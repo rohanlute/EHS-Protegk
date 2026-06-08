@@ -12,8 +12,6 @@ from .forms import *
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Sum
 from datetime import date
-
-
 # Create your views here.
 
 @login_required
@@ -397,9 +395,14 @@ def IssueManagement_list(request):
         'created_by'
     ).order_by('-id')
     if search:
-        issues = issues.filter(
-            ppe_item__name__icontains=search
-        )
+     issues = issues.filter(
+        Q(issue_no__icontains=search) |
+        Q(issue_to__icontains=search) |
+        Q(issue_date__icontains=search) |
+        Q(ppe_item__name__icontains=search) |
+        Q(contractor_name__icontains=search) |
+        Q(remarks__icontains=search) 
+    ).distinct()
     paginator = Paginator(issues, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -414,35 +417,63 @@ def IssueManagement_list(request):
     )
 @login_required
 def IssueManagement_create(request):
+
     selected_item = None
     available_quantity = 0
     sizes = []
+
     ppe_item_id = request.GET.get('ppe_item')
+
     employees = User.objects.filter(
         is_active=True
     ).select_related(
         'department'
     )
+
     if ppe_item_id:
+
         selected_item = PPEItem.objects.get(
             id=ppe_item_id
         )
+
         available_quantity = (
             PPESizeQuantity.objects.filter(
                 ppe_item=selected_item
             ).aggregate(
-                total_stock=Sum('available_quantity')
+                total_stock=Sum(
+                    'available_quantity'
+                )
             )['total_stock'] or 0
         )
+
         sizes = PPESizeQuantity.objects.filter(
             ppe_item=selected_item
         )
-    if request.method == 'POST':
-        issue_date = request.POST.get('issue_date')
-        print("Issue Date =", issue_date)
 
-        
-        ppe_item_id = request.POST.get('ppe_item')
+    if request.method == 'POST':
+
+        issue_date = request.POST.get(
+            'issue_date'
+        )
+
+        ppe_item_id = request.POST.get(
+            'ppe_item'
+        )
+
+        if not ppe_item_id:
+
+            messages.error(
+                request,
+                "Please select PPE Item."
+            )
+
+            return redirect(
+                request.path
+            )
+
+        ppe_item = PPEItem.objects.get(
+            id=ppe_item_id
+        )
 
         issue_to_list = request.POST.getlist(
             'issue_to[]'
@@ -476,20 +507,10 @@ def IssueManagement_create(request):
             'remarks[]'
         )
 
-        if not ppe_item_id:
+        # Generate ONE issue number
+        issue_no = PPEIssueManagement.generate_issue_no()
 
-            messages.error(
-                request,
-                "Please select PPE Item."
-            )
-
-            return redirect(
-                request.path
-            )
-
-        ppe_item = PPEItem.objects.get(
-            id=ppe_item_id
-        )
+        created_issues = []
 
         for (
             issue_to,
@@ -523,8 +544,6 @@ def IssueManagement_create(request):
                 id=size_id
             )
 
-            # Stock Validation
-
             if qty > selected_size.available_quantity:
 
                 messages.error(
@@ -547,6 +566,8 @@ def IssueManagement_create(request):
                 )
 
             issue = PPEIssueManagement.objects.create(
+
+                issue_no=issue_no,
 
                 issue_date=issue_date,
 
@@ -577,17 +598,17 @@ def IssueManagement_create(request):
 
             )
 
-            # -----------------------
-            # Reduce Stock
-            # -----------------------
+            created_issues.append(
+                issue
+            )
+
+            # Reduce stock
 
             selected_size.available_quantity -= qty
 
             selected_size.save()
 
-            # -----------------------
-            # Calculate Balance
-            # -----------------------
+            # Calculate total balance
 
             updated_total_stock = (
                 PPESizeQuantity.objects.filter(
@@ -599,9 +620,7 @@ def IssueManagement_create(request):
                 )['total_stock'] or 0
             )
 
-            # -----------------------
             # Transaction Log
-            # -----------------------
 
             PPEStockTransaction.objects.create(
 
@@ -617,11 +636,9 @@ def IssueManagement_create(request):
 
                 transaction_date=issue_date,
 
-                reference_number=
-                    issue.issue_no,
+                reference_number=issue_no,
 
-                remarks=
-                    remarks,
+                remarks=remarks,
 
                 created_by=request.user,
 
@@ -631,30 +648,35 @@ def IssueManagement_create(request):
 
         messages.success(
             request,
-            "PPE Issued Successfully."
+            f"PPE Issue {issue_no} Created Successfully."
         )
 
         return redirect(
             'PPE:IssueManagement_list'
         )
-    else:
-        form = PPEIssueManagementForm()
+
+    form = PPEIssueManagementForm()
+
     context = {
+
         'form': form,
+
         'selected_item': selected_item,
-        'available_quantity': available_quantity,
+
+        'available_quantity':
+            available_quantity,
+
         'sizes': sizes,
+
         'employees': employees,
+
     }
+
     return render(
         request,
         'ppe/Management/IssueManagement_create.html',
         context
     )
-
-
-
-
 @login_required
 def get_employee_department(request):
     employee_id = request.GET.get(
@@ -676,12 +698,17 @@ def get_employee_department(request):
         return JsonResponse({
             'department': ''
         })
+
 @login_required
 def edit_issue(request, pk):
 
-    issue = get_object_or_404(
+    current_record = get_object_or_404(
         PPEIssueManagement,
         pk=pk
+    )
+
+    issue_rows = PPEIssueManagement.objects.filter(
+        issue_no=current_record.issue_no
     )
 
     employees = User.objects.filter(
@@ -690,59 +717,159 @@ def edit_issue(request, pk):
         'department'
     )
 
-    selected_item = issue.ppe_item
+    sizes = PPESizeQuantity.objects.filter(
+        ppe_item=current_record.ppe_item
+    )
 
     available_quantity = (
-        PPEStockTransaction.objects.filter(
-            ppe_item=selected_item
+        PPESizeQuantity.objects.filter(
+            ppe_item=current_record.ppe_item
         ).aggregate(
-            total_stock=Sum('total')
+            total_stock=Sum('available_quantity')
         )['total_stock'] or 0
     )
 
-    sizes = PPESizeQuantity.objects.filter(
-        ppe_item=selected_item
-    )
+    if request.method == "POST":
 
-    if request.method == 'POST':
+        # Restore previous stock
+        for row in issue_rows:
 
-        form = PPEIssueManagementForm(
-            request.POST,
-            instance=issue
-        )
+            size = row.size
 
-        if form.is_valid():
-
-            obj = form.save(commit=False)
-
-            if obj.employee:
-                obj.department = obj.employee.department
-
-            obj.save()
-
-            messages.success(
-                request,
-                'Issue Updated Successfully.'
+            size.available_quantity += (
+                row.quantity_issue
             )
 
-            return redirect(
-                'PPE:IssueManagement_list'
-            )
+            size.save()
 
-    else:
+        issue_rows.delete()
 
-        form = PPEIssueManagementForm(
-            instance=issue
+        issue_date = request.POST.get(
+            'issue_date'
         )
 
+        ppe_item = PPEItem.objects.get(
+            id=request.POST.get(
+                'ppe_item'
+            )
+        )
+
+        issue_to_list = request.POST.getlist(
+            'issue_to[]'
+        )
+
+        employee_list = request.POST.getlist(
+            'employee[]'
+        )
+
+        contractor_list = request.POST.getlist(
+            'contractor_name[]'
+        )
+
+        department_list = request.POST.getlist(
+            'department[]'
+        )
+
+        size_list = request.POST.getlist(
+            'size[]'
+        )
+
+        qty_list = request.POST.getlist(
+            'quantity_issue[]'
+        )
+
+        remarks_list = request.POST.getlist(
+            'remarks[]'
+        )
+
+        for i in range(len(size_list)):
+
+            size_obj = PPESizeQuantity.objects.get(
+                id=size_list[i]
+            )
+
+            qty = int(
+                qty_list[i]
+            )
+
+            if qty > size_obj.available_quantity:
+
+                messages.error(
+                    request,
+                    f"{size_obj.size} has only "
+                    f"{size_obj.available_quantity} quantity available."
+                )
+
+                return redirect(
+                    'PPE:edit_issue',
+                    pk=current_record.id
+                )
+
+            PPEIssueManagement.objects.create(
+
+                issue_no=current_record.issue_no,
+
+                issue_date=issue_date,
+
+                ppe_item=ppe_item,
+
+                available_quantity=
+                    size_obj.available_quantity,
+
+                issue_to=issue_to_list[i],
+
+                employee_id=
+                    employee_list[i]
+                    if employee_list[i]
+                    else None,
+
+                contractor_name=
+                    contractor_list[i],
+
+                department_id=
+                    department_list[i]
+                    if department_list[i]
+                    else None,
+
+                size=size_obj,
+
+                quantity_issue=qty,
+
+                remarks=remarks_list[i],
+
+                created_by=request.user
+
+            )
+
+            size_obj.available_quantity -= qty
+            size_obj.save()
+
+        messages.success(
+            request,
+            "Issue Updated Successfully."
+        )
+
+        return redirect(
+            'PPE:IssueManagement_list'
+        )
+    form = PPEIssueManagementForm()
     context = {
-    'form': form,
-    'issue': issue,
-    'selected_item': selected_item,
-    'available_quantity': available_quantity,
-    'sizes': sizes,
-    'employees': employees,
-}
+        'form' :form,
+        'issue': current_record,
+
+        'issue_rows': issue_rows,
+
+        'employees': employees,
+
+        'sizes': sizes,
+
+        'selected_item':
+            current_record.ppe_item,
+
+        'available_quantity':
+            available_quantity,
+
+    }
 
     return render(
         request,

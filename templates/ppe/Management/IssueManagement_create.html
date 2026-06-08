@@ -35,7 +35,8 @@
                             <input type="date"
                                 name="issue_date"
                                 class="form-control"
-                                value="{% if issue %}{{ issue.issue_date|date:'Y-m-d' }}{% endif %}">
+                                value="{% if issue %}{{ issue.issue_date|date:'Y-m-d' }}{% endif %}"
+                                required>
                         </div>
                     </div>
                     <div class="col-4">
@@ -45,24 +46,25 @@
                                 <span class="text-danger">*</span>
                             </label>
                             <select
-                                name="ppe_item"
-                                class="form-control"
-                                onchange="window.location='?ppe_item='+this.value">
-                                <option value="">
-                                    Select PPE Item
-                                </option>
-                                {% for item in form.fields.ppe_item.queryset %}
-                                <option
-                                    value="{{ item.id }}"
-                                    {% if issue and issue.ppe_item.id == item.id %}
-                                        selected
-                                    {% elif selected_item and selected_item.id == item.id %}
-                                        selected
-                                    {% endif %}>
-                                    {{ item.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            name="ppe_item"
+                            class="form-control"
+                            onchange="window.location='?ppe_item='+this.value">
+                            <option value="">
+                                Select PPE Item
+                            </option>
+                            {% for item in form.fields.ppe_item.queryset %}
+                            <option
+                                value="{{ item.id }}"
+                                {% if issue and issue.ppe_item_id == item.id %}
+                                    selected
+                                {% elif selected_item and selected_item.id == item.id %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ item.name }} ({{ item.category.category_name }} )
+                            </option>
+                            {% endfor %}
+                        </select>
                         </div>
                     </div>
                     <div class="col-4">
@@ -81,11 +83,6 @@
                 </div>
                 <hr>
                 <!-- Table -->
-                <div class="mt-2">
-                    <button type="button" id="addRow" class="btn btn-success">
-                        Add Employee
-                    </button>
-                </div>
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead class="thead-light">
@@ -105,78 +102,264 @@
                                 <th width="120">
                                     Qty
                                 </th>
-                                <th>
+                                <th width="140">
                                     Remarks
                                 </th>
+                                <th>
+                                <button type="button" id="addRow" class="btn btn-success">
+                                    +
+                                </button>
+                            </th>
                             </tr>
                         </thead>
+                           <tbody id="issueRows">
+                        {% if issue_rows %}
+                        {% for row in issue_rows %}
+                        <tr class="issue-row">
+                            <!-- Issue To -->
+                            <td>
+                                <select
+                                    class="issue_to form-control"
+                                    name="issue_to[]">
 
-                        <tbody id="issueRows">
+                                    <option value="">
+                                        Select
+                                    </option>
 
-                            <tr class="issue-row">
+                                    <option
+                                        value="EMPLOYEE"
+                                        {% if row.issue_to == 'EMPLOYEE' %}
+                                            selected
+                                        {% endif %}>
+                                        Employee
+                                    </option>
 
-                                <!-- Issue To -->
-                                <td>
-                                    <select class="issue_to form-control" name="issue_to[]">
-                                        <option value="">Select</option>
-                                        <option value="EMPLOYEE">Employee</option>
-                                        <option value="CONTRACTOR">Contractor</option>
-                                    </select>
-                                </td>
-                                <!-- Employee -->
-                                <td>
-                                    <select class="employee_div form-control" name="employee[]">
-                                        <option value="">Select Employee</option>
+                                    <option
+                                        value="CONTRACTOR"
+                                        {% if row.issue_to == 'CONTRACTOR' %}
+                                            selected
+                                        {% endif %}>
+                                        Contractor
+                                    </option>
 
-                                        {% for emp in employees %}
-                                        <option value="{{ emp.id }}" data-dept="{{ emp.department.id }}" data-deptname="{{ emp.department.name }}">
-                                            {{ emp.get_full_name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
+                                </select>
+                            </td>
+        <!-- Employee / Contractor -->
+                        <td>
+                        <select
+                            class="employee_div form-control"
+                            name="employee[]"
+                            {% if row.issue_to == 'CONTRACTOR' %}
+                                style="display:none;"
+                            {% endif %}>
+                            <option value="">
+                                Select Employee
+                            </option>
+                            {% for emp in employees %}
+                            <option
+                                value="{{ emp.id }}"
+                                data-dept="{{ emp.department.id }}"
+                                data-deptname="{{ emp.department.name }}"
+                                {% if row.employee_id == emp.id %}
+                                    selected
+                                {% endif %}>
+                                {{ emp.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input
+                            type="text"
+                            name="contractor_name[]"
+                            class="contractor_div form-control mt-1"
+                            placeholder="Enter Contractor Name"
+                            value="{{ row.contractor_name }}"
+                            {% if row.issue_to != 'CONTRACTOR' %}
+                                style="display:none;"
+                            {% endif %}>
+                    </td>
+        <!-- Department -->
+                    <td>
+                        <input
+                            type="text"
+                            class="department_name form-control"
+                            value="{% if row.department %}{{ row.department.name }}{% endif %}"
+                            readonly
+                            {% if row.issue_to == 'CONTRACTOR' %}
+                                style="display:none;"
+                            {% endif %}>
 
-                                    <input type="text" name="contractor_name[]" class="contractor_div form-control mt-1" placeholder="Enter Contractor Name" style="display:none;">
+                        <input
+                            type="hidden"
+                            class="department"
+                            name="department[]"
+                            value="{% if row.department %}{{ row.department.id }}{% endif %}">
 
-                                </td>
-                                <!-- Department -->
-                                <td>
+                        <input
+                            type="text"
+                            name="contractor_department[]"
+                            class="contractor_department form-control"
+                            placeholder="Enter Department"
+                            {% if row.issue_to != 'CONTRACTOR' %}
+                                style="display:none;"
+                            {% endif %}>
 
-                                    <input type="text" class="department_name form-control" readonly>
-                                   
-                                    <input type="hidden" class="department" name="department[]">
-                                    <input type="text" name="contractor_department[]" class="contractor_department form-control" placeholder="Enter Department" style="display:none;">
-                                </td>
-                                <!-- Size -->
-                                <td>
+                    </td>
 
-                                    <select name="size[]" class="form-control" required>
-                                        <option value=""> Select Size </option>
+        <!-- Size -->
+                <td>
+                    <select
+                        name="size[]"
+                        class="form-control"
+                        required>
 
-                                        {% for size in sizes %}
-                                        <option
-                                            value="{{ size.id }}"
-                                            {% if issue.size.id == size.id %}
-                                                selected
-                                            {% endif %}>
-                                            {{ size.size }}
-                                            =
-                                            {{ size.available_quantity }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <!-- Quantity -->
-                                <td>
-                                    <input type="number" name="quantity_issue[]" class="form-control" min="1" required>
-                                </td>
-                                <!-- Remarks -->
-                                <td>
-                                    <input type="text" name="remarks[]" class="form-control">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                        <option value="">
+                            Select Size
+                        </option>
+
+                        {% for size in sizes %}
+                        <option
+                            value="{{ size.id }}"
+                            {% if row.size_id == size.id %}
+                                selected
+                            {% endif %}>
+                            {{ size.size }}
+                            =
+                            {{ size.available_quantity }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </td>
+
+                <!-- Quantity -->
+                <td>
+
+                    <input
+                        type="number"
+                        name="quantity_issue[]"
+                        class="form-control"
+                        min="1"
+                        value="{{ row.quantity_issue }}"
+                        required>
+
+                </td>
+
+        <!-- Remarks -->
+                    <td>
+
+                            <input
+                                type="text"
+                                name="remarks[]"
+                                class="form-control"
+                                value="{{ row.remarks }}">
+                    </td>
+                    <td>
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm removeRow ml-2">
+                                ×
+                            </button>
+                    </td>
+
+                </tr>
+                    {% endfor %}
+                {% else %}
+        <tr class="issue-row">
+            <td>
+                <select class="issue_to form-control" name="issue_to[]">
+                    <option value="">Select</option>
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="CONTRACTOR">Contractor</option>
+                </select>
+            </td>
+                <td>
+                    <select class="employee_div form-control" name="employee[]">
+
+                        <option value="">
+                            Select Employee
+                        </option>
+
+                        {% for emp in employees %}
+                        <option
+                            value="{{ emp.id }}"
+                            data-dept="{{ emp.department.id }}"
+                            data-deptname="{{ emp.department.name }}">
+                            {{ emp.get_full_name }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                    <input
+                        type="text"
+                        name="contractor_name[]"
+                        class="contractor_div form-control mt-1"
+                        placeholder="Enter Contractor Name"
+                        style="display:none;">
+                </td>
+                <td>
+                    <input
+                        type="text"
+                        class="department_name form-control"
+                        readonly>
+
+                    <input
+                        type="hidden"
+                        class="department"
+                        name="department[]">
+
+                    <input
+                        type="text"
+                        name="contractor_department[]"
+                        class="contractor_department form-control"
+                        placeholder="Enter Department"
+                        style="display:none;">
+
+                </td>
+                <td>
+                <select
+                    name="size[]"
+                    class="form-control"
+                    required>
+                    <option value="">
+                        Select Size
+                    </option>
+                    {% for size in sizes %}
+                    <option value="{{ size.id }}">
+                        {{ size.size }}
+                        =
+                        {{ size.available_quantity }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+                    </td>
+                    <input
+                        type="number"
+                        name="quantity_issue[]"
+                        class="form-control"
+                        min="1"
+                        required>
+                </td>
+                <td>
+                    <input
+                        type="text"
+                        name="remarks[]"
+                        class="form-control">
+            </td>
+            <td>
+            <button
+                type="button"
+                class="btn btn-danger btn-sm removeRow ml-2">
+                ×
+            </button>
+            </td>
+        </tr>
+            {% endif %}
+            </tbody>    
+            </table>
+            </div>
             </div>
             <div class="card-footer text-right">
                 <a
@@ -198,164 +381,288 @@
     </form>
 </div>
 <script>
-
 let stockData = {};
-
 {% for size in sizes %}
 stockData["{{ size.id }}"] = {
     size: "{{ size.size }}",
     qty: {{ size.available_quantity }}
 };
 {% endfor %}
-
-
-document .getElementById('addRow') .addEventListener('click',
-function(){
-
-    const firstRow =
-        document.querySelector(
-            '.issue-row'
-        );
-
-    const clone =
-        firstRow.cloneNode(true);
-
-    clone.querySelectorAll(
-        'input'
-    ).forEach(
-        input => input.value=''
-    );
-
-    clone.querySelectorAll(
-        'select'
-    ).forEach(
-        select => select.selectedIndex=0
-    );
-
-    const remaining = getRemainingStock();
-
-    const sizeSelect = clone.querySelector('[name="size[]"]');
-
-    sizeSelect.innerHTML = '<option value="">Select Size</option>';
-
-    Object.keys(remaining).forEach(function(id){
-
-        let option = document.createElement('option');
-
-        option.value=id;
-
-        option.text=
-            remaining[id].size +
-            ' = ' +
-            remaining[id].qty;
-
-        sizeSelect.appendChild(
-            option
-        );
-
-    });
-
-    document.getElementById('issueRows').appendChild(clone);
-
-    clone.querySelector('.contractor_div').style.display='none';
-
-    clone.querySelector('.contractor_department').style.display='none';
-
-});
-
+/* -----------------------------
+   Calculate Remaining Stock
+------------------------------*/
 function getRemainingStock(){
-
     let remaining = JSON.parse(
         JSON.stringify(stockData)
     );
-
     document
     .querySelectorAll('.issue-row')
     .forEach(function(row){
-
-        let size = row.querySelector(
-            '[name="size[]"]'
-        ).value;
-
-        let qty = parseInt(
-            row.querySelector(
-                '[name="quantity_issue[]"]'
-            ).value || 0
+        let size =
+            row.querySelector('[name="size[]"]').value;
+        let qty =
+            parseInt(
+                row.querySelector(
+                    '[name="quantity_issue[]"]'
+                ).value || 0
+            );
+        console.log(
+            'Counting:',
+            size,
+            qty
         );
-
-        if(
-            remaining[size]
-        ){
+        if(size && remaining[size]){
             remaining[size].qty -= qty;
         }
-
     });
-
+    console.log(
+        'Remaining:',remaining);
     return remaining;
-
 }
-
-document.addEventListener('change', function(e){
-
-    const row = e.target.closest('.issue-row');
-
-    if(!row) return;
-
-    if(e.target.classList.contains('issue_to')){
-
-        const employee =
-            row.querySelector('.employee_div');
-
-        const contractor =
-            row.querySelector('.contractor_div');
-
-        const dept =
-            row.querySelector('.department_name');
-
-        const contractorDept =
-            row.querySelector('.contractor_department');
-
-        if(e.target.value === 'EMPLOYEE'){
-
-            employee.style.display='block';
-            contractor.style.display='none';
-
-            dept.style.display='block';
-            contractorDept.style.display='none';
-
-        }
-
-        if(e.target.value === 'CONTRACTOR'){
-
-            employee.style.display='none';
-            contractor.style.display='block';
-
-            dept.style.display='none';
-            contractorDept.style.display='block';
-        }
-
+function updateSizeOptions(){
+    const remaining = getRemainingStock();
+    document.querySelectorAll('.issue-row').forEach(function(row){
+        const select =
+            row.querySelector('[name="size[]"]');
+        const selectedValue =
+            select.value;
+        Array.from(select.options).forEach(function(option){
+            if(
+                option.value &&
+                remaining[option.value]
+            ){
+                option.text =
+                    remaining[option.value].size +
+                    ' = ' +
+                    remaining[option.value].qty;
+            }
+        });
+        select.value = selectedValue;
+    });
+}
+/* -----------------------------
+   Add Row
+------------------------------*/
+document
+.getElementById('addRow')
+.addEventListener(
+    'click',
+    function(){
+        const firstRow =
+            document.querySelector(
+                '.issue-row'
+            );
+        const clone =
+            firstRow.cloneNode(true);
+        clone.querySelectorAll('input')
+        .forEach(function(input){
+            if(input.type !== 'hidden'){
+                input.value = '';
+            }
+        });
+        clone.querySelectorAll('select')
+        .forEach(function(select){
+            select.selectedIndex = 0;
+        });
+        const remaining =
+            getRemainingStock();
+        const sizeSelect =
+            clone.querySelector(
+                '[name="size[]"]'
+            );
+        sizeSelect.innerHTML =
+            '<option value="">Select Size</option>';
+        Object.keys(remaining)
+        .forEach(function(id){
+            if(
+                remaining[id].qty > 0
+            ){
+                let option =
+                    document.createElement(
+                        'option'
+                    );
+                option.value = id;
+                option.text =
+                    remaining[id].size +
+                    ' = ' +
+                    remaining[id].qty;
+                sizeSelect.appendChild(
+                    option
+                );
+            }
+        });
+        document.getElementById('issueRows').appendChild(clone);
+        clone.querySelector(
+            '.contractor_div'
+        ).style.display = 'none';
+        clone.querySelector(
+            '.contractor_department'
+        ).style.display = 'none';
     }
+);
+/* -----------------------------
+   Remove Row
+------------------------------*/
+document.addEventListener(
+    'click',
+    function(e){
+        if(
+            e.target.classList.contains(
+                'removeRow'
+            )
+        ){
+            const row =
+                e.target.closest(
+                    '.issue-row'
+                );
+            row.remove();
+            const remaining =
+                getRemainingStock();
+            document
+            .querySelectorAll('.issue-row')
+            .forEach(function(row){
 
-    if(e.target.classList.contains('employee_div')){
-
-        const selected =
-            e.target.options[
-                e.target.selectedIndex
-            ];
-
-        row.querySelector('.department_name').value =
-            selected.getAttribute(
-                'data-deptname'
-            ) || '';
-
-        row.querySelector('.department').value =
-            selected.getAttribute(
-                'data-dept'
-            ) || '';
-
+                const sizeSelect =
+                    row.querySelector(
+                        '[name="size[]"]'
+                    );
+                if(
+                    sizeSelect.value === ''
+                ){
+                    sizeSelect.innerHTML =
+                        '<option value="">Select Size</option>';
+                    Object.keys(remaining)
+                    .forEach(function(id){
+                        let option =
+                            document.createElement(
+                                'option'
+                            );
+                        option.value = id;
+                        option.text =
+                            remaining[id].size +
+                            ' = ' +
+                            remaining[id].qty;
+                        sizeSelect.appendChild(
+                            option
+                        );
+                    });
+                }
+            });
+        }
     }
-
-});
+);
+/* -----------------------------
+   Change Events
+------------------------------*/
+document.addEventListener(
+    'change',
+    function(e){
+        const row =
+            e.target.closest(
+                '.issue-row'
+            );
+        if(!row) return;
+        if(
+            e.target.classList.contains(
+                'issue_to'
+            )
+        ){
+            const employee =
+                row.querySelector(
+                    '.employee_div'
+                );
+            const contractor =
+                row.querySelector(
+                    '.contractor_div'
+                );
+            const dept =
+                row.querySelector(
+                    '.department_name'
+                );
+            const contractorDept =
+                row.querySelector(
+                    '.contractor_department'
+                );
+            if(
+                e.target.value ===
+                'EMPLOYEE'
+            ){
+                employee.style.display='block';
+                contractor.style.display='none';
+                dept.style.display='block';
+                contractorDept.style.display='none';
+            }
+            if(
+                e.target.value ===
+                'CONTRACTOR'
+            ){
+                employee.style.display='none';
+                contractor.style.display='block';
+                dept.style.display='none';
+                contractorDept.style.display='block';
+            }
+        }
+        if(
+            e.target.classList.contains(
+                'employee_div'
+            )
+        ){
+            const selected =
+                e.target.options[
+                    e.target.selectedIndex
+                ];
+            row.querySelector(
+                '.department_name'
+            ).value =
+                selected.getAttribute(
+                    'data-deptname'
+                ) || '';
+            row.querySelector(
+                '.department'
+            ).value =
+                selected.getAttribute(
+                    'data-dept'
+                ) || '';
+        }
+    }
+);
+document.addEventListener(
+    'input',
+    function(e){
+        if(
+            e.target.name ===
+            'quantity_issue[]'
+        ){
+            const row =
+                e.target.closest(
+                    '.issue-row'
+                );
+            const sizeId =
+                row.querySelector(
+                    '[name="size[]"]'
+                ).value;
+            if(!sizeId){
+                return;
+            }
+            const qty =
+                parseInt(
+                    e.target.value || 0
+                );
+            const available =
+                stockData[sizeId].qty;
+            if(
+                qty > available
+            ){
+                alert(
+                    'Size ' +
+                    stockData[sizeId].size +
+                    ' has only ' +
+                    available +
+                    ' quantity available.'
+                );
+            }
+        }
+    }
+);
 </script>
-
 {% endblock %}
