@@ -1,0 +1,818 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="#">Toolbox Talks</a></li>
+<li class="breadcrumb-item"><a href="#">Sessions</a></li>
+<li class="breadcrumb-item active">{{ action }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 5px;
+    background: #f8f9fa;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .checkbox-item:hover {
+    background: #e7f3ff;
+    border-color: #b8d4f0;
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .select-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #e9ecef;
+    border-radius: 5px;
+  }
+
+  .group-header {
+    grid-column: 1 / -1;
+    background: #d1ecf1;
+    padding: 7px 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #0c5460;
+    border-left: 3px solid #17a2b8;
+  }
+
+  .section-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-count {
+    background: #007bff;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .loading-text {
+    color: #6c757d;
+    font-style: italic;
+    padding: 10px;
+    grid-column: 1 / -1;
+  }
+
+  .auto-schedule-section {
+    background: #f0f7ff;
+    border: 1px solid #b8d4f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 10px;
+  }
+
+  .offset-section {
+    display: none;
+    margin-top: 15px;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="row">
+  <div class="col-md-11 mx-auto">
+    <div class="ehs-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-calendar-plus"></i> {{ title }}
+        </h3>
+      </div> <!-- /.card-header -->
+
+            <div class="card-body">
+                <form method="POST" id="sessionForm">
+                    {% csrf_token %}
+
+                    <!-- Category Template Selection -->
+                     <h5 class="mb-3"><i class="fas fa-book"></i>Topic Information</h5>
+                     <div class="row">
+                     <!-- Category -->
+                      <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.category.id_for_label }}">Topic Category<span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="text-danger small">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select toolbox talk category</small>
+                        </div>
+                    </div>
+                    <!-- Topic -->
+                     <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.topic.id_for_label }}">Topic <span class="text-danger">*</span></label>
+                            {{ form.topic }}
+                            {% if form.topic.errors %}
+                            <div class="text-danger small">
+                                {{ form.topic.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select toolbox talk topic </small>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <!-- LOCATION ASSIGNMENT -->
+                 <h5 class="mb-3"><i class="fas fa-industry"></i> Location Assignment</h5>
+
+
+                 <!-- PLANTS -->
+                  <div class="mb-4">
+                    <div class="section-label">
+                        <span>Plant<span class="text-danger">*</span></span>
+                        <span class="badge-count" id="plantCount"> 0 </span>
+                    </div>
+                    {{ form.plant.as_hidden }}
+                    <small class="form-text text-muted mb-2 d-block">Select plant for toolbox talk session</small>
+                    <div class="checkbox-grid" id="plantsGrid">
+                     {% for plant in plants %}
+                      <div class="checkbox-item">
+                        <input
+                        type="checkbox"
+                        class="plant-checkbox"
+                        value="{{ plant.id }}">
+                        <label>{{ plant.name }}</label>
+                    </div>
+                    
+
+                     {% endfor %}
+                     </div>
+                </div>
+                <!-- ZONES -->
+                <div class="mb-4">
+                    <div class="section-label">
+                        <span>Zone <span class="text-danger">*</span></span>
+                        <span class="badge-count" id="zoneCount"> 0 </span> </div>
+                        <small class="form-text text-muted mb-2 d-block">
+                            Select plant first, then select zone 
+                        </small>
+                        {{ form.zone.as_hidden }}
+                        <div class="checkbox-grid" id="zonesGrid">
+                            <div class="loading-text">
+                                 Please select plant first
+                                </div>
+                            </div>
+                        </div>
+                        <!-- LOCATIONS -->
+                         
+                          <div class="mb-4">
+                            <div class="section-label">
+                                <span>Location <span class="text-danger">*</span></span>
+                                <span class="badge-count" id="locationCount"> 0 </span>
+                            </div>
+                            {{ form.location.as_hidden }}
+                            <small class="form-text text-muted mb-2 d-block">
+                                Select zone first, then select location
+                            </small>
+                            <div class="checkbox-grid" id="locationsGrid">
+                                <div class="loading-text">
+                                    Please select zone first
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SUB LOCATIONS -->
+                         <div class="mb-4">
+                            <div class="section-label">
+                                <span>Sub Location <span class="text-danger">*</span></span>
+                                <span class="badge-count" id="subLocationCount"> 0 </span>
+                            </div>
+                            {{ form.sublocation.as_hidden }}
+                            <small class="form-text text-muted mb-2 d-block">
+                                Select location first, then select sub location
+                             </small>
+                             <div class="checkbox-grid" id="subLocationsGrid">
+                                <div class="loading-text">
+                                    Please select location first
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assign to user -->
+                        
+                        <h5 class="mb-3"> 
+                            <i class="fas fa-users"></i>
+                            Assignment
+                        </h5>
+                        <div class="mb-4">
+                            <div class="section-label">
+                                <span>Trainer <span class="text-danger">*</span> </span>
+                                <span class="badge-count" id="trainerCount">0 </span>
+                            </div>
+                            {{ form.trainer.as_hidden }}
+                            <small class="form-text text-muted mb-2 d-block">
+                                 Select plant and department first to view available trainers
+                                </small>
+                                <div class="checkbox-grid" id="trainerGrid">
+                                    <div class="loading-text">
+                                        Please select plant and department first
+                                     </div>
+                                    </div>
+                                </div>
+                                <!--  Assign to Incharge -->
+                                <div class="mb-4">
+                                    <div class="section-label">
+                                        <span>Incharge <span class="text-danger">*</span></span>
+                                        <span class="badge-count" id="inchargeCount"> 0 </span>
+                                    </div>
+                                    {{ form.incharge.as_hidden }}
+                                    <small class="form-text text-muted mb-2 d-block">
+                                         Select plant and department first to view available incharges
+                                        </small>
+                                        <div class="checkbox-grid" id="inchargeGrid">
+                                            <div class="loading-text">
+                                                Please select plant and department first
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr> 
+                                    <!-- Session DETAILS -->
+                                     <h5 class="mb-3">
+                                        <i class="fas fa-clock"></i>
+                                        Session Timings & Details
+                                    </h5>
+                                    <div class="row">
+                                        <!-- Planned Date -->
+                                         <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="{{ form.planned_date.id_for_label }}">
+                                                    Planned Date
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.planned_date }}
+                                                {% if form.planned_date.errors %}
+                                                <div class="text-danger small">
+                                                    {{ form.planned_date.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Select the date for toolbox talk session
+                                                 </small>
+                                                </div>
+                                            </div>
+                                            <!-- Planned Time -->
+                                             <div class="col-md-6">
+                                                <div class="form-group">
+                                                     <label for="{{ form.planned_time.id_for_label }}">
+                                                         Planned Time
+                                                         <span class="text-danger">*</span>
+                                                         </label>
+                                                          {{ form.planned_time }}
+                                                           {% if form.planned_time.errors %}
+                                                           <div class="text-danger small">
+                                                             {{ form.planned_time.errors }}
+                                                            </div>
+                                                            {% endif %}
+                                                            <small class="form-text text-muted">
+                                                                Select the time for toolbox talk session
+                                                            </small>
+                                                        </div>
+                                                     </div>
+                                                    </div>
+                                                    <hr>
+                                                   
+                                                     <!-- DEPARTMENT -->
+                                                      <div class="form-group">
+                                                        <label for="{{ form.department.id_for_label }}">
+                                                             Department
+                                                             <span class="text-danger">*</span>
+                                                            </label>
+                                                            {{ form.department }}
+                                                            {% if form.department.errors %}
+                                                            <div class="text-danger small">
+                                                                {{ form.department.errors }}
+                                                            </div>
+                                                            {% endif %}
+                                                            <small class="form-text text-muted">
+                                                                Select department for the session
+                                                            </small>
+                                                        </div>
+                                                        <!-- EXPECTED PARTICIPANTS -->
+                                                         <div class="form-group">
+                                                             <label for="{{ form.expected_participants.id_for_label }}">
+                                                                Expected Participants
+                                                                <span class="text-danger">*</span>
+                                                             </label>
+                                                             {{ form.expected_participants }}
+                                                             {% if form.expected_participants.errors %}
+                                                             <div class="text-danger small">
+                                                                {{ form.expected_participants.errors }}
+                                                            </div>
+                                                            {% endif %}
+                                                            <small class="form-text text-muted">
+                                                                 Enter expected number of attendees
+                                                                </small>
+                                                            </div>
+                                                            <!-- REMARKS -->
+                                                             <div class="form-group">
+                                                                <label for="{{ form.remarks.id_for_label }}">
+                                                                    Remarks
+                                                                </label>
+                                                                {{ form.remarks }}
+                                                                {% if form.remarks.errors %}
+                                                                <div class="text-danger small">
+                                                                    {{ form.remarks.errors }}
+                                                                </div>
+                                                                {% endif %}
+                                                                <small class="form-text text-muted">
+                                                                    Any additional information for the session
+                                                                </small>
+                                                            </div>
+                                                            <hr>
+                                                            <!-- FORM ACTIONS -->
+                                                            <div class="d-flex justify-content-between mt-4">
+                                                                <a href="#" class="btn btn-secondary">
+                                                                    <i class="fas fa-times"></i>
+                                                                    Cancel
+                                                                </a>
+                                                                <button type="submit" class="btn btn-primary">
+                                                                    <i class="fas fa-save"></i>
+                                                                    {{ action }} Session
+                                                                </button>
+                                                            </div>
+                                                         </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function(){
+
+    // Category -> Topic
+
+    $('#id_category').change(function(){
+
+        let categoryId = $(this).val();
+
+        $.ajax({
+
+            url: "{% url 'toolbox_talk:ajax_topics' %}",
+
+            data: {
+                category_id: categoryId
+            },
+
+            success: function(data){
+
+                $('#id_topic').html(
+                    '<option value="">Select Topic</option>'
+                );
+
+                $.each(data, function(index, item){
+
+                    $('#id_topic').append(
+
+                        `<option value="${item.id}">
+                            ${item.topic_title}
+                        </option>`
+
+                    );
+
+                });
+
+            }
+
+        });
+
+    });
+
+
+$(document).on(
+    'change',
+    '.plant-checkbox',
+    function(){
+
+        $('.plant-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let plantId = $(this).val();
+
+        $('#id_plant').val(
+            plantId
+        );
+
+        $('#plantCount').text(1);
+
+        loadZones(
+            plantId
+        );
+
+        loadUsers();
+    }
+);   
+
+function loadZones(plantId){
+
+    $.ajax({
+
+        url: "{% url 'toolbox_talk:ajax_zones' %}",
+
+        data: {
+            plant_id: plantId
+        },
+
+        success: function(data){
+
+            let html = '';
+
+            $.each(data,function(i,item){
+
+                html += `
+                <div class="checkbox-item">
+
+                    <input
+                        type="checkbox"
+                        class="zone-checkbox"
+                        value="${item.id}">
+
+                    <label>
+                        ${item.name}
+                    </label>
+
+                </div>
+                `;
+            });
+
+            $('#zonesGrid').html(
+                html
+            );
+
+        }
+
+    });
+
+}
+
+
+
+
+$(document).on(
+    'change',
+    '.zone-checkbox',
+    function(){
+
+        $('.zone-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let zoneId = $(this).val();
+
+        $('#id_zone').val(
+            zoneId
+        );
+
+        $('#zoneCount').text(1);
+
+        loadLocations(
+            zoneId
+        );
+
+    }
+);
+
+$(document).on(
+    'change',
+    '.location-checkbox',
+    function(){
+
+        $('.location-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let locationId = $(this).val();
+
+        $('#id_location').val(
+            locationId
+        );
+
+        $('#locationCount').text(1);
+
+        loadSubLocations(
+            locationId
+        );
+
+    }
+);
+
+
+function loadSubLocations(locationId){
+
+    $.ajax({
+
+        url: "{% url 'toolbox_talk:ajax_sublocations' %}",
+
+        data: {
+
+            location_id: locationId
+
+        },
+
+        success: function(data){
+
+            let html = '';
+
+            $.each(
+                data,
+                function(i,item){
+
+                    html += `
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            class="sublocation-checkbox"
+                            value="${item.id}">
+
+                        <label>
+
+                            ${item.name}
+
+                        </label>
+
+                    </div>
+
+                    `;
+
+                }
+            );
+
+            $('#subLocationsGrid')
+                .html(html);
+
+        }
+
+    });
+
+}
+
+$(document).on(
+    'change',
+    '.sublocation-checkbox',
+    function(){
+
+        $('.sublocation-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let subLocationId = $(this).val();
+
+        $('#id_sublocation').val(
+            subLocationId
+        );
+
+        $('#subLocationCount').text(1);
+
+    }
+);
+
+
+function loadLocations(zoneId){
+
+    $.ajax({
+
+        url: "{% url 'toolbox_talk:ajax_locations' %}",
+
+        data: {
+            zone_id: zoneId
+        },
+
+        success: function(data){
+
+            let html = '';
+
+            $.each(data,function(i,item){
+
+                html += `
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            class="location-checkbox"
+                            value="${item.id}">
+
+                        <label>
+                            ${item.name}
+                        </label>
+
+                    </div>
+                `;
+
+            });
+
+            $('#locationsGrid').html(html);
+
+        }
+
+    });
+
+}
+
+
+
+function loadUsers(){
+
+    let plantId =
+        $('#id_plant').val();
+
+    let departmentId =
+        $('#id_department').val();
+
+    if(
+        !plantId ||
+        !departmentId
+    ){
+        return;
+    }
+
+    $.ajax({
+
+        url:
+        "{% url 'toolbox_talk:ajax_users' %}",
+
+        data: {
+
+            plant_id:
+            plantId,
+
+            department_id:
+            departmentId
+
+        },
+
+        success: function(data){
+
+            let trainerHtml = '';
+
+            let inchargeHtml = '';
+
+            $.each(
+                data,
+                function(i,item){
+
+                    trainerHtml += `
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            class="trainer-checkbox"
+                            value="${item.id}">
+
+                        <label>
+
+                            ${item.name}
+
+                        </label>
+
+                    </div>
+
+                    `;
+
+                    inchargeHtml += `
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            class="incharge-checkbox"
+                            value="${item.id}">
+
+                        <label>
+
+                            ${item.name}
+
+                        </label>
+
+                    </div>
+
+                    `;
+
+                }
+            );
+
+            $('#trainerGrid')
+                .html(
+                    trainerHtml
+                );
+
+            $('#inchargeGrid')
+                .html(
+                    inchargeHtml
+                );
+
+        }
+
+    });
+
+}
+
+$(document).on(
+    'change',
+    '.trainer-checkbox',
+    function(){
+
+        $('.trainer-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let trainerId =
+            $(this).val();
+
+        $('#id_trainer').val(
+            trainerId
+        );
+
+        $('#trainerCount')
+            .text(1);
+
+    }
+);
+
+$(document).on(
+    'change',
+    '.incharge-checkbox',
+    function(){
+
+        $('.incharge-checkbox')
+            .not(this)
+            .prop('checked', false);
+
+        let inchargeId =
+            $(this).val();
+
+        $('#id_incharge').val(
+            inchargeId
+        );
+
+        $('#inchargeCount')
+            .text(1);
+
+    }
+);
+
+});
+
+
+
+
+    
+
+</script>
+
+{% endblock %}
