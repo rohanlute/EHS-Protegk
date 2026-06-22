@@ -402,3 +402,69 @@ class ToolboxTalkSessionPlan(models.Model):
             )
 
         super().save(*args, **kwargs)
+        
+        
+#
+class ToolboxSessionAssignment(models.Model):
+
+    ROLE_CHOICES = (
+        ('TRAINER', 'Trainer'),
+        ('INCHARGE', 'Incharge'),
+    )
+
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('ACCEPTED', 'Accepted'),
+        ('REJECTED', 'Rejected'),
+        ('COMPLETED', 'Completed'),
+    )
+
+    session = models.ForeignKey(
+        ToolboxTalkSessionPlan,
+        on_delete=models.CASCADE,
+        related_name='assignments'
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='toolbox_assignments'
+    )
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
+
+    remarks = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    accepted_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    assigned_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='toolbox_assignments_created'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )        
+        

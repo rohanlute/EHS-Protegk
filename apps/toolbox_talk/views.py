@@ -32,7 +32,8 @@ from .models import (
     ToolboxTalkCategory,
     ToolboxTalkTopic,
     ToolboxTalkTopicDetail, 
-    ToolboxTalkSessionPlan 
+    ToolboxTalkSessionPlan,
+    ToolboxSessionAssignment,
 )
 
 from apps.organizations.models import (
@@ -760,6 +761,7 @@ def toolbox_topic_delete_confirm(
 def toolbox_session_create(request):
 
     if request.method == 'POST':
+        print(request.POST)
 
         form = ToolboxTalkSessionPlanForm(
             request.POST,
@@ -789,6 +791,8 @@ def toolbox_session_create(request):
         selected_incharge_ids = request.POST.getlist(
             'selected_incharges'
         )
+        print("TRAINERS:", selected_trainer_ids)
+        print("INCHARGES:", selected_incharge_ids)
 
         if not selected_plant_ids:
 
@@ -810,7 +814,7 @@ def toolbox_session_create(request):
                 request,
                 'Please select at least one incharge.'
             )
-
+# backend validation so that trainer and incharge is not the same person 
         elif set(selected_trainer_ids).intersection(
             set(selected_incharge_ids)
         ):
@@ -819,6 +823,8 @@ def toolbox_session_create(request):
                 request,
                 'Same user cannot be Trainer and Incharge.'
             )
+            print("FORM VALID:", form.is_valid())
+            print("FORM ERRORS:", form.errors)    
 
         elif form.is_valid():
 
@@ -840,7 +846,10 @@ def toolbox_session_create(request):
 
                     session.save()
 
-                    # Many-to-Many fields
+                    # -------------------------
+                    # M2M Relationships
+                    # -------------------------
+
                     session.plants.set(
                         selected_plant_ids
                     )
@@ -865,21 +874,46 @@ def toolbox_session_create(request):
                         selected_incharge_ids
                     )
 
+                    # -------------------------
+                    # Assignment Records
+                    # -------------------------
+
+                    for trainer_id in selected_trainer_ids:
+
+                        ToolboxSessionAssignment.objects.create(
+                            session=session,
+                            user_id=trainer_id,
+                            role='TRAINER',
+                            assigned_by=request.user
+                        )
+
+                    for incharge_id in selected_incharge_ids:
+
+                        ToolboxSessionAssignment.objects.create(
+                            session=session,
+                            user_id=incharge_id,
+                            role='INCHARGE',
+                            assigned_by=request.user
+                        )
+
                     messages.success(
                         request,
                         'Session created successfully.'
                     )
 
                     return redirect(
-                        'toolbox_talk:session_list'
+                        'toolbox_talk:topic_list'
                     )
 
             except Exception as e:
-
+                print("ERROR OCCURRED")
+                print(str(e))
+                import traceback
+                traceback.print_exc()
                 messages.error(
                     request,
-                    f'Error creating session: {str(e)}'
-                )
+                    f'Error creating session: {str(e)}')
+                
 
         else:
 
@@ -913,7 +947,6 @@ def toolbox_session_create(request):
         'toolbox_talk/session_form.html',
         context
     )
-
 
 
 
@@ -1019,3 +1052,4 @@ def get_incharges_by_plants(request):
 
 
 
+#

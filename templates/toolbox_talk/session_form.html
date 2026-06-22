@@ -310,6 +310,10 @@
             </div>
           </div>
           <hr>
+          <div id="trainer-incharge-error" class="alert alert-danger" style="display:none;">
+            Same user cannot be Trainer and Incharge.
+          </div>
+
           <h5 class="mb-3">
             <i class="fas fa-chalkboard-teacher">
             </i>
@@ -585,7 +589,7 @@ function deselectAll(cls, countFn) {
 
 
 
-function deselectAll(cls1,clas2, countFn) {
+function deselectAll(cls, countFn) {
   document.querySelectorAll('.' + cls).forEach(function (cb) { cb.checked = false; });
   if (countFn) countFn();
 }
@@ -667,6 +671,69 @@ function resetGrid(gridId, message) {
   document.getElementById(gridId).innerHTML =
     '<div class="loading-text">' + message + '</div>';
 }
+
+
+// frontend validation for not allowing the trainers and incharge to be the same person 
+function validateTrainerIncharge() {
+
+    let trainers = [];
+
+    document
+        .querySelectorAll(
+            '.trainer-checkbox:checked'
+        )
+        .forEach(cb => {
+            trainers.push(cb.value);
+        });
+
+    let duplicateFound = false;
+
+    document
+        .querySelectorAll(
+            '.incharge-checkbox:checked'
+        )
+        .forEach(cb => {
+
+            if (
+                trainers.includes(
+                    cb.value
+                )
+            ) {
+                duplicateFound = true;
+            }
+
+        });
+
+    const errorBox =
+        document.getElementById(
+            'trainer-incharge-error'
+        );
+
+    if (duplicateFound) {
+
+        errorBox.style.display =
+            'block';
+
+    } else {
+
+        errorBox.style.display =
+            'none';
+
+    }
+}
+
+document
+.querySelectorAll(
+    '.trainer-checkbox, .incharge-checkbox'
+)
+.forEach(cb => {
+
+    cb.addEventListener(
+        'change',
+        validateTrainerIncharge
+    );
+
+});
 
 
 
@@ -903,6 +970,7 @@ function loadTrainersForPlants() {
                     <input
                         type="checkbox"
                         class="trainer-checkbox"
+                        name="selected_trainers"
                         value="${user.id}"
                         id="trainer_${user.id}"
                     >
@@ -967,6 +1035,7 @@ function loadInchargesForPlants() {
                     <input
                         type="checkbox"
                         class="incharge-checkbox"
+                        name="selected_incharges"
                         value="${user.id}"
                         id="incharge_${user.id}"
                     >

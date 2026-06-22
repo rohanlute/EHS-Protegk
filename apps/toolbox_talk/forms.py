@@ -304,17 +304,22 @@ class ToolboxTalkSessionPlanForm(forms.ModelForm):
         )
 
         # AJAX will populate this later
-        self.fields[
-            'topic'
-        ].queryset = (
-            ToolboxTalkTopic.objects.none()
-        )
+        # AJAX + POST validation support
+        self.fields["topic"].queryset = ToolboxTalkTopic.objects.none()
+        if self.data.get("category"):
+            try:
+                category_id = int(self.data.get("category"))
+                self.fields["topic"].queryset = ToolboxTalkTopic.objects.filter(
+                    category_id=category_id, is_active=True
+                    )
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk:
+            self.fields["topic"].queryset = ToolboxTalkTopic.objects.filter(
+                category=self.instance.category, is_active=True
+                )
 
-        self.fields[
-            'topic'
-        ].empty_label = (
-            'Select Topic'
-        )
+
         
         # simple drop-down for department no ajax based filtering population
         self.fields['department'].queryset = ( Department.objects.filter(is_active=True))
