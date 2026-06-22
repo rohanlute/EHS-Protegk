@@ -18,8 +18,6 @@ from .models import PPEReturnManagement
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Sum
 from datetime import date
-
-
 # Create your views here.
 
 @login_required
@@ -729,6 +727,7 @@ def IssueManagement_create(request):
     selected_item = None
     available_quantity = 0
     sizes = []
+
     ppe_item_id = request.GET.get('ppe_item')
     plant_id = request.GET.get('plant')
     plants = Plant.objects.filter(
@@ -834,7 +833,6 @@ def IssueManagement_create(request):
             PPEIssueManagement.objects.create(
                 plant=plant,   
                 issue_group_no=issue_group_no,
-
                 issue_date=request.POST.get(
                     "issue_date"
                 ),
@@ -1040,13 +1038,17 @@ def edit_issue(request, pk):
                 continue
             qty = int(qty)
             size_obj = PPESizeQuantity.objects.get(
-                id=size_id
+                id=size_list[i]
+            )
+
+            qty = int(
+                qty_list[i]
             )
             if qty > size_obj.available_quantity:
                 messages.error(
                     request,
                     f"{size_obj.size} has only "
-                    f"{size_obj.available_quantity} available."
+                    f"{size_obj.available_quantity} quantity available."
                 )
                 return redirect(
                     'PPE:edit_issue',
@@ -1061,16 +1063,33 @@ def edit_issue(request, pk):
                 plant=first_issue.plant,
                 issue_group_no=first_issue.issue_group_no,
                 issue_date=issue_date,
-                ppe_item=first_issue.ppe_item,
-                available_quantity=size_obj.available_quantity,
-                issue_to=issue_to,
-                employee=employee,
-                contractor_name=contractor_name,
-                contractor_department=contractor_department,
-                department_id=department_id if department_id else None,
+
+                ppe_item=ppe_item,
+
+                available_quantity=
+                    size_obj.available_quantity,
+
+                issue_to=issue_to_list[i],
+
+                employee_id=
+                    employee_list[i]
+                    if employee_list[i]
+                    else None,
+
+                contractor_name=
+                    contractor_list[i],
+
+                department_id=
+                    department_list[i]
+                    if department_list[i]
+                    else None,
+
                 size=size_obj,
+
                 quantity_issue=qty,
-                remarks=remarks,
+
+                remarks=remarks_list[i],
+
                 created_by=request.user
             )
             size_obj.available_quantity -= qty
@@ -1128,8 +1147,15 @@ def edit_issue(request, pk):
         'available_quantity': available_quantity,
         'sizes': sizes,
         'employees': employees,
-        'edit_mode': True,
-        'original_stock': original_stock,
+
+        'sizes': sizes,
+
+        'selected_item':
+            current_record.ppe_item,
+
+        'available_quantity':
+            available_quantity,
+
     }
     return render(
         request,
@@ -1220,7 +1246,7 @@ def return_list(request):
             first_id=Min('id')
         )
         .order_by(
-            '-return_date',
+            'return_date',
             'plant__name'
         )
     )
