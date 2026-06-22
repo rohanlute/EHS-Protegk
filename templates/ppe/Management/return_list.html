@@ -1,20 +1,19 @@
 {% extends 'base/base.html' %}
-{% block title %}PPE Master{% endblock %}
-{% block page_title %}PPE Master{% endblock %}
+{% block title %}Return List{% endblock %}
+{% block page_title %}Return List{% endblock %}
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">PPE Master</li>
+<li class="breadcrumb-item active">Return List</li>
 {% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-md-12">
     <!-- Header with Add Button -->
     <div class="mb-3">
-        <a href="{% url 'PPE:create_ppe' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add PPE
+        <a href="{% url 'PPE:return_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Return
         </a>
     </div>
-    <!-- Search Card -->
     <div class="card mb-3">
         <div class="card-body">
             <form method="get" class="form-inline">
@@ -22,13 +21,13 @@
                     <input type="text"
                            name="search"
                            class="form-control"
-                           placeholder="Search PPE..."
+                           placeholder="Search Return"
                            value="{{ request.GET.search }}">
                     <div class="input-group-append">
                         <button type="submit" class="btn btn-primary me-4">
                             <i class="fas fa-search"></i> Search
                         </button>
-                        <a href="{% url 'PPE:master_list' %}" class="btn btn-secondary">
+                        <a href="{% url 'PPE:return_list' %}" class="btn btn-secondary">
                             <i class="fas fa-undo"></i> Reset
                         </a>
                     </div>
@@ -40,7 +39,7 @@
     <div class="ehs-card">
         <div class="card-header">
             <h3 class="card-title">
-                <i class="fas fa-hard-hat"></i> PPE Master List
+                <i class="fas fa-hard-hat"></i> Return List
             </h3>
         </div>
         <div class="card-body">
@@ -48,57 +47,52 @@
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
-                        <tr>
-                            <th>PPE Code</th>
-                            <th>PPE Name</th>
-                            <th>PPE Category</th>
-                            <th>Status</th>
-                            <th width="180">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ppe in page_obj %}
-                        <tr>
-                            <td>
-                                <strong>{{ ppe.ppe_code }}</strong>
-                            </td>
-                            <td>{{ ppe.name }}</td>
-                            <td>
-                                {{ ppe.category.category_name }}
-                            </td>
-                            <td>
-                                {% if ppe.is_active %}
-                                    <span class="badge badge-success">
-                                        Active
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-secondary">
-                                        Inactive
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="table-actions">
-                                  <a href="{% url 'PPE:ppe_detail' ppe.pk %}" 
-                                   class="btn btn-sm btn-info"
-                                   title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                  <a href="{% url 'PPE:master_edit' ppe.pk %}" 
-                                   class="btn btn-sm btn-warning"
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-
-                                <a href="{% url 'PPE:ppe_delete' ppe.pk %}" 
-                                   class="btn btn-sm btn-danger"
-                                   title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                    <tr>
+                        <th>Return Date</th>
+                        <th>PPE Item</th>
+                        <th>Assigned Qty</th>
+                        <th>Return Qty</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for return_obj in page_obj %}
+                <tr>
+                    <td>
+                        {{ return_obj.return_date|date:"d-m-Y" }}
+                    </td>
+                    <td>
+                        {{ return_obj.ppe_item__name }}
+                    </td>
+                    <td>
+                        {{ return_obj.assigned_qty }}
+                    </td>
+                    <td>
+                        {{ return_obj.total_return_qty }}
+                    </td>
+                    <td>
+                        <a href="{% url 'PPE:return_detail' return_obj.first_id %}"
+                        class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'PPE:return_edit' return_obj.first_id %}"
+                        class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                      {% comment %} <a href="{% url 'PPE:return_delete' return_obj.first_id %}"
+                        class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a> {% endcomment %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No Return Records Found
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>                
                 </table>
             </div>
             <!-- Pagination -->
@@ -135,7 +129,6 @@
                         </a>
                     </li>
                     {% endif %}
-
                 </ul>
             </nav>
             {% endif %}
@@ -143,12 +136,12 @@
             <div class="text-center py-5">
                 <i class="fas fa-hard-hat fa-4x text-muted mb-3"></i>
                 <p class="text-muted">
-                    No PPE records found.
+                    No Issue found.
                 </p>
-                <a href="{% url 'PPE:create_ppe' %}"
+                <a href="{% url 'PPE:return_create' %}"
                    class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Create First PPE
+                    Create Return
                 </a>
             </div>
             {% endif %}

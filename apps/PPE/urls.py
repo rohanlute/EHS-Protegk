@@ -1,7 +1,5 @@
 from django.urls import path
 from . import views
-from .views import stock_create, stock_list, stock_edit, stock_delete
-from .views import stock_create, stock_list, stock_edit, stock_delete
 
 app_name = 'PPE'
 
@@ -15,10 +13,10 @@ urlpatterns = [
     path('ppe/<int:pk>/', views.ppe_detail, name='ppe_detail'),
     path('ppe/<int:pk>/delete', views.ppe_delete, name='ppe_delete'),
     path('ppe/<int:pk>/edit', views.master_edit, name='master_edit'),
-    path('stock/create/', stock_create, name='stock_create'),
-    path('stock/list/', stock_list, name='stock_list'),
-    path('stock/edit/<int:pk>/', stock_edit, name='stock_edit'),
-    path('stock/delete/<int:pk>/', stock_delete, name='stock_delete'),
+    path('stock/create/', views.stock_create, name='stock_create'),
+    path('stock/list/', views.stock_list, name='stock_list'),
+    path('stock/edit/<int:pk>/', views.stock_edit, name='stock_edit'),
+    path('stock/delete/<int:pk>/', views.stock_delete, name='stock_delete'),
     path('stock/<int:pk>/', views.stock_detail, name='stock_detail'),
     
     # PPE Issue Management
@@ -26,8 +24,12 @@ urlpatterns = [
     path('IssueManagement/create/', views.IssueManagement_create, name='IssueManagement_create'),
     path('IssueManagement/edit/<int:pk>/', views.edit_issue,name='edit_issue'),
     path('IssueManagement/<int:pk>/', views.issue_detail,name='issue_detail'),
-    path('IssueManagement/delete/<int:pk>/', views.issue_delete,name='issue_delete')
-    
-    
-    
+    path('IssueManagement/delete/<int:pk>/', views.issue_delete,name='issue_delete'),
+    path('Return/list/', views.return_list, name='return_list'),
+    path('Return/create/', views.return_create, name='return_create'),
+    path('get-issue-details/',views.get_issue_details,name='get_issue_details'),
+    path('Return/delete/<int:pk>/', views.return_delete, name='return_delete'),
+    path('Return/edit/<int:pk>/', views.return_edit, name='return_edit'),
+    path('Return/<int:pk>/', views.return_detail, name='return_detail'),
+
     ]

@@ -3,7 +3,14 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from apps.accounts.models import User
+from apps.organizations.models import Plant
 from apps.organizations.models import Department
+from django.core.exceptions import ValidationError
+from django.db.models import Sum
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class PPECategory(models.Model):
     """Master PPE Categories"""
     category_name = models.CharField(
@@ -173,22 +180,31 @@ class PPESizeQuantity(models.Model):
         on_delete=models.CASCADE,
         related_name="sizes"
     )
+    plant = models.ForeignKey(
+        Plant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_plant'
+    )
+        
     size = models.CharField(max_length=50)
     available_quantity = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
-        unique_together = ("ppe_item", "size")
+        unique_together = (
+            "plant",
+            "ppe_item",
+            "size",
+        )
     def __str__(self):
         return f"{self.ppe_item.name} - {self.size}"
 class PPEStockTransaction(models.Model):  
     TRANSACTION_CHOICES = (
         ('OPENING', 'Opening Stock'),
         ('STOCK_IN', 'Stock In'),
-        ('ADJUSTMENT', 'Stock Adjustment'),
-        ('ISSUE', 'PPE Issue'),
-        ('RETURN', 'PPE Return'),
-        ('REPLACEMENT', 'PPE Replacement'),
+        ('ADJUSTMENT', 'Stock Adjustment')
     )
     UNIT_CHOICES = (
         ('NOS', 'Nos'),
@@ -199,6 +215,13 @@ class PPEStockTransaction(models.Model):
         on_delete=models.CASCADE,
         related_name='stock_transactions',
         verbose_name="PPE Item"
+    )
+    plant = models.ForeignKey(
+        Plant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_transactions'
     )
     size = models.ForeignKey(
         'PPESizeQuantity',
@@ -287,34 +310,56 @@ class PPEStockTransaction(models.Model):
         if self.size:
             return f"{self.size.size}={self.quantity}"
         return "-"
+
 class PPEIssueManagement(models.Model):
+
     ISSUE_TO_CHOICES = (
         ('EMPLOYEE', 'Employee'),
         ('CONTRACTOR', 'Contractor'),
     )
+
     issue_no = models.CharField(
         max_length=20,
         unique=True,
         editable=False
     )
+
     issue_group_no = models.CharField(
         max_length=20,
         blank=True,
         null=True
     )
+
     issue_date = models.DateField()
+
+    plant = models.ForeignKey(
+        'organizations.Plant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_issues'
+    )
+    plant_name = models.CharField(
+    max_length=200,
+    blank=True,
+    null=True
+    )
+
     ppe_item = models.ForeignKey(
         PPEItem,
         on_delete=models.PROTECT,
         related_name='ppe_issues'
     )
+
     available_quantity = models.PositiveIntegerField(
         default=0
     )
+
     issue_to = models.CharField(
         max_length=20,
         choices=ISSUE_TO_CHOICES
     )
+
     employee = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -322,31 +367,38 @@ class PPEIssueManagement(models.Model):
         blank=True,
         related_name='ppe_issue_employee'
     )
+
     contractor_name = models.CharField(
         max_length=200,
         null=True,
         blank=True
     )
+
     contractor_department = models.CharField(
         max_length=200,
         null=True,
         blank=True
     )
+
     department = models.ForeignKey(
         Department,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
+
     size = models.ForeignKey(
         PPESizeQuantity,
         on_delete=models.PROTECT
     )
+
     quantity_issue = models.PositiveIntegerField()
+
     remarks = models.TextField(
         blank=True,
         null=True
     )
+
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -354,26 +406,34 @@ class PPEIssueManagement(models.Model):
         blank=True,
         related_name='ppe_issue_created'
     )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
+
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
     class Meta:
         db_table = 'ppe_issue_management'
         ordering = ['-id']
 
     def save(self, *args, **kwargs):
+
         if not self.issue_no:
             self.issue_no = self.generate_issue_no()
+
         # Auto department from employee
         if self.employee:
             self.department = self.employee.department
+
         super().save(*args, **kwargs)
+
     @classmethod
     def generate_issue_no(cls):
         last = cls.objects.order_by('-id').first()
+
         if last:
             try:
                 number = int(
@@ -382,10 +442,321 @@ class PPEIssueManagement(models.Model):
                         ''
                     )
                 ) + 1
-            except:
+            except Exception:
                 number = 1
         else:
             number = 1
+
         return f'PPE-ISS-{number:04d}'
+
     def __str__(self):
         return self.issue_no
+
+class PPEReturnManagement(models.Model):
+
+    RETURN_TO_CHOICES = (
+        ('EMPLOYEE', 'Employee'),
+        ('CONTRACTOR', 'Contractor'),
+    )
+
+    return_group_no = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        db_index=True
+    )
+
+    return_no = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        null=True
+    )
+
+    plant = models.ForeignKey(
+        'organizations.Plant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_returns'
+    )
+
+    return_date = models.DateField()
+
+    issue = models.ForeignKey(
+        'PPEIssueManagement',
+        on_delete=models.PROTECT,
+        related_name='ppe_returns'
+    )
+
+    ppe_item = models.ForeignKey(
+        'PPEItem',
+        on_delete=models.PROTECT
+    )
+
+    available_qty = models.PositiveIntegerField(
+        default=0
+    )
+
+    return_to = models.CharField(
+        max_length=20,
+        choices=RETURN_TO_CHOICES
+    )
+
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_return_employee'
+    )
+
+    contractor_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
+
+    contractor_department = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
+
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    size = models.ForeignKey(
+        'PPESizeQuantity',
+        on_delete=models.PROTECT
+    )
+
+    assigned_qty = models.PositiveIntegerField(
+        default=0
+    )
+
+    return_qty = models.PositiveIntegerField()
+
+    remarks = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_return_created'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_return_updated'
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        db_table = 'ppe_return_management'
+        ordering = ['-id']
+
+    def __str__(self):
+        return self.return_no or f"Return-{self.pk}"
+
+    # ------------------------------------------------
+    # Return Number
+    # ------------------------------------------------
+
+    @staticmethod
+    def generate_return_no():
+        last = PPEReturnManagement.objects.order_by('-id').first()
+
+        if last and last.return_no:
+            try:
+                num = int(last.return_no.replace('PPE-RET-', '')) + 1
+            except ValueError:
+                num = 1
+        else:
+            num = 1
+
+        return f'PPE-RET-{num:03d}'
+
+    # ------------------------------------------------
+    # Return Group Number
+    # ------------------------------------------------
+
+    @staticmethod
+    def generate_return_group_no():
+
+        last = (
+            PPEReturnManagement.objects
+            .exclude(return_group_no__isnull=True)
+            .exclude(return_group_no='')
+            .order_by('-id')
+            .first()
+        )
+
+        if last and last.return_group_no:
+
+            try:
+                num = int(
+                    last.return_group_no.split('-')[-1]
+                ) + 1
+
+            except (
+                ValueError,
+                IndexError
+            ):
+                num = 1
+
+        else:
+            num = 1
+
+        return f'PPE-RET-{num:04d}'
+
+    # ------------------------------------------------
+    # Validation
+    # ------------------------------------------------
+
+    def clean(self):
+
+        if not self.issue:
+            return
+
+        if self.return_to != self.issue.issue_to:
+
+            raise ValidationError({
+                'return_to':
+                'Return To must match Issue To.'
+            })
+
+        returned_qty = (
+            PPEReturnManagement.objects
+            .filter(issue=self.issue)
+            .exclude(pk=self.pk)
+            .aggregate(
+                total=Sum('return_qty')
+            )['total'] or 0
+        )
+
+        balance_qty = (
+            self.issue.quantity_issue -
+            returned_qty
+        )
+
+        if self.return_qty > balance_qty:
+
+            raise ValidationError({
+                'return_qty':
+                f'Only {balance_qty} quantity can be returned.'
+            })
+
+    # ------------------------------------------------
+    # Save
+    # ------------------------------------------------
+
+    def save(self, *args, **kwargs):
+
+        if not self.return_no:
+
+            self.return_no = (
+                self.generate_return_no()
+            )
+
+        if self.issue:
+
+            self.plant = self.issue.plant
+
+            self.ppe_item = (
+                self.issue.ppe_item
+            )
+
+            self.return_to = (
+                self.issue.issue_to
+            )
+
+            self.employee = (
+                self.issue.employee
+            )
+
+            self.contractor_name = (
+                self.issue.contractor_name
+            )
+
+            self.contractor_department = (
+                self.issue.contractor_department
+            )
+
+            self.department = (
+                self.issue.department
+            )
+
+            self.size = (
+                self.issue.size
+            )
+
+            self.assigned_qty = (
+                self.issue.quantity_issue
+            )
+
+            self.available_qty = (
+                PPESizeQuantity.objects
+                .filter(
+                    ppe_item=self.issue.ppe_item,
+                    plant=self.issue.plant
+                )
+                .aggregate(
+                    total=Sum(
+                        'available_quantity'
+                    )
+                )['total'] or 0
+            )
+
+        # self.full_clean()
+
+        super().save(*args, **kwargs)
+
+    # ------------------------------------------------
+    # Total Returned
+    # ------------------------------------------------
+
+    @property
+    def total_returned_qty(self):
+
+        return (
+            PPEReturnManagement.objects
+            .filter(issue=self.issue)
+            .aggregate(
+                total=Sum('return_qty')
+            )['total'] or 0
+        )
+
+    # ------------------------------------------------
+    # Pending Qty
+    # ------------------------------------------------
+
+    @property
+    def pending_qty(self):
+
+        return (
+            self.issue.quantity_issue -
+            self.total_returned_qty
+        )

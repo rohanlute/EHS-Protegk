@@ -1,17 +1,17 @@
 {% extends 'base/base.html' %}
 {% block title %}Create Stock{% endblock %}
 {% block page_title %}Add Stock{% endblock %}
-
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">Create Stock</li>
+{% endblock %}
 {% block content %}
-
 <div class="container">
-
     <!-- ===================== -->
     <!-- STEP 1: GET PPE ITEM -->
     <!-- ===================== -->
     <form method="GET">
         <div class="row g-3">
-
             <div class="col-md-4">
                 <label>PPE Item</label>
                 <select name="ppe_item" class="form-control" onchange="this.form.submit()">
@@ -24,12 +24,9 @@
                     {% endfor %}
                 </select>
             </div>
-
         </div>
     </form>
-
     <br>
-
     <!-- ===================== -->
     <!-- STEP 2: POST FORM -->
     <!-- ===================== -->
@@ -57,68 +54,74 @@
                 <label>Transaction Type</label>
                 {{ form.transaction_type }}
             </div>
-
+            <div class="col-md-4">
+                <label>Plant</label>
+                <select name="plant" class="form-control" required>
+                    <option value="">Select Plant</option>
+                    {% for plant in plants %}
+                        <option value="{{ plant.id }}"
+                            {% if selected_plant and selected_plant.id == plant.id %}
+                                selected
+                            {% endif %}>
+                            {{ plant.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
 
         <br>
 
         <!-- SIZE TABLE -->
         <table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Size</th>
-            <th>Quantity</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% if sizes %}
-            {% for s in sizes %}
+            <thead>
                 <tr>
+                    <th>Size</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
 
+            <tbody>
+                {% for s in sizes %}
+                <tr>
                     <td>
-                        <input
-                            type="hidden"
-                            name="size_id[]"
-                            value="{{ s.id }}"
-                        >
-
+                        <input type="hidden" name="size_id[]" value="{{ s.id }}">
                         {{ s.size }}
                     </td>
-
                     <td>
                         <input
                             type="number"
                             name="qty[]"
                             class="form-control qty"
                             min="0"
-                            value="0"
+                            value="{{ s.stock_quantity|default:'0' }}"
                         >
                     </td>
-
-
                 </tr>
-            {% endfor %}
-        {% endif %}
-    </tbody>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center">
+                        No sizes available
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
 
-    <tfoot>
-        <tr>
-            <th>Total</th>
-
-            <th>
-                <input
-                    type="text"
-                    id="totalQty"
-                    class="form-control"
-                    readonly
-                >
-            </th>
-
-            <th></th>
-        </tr>
-    </tfoot>
-</table>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    <th>
+                        <input
+                            type="text"
+                            id="totalQty"
+                            class="form-control"
+                            readonly
+                            value="0"
+                        >
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
         <!-- DATE + REFERENCE -->
         <div class="row g-3">
 
