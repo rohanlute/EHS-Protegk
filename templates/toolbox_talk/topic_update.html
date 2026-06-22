@@ -1,0 +1,606 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Update Toolbox Talk Topic{% endblock %}
+{% block page_title %}Update Toolbox Talk Topic{% endblock %}
+
+{% block breadcrumb %}
+
+<li class="breadcrumb-item"> <a href="{% url 'dashboards:home' %}"> Home </a> </li>
+<li class="breadcrumb-item"> <a href="{% url 'toolbox_talk:topic_list' %}"> Toolbox Talk Topics </a> </li>
+<li class="breadcrumb-item active"> Update Topic </li>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+<div class="col-md-12">
+    <form method="post" enctype="multipart/form-data" novalidate onsubmit="disableSubmit(this);">
+        {% csrf_token %}
+        <!-- Topic Information -->
+        <div class="ehs-card mb-4"> <!-- Start of Topic Information card  -->
+            <div class="card-header"> 
+                <h3 class="card-title"> <i class="fas fa-file-alt"></i> Topic Information </h3>
+            </div> <!-- End of card header of Topic Information card  -->
+            <div class="card-body">
+                <div class="row"> <!-- Start of first row inside Topic Information card  -->
+                    <div class="col-md-8"> <!-- Start of Topic Title column  -->
+                        <div class="form-group">
+                            <label> Topic Title <span class="text-danger">*</span> </label>
+                            {{ form.topic_title }}
+                            {% if form.topic_title.errors %}
+                                <div class="text-danger"> {{ form.topic_title.errors }} </div>
+                            {% endif %}
+                        </div>
+                    </div> <!-- End of Topic Title column  -->
+
+                    <div class="col-md-4"> <!-- Start of Topic Category column  -->
+                        <div class="form-group">
+                            <label>  Category  <span class="text-danger">*</span> </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger"> {{ form.category.errors }} </div>
+                            {% endif %}
+                        </div> 
+                    </div> <!-- End of Topic Category column  -->
+
+                </div>  <!-- End of first row inside Topic Information card  -->
+
+                <div class="row"> <!-- Start of second row inside Topic Information card  -->
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label> Description </label>
+                            {{ form.description }}
+                        </div> <!-- End of form-group for Description field  -->
+                    </div> <!-- End of Description column  -->
+
+                </div> <!-- End of second row inside Topic Information card  -->
+
+            </div> <!-- End of Card body of Topic Information card  -->
+
+        </div> <!-- End of  "EHS CARD" for Topic Information card  -->
+
+        <!-- One Entire EHS-CARD IS ENDED WITH ALL its divs closed   -->
+
+
+<!-- Toolbox Talk Details -->
+
+<div class="ehs-card mb-4">
+    <div class="card-header">
+        <h3 class="card-title"> Topic Details </h3>
+    </div>
+    <div class="card-body">
+          <div class="form-group mt-4">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover" id="details-table">
+            <thead>
+                <tr>
+                    <th width="5%"> Sr No </th>
+                    <th width="25%">Safety Point </th>
+                    <th width="25%"> Learning Objective </th>
+                    <th width="15%"> Reference Document</th>
+                    <th width="30%">Attachment</th>
+                    <th width="5%"> Action </th>
+                </tr>
+            </thead>
+
+            <tbody id="details-body">
+
+{% for detail in topic_details %}
+
+<tr class="detail-row">
+
+    <td class="row-number">
+
+        {{ forloop.counter }}
+
+    </td>
+
+    <td>
+
+        <textarea
+            name="safety_point"
+            class="form-control"
+            rows="2">{{ detail.safety_point }}</textarea>
+
+    </td>
+
+    <td>
+
+        <textarea
+            name="learning_objective"
+            class="form-control"
+            rows="2">{{ detail.learning_objective }}</textarea>
+
+    </td>
+
+    <td>
+
+        <input
+            type="text"
+            name="reference_document"
+            class="form-control"
+            value="{{ detail.reference_document }}">
+
+    </td>
+
+    <td>
+
+        <select
+            name="attachment_type"
+            class="form-control attachment-type">
+
+            <option value="">
+                Select Type
+            </option>
+
+            <option value="FILE"
+                {% if detail.attachment_type == 'FILE' %}
+                    selected
+                {% endif %}>
+
+                File
+
+            </option>
+
+            <option value="URL"
+                {% if detail.attachment_type == 'URL' %}
+                    selected
+                {% endif %}>
+
+                URL
+
+            </option>
+
+        </select>
+
+        <div class="file-container mt-2"
+             {% if detail.attachment_type != 'FILE' %}
+                style="display:none;"
+             {% endif %}>
+
+            {% if detail.attachment_file %}
+
+                <a href="{{ detail.attachment_file.url }}"
+                   target="_blank"
+                   class="btn btn-sm btn-info mb-2">
+
+                    View Existing File
+
+                </a>
+
+            {% endif %}
+
+            <input
+                type="file"
+                name="attachment_file"
+                class="form-control">
+
+        </div>
+
+        <div class="url-container mt-2"
+             {% if detail.attachment_type != 'URL' %}
+                style="display:none;"
+             {% endif %}>
+
+            <input
+                type="url"
+                name="attachment_url"
+                class="form-control"
+                value="{{ detail.attachment_url }}"
+                placeholder="Paste URL">
+
+        </div>
+
+    </td>
+
+    <td class="text-center">
+
+        <button
+            type="button"
+            class="btn btn-danger btn-sm delete-row">
+
+            <i class="fas fa-trash"></i>
+
+        </button>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr class="detail-row">
+
+    <td class="row-number">
+
+        1
+
+    </td>
+
+    <td>
+
+        <textarea
+            name="safety_point"
+            class="form-control"
+            rows="2"></textarea>
+
+    </td>
+
+    <td>
+
+        <textarea
+            name="learning_objective"
+            class="form-control"
+            rows="2"></textarea>
+
+    </td>
+
+    <td>
+
+        <input
+            type="text"
+            name="reference_document"
+            class="form-control">
+
+    </td>
+
+    <td>
+
+        <select
+            name="attachment_type"
+            class="form-control attachment-type">
+
+            <option value="">
+                Select Type
+            </option>
+
+            <option value="FILE">
+                File
+            </option>
+
+            <option value="URL">
+                URL
+            </option>
+
+        </select>
+
+        <div class="file-container mt-2"
+             style="display:none;">
+
+            <input
+                type="file"
+                name="attachment_file"
+                class="form-control">
+
+        </div>
+
+        <div class="url-container mt-2"
+             style="display:none;">
+
+            <input
+                type="url"
+                name="attachment_url"
+                class="form-control">
+
+        </div>
+
+    </td>
+
+    <td class="text-center">
+
+        <button
+            type="button"
+            class="btn btn-danger btn-sm delete-row">
+
+            <i class="fas fa-trash"></i>
+
+        </button>
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+        </table>
+
+    </div> <!-- closing div of entire table -->
+
+    <!-- Add 2nd/new row Row Button -->    
+    <button type="button" id="add-row" class="btn btn-primary mt-2">
+        <i class="fas fa-plus"></i>  Add Row
+    </button>
+
+    </div> <!-- End of card body of Toolbox Talk Details card  -->
+
+</div> <!-- End of EHS-CARD Toolbox Talk Details card  -->
+
+
+
+<!-- Status start card -->
+<div class="ehs-card mb-4">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-toggle-on"></i> Status </h3>
+    </div>
+    <div class="card-body">
+        <div class="form-check"> {{ form.is_active }} <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Active</label></div>
+    </div>
+</div> <!-- End of Status card  -->
+
+
+
+
+<!--  start of Actions card  -->
+<div class="ehs-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'toolbox_talk:topic_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Update Topic
+            </button>
+        </div>
+    </div>
+</div> <!-- End of Actions card  -->
+</form> 
+</div>
+</div>
+
+
+
+
+<script>
+document.addEventListener(
+    'change',
+    function(event){
+
+        if(
+            event.target.classList.contains(
+                'attachment-type'
+            )
+        ){
+
+            const row =
+                event.target.closest('tr');
+
+            const fileContainer =
+                row.querySelector(
+                    '.file-container'
+                );
+
+            const urlContainer =
+                row.querySelector(
+                    '.url-container'
+                );
+
+            fileContainer.style.display =
+                'none';
+
+            urlContainer.style.display =
+                'none';
+
+            if(
+                event.target.value ===
+                'FILE'
+            ){
+
+                fileContainer.style.display =
+                    'block';
+
+            }
+
+            if(
+                event.target.value ===
+                'URL'
+            ){
+
+                urlContainer.style.display =
+                    'block';
+
+            }
+
+        }
+
+    }
+);
+
+
+
+
+
+
+
+
+
+
+
+function disableSubmit(form)
+{
+    const btn = form.querySelector(
+        'button[type="submit"]'
+    );
+
+    if (btn.disabled)
+    {
+        return false;
+    }
+
+    btn.disabled = true;
+
+    btn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    return true;
+}
+
+function renumberRows()
+{
+    document
+    .querySelectorAll('.detail-row')
+    .forEach(function(row, index){
+
+        row.querySelector(
+            '.row-number'
+        ).innerText = index + 1;
+
+    });
+}
+
+document
+.getElementById('add-row')
+.addEventListener(
+    'click',
+    function(){
+
+        const tbody =
+            document.getElementById(
+                'details-body'
+            );
+
+        const row =
+            document.createElement(
+                'tr'
+            );
+
+        row.className =
+            'detail-row';
+
+        row.innerHTML = `
+
+            <td class="row-number"></td>
+
+            <td>
+
+                <textarea
+                    name="safety_point"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Enter Safety Point"></textarea>
+
+            </td>
+
+            <td>
+
+                <textarea
+                    name="learning_objective"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Enter Learning Objective"></textarea>
+
+            </td>
+
+            <td>
+
+                <input
+                    type="text"
+                    name="reference_document"
+                    class="form-control"
+                    placeholder="SOP / Policy / Work Instruction">
+
+            </td>
+
+            <td>
+
+                <select
+                    name="attachment_type"
+                    class="form-control attachment-type mb-2">
+
+                    <option value="">
+                        Select Type
+                    </option>
+
+                    <option value="FILE">
+                        File
+                    </option>
+
+                    <option value="URL">
+                        URL
+                    </option>
+
+                </select>
+
+                <div class="file-container" style="display:none;">
+                    <input type="file" name="attachment_file" class="form-control mb-2">
+                </div>
+
+                <div class="url-container" style="display:none;">
+                    <input type="url" name="attachment_url" class="form-control mt-2" placeholder="Paste URL">
+                </div>
+
+            </td>
+
+            <td class="text-center">
+
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm delete-row">
+
+                    <i class="fas fa-trash"></i>
+
+                </button>
+
+            </td>
+
+        `;
+
+        tbody.appendChild(
+            row
+        );
+
+        renumberRows();
+
+    }
+);
+
+document.addEventListener(
+    'click',
+    function(event){
+
+        if(
+            event.target.closest(
+                '.delete-row'
+            )
+        ){
+
+            const rows =
+                document.querySelectorAll(
+                    '.detail-row'
+                );
+
+            if(
+                rows.length === 1
+            ){
+
+                alert(
+                    'At least one detail row is required.'
+                );
+
+                return;
+
+            }
+
+            if(
+                confirm(
+                    'Are you sure you want to remove this row?'
+                )
+            ){
+
+                event.target
+                    .closest('tr')
+                    .remove();
+
+                renumberRows();
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

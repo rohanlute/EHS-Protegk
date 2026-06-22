@@ -1,0 +1,360 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+Toolbox Talk Topics
+{% endblock %}
+
+{% block page_title %}
+Toolbox Talk Topics
+{% endblock %}
+
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">
+        Home
+    </a>
+</li>
+
+<li class="breadcrumb-item active">
+    Toolbox Talk Topics
+</li>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="col-md-12">
+
+        <div class="ehs-card">
+
+            <div class="card-header">
+
+                <h3 class="card-title">
+
+                    <i class="fas fa-list"></i>
+
+                    Toolbox Talk Topic List
+
+                </h3>
+
+                <div class="card-tools">
+
+                    <a href="{% url 'toolbox_talk:topic_create' %}"
+                       class="btn btn-primary btn-sm">
+
+                        <i class="fas fa-plus"></i>
+
+                        Create Topic
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="card-body">
+
+                <!-- Filters -->
+
+                <form method="get">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <input
+                                    type="text"
+                                    name="search"
+                                    class="form-control"
+                                    placeholder="Search Topic Title / Topic Code"
+                                    value="{{ search }}">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <select
+                                    name="category"
+                                    class="form-control">
+
+                                    <option value="">
+                                        All Categories
+                                    </option>
+
+                                    {% for category in categories %}
+
+                                    <option
+                                        value="{{ category.id }}"
+                                        {% if selected_category == category.id|stringformat:"s" %}
+                                            selected
+                                        {% endif %}>
+
+                                        {{ category.category_name }}
+
+                                    </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <select
+                                    name="status"
+                                    class="form-control">
+
+                                    <option value="">
+                                        All Status
+                                    </option>
+
+                                    <option value="active"
+                                    {% if selected_status == 'active' %}
+                                    selected
+                                    {% endif %}>
+                                    Active
+                                </option>
+                                <option value="inactive"
+                                {% if selected_status == 'inactive' %}
+                                selected
+                                {% endif %}>
+                                Inactive
+                            </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary btn-block">
+
+                                <i class="fas fa-search"></i>
+
+                                Search
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <!-- Table -->
+
+                <div class="table-responsive">
+                    <!-- Table -->
+
+<div class="table-responsive">
+
+
+<table class="table table-bordered table-hover align-middle">
+
+    <thead>
+
+        <tr>
+
+            <th width="5%">Sr No</th>
+
+            <th>Topic Code</th>
+
+            <th>Topic Title</th>
+
+            <th>Category</th>
+
+            <th>Status</th>
+
+            <th width="15%">Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for topic in page_obj %}
+
+        <tr>
+
+            <td>
+
+                {{ page_obj.start_index|add:forloop.counter0 }}
+
+            </td>
+
+            <td>
+
+                {{ topic.topic_code }}
+
+            </td>
+
+            <td>
+
+                {{ topic.topic_title }}
+
+            </td>
+
+            <td>
+
+                {{ topic.category.category_name }}
+
+            </td>
+
+            <td>
+
+                {% if topic.is_active %}
+
+                    <span class="badge bg-success">
+
+                        Active
+
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-danger">
+
+                        Inactive
+
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+            
+
+
+            <td class="text-center">
+
+                <a href="{% url 'toolbox_talk:topic_view' topic.pk %}"
+                   class="btn btn-info btn-sm">
+
+                    <i class="fas fa-eye"></i>
+
+                </a>
+
+                <a href="{% url 'toolbox_talk:topic_update' topic.pk %}"
+                   class="btn btn-warning btn-sm">
+
+                    <i class="fas fa-edit"></i>
+
+                </a>
+
+                <a href="{% url 'toolbox_talk:topic_delete' topic.pk %}"
+                   class="btn btn-danger btn-sm">
+
+                    <i class="fas fa-trash"></i>
+
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% empty %}
+
+        <tr>
+
+            <td colspan="9"
+                class="text-center text-muted">
+
+                No Toolbox Talk Topics Found
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+
+</div>
+
+<!-- Pagination -->
+
+{% if page_obj.has_other_pages %}
+
+<nav class="mt-3">
+
+
+<ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+
+    <li class="page-item">
+
+        <a class="page-link"
+           href="?page={{ page_obj.previous_page_number }}">
+
+            Previous
+
+        </a>
+
+    </li>
+
+    {% endif %}
+
+    <li class="page-item active">
+
+        <span class="page-link">
+
+            {{ page_obj.number }}
+
+        </span>
+
+    </li>
+
+    {% if page_obj.has_next %}
+
+    <li class="page-item">
+
+        <a class="page-link"
+           href="?page={{ page_obj.next_page_number }}">
+
+            Next
+
+        </a>
+
+    </li>
+
+    {% endif %}
+
+</ul>
+
+
+
+</nav>
+
+{% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
