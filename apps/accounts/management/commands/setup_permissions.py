@@ -25,7 +25,6 @@ class Command(BaseCommand):
             ('INJURY_DASHBOARD', 'Access Injury Dashboard', 'Can view injury dashboard'),
             ('HAZARD_DASHBOARD', 'Access Hazard Dashboard', 'Can view hazard dashboard'),
             ('INSPECTION_DASHBOARD', 'Access Inspection Dashboard', 'Can view inspection dashboard'),
-
             # Emergency Permissions
             ('CREATE_EMERGENCY_REPORT', 'Create Emergency Report', 'Can create/report new emergency reports'),
             ('VIEW_EMERGENCY_REPORT', 'View Emergency Report', 'Can view emergency report details'),
@@ -51,6 +50,7 @@ class Command(BaseCommand):
             ('EDIT_INSPECTION', 'Edit Inspection', 'Can edit inspection reports'),
             ('DELETE_INSPECTION', 'Delete Inspection', 'Can delete inspections'),
             ('VIEW_INSPECTION', 'View Inspection', 'Can view inspection details'),
+            ('EXPORT_INSPECTION_PDF', 'Export Inspection PDF', 'Can export inspection reports'),
             ('APPROVE_INSPECTION', 'Approve Inspection', 'Can approve inspection reports'),
             ('MANAGE_INSPECTION_CONFIGURATION', 'Manage Inspection Configuration', ''),
             
@@ -132,7 +132,7 @@ class Command(BaseCommand):
                 # 'APPROVE_HAZARD', 'CLOSE_HAZARD',
                 
                 # Full inspection access
-                'CREATE_INSPECTION', 'EDIT_INSPECTION', 'VIEW_INSPECTION',
+                'CREATE_INSPECTION', 'EDIT_INSPECTION', 'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF',
                 # 'APPROVE_INSPECTION',
                 
                 # Module access
@@ -159,7 +159,7 @@ class Command(BaseCommand):
                 # 'APPROVE_HAZARD',  # HODs can approve hazards
                 
                 # Inspection access
-                'VIEW_INSPECTION', #'APPROVE_INSPECTION',
+                'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF', #'APPROVE_INSPECTION',
                 
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
@@ -187,7 +187,7 @@ class Command(BaseCommand):
                 # 'APPROVE_HAZARD',
                 
                 # Inspection and permits
-                'VIEW_INSPECTION', 'APPROVE_PERMIT',
+                'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF', 'APPROVE_PERMIT',
                 
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',

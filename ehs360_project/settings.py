@@ -53,8 +53,8 @@ INSTALLED_APPS = [
     'apps.audits.apps.AuditsConfig',
     'apps.legal_compliance',
     'apps.emergency.apps.EmergencyConfig',
+    'apps.PPE.apps.PpeConfig',
     'apps.toolbox_talk.apps.ToolboxTalkConfig',
-    
 
     'django.contrib.admin',
     'django.contrib.auth',

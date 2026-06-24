@@ -24,7 +24,7 @@ import json
 from .models import MonthlyIndicatorData, EnvironmentalQuestion, UnitCategory
 from collections import Counter
 from .models import MonthlyIndicatorAttachment
-
+from datetime import datetime
 # =========================================================
 # API ENDPOINTS FOR QUESTIONS MANAGER
 # =========================================================
@@ -451,8 +451,48 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
                 'unit': d.unit  # Store the Unit object
             }
 
-        MONTHS = MonthlyIndicatorData.MONTH_CHOICES
+        # MONTHS = MonthlyIndicatorData.MONTH_CHOICES
 
+        today = datetime.now()
+        current_year = today.year
+
+        current_month = today.strftime("%b").upper()
+        from calendar import month_abbr
+
+        current_month_num = today.month
+        prev_month_num = current_month_num - 1 if current_month_num > 1 else 12
+        previous_month = month_abbr[prev_month_num].upper()
+
+        current_day = today.day
+
+        is_admin = request.user.is_superuser or request.user.is_staff or getattr(request.user, 'is_admin_user', False)
+        FREEZE_DAY = 10
+
+        # If current month is Jan–Mar → FY started last year
+        if today.month < 4:
+            fy_start_year = current_year - 1
+        else:
+            fy_start_year = current_year
+
+        FY_MONTH_ORDER = [
+            "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
+            "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"
+        ]
+
+        month_dict = dict(MonthlyIndicatorData.MONTH_CHOICES)
+
+        MONTHS = []
+        for m in FY_MONTH_ORDER:
+            month_name = month_dict.get(m)
+
+            # Jan–Mar → next year
+            if m in ["JAN", "FEB", "MAR"]:
+                year = fy_start_year + 1
+            else:
+                year = fy_start_year
+
+            MONTHS.append((m, f"{month_name} {year}"))
+            
         # Build question + month data for template
         questions_with_data = []
         for q in questions:
@@ -471,6 +511,23 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
 
             month_rows = []
             for month_code, month_name in MONTHS:
+                if is_admin:
+                    is_editable = True
+                else:
+                    is_editable = (month_code == previous_month and current_day <= FREEZE_DAY)
+                    # This for testing Freeze data "Monthly Testing and Date "
+                    # TEST_MODE = True
+
+                    # if TEST_MODE:
+                    #     current_month = "NOV"
+                    #     previous_month = "OCT"
+                    # else:
+                    #     current_month = today.strftime("%b").upper()
+                    #     prev_month_num = current_month_num - 1 if current_month_num > 1 else 12
+                    #     previous_month = month_abbr[prev_month_num].upper()
+                    # is_editable = (month_code == previous_month and current_day <= FREEZE_DAY)
+                    # This for testing Freeze data
+                    # is_editable = (month_code == previous_month and 1 <= current_day <= 7)
                 month_key = month_code.lower()
                 value = ''
                 saved_unit_name = default_unit_name
@@ -483,8 +540,10 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
 
                 # AUTO data 
                 else:
-                    if month_name in auto_data.get(q.question_text, {}):
-                        value = auto_data[q.question_text][month_name]
+                    base_month_name = month_name.split(" ")[0]
+                    if base_month_name in auto_data.get(q.question_text, {}):
+                        value = auto_data[q.question_text][base_month_name]
+
                         saved_unit_name = "Count"
 
                 # Find the unit ID for the saved unit
@@ -503,7 +562,8 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
                     "value": value,
                     "saved_unit_id": saved_unit_id,
                     "saved_unit_name": saved_unit_name,
-                    "attachment":attachments_dict.get((q.id,month_code))
+                    "attachment":attachments_dict.get((q.id,month_code)),
+                    "is_editable": is_editable
                 })
 
             questions_with_data.append({
@@ -544,7 +604,28 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
             return redirect("environmental:plant-entry")
 
         questions = self.get_questions()
-        MONTHS = MonthlyIndicatorData.MONTH_CHOICES
+        # ✅ ADD THIS BLOCK
+        today = datetime.now()
+        current_month = today.strftime("%b").upper()
+        current_day = today.day
+
+        from calendar import month_abbr
+
+        current_month_num = today.month
+        prev_month_num = current_month_num - 1 if current_month_num > 1 else 12
+        previous_month = month_abbr[prev_month_num].upper()
+
+        is_admin = request.user.is_superuser or request.user.is_staff or getattr(request.user, 'is_admin_user', False)
+        FREEZE_DAY = 10
+
+        # ✅ Replace MONTHS with FY order
+        FY_MONTH_ORDER = [
+            "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
+            "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"
+        ]
+
+        MONTHS = [(m, dict(MonthlyIndicatorData.MONTH_CHOICES).get(m)) for m in FY_MONTH_ORDER]
+
         saved_count = 0
 
         for q in questions:
@@ -555,6 +636,11 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
             slug = self.slugify_field(q.question_text)
             default_unit = q.default_unit  # fallback Unit object
             for month_code, month_name in MONTHS:
+                if not is_admin:
+                    if not (month_code == previous_month and current_day <= FREEZE_DAY):
+                    # This for testing Freeze data
+                    # if not (month_code == current_month and 9 <= current_day <= 16):
+                        continue
                 value_field = f"{slug}_{month_code.lower()}"
                 unit_field = f"{slug}_{month_code.lower()}_unit"
 
@@ -583,9 +669,13 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
                     raw_numeric_value = float(value.replace(",", ""))
 
                     # Apply conversion rate if the unit is not the base unit
-                    if unit_obj and unit_obj.base_unit != unit_obj.name:
-                        raw_numeric_value = raw_numeric_value * float(unit_obj.conversion_rate)
+                    # if unit_obj and unit_obj.base_unit != unit_obj.name:
+                    #     raw_numeric_value = raw_numeric_value * float(unit_obj.conversion_rate)
 
+                    if unit_obj and unit_obj.base_unit != unit_obj.name:
+                        # Only convert if value is small (means user input, not stored value)
+                        if raw_numeric_value < float(unit_obj.conversion_rate):
+                            raw_numeric_value = raw_numeric_value * float(unit_obj.conversion_rate)
                     # ✅ Convert to Integer by rounding to the nearest whole number
                     # This ensures that 10.5 becomes 11 and 10.4 becomes 10
                     final_integer_value = int(round(raw_numeric_value))
@@ -1055,6 +1145,31 @@ class GetCategoryUnitsAPIView(LoginRequiredMixin, View):
             }, status=500)
 
 
+# Sequence Change.
+class UpdateQuestionSequenceView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+
+            question_ids = data.get("question_ids", [])
+
+            for index, question_id in enumerate(question_ids, start=1):
+                EnvironmentalQuestion.objects.filter(
+                    id=question_id
+                ).update(order=index)
+
+            return JsonResponse({
+                "success": True
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            })
+        
+
 # class GetSourceFieldsAPIView(LoginRequiredMixin, View):
 #     """
 #     API to get available fields and their choices for a source type
@@ -1138,132 +1253,23 @@ class PlantDataDisplayView(LoginRequiredMixin, View):
         if not plant:
             return render(request, "no_plant_assigned.html")
 
-        questions = EnvironmentalQuestion.objects.filter(
-            is_active=True
-        ).select_related('unit_category', 'default_unit').order_by("is_system", "order", "id")
-
-        MONTHS = MonthlyIndicatorData.MONTH_CHOICES
-
-        # Manual data
-        saved_data = MonthlyIndicatorData.objects.filter(
-            plant=plant
-        ).select_related('indicator')
-
-        manual_dict = {}
-        for d in saved_data:
-            if not d.indicator_id:
-                continue
-            manual_dict.setdefault(d.indicator_id, {})
-            manual_dict[d.indicator_id][d.month] = d.value
-
-        # ✅ START: Fetch Attachments efficiently
-        attachments = MonthlyIndicatorAttachment.objects.filter(plant=plant).select_related('indicator')
-        attachments_dict = {}
-        for att in attachments:
-            attachments_dict.setdefault(att.indicator_id, {})
-            attachments_dict[att.indicator_id][att.month] = att
-        # ✅ END: Fetch Attachments efficiently
-
-        # Build display structure
+        report_data = build_environmental_report([plant], include_attachments=True)
         questions_data = []
-        for q in questions:
-            default_unit_name = q.default_unit.name if q.default_unit else "Count"
-            
-            month_values = []
-            total = Decimal("0")
-            has_values = False
-            
-            for month_code, month_name in MONTHS:
-
-                value = None
-                # ✅ Get the attachment for this cell
-                attachment = attachments_dict.get(q.id, {}).get(month_code)
-
-                # MANUAL QUESTION
-                if q.source_type == "MANUAL":
-                    value = manual_dict.get(q.id, {}).get(month_code)
-
-                # AUTOMATIC QUESTION
-                else:
-                    start_date = datetime(datetime.now().year, 
-                                          datetime.strptime(month_code, "%b").month, 1)
-                    
-                    if month_code == "DEC":
-                        end_date = datetime(datetime.now().year + 1, 1, 1)
-                    else:
-                        next_month = datetime.strptime(month_code, "%b").month + 1
-                        end_date = datetime(datetime.now().year, next_month, 1)
-
-                    model_map = {
-                        "INCIDENT": (Incident, "plant"),
-                        "HAZARD": (Hazard, "plant"),
-                        "INSPECTION": (InspectionSchedule, "plants"),
-                    }
-
-                    model_tuple = model_map.get(q.source_type)
-
-                    if model_tuple:
-                        model, plant_field = model_tuple
-
-                        if plant_field == "plants":
-                            plant_filter = {f"{plant_field}__id": plant.id}
-                        else:
-                            plant_filter = {plant_field: plant}
-
-                        filters = {
-                            **plant_filter,
-                            "created_at__gte": start_date,
-                            "created_at__lt": end_date,
-                        }
-
-                        if q.filter_field and q.filter_value:
-                            field = q.filter_field
-                            if q.source_type == "INSPECTION":
-                                if field == "inspection_type":
-                                    field = "template__inspection_type"
-                                elif field == "template":
-                                    field = "template_id"
-                            filters[field] = q.filter_value
-
-                        if q.filter_field_2 and q.filter_value_2:
-                            field = q.filter_field_2
-                            if q.source_type == "INSPECTION":
-                                if field == "inspection_type":
-                                    field = "template__inspection_type"
-                                elif field == "template":
-                                    field = "template_id"
-                            filters[field] = q.filter_value_2
-
-                        value = model.objects.filter(**filters).count()
-                
-                # ✅ Store value AND attachment together
-                month_values.append({
-                    "value": value if value not in [None, ""] else "-",
-                    "attachment": attachment
-                })
-
-                if value not in [None, "", "-"]:
-                    try:
-                        total += Decimal(str(value))
-                        has_values = True
-                    except (ValueError, TypeError):
-                        pass
-            
+        for row in report_data["plants_data"][0]["questions_data"]:
             questions_data.append({
-                "question": q.question_text,
-                "unit": default_unit_name,
-                "month_values": month_values,
-                "annual": f"{total}" if has_values else '-',
+                "question": row["question"],
+                "unit": row["unit"],
+                "month_values": [row["month_data"][month["label"]] for month in report_data["months"]],
+                "annual": row["annual"],
             })
 
-        context = {
+        return render(request, self.template_name, {
             "plant": plant,
             "user_plants": user_plants,
             "questions_data": questions_data,
-            "months": MONTHS,
-        }
+            "months": [(month["code"], month["label"]) for month in report_data["months"]],
+        })
 
-        return render(request, self.template_name, context)
 # =========================================================
 # ADMIN VIEW - ALL PLANTS DATA
 # =========================================================
@@ -1278,7 +1284,6 @@ class AdminAllPlantsDataView(LoginRequiredMixin, View):
     template_name = "data_collection/admin_all_plants.html"
 
     def get(self, request):
-        # ... (permission check code remains the same) ...
         if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'is_admin_user', False)):
             messages.error(request, "You don't have permission to access this page")
             return redirect("environmental:plant-entry")
@@ -1288,134 +1293,44 @@ class AdminAllPlantsDataView(LoginRequiredMixin, View):
         if not all_plants.exists():
             return render(request, self.template_name, {"no_plants": True})
 
-        questions = EnvironmentalQuestion.objects.filter(
-            is_active=True
-        ).select_related(
-            "unit_category", "default_unit"
-        ).order_by("is_system", "order", "id")
-
-        if not questions.exists():
+        questions = get_environmental_questions()
+        if not questions:
             return render(request, self.template_name, {"no_questions": True})
 
-        # ALL indicator data (queried once)
-        all_data = MonthlyIndicatorData.objects.filter(
-            indicator__isnull=False
-        ).select_related("plant", "indicator")
+        selected_plant_ids = request.GET.getlist("plant_ids")
+        selected_month = request.GET.get("month", "all")
+        selected_fy = request.GET.get("financial_year") or get_financial_year_label(get_financial_year_start_year())
+        all_months = get_financial_year_months(selected_fy)
 
-        # ✅ START: Fetch ALL attachments efficiently
-        all_attachments = MonthlyIndicatorAttachment.objects.select_related("plant", "indicator")
-        attachments_dict = {}
-        for att in all_attachments:
-            attachments_dict.setdefault(att.plant_id, {})
-            attachments_dict[att.plant_id].setdefault(att.indicator_id, {})
-            attachments_dict[att.plant_id][att.indicator_id][att.month] = att
-        # ✅ END: Fetch ALL attachments efficiently
+        selected_plants = list(all_plants.filter(id__in=selected_plant_ids)) if selected_plant_ids else list(all_plants)
+        if not selected_plants:
+            selected_plants = list(all_plants)
 
-        # Organize manual data in dictionary for performance
-        manual_dict = {}
-        for d in all_data:
-            manual_dict.setdefault(d.plant_id, {})
-            manual_dict[d.plant_id].setdefault(d.indicator_id, {})
-            manual_dict[d.plant_id][d.indicator_id][d.month] = d.value
+        aggregate_view = len(selected_plants) != 1
+        report_data = build_environmental_report(
+            plants=selected_plants,
+            fy_start_year=selected_fy,
+            selected_month=selected_month,
+            aggregate=aggregate_view,
+            include_attachments=not aggregate_view,
+        )
 
-        MONTHS = MonthlyIndicatorData.MONTH_CHOICES
-
-        plants_data = []
-
-        for plant in all_plants:
-            plant_questions_data = []
-
-            for q in questions:
-                unit_name = q.default_unit.name if q.default_unit else "Count"
-                month_data = {}
-                total = 0
-                has_values = False
-
-                for month_code, month_name in MONTHS:
-                    value = None
-                    # ✅ Get attachment for this cell
-                    attachment = attachments_dict.get(plant.id, {}).get(q.id, {}).get(month_code)
-
-                    # MANUAL QUESTION
-                    if q.source_type == "MANUAL":
-                        value = manual_dict.get(plant.id, {}).get(q.id, {}).get(month_code)
-                    # AUTOMATIC QUESTION
-                    else:
-                        # ... (automatic question logic remains the same) ...
-                        start_date = datetime(datetime.now().year,
-                                              datetime.strptime(month_code, "%b").month, 1)
-
-                        if month_code == "DEC":
-                            end_date = datetime(datetime.now().year + 1, 1, 1)
-                        else:
-                            next_month = datetime.strptime(month_code, "%b").month + 1
-                            end_date = datetime(datetime.now().year, next_month, 1)
-
-                        model_map = {"INCIDENT": (Incident, "plant"),"HAZARD": (Hazard, "plant"),"INSPECTION": (InspectionSchedule, "plants")}
-                        model_tuple = model_map.get(q.source_type)
-
-                        if model_tuple:
-                            model, plant_field = model_tuple
-                            if plant_field == "plants":
-                                plant_filter = {f"{plant_field}__id": plant.id}
-                            else:
-                                plant_filter = {plant_field: plant}
-
-                            filters = {**plant_filter,"created_at__gte": start_date,"created_at__lt": end_date}
-
-                            if q.filter_field and q.filter_value:
-                                field = q.filter_field
-                                if q.source_type == "INSPECTION":
-                                    if field == "inspection_type":
-                                        field = "template__inspection_type"
-                                    elif field == "template":
-                                        field = "template_id"
-                                filters[field] = q.filter_value
-
-                            if q.filter_field_2 and q.filter_value_2:
-                                field = q.filter_field_2
-                                if q.source_type == "INSPECTION":
-                                    if field == "inspection_type":
-                                        field = "template__inspection_type"
-                                    elif field == "template":
-                                        field = "template_id"
-                                filters[field] = q.filter_value_2
-
-                            value = model.objects.filter(**filters).count()
-                    
-                    # ✅ Store value and attachment together
-                    month_data[month_name] = {
-                        "value": value if value not in [None, ""] else "-",
-                        "attachment": attachment
-                    }
-
-                    if value not in [None, "", "-"]:
-                        try:
-                            total += Decimal(str(value))
-                            has_values = True
-                        except Exception:
-                            pass
-
-                plant_questions_data.append({
-                    "question": q.question_text,
-                    "unit": unit_name,
-                    "month_data": month_data,
-                    "annual": f"{total}" if has_values else "-",
-                })
-
-            plants_data.append({
-                "plant": plant,
-                "questions_data": plant_questions_data,
-            })
-
-        context = {
-            "plants_data": plants_data,
-            "months": [m[1] for m in MONTHS],
+        return render(request, self.template_name, {
+            "all_plants": all_plants,
+            "selected_plant_ids": [str(plant.id) for plant in selected_plants],
+            "selected_month": selected_month,
+            "selected_financial_year": selected_fy,
+            "financial_year_options": get_financial_year_options(),
+            "all_months": all_months,
+            "months": report_data["months"],
+            "questions_data": report_data["questions_data"] if aggregate_view else report_data["plants_data"][0]["questions_data"],
+            "display_title": "Combined Total" if aggregate_view else selected_plants[0].name,
+            "selected_plants": selected_plants,
             "total_plants": all_plants.count(),
-            "total_questions": questions.count(),
-        }
+            "selected_plants_count": len(selected_plants),
+            "total_questions": len(questions),
+        })
 
-        return render(request, self.template_name, context)
     
 class GetCategoryBaseUnitAPIView(LoginRequiredMixin, View):
     """
@@ -1448,7 +1363,7 @@ class GetCategoryBaseUnitAPIView(LoginRequiredMixin, View):
             }, status=500)
 
 
-
+from calendar import month_name
 class EnvironmentalDashboardView(LoginRequiredMixin, TemplateView):
     """
     Environmental Dashboard with strict access control and dynamic filtering.
@@ -1484,11 +1399,38 @@ class EnvironmentalDashboardView(LoginRequiredMixin, TemplateView):
         # Optimization: select_related to avoid N+1 queries on SQLite
         data_qs = []
         current_year = datetime.now().year
-        month_choices = MonthlyIndicatorData.MONTH_CHOICES
+        # month_choices = MonthlyIndicatorData.MONTH_CHOICES
+
+        today = datetime.now()
+        # FY start year
+        if today.month < 4:
+            fy_start_year = today.year - 1
+        else:
+            fy_start_year = today.year
+
+        FY_MONTH_ORDER = [
+            "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
+            "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"
+        ]
+
+        month_choices = []
+
+        for m in FY_MONTH_ORDER:
+            month_num = datetime.strptime(m, "%b").month
+
+            # Jan–Mar → next year
+            if m in ["JAN", "FEB", "MAR"]:
+                year = fy_start_year + 1
+            else:
+                year = fy_start_year
+
+            label = f"{month_name[month_num]} {year}"  
+            month_choices.append((m, label))
+
         updated_at = None
         for plant in accessible_plants:
             for q in questions:
-                for month_code, month_name in month_choices:
+                for month_code, month_label in month_choices:
 
                     # Apply user-selected filters
                     if selected_month_code and month_code != selected_month_code:
@@ -1570,11 +1512,20 @@ class EnvironmentalDashboardView(LoginRequiredMixin, TemplateView):
         context['cat_data_json'] = json.dumps(list(cat_counter.values()))
 
         # --- 6. DATA TABLE (Show ALL filtered data) ---
+        # context['data_entries'] = sorted(data_qs,key=lambda x: (x["plant"].name, x["indicator"].order))
+        # month_order = [m[0] for m in month_choices]
+        # trend_counter = Counter([e["month"] for e in data_qs])
+        # context['trend_labels_json'] = json.dumps([dict(month_choices).get(m) for m in month_order])
+        # context['trend_values_json'] = json.dumps([trend_counter.get(m, 0) for m in month_order])
         context['data_entries'] = sorted(data_qs,key=lambda x: (x["plant"].name, x["indicator"].order))
-        month_order = [m[0] for m in month_choices]
+        # --- Trend Chart (FY Order) ---
+        FY_MONTH_ORDER = [
+            "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
+            "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"
+        ]
         trend_counter = Counter([e["month"] for e in data_qs])
-        context['trend_labels_json'] = json.dumps([dict(month_choices).get(m) for m in month_order])
-        context['trend_values_json'] = json.dumps([trend_counter.get(m, 0) for m in month_order])
+        context['trend_labels_json'] = json.dumps([dict(month_choices).get(m) for m in FY_MONTH_ORDER])
+        context['trend_values_json'] = json.dumps([trend_counter.get(m, 0) for m in FY_MONTH_ORDER])
 
         # --- 7. FILTER OPTIONS ---
         # context['plants'] = Plant.objects.filter(is_active=True)
@@ -1583,12 +1534,11 @@ class EnvironmentalDashboardView(LoginRequiredMixin, TemplateView):
         context['selected_plant'] = selected_plant_id
         context['selected_month'] = selected_month_code
         context['has_active_filters'] = bool(selected_plant_id or selected_month_code)
-
+        print("context=========",context)
         return context
         
 class ExportExcelView(LoginRequiredMixin, View):
     def get(self, request):
-        months = [m[1] for m in MonthlyIndicatorData.MONTH_CHOICES]
         user = request.user
 
         if user.is_superuser or user.is_staff or user.is_admin_user:
@@ -1606,9 +1556,40 @@ class ExportExcelView(LoginRequiredMixin, View):
                 is_active=True
             )
 
-        plants_data = get_all_plants_environmental_data(plants)
+        selected_plant_ids = request.GET.getlist("plant_ids")
+        selected_month = request.GET.get("month", "all")
+        selected_fy = request.GET.get("financial_year") or get_financial_year_label(get_financial_year_start_year())
 
-        workbook = generate_environmental_excel(plants_data)
+        if selected_plant_ids:
+            plants = plants.filter(id__in=selected_plant_ids)
+
+        selected_plants = list(plants.order_by("name"))
+        if not selected_plants:
+            messages.error(request, "No matching plants found for export")
+            return redirect("environmental:admin-all-plants")
+
+        aggregate_view = len(selected_plants) != 1
+        report_data = build_environmental_report(
+            plants=selected_plants,
+            fy_start_year=selected_fy,
+            selected_month=selected_month,
+            aggregate=aggregate_view,
+            include_attachments=False,
+        )
+
+        if not aggregate_view:
+            report_data = {
+                "months": report_data["months"],
+                "questions_data": report_data["plants_data"][0]["questions_data"],
+            }
+
+        title = (
+            f"Environmental Data - {selected_plants[0].name}"
+            if len(selected_plants) == 1 else
+            f"Environmental Data - Combined Total ({len(selected_plants)} Plants)"
+        )
+
+        workbook = generate_environmental_excel(report_data, title=title)
 
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

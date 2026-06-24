@@ -3,16 +3,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Prefetch
+from django.db.models import Q, Count, Prefetch, Value
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.core.paginator import EmptyPage, Paginator
 from django.urls import reverse
 from django.utils import timezone
 from django.db import transaction
+from django.views import View
 from django.views.generic import TemplateView
 from django.db.models import Count, Avg
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.core.paginator import Paginator
 import json
@@ -20,14 +22,110 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import *
 from .forms import *
+from .utils import generate_inspection_pdf
 from apps.notifications.services import NotificationService
-from apps.organizations.models import Plant, Zone, Location, SubLocation
+from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
 
 
 
 # ====================================
 # DASHBOARD
 # ====================================
+
+
+def _build_scope_queryset(schedule_queryset, user_queryset, primary_id=None, child_model=None, child_filter=None):
+    if schedule_queryset.exists():
+        return schedule_queryset
+    if user_queryset.exists():
+        return user_queryset
+    if primary_id:
+        return child_model.objects.filter(pk=primary_id)
+    if child_model and child_filter:
+        return child_model.objects.filter(**child_filter)
+    return child_model.objects.none() if child_model else schedule_queryset.none()
+
+
+def _get_inspection_scope(schedule, user=None):
+    plants = schedule.plants.filter(is_active=True).order_by('name').distinct()
+    user_plant_ids = []
+
+    if user is not None:
+        user_plant_ids = [plant.id for plant in user.get_all_plants() if getattr(plant, 'is_active', True)]
+        if user_plant_ids:
+            plants = plants.filter(id__in=user_plant_ids)
+
+    zones = schedule.zones.filter(is_active=True)
+    if not zones.exists() and plants.exists():
+        zones = Zone.objects.filter(plant__in=plants, is_active=True)
+    zones = zones.order_by('name').distinct()
+
+    locations = schedule.locations.filter(is_active=True)
+    if not locations.exists() and zones.exists():
+        locations = Location.objects.filter(zone__in=zones, is_active=True)
+    locations = locations.order_by('name').distinct()
+
+    sublocations = schedule.sublocations.filter(is_active=True)
+    if not sublocations.exists() and locations.exists():
+        sublocations = SubLocation.objects.filter(location__in=locations, is_active=True)
+    sublocations = sublocations.order_by('name').distinct()
+
+    return {
+        'plants': plants,
+        'zones': zones,
+        'locations': locations,
+        'sublocations': sublocations,
+    }
+
+
+def _clone_schedule_as_scheduled(source_schedule, assignment_notes=None):
+    """
+    Create a fresh schedule record by copying the source schedule's data while
+    resetting lifecycle fields so the new record stays scheduled.
+    """
+    plants = list(source_schedule.plants.all())
+    zones = list(source_schedule.zones.all())
+    locations = list(source_schedule.locations.all())
+    sublocations = list(source_schedule.sublocations.all())
+    assigned_users = list(source_schedule.assigned_users.all())
+
+    new_schedule = InspectionSchedule.objects.get(pk=source_schedule.pk)
+    new_schedule.pk = None
+    new_schedule.id = None
+    new_schedule.schedule_code = None
+    new_schedule.status = 'SCHEDULED'
+    new_schedule.started_at = None
+    new_schedule.closed_at = None
+    new_schedule.reminder_sent = False
+    new_schedule.reminder_sent_at = None
+
+    today = timezone.now().date()
+    due_offset = max((source_schedule.due_date - source_schedule.scheduled_date).days, 0)
+    new_schedule.scheduled_date = today
+    new_schedule.due_date = today + timedelta(days=due_offset)
+
+    if source_schedule.scheduled_end_date:
+        end_offset = max(
+            (source_schedule.scheduled_end_date - source_schedule.scheduled_date).days,
+            due_offset,
+        )
+        new_schedule.scheduled_end_date = today + timedelta(days=end_offset)
+
+    if assignment_notes is not None:
+        new_schedule.assignment_notes = assignment_notes
+
+    # Save first so M2M fields can be restored on the new schedule instance.
+    new_schedule.save()
+
+    if new_schedule.status != 'SCHEDULED':
+        InspectionSchedule.objects.filter(pk=new_schedule.pk).update(status='SCHEDULED')
+        new_schedule.status = 'SCHEDULED'
+
+    new_schedule.plants.set(plants)
+    new_schedule.zones.set(zones)
+    new_schedule.locations.set(locations)
+    new_schedule.sublocations.set(sublocations)
+    new_schedule.assigned_users.set(assigned_users)
+    return new_schedule
 
 # @login_required
 # def inspection_dashboard(request):
@@ -732,7 +830,12 @@ def schedule_list(request):
     # User-based filtering
     if request.user.is_superuser or request.user.is_admin_user:
         pass
-    elif request.user.has_permission('CONDUCT_INSPECTION') or request.user.can_access_inspection_module:
+    # elif request.user.has_permission('CONDUCT_INSPECTION') or request.user.can_access_inspection_module:
+    #     user_plants = request.user.get_all_plants()
+    #     schedules = schedules.filter(plants__in=user_plants).distinct()
+    elif request.user.has_permission('CONDUCT_INSPECTION'):
+        schedules = schedules.filter(assigned_to=request.user)
+    elif request.user.can_access_inspection_module:
         user_plants = request.user.get_all_plants()
         schedules = schedules.filter(plants__in=user_plants).distinct()
     else:
@@ -761,12 +864,15 @@ def schedule_list(request):
             Q(assigned_users__last_name__icontains=search)
         )
     
-    schedules = schedules.distinct().order_by('-scheduled_date', '-created_at')
+    schedules = schedules.distinct().order_by('-created_at')
     
     paginator = Paginator(schedules, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    querydict = request.GET.copy()
+    querydict.pop('page', None)
+
     from apps.organizations.models import Plant
     plants = Plant.objects.filter(is_active=True)
     
@@ -783,7 +889,8 @@ def schedule_list(request):
         'selected_status': status,
         'selected_plant': plant_id,
         'selected_hod': assigned_to_id,
-        'search': search
+        'search': search,
+        'querystring': querydict.urlencode(),
     }
     return render(request, 'inspections/schedule_list.html', context)
 
@@ -848,18 +955,24 @@ def schedule_create(request):
                             department=form.cleaned_data.get('department'),
                             scheduled_date=form.cleaned_data.get('scheduled_date'),
                             due_date=form.cleaned_data.get('due_date'),
+                            scheduled_end_date=form.cleaned_data.get('scheduled_end_date'),
                             assignment_notes=form.cleaned_data.get('assignment_notes', ''),
                             status='SCHEDULED'
                         )
                         schedule.save()
 
-                        # Set M2M
-                        schedule.plants.set(plants)
-                        schedule.zones.set(zones)
-                        schedule.locations.set(locations)
-                        schedule.sublocations.set(sublocations)
-                        schedule.assigned_users.set(assigned_users)
+                        # Only assign plant related to user
+                        user_plants = plants.filter(id=user.plant.id) if user.plant else Plant.objects.none()
 
+                        schedule.plants.set(user_plants)
+
+                        schedule.zones.set(zones.filter(plant__in=user_plants))
+                        schedule.locations.set(locations.filter(zone__plant__in=user_plants))
+                        schedule.sublocations.set(
+                            sublocations.filter(location__zone__plant__in=user_plants)
+                        )
+
+                        schedule.assigned_users.set([user])
                         created_schedules.append(schedule)
 
                         # Notify each user
@@ -934,13 +1047,35 @@ def schedule_edit(request, pk):
     
     # Check permissions
     if not request.user.is_superuser and not request.user.is_admin_user:
-        if schedule.status in ['COMPLETED', 'CANCELLED']:
-            messages.error(request, 'Cannot edit completed or cancelled inspections!')
+        if schedule.status in ['CLOSED', 'LATE_CLOSE', 'CANCELLED']:
+            messages.error(request, 'Cannot edit CLOSED or cancelled inspections!')
             return redirect('inspections:schedule_detail', pk=pk)
     
     if request.method == 'POST':
         form = InspectionScheduleForm(request.POST, instance=schedule, user=request.user)
+        # if form.is_valid():
+        #     schedule = form.save(commit=False)
+        #     schedule.save()
+
+        #     selected_plant_ids = request.POST.getlist('selected_plants')
+        #     selected_zone_ids = request.POST.getlist('selected_zones')
+        #     selected_location_ids = request.POST.getlist('selected_locations')
+        #     selected_sublocation_ids = request.POST.getlist('selected_sublocations')
+        #     selected_user_ids = request.POST.getlist('selected_users')
+
+        #     schedule.plants.set(Plant.objects.filter(id__in=selected_plant_ids))
+        #     schedule.zones.set(Zone.objects.filter(id__in=selected_zone_ids))
+        #     schedule.locations.set(Location.objects.filter(id__in=selected_location_ids))
+        #     schedule.sublocations.set(SubLocation.objects.filter(id__in=selected_sublocation_ids))
+        #     schedule.assigned_users.set(User.objects.filter(id__in=selected_user_ids))
+        #     enable_auto = form.cleaned_data.get('enable_auto_schedule')
+        #     due_offset = form.cleaned_data.get('due_date_offset_days') or 7
+
+        #     messages.success(request, 'Inspection schedule updated successfully!')
+        #     return redirect('inspections:schedule_detail', pk=pk)
+
         if form.is_valid():
+
             schedule = form.save(commit=False)
             schedule.save()
 
@@ -948,22 +1083,88 @@ def schedule_edit(request, pk):
             selected_zone_ids = request.POST.getlist('selected_zones')
             selected_location_ids = request.POST.getlist('selected_locations')
             selected_sublocation_ids = request.POST.getlist('selected_sublocations')
+            selected_user_ids = request.POST.getlist('selected_users')
 
-            schedule.plants.set(Plant.objects.filter(id__in=selected_plant_ids))
-            schedule.zones.set(Zone.objects.filter(id__in=selected_zone_ids))
-            schedule.locations.set(Location.objects.filter(id__in=selected_location_ids))
-            schedule.sublocations.set(SubLocation.objects.filter(id__in=selected_sublocation_ids))
+            # Update M2M fields
+            schedule.plants.set(
+                Plant.objects.filter(id__in=selected_plant_ids)
+            )
+
+            schedule.zones.set(
+                Zone.objects.filter(id__in=selected_zone_ids)
+            )
+
+            schedule.locations.set(
+                Location.objects.filter(id__in=selected_location_ids)
+            )
+
+            schedule.sublocations.set(
+                SubLocation.objects.filter(id__in=selected_sublocation_ids)
+            )
+
+            schedule.assigned_users.set(
+                User.objects.filter(id__in=selected_user_ids)
+            )
+
+            # AUTO SCHEDULE LOGIC
+            enable_auto = form.cleaned_data.get('enable_auto_schedule')
+            due_offset = form.cleaned_data.get('due_date_offset_days') or 7
+
+            if enable_auto:
+
+                config, created = TemplateAutoScheduleConfig.objects.get_or_create(
+                    template=schedule.template,
+                    defaults={
+                        'due_date_offset_days': due_offset,
+                        'is_active': True,
+                        'is_paused': False,
+                        'created_by': request.user
+                    }
+                )
+
+                config.due_date_offset_days = due_offset
+                config.is_active = True
+                config.is_paused = False
+                config.save()
+
+                config.plants.set(schedule.plants.all())
+                config.zones.set(schedule.zones.all())
+                config.locations.set(schedule.locations.all())
+                config.sublocations.set(schedule.sublocations.all())
+                config.assigned_users.set(schedule.assigned_users.all())
+
+                schedule.auto_schedule_config = config
+                schedule.save()
+            else:
+                schedule.auto_schedule_config = None
+                schedule.save()
 
             messages.success(request, 'Inspection schedule updated successfully!')
             return redirect('inspections:schedule_detail', pk=pk)
     else:
-        form = InspectionScheduleForm(instance=schedule, user=request.user)
+        # form = InspectionScheduleForm(instance=schedule, user=request.user)
+        initial_data = {
+            'enable_auto_schedule': bool(schedule.auto_schedule_config),
+            'due_date_offset_days': (
+                schedule.auto_schedule_config.due_date_offset_days
+                if schedule.auto_schedule_config else 7
+            )
+        }
+
+        form = InspectionScheduleForm(instance=schedule,user=request.user,initial=initial_data)
     
     context = {
         'form': form,
         'action': 'Edit',
         'title': f'Edit Schedule: {schedule.schedule_code}',
-        'schedule': schedule
+        'schedule': schedule,
+
+        'selected_plants': list(schedule.plants.values_list('id', flat=True)),
+        'selected_zones': list(schedule.zones.values_list('id', flat=True)),
+        'selected_locations': list(schedule.locations.values_list('id', flat=True)),
+        'selected_sublocations': list(schedule.sublocations.values_list('id', flat=True)),
+        'selected_users': [schedule.assigned_to.id] if schedule.assigned_to else [],
+
     }
     return render(request, 'inspections/schedule_form.html', context)
 
@@ -992,11 +1193,48 @@ def schedule_detail(request, pk):
     
     context = {
         'schedule': schedule,
-        'can_edit': schedule.status not in ['COMPLETED', 'CANCELLED'],
+        'can_edit': schedule.status not in ['CLOSED', 'LATE_CLOSE', 'CANCELLED'],
         'can_start': schedule.status == 'SCHEDULED' and schedule.assigned_to == request.user,
-        'can_cancel': schedule.status not in ['COMPLETED', 'CANCELLED']
+        'can_cancel': schedule.status not in ['CLOSED', 'LATE_CLOSE', 'CANCELLED'],
+        'can_restart': (
+            schedule.status == 'OVERDUE' and (
+                request.user == schedule.assigned_to or
+                request.user.is_superuser or
+                request.user.is_admin_user
+            )
+        ),
     }
     return render(request, 'inspections/schedule_detail.html', context)
+
+
+class InspectionPDFDownloadView(LoginRequiredMixin, View):
+    """Generate PDF report for an inspection schedule."""
+
+    def get(self, request, pk):
+        schedule = get_object_or_404(
+            InspectionSchedule.objects.select_related(
+                'template',
+                'assigned_to',
+                'assigned_by',
+                'department'
+            ).prefetch_related(
+                'plants', 'zones', 'locations', 'sublocations', 'assigned_users'
+            ),
+            pk=pk
+        )
+
+        if not (
+            request.user.is_superuser or
+            request.user.is_admin_user or
+            request.user.has_permission('EXPORT_INSPECTION_PDF') or
+            request.user.has_permission('VIEW_INSPECTION')
+        ):
+            messages.error(request, "You don't have permission to download this report")
+            return redirect('inspections:schedule_list')
+
+        return generate_inspection_pdf(schedule)
+
+
 @login_required
 def get_users_by_plants(request):
     """
@@ -1065,8 +1303,8 @@ def schedule_cancel(request, pk):
     
     schedule = get_object_or_404(InspectionSchedule, pk=pk)
     
-    if schedule.status in ['COMPLETED', 'CANCELLED']:
-        messages.error(request, 'Cannot cancel completed or already cancelled inspections!')
+    if schedule.status in ['CLOSED', 'LATE_CLOSE', 'CANCELLED']:
+        messages.error(request, 'Cannot cancel CLOSED or already cancelled inspections!')
         return redirect('inspections:schedule_detail', pk=pk)
     
     if request.method == 'POST':
@@ -1110,6 +1348,28 @@ def schedule_send_reminder(request, pk):
 
 
 @login_required
+def schedule_delete(request, pk):
+    """Delete an inspection schedule."""
+    schedule = get_object_or_404(InspectionSchedule, pk=pk)
+
+    if not (
+        request.user.is_superuser or
+        request.user.is_admin_user or
+        request.user.has_permission('DELETE_INSPECTION')
+    ):
+        messages.error(request, 'You are not authorized to delete this inspection.')
+        return redirect('inspections:schedule_list')
+
+    if request.method == 'POST':
+        schedule_code = schedule.schedule_code
+        schedule.delete()
+        messages.success(request, f'Inspection "{schedule_code}" deleted successfully.')
+        return redirect('inspections:schedule_list')
+
+    return redirect('inspections:schedule_list')
+
+
+@login_required
 def my_inspections(request):
     """View for HOD to see their assigned inspections"""
     
@@ -1119,14 +1379,14 @@ def my_inspections(request):
     
     schedules = InspectionSchedule.objects.filter(
         assigned_to=request.user
-    ).select_related('template', 'department')
+    ).select_related('template', 'department').order_by('-created_at')
     
     # Filters
-    status = request.GET.get('status', 'SCHEDULED')
+    status = request.GET.get('status')
     if status:
         schedules = schedules.filter(status=status)
     
-    schedules = schedules.order_by('-scheduled_date')
+    schedules = schedules.order_by('-created_at')
     
     # Pagination
     paginator = Paginator(schedules, 15)
@@ -1143,9 +1403,9 @@ def my_inspections(request):
             assigned_to=request.user,
             status='IN_PROGRESS'
         ).count(),
-        'completed': InspectionSchedule.objects.filter(
+        'CLOSED': InspectionSchedule.objects.filter(
             assigned_to=request.user,
-            status='COMPLETED'
+            status__in=['CLOSED', 'CLOSED_LATE']
         ).count(),
         'overdue': InspectionSchedule.objects.filter(
             assigned_to=request.user,
@@ -1174,9 +1434,9 @@ def inspection_start(request, schedule_id):
         messages.error(request, 'You are not authorized to access this inspection!')
         return redirect('inspections:my_inspections')
     
-    # Check if already completed
-    if schedule.status == 'COMPLETED':
-        messages.warning(request, 'This inspection is already completed!')
+    # Check if already CLOSED
+    if schedule.status in ['CLOSED', 'LATE_CLOSE']:
+        messages.warning(request, 'This inspection is already CLOSED!')
         return redirect('inspections:schedule_detail', pk=schedule.pk)
     
     # Update status to IN_PROGRESS
@@ -1185,30 +1445,7 @@ def inspection_start(request, schedule_id):
         schedule.started_at = timezone.now()
         schedule.save()
     
-    # Get all questions from template in order
-    template_questions = TemplateQuestion.objects.filter(
-        template=schedule.template
-    ).select_related(
-        'question',
-        'question__category'
-    ) #removed .order_by('display_order')
-    
-    # Group questions by category
-    from collections import defaultdict
-    questions_by_category = defaultdict(list)
-    
-    for tq in template_questions:
-        questions_by_category[tq.question.category].append(tq)
-    
-    # Sort by category display order
-    questions_by_category = dict(questions_by_category.items()) #removed - ,sorted(key=lambda x: x[0].display_order)
-    
-    context = {
-        'schedule': schedule,
-        'questions_by_category': questions_by_category,
-        'total_questions': template_questions.count()
-    }
-    
+    context = _build_inspection_form_context(schedule, request.user)
     return render(request, 'inspections/inspection_form.html', context)
 
 
@@ -1232,11 +1469,147 @@ def generate_finding_code(submission):
         new_num = 1
     
     return f"FIND-{date_str}-{new_num:04d}"
+
+
+def _get_inspection_completion_status(schedule):
+    """Return the final status for a submitted inspection."""
+    return 'CLOSED_LATE' if '[RESTARTED_FROM:' in (schedule.assignment_notes or '') else 'CLOSED'
+
+
+def _get_selected_scope_ids(source_data, inspection_scope):
+    def _clean_ids(values, available_qs):
+        allowed_ids = set(available_qs.values_list('id', flat=True))
+        resolved = []
+        for raw_id in values or []:
+            try:
+                parsed_id = int(raw_id)
+            except (TypeError, ValueError):
+                continue
+            if parsed_id in allowed_ids and parsed_id not in resolved:
+                resolved.append(parsed_id)
+        return resolved
+
+    selected_plant_ids = _clean_ids(source_data.get('selected_plants', []), inspection_scope['plants'])
+    selected_zone_ids = _clean_ids(
+        source_data.get('selected_zones', []),
+        inspection_scope['zones'].filter(plant_id__in=selected_plant_ids).distinct()
+    )
+    selected_location_ids = _clean_ids(
+        source_data.get('selected_locations', []),
+        inspection_scope['locations'].filter(zone_id__in=selected_zone_ids).distinct()
+    )
+    selected_sublocation_ids = _clean_ids(
+        source_data.get('selected_sublocations', []),
+        inspection_scope['sublocations'].filter(location_id__in=selected_location_ids).distinct()
+    )
+
+    return {
+        'selected_plant_ids': selected_plant_ids,
+        'selected_zone_ids': selected_zone_ids,
+        'selected_location_ids': selected_location_ids,
+        'selected_sublocation_ids': selected_sublocation_ids,
+    }
+
+
+def _build_inspection_form_context(
+    schedule,
+    user,
+    *,
+    source_data=None,
+    field_errors=None,
+    scope_errors=None,
+    non_field_errors=None
+):
+    from collections import defaultdict
+
+    template_questions = TemplateQuestion.objects.filter(
+        template=schedule.template
+    ).select_related(
+        'question',
+        'question__category'
+    ) #removed .order_by('display_order')
+
+    inspection_scope = _get_inspection_scope(schedule, user)
+    available_plants = inspection_scope['plants']
+    available_zones = inspection_scope['zones']
+    available_locations = inspection_scope['locations']
+    available_sublocations = inspection_scope['sublocations']
+
+    draft = getattr(schedule, 'draft', None)
+    draft_data = draft.data if draft else {}
+    active_source = source_data if source_data is not None else draft_data
+    draft_photo_map = {}
+
+    if draft:
+        draft_photo_map = {
+            photo.question_id: photo
+            for photo in draft.photos.select_related('question').all()
+        }
+
+    selected_scope = _get_selected_scope_ids(active_source or {}, inspection_scope)
+    if not active_source:
+        selected_scope = {
+            'selected_plant_ids': list(available_plants.values_list('id', flat=True)),
+            'selected_zone_ids': list(available_zones.values_list('id', flat=True)),
+            'selected_location_ids': list(available_locations.values_list('id', flat=True)),
+            'selected_sublocation_ids': list(available_sublocations.values_list('id', flat=True)),
+        }
+
+    answers_by_question = (active_source or {}).get('answers', {})
+    remarks_by_question = (active_source or {}).get('remarks', {})
+
+    questions_by_category = defaultdict(list)
+    for tq in template_questions:
+        question_key = str(tq.question.id)
+        tq.prefill_answer = answers_by_question.get(question_key, '')
+        tq.prefill_remarks = remarks_by_question.get(question_key, '')
+        tq.answer_error = (field_errors or {}).get(f'question_{tq.question.id}', '')
+        tq.remarks_error = (field_errors or {}).get(f'remarks_{tq.question.id}', '')
+        tq.photo_error = (field_errors or {}).get(f'photo_{tq.question.id}', '')
+        tq.draft_photo = draft_photo_map.get(tq.question.id)
+        questions_by_category[tq.question.category].append(tq)
+
+    header_plants = available_plants
+    header_zones = available_zones
+    header_locations = available_locations
+    header_sublocations = available_sublocations
+
+    return {
+        'schedule': schedule,
+        'questions_by_category': dict(questions_by_category.items()),
+        'total_questions': template_questions.count(),
+        'available_plants': available_plants,
+        'available_zones': available_zones,
+        'available_locations': available_locations,
+        'available_sublocations': available_sublocations,
+        'header_plants': header_plants,
+        'header_zones': header_zones,
+        'header_locations': header_locations,
+        'header_sublocations': header_sublocations,
+        'selected_plant_ids': selected_scope['selected_plant_ids'],
+        'selected_zone_ids': selected_scope['selected_zone_ids'],
+        'selected_location_ids': selected_scope['selected_location_ids'],
+        'selected_sublocation_ids': selected_scope['selected_sublocation_ids'],
+        'allowed_plant_ids': list(available_plants.values_list('id', flat=True)),
+        'allowed_zone_ids': list(available_zones.values_list('id', flat=True)),
+        'allowed_location_ids': list(available_locations.values_list('id', flat=True)),
+        'allowed_sublocation_ids': list(available_sublocations.values_list('id', flat=True)),
+        'scope_errors': scope_errors or {},
+        'non_field_errors': non_field_errors or [],
+        'draft_exists': bool(draft),
+    }
+
+
 @login_required
 def inspection_submit(request, schedule_id):
-    """HOD submits the completed inspection"""
+    """HOD submits the CLOSED inspection"""
     
-    schedule = get_object_or_404(InspectionSchedule.objects.select_related('template', 'assigned_to'), pk=schedule_id)
+    schedule = get_object_or_404(
+        InspectionSchedule.objects.select_related('template', 'assigned_to', 'assigned_by').prefetch_related(
+            'plants', 'zones', 'locations', 'sublocations'
+        ),
+        pk=schedule_id
+    )
 
     # Check permission
     if schedule.assigned_to != request.user:
@@ -1247,32 +1620,133 @@ def inspection_submit(request, schedule_id):
     if request.method != 'POST':
         return redirect('inspections:inspection_start', schedule_id=schedule_id)
     try:
+        inspection_scope = _get_inspection_scope(schedule, request.user)
+        available_plants = inspection_scope['plants']
+        available_zones = inspection_scope['zones']
+        available_locations = inspection_scope['locations']
+        available_sublocations = inspection_scope['sublocations']
+
+        source_data = {
+            'selected_plants': request.POST.getlist('selected_plants'),
+            'selected_zones': request.POST.getlist('selected_zones'),
+            'selected_locations': request.POST.getlist('selected_locations'),
+            'selected_sublocations': request.POST.getlist('selected_sublocations'),
+            'answers': {},
+            'remarks': {},
+        }
+
+        template_questions = TemplateQuestion.objects.filter(
+            template=schedule.template
+        ).select_related('question')
+
+        for tq in template_questions:
+            question_id = str(tq.question.id)
+            source_data['answers'][question_id] = request.POST.get(f'question_{question_id}', '')
+            source_data['remarks'][question_id] = request.POST.get(f'remarks_{question_id}', '').strip()
+
+        selected_scope = _get_selected_scope_ids(source_data, inspection_scope)
+        selected_plant_ids = selected_scope['selected_plant_ids']
+        selected_zone_ids = selected_scope['selected_zone_ids']
+        selected_location_ids = selected_scope['selected_location_ids']
+        selected_sublocation_ids = selected_scope['selected_sublocation_ids']
+
+        action = request.POST.get('form_action', 'submit')
+
+        if action == 'draft':
+            draft, _ = InspectionDraft.objects.update_or_create(
+                schedule=schedule,
+                defaults={
+                    'saved_by': request.user,
+                    'data': {
+                        'selected_plants': selected_plant_ids,
+                        'selected_zones': selected_zone_ids,
+                        'selected_locations': selected_location_ids,
+                        'selected_sublocations': selected_sublocation_ids,
+                        'answers': source_data['answers'],
+                        'remarks': source_data['remarks'],
+                    }
+                }
+            )
+
+            for tq in template_questions:
+                photo = request.FILES.get(f'photo_{tq.question.id}')
+                if photo:
+                    InspectionDraftPhoto.objects.update_or_create(
+                        draft=draft,
+                        question=tq.question,
+                        defaults={'photo': photo}
+                    )
+
+            messages.success(request, f'Draft saved for inspection {schedule.schedule_code}.')
+            return redirect('inspections:inspection_start', schedule_id=schedule_id)
+
+        field_errors = {}
+        scope_errors = {}
+        non_field_errors = []
+
+        if available_plants.exists() and not selected_plant_ids:
+            scope_errors['selected_plants'] = 'Please select at least one plant.'
+        if available_zones.filter(plant_id__in=selected_plant_ids).exists() and not selected_zone_ids:
+            scope_errors['selected_zones'] = 'Please select at least one zone.'
+        if available_locations.filter(zone_id__in=selected_zone_ids).exists() and not selected_location_ids:
+            scope_errors['selected_locations'] = 'Please select at least one location.'
+        if available_sublocations.filter(location_id__in=selected_location_ids).exists() and not selected_sublocation_ids:
+            scope_errors['selected_sublocations'] = 'Please select at least one sub-location.'
+
+        draft = getattr(schedule, 'draft', None)
+        draft_photo_map = {}
+        if draft:
+            draft_photo_map = {
+                photo.question_id: photo
+                for photo in draft.photos.select_related('question').all()
+            }
+
+        for tq in template_questions:
+            question = tq.question
+            question_id = question.id
+            answer = source_data['answers'].get(str(question_id), '').strip()
+            remarks = source_data['remarks'].get(str(question_id), '').strip()
+            photo = request.FILES.get(f'photo_{question_id}')
+            draft_photo = draft_photo_map.get(question_id)
+
+            if tq.is_mandatory and not answer:
+                field_errors[f'question_{question_id}'] = 'This answer is required.'
+            if question.is_remarks_mandatory and not remarks:
+                field_errors[f'remarks_{question_id}'] = 'Remarks are required.'
+            if question.is_photo_required and not photo and not draft_photo:
+                field_errors[f'photo_{question_id}'] = 'Photo evidence is required.'
+
+        if scope_errors or field_errors:
+            non_field_errors.append('Please correct the highlighted fields and submit again.')
+            context = _build_inspection_form_context(
+                schedule,
+                request.user,
+                source_data=source_data,
+                field_errors=field_errors,
+                scope_errors=scope_errors,
+                non_field_errors=non_field_errors
+            )
+            return render(request, 'inspections/inspection_form.html', context)
+
         with transaction.atomic():
-            # Create submission 
             submission = InspectionSubmission.objects.create(
                 schedule=schedule,
                 submitted_by=request.user,
                 remarks=request.POST.get('overall_remarks', '').strip()
             )
-            template_questions = TemplateQuestion.objects.filter(
-                template=schedule.template
-            ).select_related('question')
             no_answers = []
-            missing_answers = []
             for tq in template_questions:
                 question = tq.question
-                field_name = f"question_{question.id}"
-                answer = request.POST.get(field_name)
-                remarks = request.POST.get(f"remarks_{question.id}", "").strip()
-                photo = request.FILES.get(f"photo_{question.id}")
-                
-                if tq.is_mandatory and not answer:
-                    missing_answers.append(question.question_text)
-                    continue
+                question_id = str(question.id)
+                answer = source_data['answers'].get(question_id, '').strip()
+                remarks = source_data['remarks'].get(question_id, '').strip()
+                uploaded_photo = request.FILES.get(f'photo_{question.id}')
+                draft_photo = draft_photo_map.get(question.id)
+                photo = uploaded_photo or (draft_photo.photo if draft_photo else None)
 
                 if not answer:
                     continue
-                # Save response
+
                 response = InspectionResponse.objects.create(
                     submission=submission,
                     question=question,
@@ -1280,10 +1754,8 @@ def inspection_submit(request, schedule_id):
                     remarks=remarks,
                     photo=photo
                 )
-                # Track
                 if answer == 'No':
-                    no_answers.append({'question': question,'response': response})
-                    # Auto finding 
+                    no_answers.append({'question': question, 'response': response})
                     if question.auto_generate_finding:
                         InspectionFinding.objects.create(
                             submission=submission,
@@ -1293,27 +1765,29 @@ def inspection_submit(request, schedule_id):
                             priority='HIGH' if question.is_critical else 'MEDIUM',
                             status='OPEN'
                         )
-            if missing_answers:
-                submission.delete()
-                messages.error(request,
-                    f"Please answer all mandatory questions: {', '.join(missing_answers[:3])}")
-                return redirect('inspections:inspection_start', schedule_id=schedule_id)
-            # Calculate compliance 
             submission.compliance_score = submission.calculate_compliance_score()
             submission.save()
-            # Update schedule 
-            schedule.status = 'COMPLETED'
-            schedule.completed_at = timezone.now()
-            schedule.save(update_fields=['status', 'completed_at'])
-            # Send notification 
+            schedule.plants.set(Plant.objects.filter(id__in=selected_plant_ids, is_active=True))
+            schedule.zones.set(Zone.objects.filter(id__in=selected_zone_ids, is_active=True))
+            schedule.locations.set(Location.objects.filter(id__in=selected_location_ids, is_active=True))
+            schedule.sublocations.set(SubLocation.objects.filter(id__in=selected_sublocation_ids, is_active=True))
+
+            schedule.status = _get_inspection_completion_status(schedule)
+            schedule.closed_at = timezone.now()
+            schedule.save(update_fields=['status', 'closed_at'])
+
+            InspectionDraft.objects.filter(schedule=schedule).delete()
+
             NotificationService.notify(
                 content_object=submission,
-                notification_type='INSPECTION_COMPLETED',
+                notification_type='INSPECTION_SUBMITTED',
                 module='INSPECTION'
             )
-            messages.success(request,f'Inspection {schedule.schedule_code} submitted successfully! '
-                f'Compliance Score: {submission.compliance_score}%')
-            return redirect('inspections:inspection_review',submission_id=submission.id)
+            messages.success(
+                request,
+                f'Inspection {schedule.schedule_code} submitted successfully! Compliance Score: {submission.compliance_score}%'
+            )
+            return redirect('inspections:inspection_review', submission_id=submission.id)
     except Exception as e:
         messages.error(request, f'Inspection submission failed: {str(e)}')
         return redirect('inspections:inspection_start', schedule_id=schedule_id)
@@ -1321,7 +1795,7 @@ def inspection_submit(request, schedule_id):
 
 @login_required
 def inspection_review(request, submission_id):
-    """Review completed inspection showing ALL answers and details."""
+    """Review CLOSED inspection showing ALL answers and details."""
     
     submission = get_object_or_404(
         InspectionSubmission.objects
@@ -1335,7 +1809,7 @@ def inspection_review(request, submission_id):
             request.user == submission.submitted_by or
             request.user.can_access_inspection_module):
         messages.error(request, 'Unauthorized access!')
-        return redirect('inspections:pre_inspection_dashboard')
+        return redirect('inspections:inspection_dashboard')
 
     # ===================================================================
     # START OF THE FIX
@@ -1345,7 +1819,10 @@ def inspection_review(request, submission_id):
     # Pre-fetch related question and category data for efficiency.
     all_responses = submission.responses.select_related(
         'question',
-        'question__category'
+        'question__category',
+        'assigned_to',
+        'assigned_by',
+        'converted_to_hazard'
     ).order_by('question__category__category_name') # Order for consistent display
 
     # Group all responses by category for structured display in the template.
@@ -1363,20 +1840,38 @@ def inspection_review(request, submission_id):
     findings = InspectionFinding.objects.filter(
         submission=submission
     ).select_related('question', 'assigned_to')
+
+    template_questions_count = TemplateQuestion.objects.filter(
+        template=submission.schedule.template
+    ).count()
     
     # Get all responses for statistics (This was already correct)
     total_questions = all_responses.count()
     yes_count = all_responses.filter(answer='Yes').count()
     no_count = all_responses.filter(answer='No').count()
     na_count = all_responses.filter(answer='N/A').count()
+
+    finding_response_map = {
+        response.question_id: response
+        for response in all_responses
+    }
+
+    for finding in findings:
+        finding.review_response = finding_response_map.get(finding.question_id)
     
     context = {
         'submission': submission,
         'schedule': submission.schedule,
+        'plants': submission.schedule.plants.all().order_by('name'),
+        'zones': submission.schedule.zones.select_related('plant').all().order_by('plant__name', 'name'),
+        'locations': submission.schedule.locations.select_related('zone', 'zone__plant').all().order_by('zone__plant__name', 'zone__name', 'name'),
+        'sublocations': submission.schedule.sublocations.select_related('location', 'location__zone', 'location__zone__plant').all().order_by('location__zone__plant__name', 'location__zone__name', 'location__name', 'name'),
         # Pass the new dictionary with ALL responses to the template
         'responses_by_category': dict(responses_by_category),
         'findings': findings,
         'total_questions': total_questions,
+        'template_questions_count': template_questions_count,
+        'unanswered_count': max(template_questions_count - total_questions, 0),
         'yes_count': yes_count,
         'no_count': no_count,
         'na_count': na_count,
@@ -1464,6 +1959,26 @@ def get_questions_by_category(request):
     return JsonResponse({'questions': list(questions_data)})
 
 
+
+@login_required
+def get_template_inspection_type(request):
+
+    template_id = request.GET.get('template_id')
+
+    if not template_id:
+        return JsonResponse({'success': False})
+
+    try:
+        template = InspectionTemplate.objects.get(id=template_id)
+
+        return JsonResponse({
+            'success': True,
+            'inspection_type': template.inspection_type
+        })
+
+    except InspectionTemplate.DoesNotExist:
+        return JsonResponse({'success': False})
+    
 
 @login_required
 def no_answers_list(request):
@@ -1886,7 +2401,7 @@ def convert_no_answer_to_hazard(request, response_id):
             hazard.immediate_action = request.POST.get('immediate_action', '')
 
             # Dates
-            hazard.incident_datetime = response.answered_at or schedule.completed_at or timezone.now()
+            hazard.incident_datetime = response.answered_at or schedule.closed_at or timezone.now()
             hazard.status = 'REPORTED'
             hazard.approval_status = 'PENDING'
 
@@ -1971,6 +2486,15 @@ class InspectionDashboardView(LoginRequiredMixin, TemplateView):
         """
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        today = timezone.now().date()
+
+        selected_plant = self.request.GET.get('plant', '')
+        selected_zone = self.request.GET.get('zone', '')
+        selected_location = self.request.GET.get('location', '')
+        selected_sublocation = self.request.GET.get('sublocation', '')
+        selected_department = self.request.GET.get('department', '')
+        selected_template = self.request.GET.get('template', '')
+        selected_month = self.request.GET.get('month', '')
 
         # --- 1. USER ACCESS CONTROL (Determine accessible plants) ---
         # This logic is adapted from your EnvironmentalDashboardView
@@ -1986,26 +2510,67 @@ class InspectionDashboardView(LoginRequiredMixin, TemplateView):
             else:
                 accessible_plants = assigned
 
-        # --- 2. Base Queryset for Completed Inspections (Filtered by accessible plants) ---
+        is_admin_user = user.is_superuser or user.is_staff or getattr(user, 'is_admin_user', False)
+
+        # --- 2. Build a filtered base schedule queryset for the whole dashboard ---
+        schedules_qs = InspectionSchedule.objects.select_related(
+            'template', 'assigned_to', 'department'
+        ).prefetch_related(
+            'plants', 'zones', 'locations', 'sublocations'
+        )
+
+        if not is_admin_user:
+            schedules_qs = schedules_qs.filter(
+                Q(plants__in=accessible_plants) | Q(plants__isnull=True)
+            )
+
+        schedules_qs = schedules_qs.distinct()
+
+        if selected_month:
+            try:
+                year, month = map(int, selected_month.split('-'))
+                schedules_qs = schedules_qs.filter(
+                    scheduled_date__year=year,
+                    scheduled_date__month=month
+                )
+                context['selected_month_label'] = datetime(year, month, 1).strftime('%B %Y')
+            except (ValueError, TypeError):
+                selected_month = ''
+
+        if selected_plant:
+            schedules_qs = schedules_qs.filter(plants__id=selected_plant)
+        if selected_zone:
+            schedules_qs = schedules_qs.filter(zones__id=selected_zone)
+        if selected_location:
+            schedules_qs = schedules_qs.filter(locations__id=selected_location)
+        if selected_sublocation:
+            schedules_qs = schedules_qs.filter(sublocations__id=selected_sublocation)
+        if selected_department:
+            schedules_qs = schedules_qs.filter(department_id=selected_department)
+        if selected_template:
+            schedules_qs = schedules_qs.filter(template_id=selected_template)
+
+        schedules_qs = schedules_qs.distinct()
+
         submissions = (
             InspectionSubmission.objects
             .select_related('schedule', 'schedule__template', 'submitted_by')
             .prefetch_related('schedule__plants')
-            .filter(
-                Q(schedule__plants__in=accessible_plants) |
-                Q(schedule__plants__isnull=True)
-            )
+            .filter(schedule__in=schedules_qs)
             .order_by('-submitted_at')
             .distinct()
         )
+
         # --- 3. Top Statistics Cards Data (Filtered) ---
         total_inspections = submissions.count()
         current_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        schedules_qs = (InspectionSchedule.objects.filter(plants__in=accessible_plants).distinct())
 
         context['total_inspections'] = total_inspections
         context['open_schedules'] = schedules_qs.filter(status__in=['SCHEDULED', 'IN_PROGRESS', 'OVERDUE']).count()
-        context['this_month_inspections'] = submissions.filter(submitted_at__gte=current_month_start).count()
+        context['this_month_inspections'] = (
+            submissions.count() if selected_month else submissions.filter(submitted_at__gte=current_month_start).count()
+        )
+        context['this_month_label'] = context.get('selected_month_label', 'This Month')
 
         # New Stat: Average Compliance Score (Calculated from filtered submissions)
         if total_inspections > 0:
@@ -2013,12 +2578,53 @@ class InspectionDashboardView(LoginRequiredMixin, TemplateView):
             context['average_compliance_score'] = round(avg, 2) if avg else 0
         else:
             context['average_compliance_score'] = 0
-        context['overdue_inspections'] = (schedules_qs.filter(status='OVERDUE').select_related('assigned_to')
-        .prefetch_related('plants').order_by('-due_date')[:5])
+        context['overdue_inspections'] = (
+            schedules_qs.filter(status='OVERDUE')
+            .select_related('assigned_to')
+            .prefetch_related('plants')
+            .order_by('-due_date')[:5]
+        )
+
+        plant_summary = list(
+            schedules_qs.annotate(
+                display_plant_name=Coalesce('plants__name', Value('Unassigned'))
+            ).values(
+                'plants__id',
+                'display_plant_name'
+            ).annotate(
+                total=Count('id', distinct=True),
+                closed_count=Count('id', filter=Q(status='CLOSED'), distinct=True),
+                pending_count=Count('id', filter=Q(status='SCHEDULED'), distinct=True),
+                in_progress_count=Count('id', filter=Q(status='IN_PROGRESS'), distinct=True),
+                cancelled_count=Count('id', filter=Q(status='CANCELLED'), distinct=True),
+                overdue_count=Count('id', filter=Q(status='OVERDUE'), distinct=True),
+                late_close_count=Count('id', filter=Q(status='LATE_CLOSE'), distinct=True),
+            ).order_by('-total', 'display_plant_name')
+        )
+
+        top_plant = plant_summary[0] if plant_summary else None
+        context['plant_chart_labels'] = json.dumps([item['display_plant_name'] for item in plant_summary])
+        context['plant_closed_data'] = json.dumps([item['closed_count'] for item in plant_summary])
+        context['plant_pending_data'] = json.dumps([item['pending_count'] for item in plant_summary])
+        context['plant_in_progress_data'] = json.dumps([item['in_progress_count'] for item in plant_summary])
+        context['plant_cancelled_data'] = json.dumps([item['cancelled_count'] for item in plant_summary])
+        context['plant_overdue_data'] = json.dumps([item['overdue_count'] for item in plant_summary])
+        context['plant_late_close_data'] = json.dumps([item['late_close_count'] for item in plant_summary])
+        context['plant_chart_data'] = bool(plant_summary)
+        context['plant_summary'] = {
+            'plants_covered': len(plant_summary),
+            'top_plant_name': top_plant['display_plant_name'] if top_plant else 'N/A',
+            'top_plant_total': top_plant['total'] if top_plant else 0,
+            'top_plant_overdue': top_plant['overdue_count'] if top_plant else 0,
+        }
 
         # --- 5. Top Non-Compliant Questions Chart Data (Filtered) ---
-        top_non_compliant = (InspectionResponse.objects.filter(submission__schedule__plants__in=accessible_plants,answer='No')
-        .values('question__question_text').annotate(no_count=Count('id')).order_by('-no_count')[:5])
+        top_non_compliant = (
+            InspectionResponse.objects.filter(submission__in=submissions, answer='No')
+            .values('question__question_text')
+            .annotate(no_count=Count('id'))
+            .order_by('-no_count')[:5]
+        )
         chart_labels = [i['question__question_text'] for i in top_non_compliant]
         chart_data = [i['no_count'] for i in top_non_compliant]
 
@@ -2039,6 +2645,95 @@ class InspectionDashboardView(LoginRequiredMixin, TemplateView):
 
         context['page_obj'] = page_obj
 
+        plants_qs = accessible_plants.order_by('name').distinct()
+
+        zones_qs = Zone.objects.filter(is_active=True)
+        if not is_admin_user:
+            zones_qs = zones_qs.filter(plant__in=accessible_plants)
+        if selected_plant:
+            zones_qs = zones_qs.filter(plant_id=selected_plant)
+
+        locations_qs = Location.objects.filter(is_active=True)
+        if not is_admin_user:
+            locations_qs = locations_qs.filter(zone__plant__in=accessible_plants)
+        if selected_zone:
+            locations_qs = locations_qs.filter(zone_id=selected_zone)
+        elif selected_plant:
+            locations_qs = locations_qs.filter(zone__plant_id=selected_plant)
+
+        sublocations_qs = SubLocation.objects.filter(is_active=True)
+        if not is_admin_user:
+            sublocations_qs = sublocations_qs.filter(location__zone__plant__in=accessible_plants)
+        if selected_location:
+            sublocations_qs = sublocations_qs.filter(location_id=selected_location)
+        elif selected_zone:
+            sublocations_qs = sublocations_qs.filter(location__zone_id=selected_zone)
+        elif selected_plant:
+            sublocations_qs = sublocations_qs.filter(location__zone__plant_id=selected_plant)
+
+        template_qs = InspectionTemplate.objects.filter(schedules__in=schedules_qs).distinct().order_by('template_name')
+        department_qs = Department.objects.filter(inspection_schedules__in=schedules_qs).distinct().order_by('name')
+
+        context['plants'] = plants_qs
+        context['zones'] = zones_qs.order_by('name').distinct()
+        context['locations'] = locations_qs.order_by('name').distinct()
+        context['sublocations'] = sublocations_qs.order_by('name').distinct()
+        context['all_templates'] = template_qs
+        context['all_departments'] = department_qs
+        context['month_options'] = [{
+            'value': (today - timedelta(days=i * 30)).strftime('%Y-%m'),
+            'label': (today - timedelta(days=i * 30)).strftime('%B %Y')
+        } for i in range(12)]
+
+        context.update({
+            'selected_plant': selected_plant,
+            'selected_zone': selected_zone,
+            'selected_location': selected_location,
+            'selected_sublocation': selected_sublocation,
+            'selected_department': selected_department,
+            'selected_template': selected_template,
+            'selected_month': selected_month,
+        })
+
+        if selected_plant:
+            plant_obj = Plant.objects.filter(pk=selected_plant).first()
+            if plant_obj:
+                context['selected_plant_name'] = plant_obj.name
+        if selected_zone:
+            zone_obj = Zone.objects.filter(pk=selected_zone).first()
+            if zone_obj:
+                context['selected_zone_name'] = zone_obj.name
+        if selected_location:
+            location_obj = Location.objects.filter(pk=selected_location).first()
+            if location_obj:
+                context['selected_location_name'] = location_obj.name
+        if selected_sublocation:
+            sublocation_obj = SubLocation.objects.filter(pk=selected_sublocation).first()
+            if sublocation_obj:
+                context['selected_sublocation_name'] = sublocation_obj.name
+        if selected_department:
+            department_obj = Department.objects.filter(pk=selected_department).first()
+            if department_obj:
+                context['selected_department_name'] = department_obj.name
+        if selected_template:
+            template_obj = InspectionTemplate.objects.filter(pk=selected_template).first()
+            if template_obj:
+                context['selected_template_name'] = template_obj.template_name
+
+        context['has_active_filters'] = any([
+            selected_plant,
+            selected_zone,
+            selected_location,
+            selected_sublocation,
+            selected_department,
+            selected_template,
+            selected_month,
+        ])
+
+        querydict = self.request.GET.copy()
+        querydict.pop('page', None)
+        context['querystring'] = querydict.urlencode()
+
         return context
 
 
@@ -2053,27 +2748,15 @@ def schedule_clone(request, pk):
     schedule_code before saving. It then redirects to the list view.
     """
     # Fetch the original schedule to copy from.
-    original_schedule = get_object_or_404(InspectionSchedule, pk=pk)
+    original_schedule = get_object_or_404(
+        InspectionSchedule.objects.prefetch_related(
+            'plants', 'zones', 'locations', 'sublocations', 'assigned_users'
+        ),
+        pk=pk
+    )
     
-    # Keep track of the original code for the success message.
     original_code = original_schedule.schedule_code
-
-    # --- CORRECTION IS HERE ---
-    # By setting the primary key and the unique code to None, Django
-    # knows to create a completely new instance with a new identity.
-    original_schedule.pk = None
-    original_schedule.id = None
-    original_schedule.schedule_code = None  # This is the critical fix!
-    
-    # Reset the status to 'SCHEDULED' for the new clone.
-    original_schedule.status = 'SCHEDULED'
-
-    # Set the user who performed the clone action.
-    original_schedule.assigned_by = request.user
-    
-    # Save the new object. The model will now generate a new schedule_code.
-    original_schedule.save()
-    new_schedule = original_schedule
+    new_schedule = _clone_schedule_as_scheduled(original_schedule)
     
     # Trigger a notification for the newly created schedule.
     NotificationService.notify(
@@ -2089,4 +2772,59 @@ def schedule_clone(request, pk):
     )
     
     # Redirect the user back to the list of schedules.
-    return redirect('inspections:schedule_list')
+    return redirect('inspections:schedule_detail', pk=new_schedule.pk)
+
+
+@login_required
+def schedule_restart(request, pk):
+    """Restart an overdue inspection on the same schedule record."""
+    original_schedule = get_object_or_404(
+        InspectionSchedule.objects.select_related('assigned_to', 'assigned_by').prefetch_related(
+            'plants', 'zones', 'locations', 'sublocations', 'assigned_users'
+        ),
+        pk=pk
+    )
+
+    if original_schedule.status != 'OVERDUE':
+        messages.error(request, 'Only overdue inspections can be restarted.')
+        return redirect('inspections:schedule_detail', pk=pk)
+
+    if not (
+        request.user == original_schedule.assigned_to or
+        request.user.is_superuser or
+        request.user.is_admin_user
+    ):
+        messages.error(request, 'You are not authorized to restart this inspection.')
+        return redirect('inspections:schedule_detail', pk=pk)
+
+    original_code = original_schedule.schedule_code
+    original_notes = original_schedule.assignment_notes or ''
+    restart_marker = f"[RESTARTED_FROM:{original_code}]"
+    restarted_notes = original_notes
+    if restart_marker not in original_notes:
+        restarted_notes = f"{restart_marker}\n{original_notes}".strip()
+
+    InspectionDraft.objects.filter(schedule=original_schedule).delete()
+
+    InspectionSchedule.objects.filter(pk=original_schedule.pk).update(
+        assignment_notes=restarted_notes,
+        status='IN_PROGRESS',
+        started_at=timezone.now(),
+        closed_at=None,
+        reminder_sent=False,
+        reminder_sent_at=None,
+        updated_at=timezone.now(),
+    )
+    original_schedule.refresh_from_db()
+
+    NotificationService.notify(
+        content_object=original_schedule,
+        notification_type='INSPECTION_SCHEDULE',
+        module='INSPECTION'
+    )
+
+    messages.success(
+        request,
+        f'Inspection "{original_code}" restarted successfully. Continue this same inspection and submit it to close as Close Late.'
+    )
+    return redirect('inspections:schedule_detail', schedule_id=original_schedule.pk)

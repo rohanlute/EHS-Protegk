@@ -36,9 +36,12 @@ urlpatterns = [
     path('schedules/', views.schedule_list, name='schedule_list'),
     path('schedules/create/', views.schedule_create, name='schedule_create'),
     path('schedules/<int:pk>/', views.schedule_detail, name='schedule_detail'),
+    path('schedules/<int:pk>/pdf/', views.InspectionPDFDownloadView.as_view(), name='schedule_pdf'),
     path('schedules/<int:pk>/edit/', views.schedule_edit, name='schedule_edit'),
+    path('schedules/<int:pk>/delete/', views.schedule_delete, name='schedule_delete'),
     path('schedules/<int:pk>/cancel/', views.schedule_cancel, name='schedule_cancel'),
     path('schedules/<int:pk>/send-reminder/', views.schedule_send_reminder, name='schedule_send_reminder'),
+    path('schedules/<int:pk>/restart/', views.schedule_restart, name='schedule_restart'),
     # path('inspection_dashboard/', views.InspectionDashboardView.as_view(), name='inspection_dashboard'), 
     path(
         "inspection_dashboard/",
@@ -73,5 +76,6 @@ urlpatterns = [
     path('ajax/get-locations/', views.get_locations_by_zone, name='get_locations_by_zone'),
     path('ajax/get-sublocations/', views.get_sublocations_by_location, name='get_sublocations_by_location'),
     path('ajax/get-questions/', views.get_questions_by_category, name='get_questions_by_category'),
+    path('ajax/get-template-inspection-type/', views.get_template_inspection_type, name='get_template_inspection_type'),
     path('schedules/<int:pk>/clone/', views.schedule_clone, name='schedule_clone'),
 ]

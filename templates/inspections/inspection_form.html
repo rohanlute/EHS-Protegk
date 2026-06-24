@@ -10,9 +10,106 @@
 <li class="breadcrumb-item active">{{ schedule.schedule_code }}</li>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 5px;
+    background: #f8f9fa;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .checkbox-item:hover {
+    background: #e7f3ff;
+    border-color: #b8d4f0;
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .select-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #e9ecef;
+    border-radius: 5px;
+  }
+
+  .group-header {
+    grid-column: 1 / -1;
+    background: #d1ecf1;
+    padding: 7px 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #0c5460;
+    border-left: 3px solid #17a2b8;
+  }
+
+  .section-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-count {
+    background: #007bff;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .loading-text {
+    color: #6c757d;
+    font-style: italic;
+    padding: 10px;
+    grid-column: 1 / -1;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<form method="post" action="{% url 'inspections:inspection_submit' schedule.id %}" enctype="multipart/form-data">
+<form method="post" action="{% url 'inspections:inspection_submit' schedule.id %}" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
+    {% if non_field_errors %}
+    <div class="alert alert-danger">
+        {% for error in non_field_errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
     
     <!-- Inspection Header -->
     <div class="card mb-3">
@@ -32,21 +129,61 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-3">
-                    <strong><i class="fas fa-industry"></i> Plant:</strong><br>
-                    {{ schedule.plant.name }}
+                <div class="col-md-6 mb-3">
+                    <strong><i class="fas fa-industry"></i> Plants:</strong><br>
+                    <div class="mt-1">
+                        {% for plant in header_plants %}
+                            <span class="badge badge-info mr-1 mb-1">{{ plant.name }}{% if plant.code %} ({{ plant.code }}){% endif %}</span>
+                        {% empty %}
+                            <span class="text-muted">No plants available</span>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-6 mb-3">
+                    <strong><i class="fas fa-map-marker-alt"></i> Zones:</strong><br>
+                    <div class="mt-1">
+                        {% for zone in header_zones %}
+                            <span class="badge badge-secondary mr-1 mb-1">{{ zone.name }}{% if zone.code %} ({{ zone.code }}){% endif %}</span>
+                        {% empty %}
+                            <span class="text-muted">No zones available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong><i class="fas fa-location-arrow"></i> Locations:</strong><br>
+                    <div class="mt-1">
+                        {% for location in header_locations %}
+                            <span class="badge badge-light mr-1 mb-1">{{ location.name }}{% if location.code %} ({{ location.code }}){% endif %}</span>
+                        {% empty %}
+                            <span class="text-muted">No locations available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong><i class="fas fa-map-pin"></i> Sub-Locations:</strong><br>
+                    <div class="mt-1">
+                        {% for sublocation in header_sublocations %}
+                            <span class="badge badge-warning mr-1 mb-1">{{ sublocation.name }}{% if sublocation.code %} ({{ sublocation.code }}){% endif %}</span>
+                        {% empty %}
+                            <span class="text-muted">No sub-locations available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <strong><i class="fas fa-user"></i> Assigned To:</strong><br>
+                    {{ schedule.assigned_to.get_full_name }}
+                </div>
+                <div class="col-md-3 mb-3">
                     <strong><i class="fas fa-calendar-alt"></i> Scheduled:</strong><br>
                     {{ schedule.scheduled_date|date:"d M Y" }}
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 mb-3">
                     <strong><i class="fas fa-clock"></i> Due Date:</strong><br>
                     <span class="text-danger">{{ schedule.due_date|date:"d M Y" }}</span>
                 </div>
-                <div class="col-md-3">
-                    <strong><i class="fas fa-user"></i> Assigned To:</strong><br>
-                    {{ schedule.assigned_to.get_full_name }}
+                <div class="col-md-3 mb-3">
+                    <strong><i class="fas fa-user-check"></i> Conducted By:</strong><br>
+                    {{ user.get_full_name }}
                 </div>
             </div>
             {% if schedule.assignment_notes %}
@@ -55,6 +192,93 @@
                 {{ schedule.assignment_notes }}
             </div>
             {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header" style="background: linear-gradient(135deg, #0f766e, #0ea5e9); color: white;">
+            <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Inspection Scope</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <div class="section-label">
+                    <span>Plants <span class="text-danger">*</span></span>
+                    <span class="badge-count" id="plantCount">0</span>
+                </div>
+                <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
+                <div class="select-all-bar">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
+                        <i class="fas fa-check-square mr-1"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount)">
+                        <i class="fas fa-square mr-1"></i> Deselect All
+                    </button>
+                </div>
+                <div class="checkbox-grid" id="plantsGrid">
+                    <div class="loading-text">Loading plants...</div>
+                </div>
+                <div id="plantsError" class="text-danger small mt-2">{% if scope_errors.selected_plants %}{{ scope_errors.selected_plants }}{% endif %}</div>
+            </div>
+
+            <div class="mb-4">
+                <div class="section-label">
+                    <span>Zones</span>
+                    <span class="badge-count" id="zoneCount">0</span>
+                </div>
+                <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
+                <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
+                        <i class="fas fa-check-square mr-1"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('zone-checkbox', updateZoneCount)">
+                        <i class="fas fa-square mr-1"></i> Deselect All
+                    </button>
+                </div>
+                <div class="checkbox-grid" id="zonesGrid">
+                    <div class="loading-text">Please select plants first</div>
+                </div>
+                <div id="zonesError" class="text-danger small mt-2">{% if scope_errors.selected_zones %}{{ scope_errors.selected_zones }}{% endif %}</div>
+            </div>
+
+            <div class="mb-4">
+                <div class="section-label">
+                    <span>Locations</span>
+                    <span class="badge-count" id="locationCount">0</span>
+                </div>
+                <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
+                <div class="select-all-bar" id="locationSelectBar" style="display:none;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('location-checkbox', updateLocationCount)">
+                        <i class="fas fa-check-square mr-1"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('location-checkbox', updateLocationCount)">
+                        <i class="fas fa-square mr-1"></i> Deselect All
+                    </button>
+                </div>
+                <div class="checkbox-grid" id="locationsGrid">
+                    <div class="loading-text">Please select zones first</div>
+                </div>
+                <div id="locationsError" class="text-danger small mt-2">{% if scope_errors.selected_locations %}{{ scope_errors.selected_locations }}{% endif %}</div>
+            </div>
+
+            <div class="mb-0">
+                <div class="section-label">
+                    <span>Sub-Locations</span>
+                    <span class="badge-count" id="sublocationCount">0</span>
+                </div>
+                <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
+                <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
+                        <i class="fas fa-check-square mr-1"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
+                        <i class="fas fa-square mr-1"></i> Deselect All
+                    </button>
+                </div>
+                <div class="checkbox-grid" id="sublocationsGrid">
+                    <div class="loading-text">Please select locations first</div>
+                </div>
+                <div id="sublocationsError" class="text-danger small mt-2">{% if scope_errors.selected_sublocations %}{{ scope_errors.selected_sublocations }}{% endif %}</div>
+            </div>
         </div>
     </div>
     
@@ -105,54 +329,57 @@
                 {% if tq.question.question_type == 'YES_NO' %}
                 <div class="form-group mb-2">
                     <label class="font-weight-bold">Answer:</label>
-                    <div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
-                        <label class="btn btn-outline-success">
+                    <div class="btn-group btn-group-toggle d-block {% if tq.answer_error %}border border-danger rounded p-2{% endif %}" data-toggle="buttons" data-question-group="{{ tq.question.id }}">
+                        <label class="btn btn-outline-success {% if tq.prefill_answer == 'Yes' %}active{% endif %}">
                             <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="Yes" {% if tq.is_mandatory %}required{% endif %}>
+                                   value="Yes" {% if tq.prefill_answer == 'Yes' %}checked{% endif %}>
                             <i class="fas fa-check-circle"></i> Yes
                         </label>
-                        <label class="btn btn-outline-danger ml-2">
+                        <label class="btn btn-outline-danger ml-2 {% if tq.prefill_answer == 'No' %}active{% endif %}">
                             <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="No" {% if tq.is_mandatory %}required{% endif %}>
+                                   value="No" {% if tq.prefill_answer == 'No' %}checked{% endif %}>
                             <i class="fas fa-times-circle"></i> No
                         </label>
-                        <label class="btn btn-outline-secondary ml-2">
+                        <label class="btn btn-outline-secondary ml-2 {% if tq.prefill_answer == 'N/A' %}active{% endif %}">
                             <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="N/A" {% if not tq.is_mandatory %}{% endif %}>
+                                   value="N/A" {% if tq.prefill_answer == 'N/A' %}checked{% endif %}>
                             <i class="fas fa-minus-circle"></i> N/A
                         </label>
                     </div>
+                    <div class="text-danger small mt-1" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
                 </div>
                 
                 {% elif tq.question.question_type == 'TEXT' %}
                 <div class="form-group mb-2">
                     <label class="font-weight-bold">Answer:</label>
                     <input type="text" name="question_{{ tq.question.id }}" 
-                           class="form-control" 
-                           {% if tq.is_mandatory %}required{% endif %}>
+                           class="form-control {% if tq.answer_error %}is-invalid{% endif %}" 
+                           value="{{ tq.prefill_answer }}">
+                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
                 </div>
                 
                 {% elif tq.question.question_type == 'NUMBER' %}
                 <div class="form-group mb-2">
                     <label class="font-weight-bold">Answer:</label>
                     <input type="number" name="question_{{ tq.question.id }}" 
-                           class="form-control" step="any"
-                           {% if tq.is_mandatory %}required{% endif %}>
+                           class="form-control {% if tq.answer_error %}is-invalid{% endif %}" step="any"
+                           value="{{ tq.prefill_answer }}">
+                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
                 </div>
                 
                 {% elif tq.question.question_type == 'RATING' %}
                 <div class="form-group mb-2">
                     <label class="font-weight-bold">Rating (1-5):</label>
                     <select name="question_{{ tq.question.id }}" 
-                            class="form-control" style="width: 150px;"
-                            {% if tq.is_mandatory %}required{% endif %}>
+                            class="form-control {% if tq.answer_error %}is-invalid{% endif %}" style="width: 150px;">
                         <option value="">Select...</option>
-                        <option value="1">1 - Poor</option>
-                        <option value="2">2 - Fair</option>
-                        <option value="3">3 - Good</option>
-                        <option value="4">4 - Very Good</option>
-                        <option value="5">5 - Excellent</option>
+                        <option value="1" {% if tq.prefill_answer == '1' %}selected{% endif %}>1 - Poor</option>
+                        <option value="2" {% if tq.prefill_answer == '2' %}selected{% endif %}>2 - Fair</option>
+                        <option value="3" {% if tq.prefill_answer == '3' %}selected{% endif %}>3 - Good</option>
+                        <option value="4" {% if tq.prefill_answer == '4' %}selected{% endif %}>4 - Very Good</option>
+                        <option value="5" {% if tq.prefill_answer == '5' %}selected{% endif %}>5 - Excellent</option>
                     </select>
+                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
                 </div>
                 {% endif %}
                 
@@ -163,32 +390,96 @@
                         {% if tq.question.is_remarks_mandatory %}<span class="text-danger">*</span>{% endif %}
                     </label>
                     <textarea name="remarks_{{ tq.question.id }}" 
-                              class="form-control" 
+                              class="form-control {% if tq.remarks_error %}is-invalid{% endif %}" 
                               rows="2"
-                              placeholder="Add your observations or comments..."
-                              {% if tq.question.is_remarks_mandatory %}required{% endif %}></textarea>
+                              placeholder="Add your observations or comments...">{{ tq.prefill_remarks }}</textarea>
+                    <div class="invalid-feedback" style="{% if tq.remarks_error %}display:block;{% endif %}" id="error_remarks_{{ tq.question.id }}">{% if tq.remarks_error %}{{ tq.remarks_error }}{% endif %}</div>
                 </div>
                 
                 <!-- Photo Upload -->
                 {% if tq.question.is_photo_required %}
-                <div class="form-group mb-0">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-camera"></i> Photo Evidence <span class="text-danger">*</span>
-                    </label>
-                    <input type="file" name="photo_{{ tq.question.id }}" 
-                           class="form-control-file" 
-                           accept="image/*" required>
-                    <small class="form-text text-muted">Photo is mandatory for this question</small>
-                </div>
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold">
+                            <i class="fas fa-camera"></i> Photo Evidence <span class="text-danger">*</span>
+                        </label>
+
+                        <!-- Click Area -->
+                        <div class="add-photo-btn {% if tq.photo_error %}border border-danger{% endif %}" onclick="handleInspectionPhotoClick({{ tq.question.id }})">
+                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+                            <p class="mb-0">Click to add photo</p>
+                        </div>
+
+                        <!-- Main (Gallery Input - submitted to backend) -->
+                        <input type="file"
+                            name="photo_{{ tq.question.id }}"
+                            id="photo_{{ tq.question.id }}"
+                            class="d-none inspection-photo-input"
+                            accept="image/*"
+                            required>
+
+                        <!-- Camera Input -->
+                        <input type="file"
+                            id="photo_{{ tq.question.id }}_camera"
+                            class="d-none"
+                            accept="image/*"
+                            capture="environment">
+
+                        <!-- Preview -->
+                        <div id="preview_{{ tq.question.id }}" class="mt-2" data-has-draft-photo="{% if tq.draft_photo %}1{% else %}0{% endif %}">
+                            {% if tq.draft_photo %}
+                            <div class="mb-2">
+                                <img src="{{ tq.draft_photo.photo.url }}"
+                                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;"
+                                     alt="Saved draft photo">
+                                <small class="d-block text-muted mt-1">Saved in draft. You can keep it or upload a new one.</small>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <small class="form-text text-muted">
+                            Photo is mandatory for this question
+                        </small>
+                        <div class="text-danger small mt-1" id="error_photo_{{ tq.question.id }}">{% if tq.photo_error %}{{ tq.photo_error }}{% endif %}</div>
+                    </div>
                 {% else %}
-                <div class="form-group mb-0">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-camera"></i> Photo (Optional)
-                    </label>
-                    <input type="file" name="photo_{{ tq.question.id }}" 
-                           class="form-control-file" 
-                           accept="image/*">
-                </div>
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold">
+                            <i class="fas fa-camera"></i> Photo (Optional)
+                        </label>
+
+                        <!-- Click Area -->
+                        <div class="add-photo-btn" onclick="handleInspectionPhotoClick({{ tq.question.id }})">
+                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+                            <p class="mb-0">Click to add photo</p>
+                        </div>
+
+                        <!-- Main (Gallery Input - submitted to backend) -->
+                        <input type="file"
+                            name="photo_{{ tq.question.id }}"
+                            id="photo_{{ tq.question.id }}"
+                            class="d-none inspection-photo-input"
+                            accept="image/*">
+
+                        <!-- Camera Input -->
+                        <input type="file"
+                            id="photo_{{ tq.question.id }}_camera"
+                            class="d-none"
+                            accept="image/*"
+                            capture="environment">
+
+                        <!-- Preview -->
+                        <div id="preview_{{ tq.question.id }}" class="mt-2" data-has-draft-photo="{% if tq.draft_photo %}1{% else %}0{% endif %}">
+                            {% if tq.draft_photo %}
+                            <div class="mb-2">
+                                <img src="{{ tq.draft_photo.photo.url }}"
+                                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;"
+                                     alt="Saved draft photo">
+                                <small class="d-block text-muted mt-1">Saved in draft. You can keep it or upload a new one.</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="text-danger small mt-1" id="error_photo_{{ tq.question.id }}">{% if tq.photo_error %}{{ tq.photo_error }}{% endif %}</div>
+                    </div>
                 {% endif %}
             </div>
             {% endfor %}
@@ -202,10 +493,16 @@
             <p class="text-muted mb-3">
                 Please ensure all mandatory questions are answered before submitting.
             </p>
+            {% if draft_exists %}
+            <p class="text-info small mb-3">A saved draft is loaded in this form.</p>
+            {% endif %}
             <!-- <button type="button" class="btn btn-info me-2" onclick="previewNoAnswers()">
                     <i class="fas fa-eye"></i> Preview Non-Compliant Items
             </button> -->
-            <button type="submit" class="btn btn-success btn-lg mr-2" onclick="return confirm('Submit this inspection? This action cannot be undone.')">
+            <button type="submit" name="form_action" value="draft" class="btn btn-outline-primary btn-lg mr-2">
+                <i class="fas fa-save"></i> Save Draft
+            </button>
+            <button type="submit" name="form_action" value="submit" class="btn btn-success btn-lg mr-2" onclick="return confirm('Submit this inspection? This action cannot be changed later.')">
                 <i class="fas fa-check"></i> Submit Inspection
             </button>
             <a href="{% url 'inspections:my_inspections' %}" class="btn btn-secondary btn-lg">
@@ -214,11 +511,381 @@
         </div>
     </div>
 </form>
+
+<div id="photoOptionModal" 
+     style="display:none; position:fixed; bottom:0; left:0; right:0; 
+            background:#fff; border-radius:16px 16px 0 0; 
+            box-shadow:0 -5px 20px rgba(0,0,0,0.2); 
+            padding:20px; z-index:9999;">
+
+    <div style="text-align:center; margin-bottom:15px; font-weight:600;">
+        Upload Photo
+    </div>
+
+    <button id="openCameraBtn" class="btn btn-primary w-100 mb-2">
+        📷 Take Photo
+    </button>
+
+    <button id="openGalleryBtn" class="btn btn-outline-primary w-100 mb-2">
+        🖼️ Choose from Gallery
+    </button>
+
+    <button onclick="closePhotoModal()" class="btn btn-light w-100">
+        Cancel
+    </button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+const selectedPlantIds = {{ selected_plant_ids|default:"[]"|safe }};
+const selectedZoneIds = {{ selected_zone_ids|default:"[]"|safe }};
+const selectedLocationIds = {{ selected_location_ids|default:"[]"|safe }};
+const selectedSublocationIds = {{ selected_sublocation_ids|default:"[]"|safe }};
+
+const allowedPlantIds = {{ allowed_plant_ids|default:"[]"|safe }};
+const allowedZoneIds = {{ allowed_zone_ids|default:"[]"|safe }};
+const allowedLocationIds = {{ allowed_location_ids|default:"[]"|safe }};
+const allowedSublocationIds = {{ allowed_sublocation_ids|default:"[]"|safe }};
+
+function selectAll(cls, countFn) {
+    document.querySelectorAll('.' + cls).forEach(function (cb) {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+    });
+    if (countFn) {
+        countFn();
+    }
+}
+
+function deselectAll(cls, countFn) {
+    document.querySelectorAll('.' + cls).forEach(function (cb) {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+    });
+    if (countFn) {
+        countFn();
+    }
+}
+
+function updatePlantCount() {
+    document.getElementById('plantCount').textContent =
+        document.querySelectorAll('.plant-checkbox:checked').length;
+}
+
+function updateZoneCount() {
+    document.getElementById('zoneCount').textContent =
+        document.querySelectorAll('.zone-checkbox:checked').length;
+}
+
+function updateLocationCount() {
+    document.getElementById('locationCount').textContent =
+        document.querySelectorAll('.location-checkbox:checked').length;
+}
+
+function updateSublocationCount() {
+    document.getElementById('sublocationCount').textContent =
+        document.querySelectorAll('.sublocation-checkbox:checked').length;
+}
+
+function getCheckedValues(selector) {
+    const values = [];
+    document.querySelectorAll(selector + ':checked').forEach(function (cb) {
+        values.push(parseInt(cb.value, 10));
+    });
+    return values;
+}
+
+function resetGrid(gridId, message) {
+    document.getElementById(gridId).innerHTML =
+        '<div class="loading-text">' + message + '</div>';
+}
+
+function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
+    const div = document.createElement('div');
+    div.className = 'checkbox-item';
+    div.innerHTML =
+        '<input type="checkbox" name="' + name + '" value="' + value + '" id="' + id + '" class="' + cssClass + '">' +
+        '<label for="' + id + '">' + labelHtml + '</label>';
+    div.querySelector('input').addEventListener('change', onChangeFn);
+    return div;
+}
+
+function buildGroupHeader(text, icon) {
+    const div = document.createElement('div');
+    div.className = 'group-header';
+    div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + text;
+    return div;
+}
+
+function loadPlants() {
+    const grid = document.getElementById('plantsGrid');
+    grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
+
+    fetch('/organizations/ajax/get-all-plants/')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            const plants = data.filter(function (plant) {
+                return allowedPlantIds.includes(plant.id);
+            });
+
+            grid.innerHTML = '';
+            if (!plants.length) {
+                grid.innerHTML = '<div class="loading-text">No plants available</div>';
+                updatePlantCount();
+                return;
+            }
+
+            plants.forEach(function (plant) {
+                const item = buildCheckboxItem(
+                    'selected_plants',
+                    plant.id,
+                    'plant_' + plant.id,
+                    '<strong>' + plant.name + '</strong>' +
+                    (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
+                    'plant-checkbox',
+                    function () {
+                        updatePlantCount();
+                        loadZonesForPlants();
+                    }
+                );
+
+                if (selectedPlantIds.includes(plant.id)) {
+                    item.querySelector('input').checked = true;
+                }
+
+                grid.appendChild(item);
+            });
+
+            updatePlantCount();
+            loadZonesForPlants();
+        })
+        .catch(function () {
+            grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
+        });
+}
+
+function loadZonesForPlants() {
+    const plantIds = getCheckedValues('.plant-checkbox');
+    const grid = document.getElementById('zonesGrid');
+    const bar = document.getElementById('zoneSelectBar');
+
+    resetGrid('locationsGrid', 'Please select zones first');
+    resetGrid('sublocationsGrid', 'Please select locations first');
+    document.getElementById('locationSelectBar').style.display = 'none';
+    document.getElementById('sublocationSelectBar').style.display = 'none';
+    updateLocationCount();
+    updateSublocationCount();
+
+    if (!plantIds.length) {
+        resetGrid('zonesGrid', 'Please select plants first');
+        bar.style.display = 'none';
+        updateZoneCount();
+        return;
+    }
+
+    grid.innerHTML = '<div class="loading-text">Loading zones...</div>';
+
+    fetch('/organizations/ajax/get-zones-by-plants/?plant_ids=' + plantIds.join(','))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            const zones = data.filter(function (zone) {
+                return allowedZoneIds.includes(zone.id);
+            });
+
+            grid.innerHTML = '';
+            if (!zones.length) {
+                grid.innerHTML = '<div class="loading-text">No zones in selected plants</div>';
+                bar.style.display = 'none';
+                updateZoneCount();
+                return;
+            }
+
+            const grouped = {};
+            zones.forEach(function (zone) {
+                if (!grouped[zone.plant_name]) {
+                    grouped[zone.plant_name] = [];
+                }
+                grouped[zone.plant_name].push(zone);
+            });
+
+            Object.keys(grouped).forEach(function (plantName) {
+                grid.appendChild(buildGroupHeader(plantName, 'industry'));
+                grouped[plantName].forEach(function (zone) {
+                    const item = buildCheckboxItem(
+                        'selected_zones',
+                        zone.id,
+                        'zone_' + zone.id,
+                        '<strong>' + zone.name + '</strong>' +
+                        (zone.code ? ' <small class="text-muted">(' + zone.code + ')</small>' : ''),
+                        'zone-checkbox',
+                        function () {
+                            updateZoneCount();
+                            loadLocationsForZones();
+                        }
+                    );
+
+                    if (selectedZoneIds.includes(zone.id)) {
+                        item.querySelector('input').checked = true;
+                    }
+
+                    grid.appendChild(item);
+                });
+            });
+
+            bar.style.display = 'flex';
+            updateZoneCount();
+            loadLocationsForZones();
+        })
+        .catch(function () {
+            grid.innerHTML = '<div class="loading-text text-danger">Error loading zones</div>';
+        });
+}
+
+function loadLocationsForZones() {
+    const zoneIds = getCheckedValues('.zone-checkbox');
+    const grid = document.getElementById('locationsGrid');
+    const bar = document.getElementById('locationSelectBar');
+
+    resetGrid('sublocationsGrid', 'Please select locations first');
+    document.getElementById('sublocationSelectBar').style.display = 'none';
+    updateSublocationCount();
+
+    if (!zoneIds.length) {
+        resetGrid('locationsGrid', 'Please select zones first');
+        bar.style.display = 'none';
+        updateLocationCount();
+        return;
+    }
+
+    grid.innerHTML = '<div class="loading-text">Loading locations...</div>';
+
+    fetch('/organizations/ajax/get-locations-by-zones/?zone_ids=' + zoneIds.join(','))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            const locations = data.filter(function (location) {
+                return allowedLocationIds.includes(location.id);
+            });
+
+            grid.innerHTML = '';
+            if (!locations.length) {
+                grid.innerHTML = '<div class="loading-text">No locations in selected zones</div>';
+                bar.style.display = 'none';
+                updateLocationCount();
+                return;
+            }
+
+            const grouped = {};
+            locations.forEach(function (location) {
+                if (!grouped[location.zone_name]) {
+                    grouped[location.zone_name] = [];
+                }
+                grouped[location.zone_name].push(location);
+            });
+
+            Object.keys(grouped).forEach(function (zoneName) {
+                grid.appendChild(buildGroupHeader(zoneName, 'map-pin'));
+                grouped[zoneName].forEach(function (location) {
+                    const item = buildCheckboxItem(
+                        'selected_locations',
+                        location.id,
+                        'location_' + location.id,
+                        '<strong>' + location.name + '</strong>' +
+                        (location.code ? ' <small class="text-muted">(' + location.code + ')</small>' : ''),
+                        'location-checkbox',
+                        function () {
+                            updateLocationCount();
+                            loadSublocationsForLocations();
+                        }
+                    );
+
+                    if (selectedLocationIds.includes(location.id)) {
+                        item.querySelector('input').checked = true;
+                    }
+
+                    grid.appendChild(item);
+                });
+            });
+
+            bar.style.display = 'flex';
+            updateLocationCount();
+            loadSublocationsForLocations();
+        })
+        .catch(function () {
+            grid.innerHTML = '<div class="loading-text text-danger">Error loading locations</div>';
+        });
+}
+
+function loadSublocationsForLocations() {
+    const locationIds = getCheckedValues('.location-checkbox');
+    const grid = document.getElementById('sublocationsGrid');
+    const bar = document.getElementById('sublocationSelectBar');
+
+    if (!locationIds.length) {
+        resetGrid('sublocationsGrid', 'Please select locations first');
+        bar.style.display = 'none';
+        updateSublocationCount();
+        return;
+    }
+
+    grid.innerHTML = '<div class="loading-text">Loading sub-locations...</div>';
+
+    fetch('/organizations/ajax/get-sublocations-by-locations/?location_ids=' + locationIds.join(','))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            const sublocations = data.filter(function (sublocation) {
+                return allowedSublocationIds.includes(sublocation.id);
+            });
+
+            grid.innerHTML = '';
+            if (!sublocations.length) {
+                grid.innerHTML = '<div class="loading-text">No sub-locations in selected locations</div>';
+                bar.style.display = 'none';
+                updateSublocationCount();
+                return;
+            }
+
+            const grouped = {};
+            sublocations.forEach(function (sublocation) {
+                if (!grouped[sublocation.location_name]) {
+                    grouped[sublocation.location_name] = [];
+                }
+                grouped[sublocation.location_name].push(sublocation);
+            });
+
+            Object.keys(grouped).forEach(function (locationName) {
+                grid.appendChild(buildGroupHeader(locationName, 'map-marker-alt'));
+                grouped[locationName].forEach(function (sublocation) {
+                    const item = buildCheckboxItem(
+                        'selected_sublocations',
+                        sublocation.id,
+                        'sublocation_' + sublocation.id,
+                        sublocation.name + (sublocation.code ? ' <small class="text-muted">(' + sublocation.code + ')</small>' : ''),
+                        'sublocation-checkbox',
+                        function () {
+                            updateSublocationCount();
+                        }
+                    );
+
+                    if (selectedSublocationIds.includes(sublocation.id)) {
+                        item.querySelector('input').checked = true;
+                    }
+
+                    grid.appendChild(item);
+                });
+            });
+
+            bar.style.display = 'flex';
+            updateSublocationCount();
+        })
+        .catch(function () {
+            grid.innerHTML = '<div class="loading-text text-danger">Error loading sub-locations</div>';
+        });
+}
+
 $(document).ready(function() {
+    loadPlants();
+
     // Auto-resize textareas
     $('textarea').each(function() {
         this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
@@ -227,24 +894,185 @@ $(document).ready(function() {
         this.style.height = (this.scrollHeight) + 'px';
     });
     
-    // Form validation
+    var submitAction = 'submit';
+    $('button[name="form_action"]').on('click', function() {
+        submitAction = $(this).val();
+    });
+
+    function setFieldError(fieldName, message) {
+        var $field = $('[name="' + fieldName + '"]');
+        if ($field.attr('type') === 'radio') {
+            $('[data-question-group="' + fieldName.replace('question_', '') + '"]').addClass('border border-danger rounded p-2');
+            $('#error_' + fieldName).text(message);
+            return;
+        }
+        $field.addClass('is-invalid');
+        $('#error_' + fieldName).text(message).show();
+    }
+
+    function clearFieldError(fieldName) {
+        var $field = $('[name="' + fieldName + '"]');
+        if ($field.attr('type') === 'radio') {
+            $('[data-question-group="' + fieldName.replace('question_', '') + '"]').removeClass('border border-danger rounded p-2');
+            $('#error_' + fieldName).text('');
+            return;
+        }
+        $field.removeClass('is-invalid');
+        $('#error_' + fieldName).text('').hide();
+    }
+
+    function setScopeError(key, message) {
+        $('#' + key + 'Error').text(message);
+    }
+
+    function clearScopeError(key) {
+        $('#' + key + 'Error').text('');
+    }
+
     $('form').submit(function(e) {
-        var unanswered = [];
-        
-        // Check all mandatory radio button groups
-        $('input[type="radio"][required]').each(function() {
-            var name = $(this).attr('name');
-            if (!$('input[name="' + name + '"]:checked').length) {
-                unanswered.push(name);
-            }
-        });
-        
-        if (unanswered.length > 0) {
+        if (submitAction === 'draft') {
+            return true;
+        }
+
+        var hasErrors = false;
+
+        clearScopeError('plants');
+        clearScopeError('zones');
+        clearScopeError('locations');
+        clearScopeError('sublocations');
+        $('[id^="error_question_"], [id^="error_remarks_"], [id^="error_photo_"]').text('').hide();
+        $('[name^="question_"], [name^="remarks_"]').removeClass('is-invalid');
+        $('[data-question-group]').removeClass('border border-danger rounded p-2');
+
+        if (!document.querySelectorAll('.plant-checkbox:checked').length) {
+            setScopeError('plants', 'Please select at least one plant.');
+            hasErrors = true;
+        }
+        if (document.querySelectorAll('.zone-checkbox').length && !document.querySelectorAll('.zone-checkbox:checked').length) {
+            setScopeError('zones', 'Please select at least one zone.');
+            hasErrors = true;
+        }
+        if (document.querySelectorAll('.location-checkbox').length && !document.querySelectorAll('.location-checkbox:checked').length) {
+            setScopeError('locations', 'Please select at least one location.');
+            hasErrors = true;
+        }
+        if (document.querySelectorAll('.sublocation-checkbox').length && !document.querySelectorAll('.sublocation-checkbox:checked').length) {
+            setScopeError('sublocations', 'Please select at least one sub-location.');
+            hasErrors = true;
+        }
+
+        {% for category, questions in questions_by_category.items %}
+            {% for tq in questions %}
+                {% if tq.is_mandatory %}
+                    {% if tq.question.question_type == 'YES_NO' %}
+                        if (!$('input[name="question_{{ tq.question.id }}"]:checked').length) {
+                            setFieldError('question_{{ tq.question.id }}', 'This answer is required.');
+                            hasErrors = true;
+                        }
+                    {% else %}
+                        if (!$('[name="question_{{ tq.question.id }}"]').val()) {
+                            setFieldError('question_{{ tq.question.id }}', 'This answer is required.');
+                            hasErrors = true;
+                        }
+                    {% endif %}
+                {% endif %}
+
+                {% if tq.question.is_remarks_mandatory %}
+                    if (!$('[name="remarks_{{ tq.question.id }}"]').val().trim()) {
+                        setFieldError('remarks_{{ tq.question.id }}', 'Remarks are required.');
+                        hasErrors = true;
+                    }
+                {% endif %}
+
+                {% if tq.question.is_photo_required %}
+                    var photoInput{{ tq.question.id }} = document.getElementById('photo_{{ tq.question.id }}');
+                    var photoPreview{{ tq.question.id }} = document.getElementById('preview_{{ tq.question.id }}');
+                    if (!photoInput{{ tq.question.id }}.files.length && photoPreview{{ tq.question.id }}.dataset.hasDraftPhoto !== '1') {
+                        $('#error_photo_{{ tq.question.id }}').text('Photo evidence is required.').show();
+                        hasErrors = true;
+                    }
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+
+        if (hasErrors) {
             e.preventDefault();
-            alert('Please answer all mandatory questions before submitting!');
+            var firstError = document.querySelector('.is-invalid, [data-question-group].border-danger, #plantsError:not(:empty), #zonesError:not(:empty), #locationsError:not(:empty), #sublocationsError:not(:empty)');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             return false;
         }
     });
+});
+
+let currentQuestionId = null;
+
+function handleInspectionPhotoClick(questionId) {
+    currentQuestionId = questionId;
+
+    if (isMobileOrTablet()) {
+        document.getElementById("photoOptionModal").style.display = "block";
+    } else {
+        openGallery();
+    }
+}
+
+function closePhotoModal() {
+    document.getElementById("photoOptionModal").style.display = "none";
+}
+
+function openCamera() {
+    closePhotoModal();
+    document.getElementById(`photo_${currentQuestionId}_camera`).click();
+}
+
+function openGallery() {
+    closePhotoModal();
+    document.getElementById(`photo_${currentQuestionId}`).click();
+}
+
+function isMobileOrTablet() {
+    return /Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+}
+
+$('#openCameraBtn').click(openCamera);
+$('#openGalleryBtn').click(openGallery);
+
+
+$(document).on('change', '[id$="_camera"]', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const id = this.id.replace('_camera', '');
+    const galleryInput = document.getElementById(id);
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    galleryInput.files = dataTransfer.files;
+
+    $(galleryInput).trigger('change');
+});
+
+
+$(document).on('change', '.inspection-photo-input', function() {
+    const input = this;
+    const id = input.id.replace('photo_', '');
+    const previewId = `preview_${id}`;
+    $(`#error_photo_${id}`).text('').hide();
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $(`#${previewId}`).html(`
+                <img src="${e.target.result}" 
+                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;">
+                <small class="d-block text-muted mt-1">Ready to save with this draft.</small>
+            `);
+            document.getElementById(previewId).dataset.hasDraftPhoto = '1';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 });
 </script>
 {% endblock %}

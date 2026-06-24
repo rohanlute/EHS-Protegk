@@ -126,7 +126,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Search...">
+                            <input type="text" name="search" class="form-control" placeholder="Search..." {% if search %}value="{{ search }}"{% else %}value=""{% endif %}>
                         </div>
                         <div class="col-md-1">
                             <button type="submit" class="btn btn-primary w-100">
@@ -170,7 +170,13 @@
                                 <td><strong>{{ schedule.schedule_code }}</strong></td>
                                 <td>{{ schedule.template.template_name }}</td>
                                 <td>{{ schedule.assigned_to.get_full_name }}</td>
-                                <td>{{ schedule.plant.name }}</td>
+                                <td>
+                                    {% for plant in schedule.plants.all %}
+                                        <span class="badge badge-info">{{ plant.name }}</span>
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </td>
                                 <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
                                 <td>
                                     {{ schedule.due_date|date:"d M Y" }}
@@ -182,8 +188,10 @@
                                     <span class="badge 
                                         {% if schedule.status == 'SCHEDULED' %}badge-primary
                                         {% elif schedule.status == 'IN_PROGRESS' %}badge-warning
-                                        {% elif schedule.status == 'COMPLETED' %}badge-success
+                                        {% elif schedule.status == 'CLOSED' %}badge-success
                                         {% elif schedule.status == 'OVERDUE' %}badge-danger
+                                        {% elif schedule.status == 'LATE_CLOSE' %}badge-danger
+                                        {% elif schedule.status == 'CANCELLED' %}badge-secondary
                                         {% else %}badge-secondary{% endif %}">
                                         {{ schedule.get_status_display }}
                                     </span>
@@ -197,8 +205,14 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         {% endif %}
+                                        {% if user|has_perm:'EXPORT_INSPECTION_PDF' or user|has_perm:'VIEW_INSPECTION' %}
+                                        <a href="{% url 'inspections:schedule_pdf' schedule.pk %}" 
+                                        class="btn btn-sm btn-danger" title="Download PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% endif %}
                                         {% if user|has_perm:'EDIT_INSPECTION' %}
-                                        {% if schedule.status != 'COMPLETED' and schedule.status != 'CANCELLED' %}
+                                        {% if schedule.status != 'CLOSED' and schedule.status != 'LATE_CLOSE' and schedule.status != 'CANCELLED' %}
                                         <a href="{% url 'inspections:schedule_edit' schedule.pk %}" 
                                         class="btn btn-sm btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
@@ -209,9 +223,59 @@
                                         <a href="{% url 'inspections:schedule_clone' schedule.pk %}" class="btn btn-sm btn-secondary" title="Clone">
                                             <i class="fas fa-clone"></i>
                                         </a>
+                                        {% if schedule.status == 'OVERDUE' %}
+                                        <a href="{% url 'inspections:schedule_restart' schedule.pk %}" class="btn btn-sm btn-danger" title="Restart">
+                                            <i class="fas fa-redo"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
+                                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ schedule.id }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
+                            {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
+                            <div class="modal fade" id="deleteModal{{ schedule.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                Confirm Delete
+                                            </h5>
+                                            <button type="button" class="close text-white" data-dismiss="modal">
+                                                <span>&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-body text-center">
+                                            <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                                            <h5>Are you sure?</h5>
+                                            <p class="mb-1">
+                                                Inspection <strong>{{ schedule.schedule_code }}</strong> will be <strong>permanently deleted</strong>.
+                                            </p>
+                                            <p class="text-danger mb-0">
+                                                This action cannot be undone.
+                                            </p>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <form method="POST" action="{% url 'inspections:schedule_delete' schedule.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">
+                                                    Yes, Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -223,7 +287,7 @@
                     <ul class="pagination justify-content-center">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
@@ -231,13 +295,13 @@
                         
                         {% for num in page_obj.paginator.page_range %}
                         <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            <a class="page-link" href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
                         </li>
                         {% endfor %}
                         
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>

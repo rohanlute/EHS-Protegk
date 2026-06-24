@@ -389,7 +389,8 @@ class InspectionSchedule(models.Model):
     STATUS_CHOICES = [
         ('SCHEDULED', 'Scheduled'),
         ('IN_PROGRESS', 'In Progress'),
-        ('COMPLETED', 'Completed'),
+        ('CLOSED', 'Closed'),
+        ('CLOSED_LATE', 'Closed Late'),
         ('OVERDUE', 'Overdue'),
         ('CANCELLED', 'Cancelled'),
     ]
@@ -464,15 +465,21 @@ class InspectionSchedule(models.Model):
     due_date = models.DateField(
         verbose_name="Due Date"
     )
+    scheduled_end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Schedule End Date",
+        help_text="Stop auto-generating inspections after this date"
+    )
     started_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Started At"
     )
-    completed_at = models.DateTimeField(
+    closed_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name="Completed At"
+        verbose_name="Closed At"
     )
     
     # Status
@@ -531,9 +538,9 @@ class InspectionSchedule(models.Model):
             self.schedule_code = self.generate_schedule_code()
         
         # Update status based on dates
-        if self.status not in ['COMPLETED', 'CANCELLED']:
-            if self.completed_at:
-                self.status = 'COMPLETED'
+        if self.status not in ['CLOSED', 'LATE_CLOSE', 'CANCELLED']:
+            if self.closed_at:
+                self.status = 'CLOSED'
             elif timezone.now().date() > self.due_date:
                 self.status = 'OVERDUE'
             elif self.started_at:
@@ -565,7 +572,7 @@ class InspectionSchedule(models.Model):
     def is_overdue(self):
         """Check if inspection is overdue"""
         return (
-            self.status not in ['COMPLETED', 'CANCELLED'] and
+            self.status not in ['CLOSED', 'LATE_CLOSE', 'CANCELLED'] and
             timezone.now().date() > self.due_date
         )
 class TemplateAutoScheduleConfig(models.Model):
@@ -651,7 +658,7 @@ class TemplateAutoScheduleConfig(models.Model):
         return self.STATUS_ACTIVE    
 
 class InspectionSubmission(models.Model):
-    """Stores the completed inspection submission"""
+    """Stores the CLOSED inspection submission"""
     
     schedule = models.OneToOneField(
         InspectionSchedule,
@@ -690,6 +697,53 @@ class InspectionSubmission(models.Model):
         return round(score, 2)
 
 
+class InspectionDraft(models.Model):
+    """Stores in-progress inspection data before final submission."""
+
+    schedule = models.OneToOneField(
+        InspectionSchedule,
+        on_delete=models.CASCADE,
+        related_name='draft'
+    )
+    saved_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='inspection_drafts'
+    )
+    data = models.JSONField(default=dict, blank=True)
+    saved_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'inspection_drafts'
+
+    def __str__(self):
+        return f"Draft for {self.schedule.schedule_code}"
+
+
+class InspectionDraftPhoto(models.Model):
+    """Stores per-question photo uploads for inspection drafts."""
+
+    draft = models.ForeignKey(
+        InspectionDraft,
+        on_delete=models.CASCADE,
+        related_name='photos'
+    )
+    question = models.ForeignKey(
+        InspectionQuestion,
+        on_delete=models.CASCADE,
+        related_name='draft_photos'
+    )
+    photo = models.ImageField(upload_to='inspection_drafts/%Y/%m/')
+    uploaded_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'inspection_draft_photos'
+        unique_together = ['draft', 'question']
+
+    def __str__(self):
+        return f"Draft photo for {self.draft.schedule.schedule_code} - {self.question.question_code}"
+
+
 class InspectionResponse(models.Model):
     submission = models.ForeignKey(
         'InspectionSubmission',
@@ -700,7 +754,7 @@ class InspectionResponse(models.Model):
         'InspectionQuestion',
         on_delete=models.CASCADE
     )
-    answer = models.CharField(max_length=10)
+    answer = models.TextField(blank=True)
     remarks = models.TextField(blank=True)
     photo = models.ImageField(upload_to='inspection_responses/', blank=True, null=True)
     answered_at = models.DateTimeField(auto_now_add=True)

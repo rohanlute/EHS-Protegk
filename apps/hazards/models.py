@@ -31,6 +31,7 @@ class Hazard(models.Model):
         ('noise', 'Noise'),
         ('illumination', 'Illumination'),
         ('dust_collection_ventillation', 'Dust collection / Ventillation'),
+        ('legal_compliance', 'Legal Compliance'),
         ('others', 'Others'),
     ]
     
@@ -43,13 +44,12 @@ class Hazard(models.Model):
     
     STATUS_CHOICES = [
         ('REPORTED', 'Reported'),
-        ('PENDING_APPROVAL', 'Pending Approval'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('UNDER_REVIEW', 'Under Review'),
+        # ('PENDING_APPROVAL', 'Pending Approval'),
+        # ('APPROVED', 'Approved'),
+        # ('REJECTED', 'Rejected'),
+        # ('UNDER_REVIEW', 'Under Review'),
         ('ACTION_ASSIGNED', 'Action Assigned'),
         ('IN_PROGRESS', 'In Progress'),
-        ('RESOLVED', 'Resolved'),
         ('CLOSED', 'Closed'),
     ]
     
@@ -335,7 +335,7 @@ class Hazard(models.Model):
         all_completed = all(item.status == 'COMPLETED' for item in action_items)
         
         if all_completed:
-            self.status = 'RESOLVED'
+            self.status = 'CLOSED'
             self.save(update_fields=['status'])
         elif action_items.filter(status='IN_PROGRESS').exists():
             self.status = 'IN_PROGRESS'
@@ -343,13 +343,81 @@ class Hazard(models.Model):
         elif action_items.filter(status='PENDING').exists() and self.status == 'REPORTED':
             self.status = 'ACTION_ASSIGNED'
             self.save(update_fields=['status'])      
+
+    def get_assigned_users(self):
+        """
+        Return all users assigned through hazard action items.
+        Falls back to the legacy `assigned_to` field when no action item
+        assignees exist yet.
+        """
+        assigned_users = []
+        seen_user_ids = set()
+
+        for action_item in self.action_items.all():
+            related_users = list(action_item.get_pending_users()) + list(action_item.completed_by_users.all())
+
+            for user in related_users:
+                if not user or user.pk in seen_user_ids:
+                    continue
+                assigned_users.append(user)
+                seen_user_ids.add(user.pk)
+
+        if not assigned_users and self.assigned_to:
+            assigned_users.append(self.assigned_to)
+
+        return assigned_users
         
     @property
     def is_action_overdue(self):
         """Check if action is overdue"""
-        if self.action_deadline and self.status not in ['RESOLVED', 'CLOSED']:
+        if self.action_deadline and self.status != 'CLOSED':
             return datetime.date.today() > self.action_deadline
         return False
+
+    @property
+    def completed_or_closed_date(self):
+        """Best-effort date used to determine whether the hazard was closed late."""
+        if self.closure_date:
+            return self.closure_date
+        if self.action_completed_date:
+            return self.action_completed_date
+
+        latest_action_completion = self.action_items.filter(
+            completion_date__isnull=False
+        ).order_by('-completion_date').values_list('completion_date', flat=True).first()
+        if latest_action_completion:
+            return latest_action_completion
+
+        if self.status == 'CLOSED':
+            return timezone.localtime(self.updated_at).date()
+        return None
+
+    @property
+    def is_late_closed(self):
+        """True when the hazard was closed after the deadline date."""
+        if self.status != 'CLOSED' or not self.action_deadline:
+            return False
+
+        completed_or_closed_date = self.completed_or_closed_date
+        return bool(completed_or_closed_date and completed_or_closed_date > self.action_deadline)
+
+    @property
+    def effective_status(self):
+        """Computed status used in the UI without changing the stored model field."""
+        if self.is_late_closed:
+            return 'CLOSED_LATE'
+        if self.is_action_overdue:
+            return 'OVERDUE'
+        return self.status
+
+    @property
+    def effective_status_display(self):
+        """Human-readable computed status label."""
+        status_display_map = {
+            'OVERDUE': 'Overdue',
+            'CLOSED_LATE': 'Closed Late',
+        }
+        return status_display_map.get(self.effective_status, self.get_status_display())
     
     @property
     def days_since_reported(self):
@@ -376,13 +444,19 @@ class Hazard(models.Model):
             'UNDER_REVIEW': 'badge-primary',
             'ACTION_ASSIGNED': 'badge-warning', # <-- Updated
             'IN_PROGRESS': 'badge-info',
-            'RESOLVED': 'badge-success',
-            'CLOSED': 'badge-secondary',
+            'CLOSED': 'badge-success',
             'REJECTED': 'badge-danger',
             'PENDING_APPROVAL': 'badge-light',
-            'APPROVED': 'badge-primary'
+            'APPROVED': 'badge-primary',
+            'OVERDUE': 'badge-danger',
+            'CLOSED_LATE': 'badge-danger',
         }
-        return status_classes.get(self.status, 'badge-secondary')
+        return status_classes.get(self.effective_status, 'badge-secondary')
+
+    @property
+    def status_css_class(self):
+        """CSS-friendly computed status name for custom template classes."""
+        return self.effective_status.lower().replace('_', '-')
     
     @property
     def category_icon(self):
@@ -472,6 +546,52 @@ class HazardPhoto(models.Model):
     
     def __str__(self):
         return f"{self.hazard.report_number} - Photo {self.id}"
+
+
+class HazardVideo(models.Model):
+    """Videos related to hazard"""
+
+    VIDEO_TYPE_CHOICES = [
+        ('evidence', 'Evidence'),
+        ('corrective_action', 'Corrective Action'),
+        ('before', 'Before'),
+        ('after', 'After'),
+    ]
+
+    hazard = models.ForeignKey(
+        Hazard,
+        on_delete=models.CASCADE,
+        related_name='videos'
+    )
+    video = models.FileField(
+        upload_to='hazard_videos/%Y/%m/',
+        help_text="Hazard video"
+    )
+    video_type = models.CharField(
+        max_length=20,
+        choices=VIDEO_TYPE_CHOICES,
+        default='evidence',
+        blank=True
+    )
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Brief description of the video"
+    )
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        help_text="User who uploaded the video"
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+        verbose_name = 'Hazard Video'
+        verbose_name_plural = 'Hazard Videos'
+
+    def __str__(self):
+        return f"{self.hazard.report_number} - Video {self.id}"
 
 
 class HazardActionItem(models.Model):
@@ -649,17 +769,15 @@ class HazardActionItem(models.Model):
     @property
     def is_fully_completed(self):
         """
-        Checks if all responsible users have completed the action item.
-        Returns True only when the number of completed users matches the number of assigned users.
+        Treat the action item as completed as soon as any assigned user completes it.
         """
         responsible_users_count = self.get_emails_count()
-        completed_users_count = self.completed_by_users.count()
-        
+
         # If no one is assigned, it cannot be considered complete.
         if responsible_users_count == 0:
             return False
-            
-        return responsible_users_count > 0 and responsible_users_count == completed_users_count
+
+        return self.completed_by_users.exists()
 
     def get_pending_users(self):
         """

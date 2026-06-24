@@ -147,13 +147,8 @@
                         Edit Hazard Report: {{ hazard.report_number }}
                     </h3>
                     <p class="text-muted mb-0">
-                        <span class="badge 
-                            {% if hazard.status == 'CLOSED' %}badge-success
-                            {% elif hazard.status == 'REJECTED' %}badge-danger
-                            {% elif hazard.status == 'APPROVED' %}badge-primary
-                            {% elif hazard.status == 'PENDING' %}badge-warning
-                            {% else %}badge-secondary{% endif %}">
-                            {{ hazard.get_status_display }}
+                        <span class="badge {{ hazard.status_badge_class }}">
+                            {{ hazard.effective_status_display }}
                         </span>
                         <span class="badge 
                             {% if hazard.severity == 'critical' %}badge-danger
@@ -392,6 +387,7 @@
                                             <option value="noise" {% if hazard.hazard_category == 'noise' %}selected{% endif %}>Noise</option>
                                             <option value="illumination" {% if hazard.hazard_category == 'illumination' %}selected{% endif %}>Illumination</option>
                                             <option value="dust_collection_ventillation" {% if hazard.hazard_category == 'dust_collection_ventillation' %}selected{% endif %}>Dust collection / Ventillation</option>
+                                            <option value="legal_compliance" {% if hazard.hazard_category == 'legal_compliance' %}selected{% endif %}>Legal Complinace</option>
                                             <option value="others" {% if hazard.hazard_category == 'others' %}selected{% endif %}>Others</option>
                                         </select>
                                     </div>
@@ -462,6 +458,25 @@
                         </div>
                         {% endif %}
 
+                        {% if videos %}
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="fas fa-video"></i>
+                                Existing Videos
+                            </div>
+
+                            <div class="row">
+                                {% for video in videos %}
+                                <div class="col-md-4 mb-3">
+                                    <video controls style="width: 100%; border-radius: 10px;">
+                                        <source src="{{ video.video.url }}">
+                                    </video>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <!-- Upload New Photos -->
                         <div class="form-section">
                             <div class="section-title">
@@ -474,13 +489,17 @@
                             <div id="photo-container" class="row">
                                 <!-- Initial photo upload -->
                                 <div class="col-md-4 mb-3 photo-item">
-                                    <div class="add-photo-btn" onclick="document.getElementById('photo_0').click()">
+                                    <div class="add-photo-btn" onclick="handlePhotoClick(0)">
                                         <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
                                         <p class="mb-0">Click to add photo</p>
                                     </div>
-                                    <input type="file" name="photo_0" id="photo_0" 
-                                           class="d-none photo-input" accept="image/*" 
-                                           data-index="0">
+                                    <input type="file" name="photo_0" id="photo_0"
+                                        class="d-none photo-input" accept="image/*"
+                                        data-index="0">
+
+                                    <input type="file" id="photo_0_camera"
+                                        class="d-none"
+                                        accept="image/*" capture="environment">
                                     <div id="preview_0" class="mt-2"></div>
                                 </div>
                             </div>
@@ -488,6 +507,14 @@
                             <button type="button" id="add-more-photos" class="btn btn-outline-primary btn-sm mt-2">
                                 <i class="fas fa-plus"></i> Add More Photos
                             </button>
+                            {% comment %}<button type="button" id="upload-hazard-videos" class="btn btn-outline-danger btn-sm mt-2 ml-2">
+                                <i class="fas fa-video"></i> Upload Videos
+                            </button>{% endcomment %}
+                            <input type="file" name="videos" id="hazard_videos"
+                                class="d-none" accept="video/*" multiple>
+                            <input type="file" id="hazard_videos_camera"
+                                class="d-none" accept="video/*" capture="environment">
+                            <div id="hazard-video-preview" class="mt-3"></div>
                         </div>
 
                         <!-- Submit Buttons -->
@@ -509,6 +536,16 @@
         </div>
     </div>
 </div>
+<div id="photoOptionModal" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:16px 16px 0 0; padding:20px; z-index:9999;">
+    <button id="openCameraBtn" class="btn btn-primary w-100 mb-2">📷 Take Photo</button>
+    <button id="openGalleryBtn" class="btn btn-outline-primary w-100 mb-2">🖼️ Choose from Gallery</button>
+    <button onclick="closePhotoModal()" class="btn btn-light w-100">Cancel</button>
+</div>
+<div id="videoOptionModal" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:16px 16px 0 0; padding:20px; z-index:9999;">
+    <button id="recordVideoBtn" class="btn btn-danger w-100 mb-2">Record Video</button>
+    <button id="openVideoGalleryBtn" class="btn btn-outline-danger w-100 mb-2">Choose from Device</button>
+    <button type="button" onclick="closeVideoModal()" class="btn btn-light w-100">Cancel</button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -518,6 +555,8 @@ $(document).ready(function() {
     const zoneSelect = document.getElementById('id_zone');
     const locationSelect = document.getElementById('id_location');
     const sublocationSelect = document.getElementById('id_sublocation');
+    const hazardVideoInput = document.getElementById('hazard_videos');
+    const hazardVideoCameraInput = document.getElementById('hazard_videos_camera');
 
     function resetSelect(selectEl, text) {
         if (selectEl) {
@@ -636,13 +675,18 @@ $(document).ready(function() {
         const newPhotoHtml = `
             <div class="col-md-4 mb-3 photo-item">
                 <button type="button" class="remove-photo-slot" title="Remove this slot">&times;</button>
-                <div class="add-photo-btn" onclick="document.getElementById('photo_${newIndex}').click()">
+                <div class="add-photo-btn" onclick="handlePhotoClick(${newIndex})">
                     <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
                     <p class="mb-0">Click to add photo</p>
                 </div>
+                <!-- Gallery -->
                 <input type="file" name="photo_${newIndex}" id="photo_${newIndex}" 
-                       class="d-none photo-input" accept="image/*" 
-                       data-index="${newIndex}">
+                    class="d-none photo-input" accept="image/*" 
+                    data-index="${newIndex}">
+                <!-- Camera -->
+                <input type="file" id="photo_${newIndex}_camera"
+                    class="d-none"
+                    accept="image/*" capture="environment">
                 <div id="preview_${newIndex}" class="mt-2"></div>
             </div>
         `;
@@ -655,6 +699,45 @@ $(document).ready(function() {
     $(document).on('click', '.remove-photo-slot', function() {
         $(this).closest('.photo-item').remove();
     });
+
+    $(document).on('change', '[id$="_camera"]', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        const id = this.id.replace('_camera', '');
+        const galleryInput = document.getElementById(id);
+
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        galleryInput.files = dt.files;
+
+        $(galleryInput).trigger('change');
+    });
+
+    $('#openCameraBtn').click(openCamera);
+    $('#openGalleryBtn').click(openGallery);
+    $('#upload-hazard-videos').click(function() {
+        if (isMobileOrTablet()) {
+            document.getElementById("videoOptionModal").style.display = "block";
+        } else {
+            openVideoGallery();
+        }
+    });
+    $('#recordVideoBtn').click(recordVideo);
+    $('#openVideoGalleryBtn').click(openVideoGallery);
+
+    $(hazardVideoInput).on('change', function() {
+        renderHazardVideoPreview(this.files);
+    });
+
+    $(hazardVideoCameraInput).on('change', function() {
+        if (!this.files.length) return;
+
+        const dt = new DataTransfer();
+        Array.from(this.files).forEach(file => dt.items.add(file));
+        hazardVideoInput.files = dt.files;
+        renderHazardVideoPreview(hazardVideoInput.files);
+    });
 });
 
 // Delete Existing Photo Function 
@@ -663,6 +746,68 @@ function deletePhoto(photoId) {
         $(`#keep_photo_${photoId}`).val('0');
         $(`#keep_photo_${photoId}`).closest('.existing-photo').parent().fadeOut();
     }
+}
+
+
+let currentPhotoIndex = null;
+
+function handlePhotoClick(index) {
+    currentPhotoIndex = index;
+
+    if (isMobileOrTablet()) {
+        document.getElementById("photoOptionModal").style.display = "block";
+    } else {
+        openGallery();
+    }
+}
+
+function openCamera() {
+    closePhotoModal();
+    document.getElementById(`photo_${currentPhotoIndex}_camera`).click();
+}
+
+function openGallery() {
+    closePhotoModal();
+    document.getElementById(`photo_${currentPhotoIndex}`).click();
+}
+
+function closePhotoModal() {
+    document.getElementById("photoOptionModal").style.display = "none";
+}
+
+function isMobileOrTablet() {
+    return /Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+}
+
+function closeVideoModal() {
+    document.getElementById("videoOptionModal").style.display = "none";
+}
+
+function recordVideo() {
+    closeVideoModal();
+    document.getElementById('hazard_videos_camera').click();
+}
+
+function openVideoGallery() {
+    closeVideoModal();
+    document.getElementById('hazard_videos').click();
+}
+
+function renderHazardVideoPreview(files) {
+    const preview = document.getElementById('hazard-video-preview');
+    if (!files || !files.length) {
+        preview.innerHTML = '';
+        return;
+    }
+
+    preview.innerHTML = Array.from(files).map(file => `
+        <div class="mb-3">
+            <div class="small text-muted mb-1">${file.name}</div>
+            <video controls style="width: 100%; max-width: 320px; border-radius: 10px;">
+                <source src="${URL.createObjectURL(file)}" type="${file.type}">
+            </video>
+        </div>
+    `).join('');
 }
 </script>
 {% endblock %}
