@@ -178,15 +178,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CSRF_TRUSTED_ORIGINS = [
-    'https://ehs360.everestind.com',
-]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://ehs360.everestind.com',   # production HTTPS
-    'http://ehs360.everestind.com',    # if you also allow HTTP access
-    'http://192.168.252.114',          # internal/local HTTP
-    'https://192.168.252.114',         # internal/local HTTPS (if used)
+    'http://ehs.protegk-it.com',
+    'https://ehs.protegk-it.com',
+    
 ]
 
 # Crispy Forms
@@ -238,4 +234,4 @@ REMINDER_DAYS_BEFORE_DUE = 1  # Send reminder 1 day before due date
 ESCALATION_INTERVAL_DAYS = 7  # Escalate every 7 days after overdue
 
 # Base site URL
-SITE_URL = "http://127.0.0.1:8000/"
+SITE_URL = "http://ehs.protegk-it.com/"
