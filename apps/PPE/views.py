@@ -388,12 +388,15 @@ def stock_delete(request, pk):
 @login_required
 def IssueManagement_list(request):
     search = request.GET.get('search', '')
-    issues = PPEIssueManagement.objects.select_related(
-        'ppe_item',
-        'employee',
-        'department',
-        'created_by'
-    ).order_by('-id')
+    from django.db.models import Min
+    issues = (PPEIssueManagement.objects.values('issue_group_no','issue_date','ppe_item__name')
+        .annotate(
+            total_persons=Count('id'),
+            total_qty=Sum('quantity_issue'),
+            first_id=Min('id')
+        )
+        .order_by('-issue_group_no')
+    )
     if search:
      issues = issues.filter(
         Q(issue_no__icontains=search) |
@@ -582,6 +585,8 @@ def IssueManagement_create(request):
 
                 contractor_name=
                     contractor_name,
+                
+                contractor_department=contractor_department,
 
                 department_id=
                     department_id
@@ -871,49 +876,72 @@ def edit_issue(request, pk):
 
     }
 
-    return render(
-        request,
+    return render(request,
         'ppe/Management/IssueManagement_create.html',
         context
     )
+
+
+
 @login_required
 def issue_detail(request, pk):
 
-    issue = get_object_or_404(
-        PPEIssueManagement,
-        pk=pk
-    )
+    first_issue = get_object_or_404(PPEIssueManagement,pk=pk)
+
+    issues = PPEIssueManagement.objects.filter(issue_group_no=first_issue.issue_group_no).select_related(
+        'employee','department','size').order_by('id')
 
     available_quantity = (
         PPEStockTransaction.objects.filter(
-            ppe_item=issue.ppe_item
+            ppe_item=first_issue.ppe_item
         ).aggregate(
             total_stock=Sum('total')
         )['total_stock'] or 0
     )
 
     sizes = PPESizeQuantity.objects.filter(
-        ppe_item=issue.ppe_item
+        ppe_item=first_issue.ppe_item
     )
 
     context = {
-        'issue': issue,
+        'issue': first_issue,
+        'issues': issues,
         'available_quantity': available_quantity,
         'sizes': sizes,
     }
 
-    return render(
-        request,
-        'ppe/Management/issue_detail.html',
-        context
+    return render(request,
+        'ppe/Management/issue_detail.html',context
     )
+
+
 @login_required
 def issue_delete(request, pk):
-    issue = get_object_or_404(PPEIssueManagement, pk=pk)
+
+    issue = get_object_or_404(PPEIssueManagement,pk=pk)
+
     if request.method == "POST":
+        size_obj = issue.size
+
+        size_obj.available_quantity += (issue.quantity_issue)
+
+        size_obj.save()
+
         issue.delete()
-        messages.success(request, "Issue deleted successfully")
-        return redirect('PPE:IssueManagement_list')
-    return render(request, 'ppe/management/issue_delete.html', {
-        'issue': issue
-    })
+
+        messages.success(
+            request,
+            "Issue deleted successfully"
+        )
+
+        return redirect(
+            'PPE:IssueManagement_list'
+        )
+
+    return render(
+        request,
+        'ppe/management/issue_delete.html',
+        {
+            'issue': issue
+        }
+    )

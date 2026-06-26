@@ -241,6 +241,7 @@ class PPEIssueManagementForm(forms.ModelForm):
             'issue_to',
             'employee',
             'contractor_name',
+            'contractor_department',
             'department',
             'size',
             'quantity_issue',
@@ -275,6 +276,12 @@ class PPEIssueManagementForm(forms.ModelForm):
             ),
 
             'contractor_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'contractor_department': forms.TextInput(
                 attrs={
                     'class': 'form-control'
                 }

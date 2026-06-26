@@ -297,6 +297,11 @@ class PPEIssueManagement(models.Model):
         unique=True,
         editable=False
     )
+    issue_group_no = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True
+    )
     issue_date = models.DateField()
     ppe_item = models.ForeignKey(
         PPEItem,
@@ -318,6 +323,11 @@ class PPEIssueManagement(models.Model):
         related_name='ppe_issue_employee'
     )
     contractor_name = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True
+    )
+    contractor_department = models.CharField(
         max_length=200,
         null=True,
         blank=True
