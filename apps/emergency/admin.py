@@ -59,11 +59,12 @@ class EmergencyReportAdmin(admin.ModelAdmin):
         "severity_level",
         "incident_date",
         "plant",
+        "incident_department",
         "department",
         "status",
     )
-    list_filter = ("emergency_type", "severity_level", "status", "plant", "department")
-    search_fields = ("report_number", "emergency_title", "description")
+    list_filter = ("emergency_type", "severity_level", "status", "plant", "incident_department", "department")
+    search_fields = ("report_number", "emergency_title", "description", "incident_department__name", "department__name")
     filter_horizontal = ("response_team_members",)
     inlines = [EmergencyReportPhotoInline]
 

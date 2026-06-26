@@ -615,6 +615,7 @@ class EmergencySOSReportForm(forms.ModelForm):
             "emergency_type",
             "other_emergency_type",
             "severity_level",
+            "incident_department",
             "plant",
             "zone",
             "location",
@@ -626,6 +627,7 @@ class EmergencySOSReportForm(forms.ModelForm):
             "emergency_type": forms.Select(attrs=SELECT),
             "other_emergency_type": forms.TextInput(attrs={**TEXT_INPUT, "placeholder": "Specify emergency type"}),
             "severity_level": forms.Select(attrs=SELECT),
+            "incident_department": forms.Select(attrs=SELECT),
             "plant": forms.Select(attrs=SELECT),
             "zone": forms.Select(attrs=SELECT),
             "location": forms.Select(attrs=SELECT),
@@ -644,6 +646,10 @@ class EmergencySOSReportForm(forms.ModelForm):
 
         self.fields["emergency_type"].choices = [("", "-- Select Emergency Type --"), *EmergencyReport.EMERGENCY_TYPE_CHOICES]
         self.fields["severity_level"].choices = [("", "-- Select Severity Level --"), *EmergencyReport.SEVERITY_CHOICES]
+        self.fields["incident_department"].queryset = Department.objects.filter(is_active=True).order_by("name")
+        self.fields["incident_department"].empty_label = "-- Select Incident Department --"
+        self.fields["incident_department"].required = True
+        self.fields["incident_department"].label = "Incident Department"
         self.fields["plant"].empty_label = "-- Select Plant --"
         self.fields["zone"].empty_label = "-- Select Zone --"
         self.fields["location"].empty_label = "-- Select Location --"
