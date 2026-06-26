@@ -47,27 +47,40 @@ def _build_scope_queryset(schedule_queryset, user_queryset, primary_id=None, chi
 
 def _get_inspection_scope(schedule, user=None):
     plants = schedule.plants.filter(is_active=True).order_by('name').distinct()
-    user_plant_ids = []
 
     if user is not None:
-        user_plant_ids = [plant.id for plant in user.get_all_plants() if getattr(plant, 'is_active', True)]
+        user_plant_ids = [
+            plant.id
+            for plant in user.get_all_plants()
+            if getattr(plant, 'is_active', True)
+        ]
+
         if user_plant_ids:
             plants = plants.filter(id__in=user_plant_ids)
 
-    zones = schedule.zones.filter(is_active=True)
-    if not zones.exists() and plants.exists():
-        zones = Zone.objects.filter(plant__in=plants, is_active=True)
-    zones = zones.order_by('name').distinct()
+    # =========================
+    # DYNAMIC ASSIGNMENT
+    # =========================
 
-    locations = schedule.locations.filter(is_active=True)
-    if not locations.exists() and zones.exists():
-        locations = Location.objects.filter(zone__in=zones, is_active=True)
-    locations = locations.order_by('name').distinct()
+    if schedule.is_dynamic_area_assignment:
 
-    sublocations = schedule.sublocations.filter(is_active=True)
-    if not sublocations.exists() and locations.exists():
-        sublocations = SubLocation.objects.filter(location__in=locations, is_active=True)
-    sublocations = sublocations.order_by('name').distinct()
+        zones = Zone.objects.filter(plant__in=plants,is_active=True).order_by('name').distinct()
+
+        locations = Location.objects.filter(zone__in=zones,is_active=True).order_by('name').distinct()
+
+        sublocations = SubLocation.objects.filter(location__in=locations,is_active=True).order_by('name').distinct()
+
+    # =========================
+    # FIXED ASSIGNMENT
+    # =========================
+
+    else:
+
+        zones = schedule.zones.filter(is_active=True).order_by('name').distinct()
+
+        locations = schedule.locations.filter(is_active=True).order_by('name').distinct()
+
+        sublocations = schedule.sublocations.filter(is_active=True).order_by('name').distinct()
 
     return {
         'plants': plants,
@@ -75,6 +88,7 @@ def _get_inspection_scope(schedule, user=None):
         'locations': locations,
         'sublocations': sublocations,
     }
+
 
 
 def _clone_schedule_as_scheduled(source_schedule, assignment_notes=None):
@@ -846,6 +860,9 @@ def schedule_list(request):
     plant_id = request.GET.get('plant')
     assigned_to_id = request.GET.get('assigned_to')
     search = request.GET.get('search')
+    template_id = request.GET.get('template')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
     
     if status:
         schedules = schedules.filter(status=status)
@@ -863,15 +880,74 @@ def schedule_list(request):
             Q(assigned_users__first_name__icontains=search) |
             Q(assigned_users__last_name__icontains=search)
         )
+
+    if template_id:
+        schedules = schedules.filter(template_id=template_id)
+
+    if from_date:
+        schedules = schedules.filter(scheduled_date__gte=from_date)
+
+    if to_date:
+        schedules = schedules.filter(scheduled_date__lte=to_date)
     
     schedules = schedules.distinct().order_by('-created_at')
+
+    from collections import defaultdict
+
+    inspection_summary = {}
+
+    for schedule in schedules:
+
+        template_name = schedule.template.template_name
+
+        if template_name not in inspection_summary:
+            inspection_summary[template_name] = {
+                'template': template_name,
+                'assigned_to': set(),
+                'plants': set(),
+                'scheduled_date': schedule.scheduled_date,
+                'end_date': schedule.scheduled_end_date,
+            }
+
+        inspection_summary[template_name]['assigned_to'].add(
+            schedule.assigned_to.get_full_name()
+        )
+
+        for plant in schedule.plants.all():
+            inspection_summary[template_name]['plants'].add(
+                plant.name
+            )
+
+        # Latest end date
+        if schedule.scheduled_end_date:
+            current_end = inspection_summary[template_name]['end_date']
+
+            if not current_end or schedule.scheduled_end_date > current_end:
+                inspection_summary[template_name]['end_date'] = schedule.scheduled_end_date
+
+
+    inspection_summary = [
+        {
+            'template': data['template'],
+            'assigned_to': ', '.join(sorted(data['assigned_to'])),
+            'plants': ', '.join(sorted(data['plants'])),
+            'scheduled_date': data['scheduled_date'],
+            'end_date': data['end_date'],
+        }
+        for data in inspection_summary.values()
+    ]
+
+    summary_paginator = Paginator(inspection_summary,5)
+    summary_page_number = request.GET.get('summary_page')
+    summary_page_obj = summary_paginator.get_page(summary_page_number)
     
-    paginator = Paginator(schedules, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    schedule_paginator = Paginator(schedules, 20)
+    schedule_page_number = request.GET.get('schedule_page')
+    page_obj = schedule_paginator.get_page(schedule_page_number)
 
     querydict = request.GET.copy()
-    querydict.pop('page', None)
+    querydict.pop('summary_page', None)
+    querydict.pop('schedule_page', None)
 
     from apps.organizations.models import Plant
     plants = Plant.objects.filter(is_active=True)
@@ -880,17 +956,27 @@ def schedule_list(request):
         role__name__in=['HOD', 'SAFETY MANAGER'],
         is_active_employee=True
     ).order_by('first_name', 'last_name')
+
+    from apps.inspections.models import InspectionTemplate
+
+    templates = InspectionTemplate.objects.filter(is_active=True).order_by('template_name')
     
     context = {
+        'summary_page_obj': summary_page_obj,
         'page_obj': page_obj,
         'status_choices': InspectionSchedule.STATUS_CHOICES,
         'plants': plants,
         'hods': hods,
+        'templates': templates,
         'selected_status': status,
         'selected_plant': plant_id,
         'selected_hod': assigned_to_id,
+        'selected_template': template_id,
+        'from_date': from_date,
+        'to_date': to_date,
         'search': search,
         'querystring': querydict.urlencode(),
+        'inspection_summary': inspection_summary,
     }
     return render(request, 'inspections/schedule_list.html', context)
 
@@ -1270,6 +1356,105 @@ def get_users_by_plants(request):
 
 
 @login_required
+def get_users_by_role(request):
+    """AJAX: Get users for the selected role, optionally filtered by plant ids."""
+    role_name = request.GET.get('role', '').strip()
+    if not role_name:
+        return JsonResponse({'users': []})
+
+    role_map = {
+        'Admin': 'ADMIN',
+        'Hod': 'HOD',
+        'Safety Manager': 'SAFETY MANAGER',
+        'Plant Head': 'PLANT HEAD',
+    }
+    normalized_role = role_map.get(role_name, role_name.upper())
+
+    plant_ids = request.GET.get('plant_ids', '').strip()
+
+    users_qs = User.objects.filter(
+        role__name=normalized_role,
+        is_active_employee=True,
+        is_active=True
+    )
+
+    if plant_ids:
+        ids = [pid.strip() for pid in plant_ids.split(',') if pid.strip()]
+        users_qs = users_qs.filter(plant__id__in=ids)
+
+    users = users_qs.select_related('plant', 'role', 'department').order_by('first_name')
+
+    users_data = []
+    for u in users:
+        users_data.append({
+            'id': u.id,
+            'full_name': u.get_full_name(),
+            'role': u.role.name if u.role else '',
+            'department': u.department.name if u.department else '',
+            'plant_name': u.plant.name if u.plant else '',
+            'plant_id': u.plant.id if u.plant else None,
+        })
+
+    return JsonResponse({'users': users_data})
+
+
+def get_users_by_roles(request):
+    """AJAX: Get users for multiple selected roles, optionally filtered by plant ids."""
+    roles_param = request.GET.get('roles', '').strip()
+    if not roles_param:
+        return JsonResponse({'users': []})
+
+    # Parse comma-separated roles
+    role_names = [r.strip() for r in roles_param.split(',') if r.strip()]
+    if not role_names:
+        return JsonResponse({'users': []})
+
+    role_map = {
+        'Admin': 'ADMIN',
+        'Hod': 'HOD',
+        'Safety Manager': 'SAFETY MANAGER',
+        'Plant Head': 'PLANT HEAD',
+        'ADMIN': 'ADMIN',
+        'HOD': 'HOD',
+        'SAFETY MANAGER': 'SAFETY MANAGER',
+        'PLANT HEAD': 'PLANT HEAD',
+    }
+    
+    normalized_roles = []
+    for role_name in role_names:
+        normalized = role_map.get(role_name, role_name.upper())
+        if normalized not in normalized_roles:
+            normalized_roles.append(normalized)
+
+    plant_ids = request.GET.get('plant_ids', '').strip()
+
+    users_qs = User.objects.filter(
+        role__name__in=normalized_roles,
+        is_active_employee=True,
+        is_active=True
+    )
+
+    if plant_ids:
+        ids = [pid.strip() for pid in plant_ids.split(',') if pid.strip()]
+        users_qs = users_qs.filter(plant__id__in=ids)
+
+    users = users_qs.select_related('plant', 'role', 'department').order_by('first_name').distinct()
+
+    users_data = []
+    for u in users:
+        users_data.append({
+            'id': u.id,
+            'full_name': u.get_full_name(),
+            'role': u.role.name if u.role else '',
+            'department': u.department.name if u.department else '',
+            'plant_name': u.plant.name if u.plant else '',
+            'plant_id': u.plant.id if u.plant else None,
+        })
+
+    return JsonResponse({'users': users_data})
+
+
+@login_required
 def autoschedule_toggle(request, config_id):
     """
     Stop / Pause / Resume auto-schedule config.
@@ -1548,12 +1733,30 @@ def _build_inspection_form_context(
 
     selected_scope = _get_selected_scope_ids(active_source or {}, inspection_scope)
     if not active_source:
-        selected_scope = {
-            'selected_plant_ids': list(available_plants.values_list('id', flat=True)),
-            'selected_zone_ids': list(available_zones.values_list('id', flat=True)),
-            'selected_location_ids': list(available_locations.values_list('id', flat=True)),
-            'selected_sublocation_ids': list(available_sublocations.values_list('id', flat=True)),
-        }
+        if schedule.is_dynamic_area_assignment:
+            selected_scope = {
+                'selected_plant_ids': list(
+                    available_plants.values_list('id', flat=True)
+                ),
+                'selected_zone_ids': [],
+                'selected_location_ids': [],
+                'selected_sublocation_ids': [],
+            }
+        else:
+            selected_scope = {
+                'selected_plant_ids': list(
+                    available_plants.values_list('id', flat=True)
+                ),
+                'selected_zone_ids': list(
+                    available_zones.values_list('id', flat=True)
+                ),
+                'selected_location_ids': list(
+                    available_locations.values_list('id', flat=True)
+                ),
+                'selected_sublocation_ids': list(
+                    available_sublocations.values_list('id', flat=True)
+                ),
+            }
 
     answers_by_question = (active_source or {}).get('answers', {})
     remarks_by_question = (active_source or {}).get('remarks', {})
@@ -1649,6 +1852,12 @@ def inspection_submit(request, schedule_id):
         selected_zone_ids = selected_scope['selected_zone_ids']
         selected_location_ids = selected_scope['selected_location_ids']
         selected_sublocation_ids = selected_scope['selected_sublocation_ids']
+
+        if not schedule.is_dynamic_area_assignment:
+            selected_plant_ids = selected_plant_ids or list(available_plants.values_list('id', flat=True))
+            selected_zone_ids = selected_zone_ids or list(available_zones.values_list('id', flat=True))
+            selected_location_ids = selected_location_ids or list(available_locations.values_list('id', flat=True))
+            selected_sublocation_ids = selected_sublocation_ids or list(available_sublocations.values_list('id', flat=True))
 
         action = request.POST.get('form_action', 'submit')
 
