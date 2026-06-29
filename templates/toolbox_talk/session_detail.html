@@ -1,0 +1,550 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Session Details{% endblock %}
+{% block page_title %}Session Details{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">
+        Home
+    </a>
+</li>
+
+<li class="breadcrumb-item">
+    <a href="{% url 'toolbox_talk:my_sessions' %}">
+        My Sessions
+    </a>
+</li>
+
+<li class="breadcrumb-item active">
+    Session Details
+</li>
+{% endblock %}
+
+{% block content %}
+
+<div class="card ehs-card">
+
+    <!-- Header -->
+
+    <div class="card-header bg-info text-white">
+
+        <div class="row">
+
+            <div class="col-md-8">
+
+                <h3 class="mb-1">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>
+                    {{ session.topic.topic_title }}
+                </h3>
+
+                <p class="mb-0">
+                    Session No :
+                    <strong>{{ session.session_no }}</strong>
+                </p>
+
+            </div>
+
+            <div class="col-md-4 text-right">
+
+                <!-- ✅ CHANGE 1: Added IN_PROGRESS badge -->
+                <span class="badge
+                    {% if assignment.status == 'PENDING' %}
+                        badge-warning
+                    {% elif assignment.status == 'ACCEPTED' %}
+                        badge-primary
+                    {% elif assignment.status == 'IN_PROGRESS' %}
+                        badge-info
+                    {% elif assignment.status == 'COMPLETED' %}
+                        badge-success
+                    {% elif assignment.status == 'REJECTED' %}
+                        badge-danger
+                    {% else %}
+                        badge-secondary
+                    {% endif %}
+                p-2">
+
+                    {{ assignment.get_status_display }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <!-- ✅ CHANGE 2: Updated Action Buttons with Trainer + Incharge workflow -->
+
+        <div class="mb-3">
+
+            <a href="{% url 'toolbox_talk:my_sessions' %}"
+               class="btn btn-secondary">
+
+                <i class="fas fa-arrow-left"></i>
+                Back
+
+            </a>
+
+            <!-- TRAINER ACTIONS -->
+
+            {% if assignment.role == 'TRAINER' %}
+
+                {% if assignment.status == 'PENDING' %}
+
+                <a href="{% url 'toolbox_talk:accept_session' assignment.pk %}"
+                   class="btn btn-success">
+
+                    <i class="fas fa-check"></i>
+
+                    Accept Session
+
+                </a>
+
+                {% endif %}
+
+                {% if assignment.status == 'ACCEPTED' %}
+
+                <a href="{% url 'toolbox_talk:conduct_session' assignment.pk %}"
+                   class="btn btn-warning">
+
+                    <i class="fas fa-play"></i>
+
+                    Conduct Session
+
+                </a>
+
+                {% endif %}
+
+                {% if assignment.status == 'COMPLETED' %}
+
+                <a href="{% url 'toolbox_talk:conduct_session' assignment.pk %}"
+                   class="btn btn-info">
+
+                    <i class="fas fa-eye"></i>
+
+                    View Conduct Report
+
+                </a>
+
+                {% endif %}
+
+            {% endif %}
+
+            <!-- INCHARGE ACTIONS -->
+
+            {% if assignment.role == 'INCHARGE' %}
+
+                <a href="{% url 'toolbox_talk:attendance_session' assignment.pk %}"
+                   class="btn btn-success">
+
+                    <i class="fas fa-user-check"></i>
+
+                    Mark Attendance
+
+                </a>
+
+            {% endif %}
+            
+            
+
+            {% if assignment.status == 'COMPLETED' %}
+            <a href="{% url 'toolbox_talk:download_session_pdf' assignment.pk %}"class="btn btn-danger">
+                <i class="fas fa-file-pdf"></i>
+                Download PDF
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Session Information -->
+
+        <div class="card mb-3">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-info-circle mr-2"></i>
+
+                    Session Information
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Session Number
+                        </label>
+
+                        <p>
+                            {{ session.session_no }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Category
+                        </label>
+
+                        <p>
+                            {{ session.category.category_name }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Topic
+                        </label>
+
+                        <p>
+                            {{ session.topic.topic_title }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Department
+                        </label>
+
+                        <p>
+                            {{ session.department }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Planned Date
+                        </label>
+
+                        <p>
+                            {{ session.planned_date|date:"d M Y" }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Planned Time
+                        </label>
+
+                        <p>
+                            {{ session.planned_time|time:"h:i A" }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Expected Participants
+                        </label>
+
+                        <p>
+                            {{ session.expected_participants }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Remarks
+                        </label>
+
+                        <p>
+                            {{ session.remarks|default:"-" }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Assignment Information -->
+
+        <div class="card mb-3">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-user-check mr-2"></i>
+
+                    Assignment Information
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Assigned By
+                        </label>
+
+                        <p>
+                            {{ assignment.assigned_by }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Assigned On
+                        </label>
+
+                        <p>
+                            {{ assignment.created_at }}
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Status
+                        </label>
+
+                        <p>
+                            {{ assignment.get_status_display }}
+                        </p>
+
+                    </div>
+
+                    {% if assignment.accepted_at %}
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Accepted At
+                        </label>
+
+                        <p>
+                            {{ assignment.accepted_at }}
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+                    {% if assignment.completed_at %}
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="font-weight-bold">
+                            Completed At
+                        </label>
+
+                        <p>
+                            {{ assignment.completed_at }}
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ✅ CHANGE 3: Session Team card added before Topic Details -->
+
+        <div class="card mb-3">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-users mr-2"></i>
+
+                    Session Team
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <label class="font-weight-bold">
+
+                            Trainers
+
+                        </label>
+
+                        <ul>
+
+                            {% for trainer in session.trainers.all %}
+
+                            <li>{{ trainer }}</li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="font-weight-bold">
+
+                            Incharges
+
+                        </label>
+
+                        <ul>
+
+                            {% for incharge in session.incharges.all %}
+
+                            <li>{{ incharge }}</li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Topic Details -->
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-book-open mr-2"></i>
+
+                    Topic Details
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                {% for detail in topic_details %}
+
+                <div class="card border-left-info mb-3">
+
+                    <div class="card-body">
+
+                        <h5>
+                            Safety Point {{ forloop.counter }}
+                        </h5>
+
+                        <p>
+                            {{ detail.safety_point }}
+                        </p>
+
+                        <hr>
+
+                        <h6>
+                            Learning Objective
+                        </h6>
+
+                        <p>
+                            {{ detail.learning_objective }}
+                        </p>
+
+                        {% if detail.reference_document %}
+
+                        <p>
+
+                            <strong>
+                                Reference Document :
+                            </strong>
+
+                            {{ detail.reference_document }}
+
+                        </p>
+
+                        {% endif %}
+
+                        {% if detail.attachment_file %}
+
+                        <a href="{{ detail.attachment_file.url }}"
+                           target="_blank"
+                           class="btn btn-info btn-sm">
+
+                            <i class="fas fa-paperclip"></i>
+
+                            View Attachment
+
+                        </a>
+
+                        {% endif %}
+
+                        {% if detail.attachment_url %}
+
+                        <a href="{{ detail.attachment_url }}"
+                           target="_blank"
+                           class="btn btn-primary btn-sm">
+
+                            <i class="fas fa-link"></i>
+
+                            Open Link
+
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="alert alert-info">
+
+                    No topic details available.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -38,6 +38,7 @@ urlpatterns = [
     path('audits/', include('apps.audits.urls')),
     path('legal-compliance/', include('apps.legal_compliance.urls')),
     path('emergency/', include('apps.emergency.urls')),
+
     path('toolbox-talk/',include('apps.toolbox_talk.urls')),
     path('PPE/',include('apps.PPE.urls')),
     #path('observations/', include('apps.observations.urls')),

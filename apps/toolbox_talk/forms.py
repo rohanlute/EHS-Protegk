@@ -4,6 +4,7 @@ from .models import (
     ToolboxTalkCategory,
     ToolboxTalkTopic,
     ToolboxTalkSessionPlan,
+    #ToolboxTalkActionItem,
     
 )
 
@@ -304,17 +305,22 @@ class ToolboxTalkSessionPlanForm(forms.ModelForm):
         )
 
         # AJAX will populate this later
-        self.fields[
-            'topic'
-        ].queryset = (
-            ToolboxTalkTopic.objects.none()
-        )
+        # AJAX + POST validation support
+        self.fields["topic"].queryset = ToolboxTalkTopic.objects.none()
+        if self.data.get("category"):
+            try:
+                category_id = int(self.data.get("category"))
+                self.fields["topic"].queryset = ToolboxTalkTopic.objects.filter(
+                    category_id=category_id, is_active=True
+                    )
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk:
+            self.fields["topic"].queryset = ToolboxTalkTopic.objects.filter(
+                category=self.instance.category, is_active=True
+                )
 
-        self.fields[
-            'topic'
-        ].empty_label = (
-            'Select Topic'
-        )
+
         
         # simple drop-down for department no ajax based filtering population
         self.fields['department'].queryset = ( Department.objects.filter(is_active=True))
@@ -345,4 +351,77 @@ class ToolboxTalkSessionPlanForm(forms.ModelForm):
             )
 
         return cleaned_data
+    
+#Actions management module
+
+'''
+
+class ToolboxTalkActionItemForm(forms.ModelForm):
+
+    class Meta:
+
+        model = ToolboxTalkActionItem
+
+        fields = [
+            'title',
+            'description',
+            'priority',
+            'assigned_to',
+            'target_date',
+            'status',
+            'closure_remark'
+        ]
+
+        widgets = {
+
+            'title': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4
+                }
+            ),
+
+            'priority': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'assigned_to': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'target_date': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control'
+                }
+            ),
+
+            'status': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'closure_remark': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4
+                }
+            ),
+
+        }
+        
+'''        
+    
+    
 
