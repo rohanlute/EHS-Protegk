@@ -413,10 +413,11 @@ class ToolboxSessionAssignment(models.Model):
     )
 
     STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
-        ('ACCEPTED', 'Accepted'),
-        ('REJECTED', 'Rejected'),
-        ('COMPLETED', 'Completed'),
+    ('PENDING', 'Pending'),
+    ('ACCEPTED', 'Accepted'),
+    ('IN_PROGRESS', 'In Progress'),
+    ('COMPLETED', 'Completed'),
+    ('REJECTED', 'Rejected'),
     )
 
     session = models.ForeignKey(
@@ -466,5 +467,302 @@ class ToolboxSessionAssignment(models.Model):
 
     created_at = models.DateTimeField(
         auto_now_add=True
-    )        
+    )  
+    
+#
+class ToolboxTalkConduct(models.Model):
+
+    session = models.OneToOneField(
+        ToolboxTalkSessionPlan,
+        on_delete=models.CASCADE,
+        related_name='conduct'
+    )
+
+    assignment = models.ForeignKey(
+        ToolboxSessionAssignment,
+        on_delete=models.CASCADE,
+        related_name='conducts'
+    )
+
+    overall_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    conducted_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        db_table = 'toolbox_talk_conduct'
         
+        
+    def __str__(self):
+        return (
+        f"{self.session.session_no}"
+    )
+        
+        
+#
+class ToolboxTalkConductDetail(models.Model):
+
+    conduct = models.ForeignKey(
+        ToolboxTalkConduct,
+        on_delete=models.CASCADE,
+        related_name='details'
+    )
+
+    topic_detail = models.ForeignKey(
+        ToolboxTalkTopicDetail,
+        on_delete=models.CASCADE
+    )
+
+    trainer_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        db_table = 'toolbox_talk_conduct_details'
+        
+        unique_together = (
+        'conduct',
+        'topic_detail'
+        ) 
+        
+    def __str__(self):
+        return (
+        f"{self.conduct.session.session_no}"
+    ) 
+        
+        
+# incharge /attendence management 
+class ToolboxTalkAttendance(models.Model):
+
+    session = models.OneToOneField(
+        ToolboxTalkSessionPlan,
+        on_delete=models.CASCADE,
+        related_name='attendance'
+    )
+
+    overall_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='toolbox_attendance_created'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        db_table = 'toolbox_talk_attendance'
+
+    def __str__(self):
+
+        return self.session.session_no
+
+
+class ToolboxTalkAttendanceDetail(models.Model):
+
+    attendance = models.ForeignKey(
+        ToolboxTalkAttendance,
+        on_delete=models.CASCADE,
+        related_name='attendees'
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    present = models.BooleanField(
+        default=True
+    )
+
+    marked_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='toolbox_attendance_marked'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+
+        db_table = 'toolbox_talk_attendance_details'
+
+        unique_together = (
+            'attendance',
+            'user'
+        )
+
+    def __str__(self):
+
+        return self.user.get_full_name() 
+    
+    
+# Toolbox Talk Evidence Management
+class ToolboxTalkEvidence(models.Model):
+
+    EVIDENCE_TYPE_CHOICES = (
+
+        ('PHOTO', 'Photo'),
+
+        ('DOCUMENT', 'Document'),
+    )
+
+    session = models.ForeignKey(
+        ToolboxTalkSessionPlan,
+        on_delete=models.CASCADE,
+        related_name='evidences'
+    )
+
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+
+    evidence_type = models.CharField(
+        max_length=20,
+        choices=EVIDENCE_TYPE_CHOICES
+    )
+
+    description = models.CharField(
+        max_length=500,
+        blank=True
+    )
+
+    file = models.FileField(
+        upload_to='toolbox_talk/evidence/'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+
+        db_table = 'toolbox_talk_evidences'
+        
+#   Actions management 
+'''
+class ToolboxTalkActionItem(models.Model):
+
+    PRIORITY_CHOICES = (
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+        ('CRITICAL', 'Critical'),
+    )
+
+    STATUS_CHOICES = (
+        ('OPEN', 'Open'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('VERIFIED', 'Verified'),
+    )
+
+    session = models.ForeignKey(
+        ToolboxTalkSessionPlan,
+        on_delete=models.CASCADE,
+        related_name='action_items'
+    )
+
+    title = models.CharField(
+        max_length=300
+    )
+
+    description = models.TextField()
+
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default='MEDIUM'
+    )
+
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='toolbox_action_items'
+    )
+
+    target_date = models.DateField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='OPEN'
+    )
+
+    closure_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    closed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='toolbox_actions_closed'
+    )
+
+    closed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='toolbox_actions_created'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        db_table = 'toolbox_talk_action_items'
+
+        ordering = ['status', 'target_date']
+
+        verbose_name = 'Toolbox Action Item'
+
+        verbose_name_plural = 'Toolbox Action Items'
+
+    def __str__(self):
+
+        return self.title    
+        
+        
+'''          
+
+         

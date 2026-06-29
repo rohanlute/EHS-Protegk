@@ -98,503 +98,298 @@
     padding: 10px;
     grid-column: 1 / -1;
   }
-
-  .auto-schedule-section {
-    background: #f0f7ff;
-    border: 1px solid #b8d4f0;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 10px;
-  }
-
-  .offset-section {
-    display: none;
-    margin-top: 15px;
-  }
 </style>
 {% endblock %}
 
 
 {% block content %}
+
+<!-- Pre-selected values from Django (used by JS for edit mode) -->
+<script>
+  const IS_EDIT = {{ is_edit|yesno:"true,false" }};
+
+  const selectedPlants = [{% for plant in session.plants.all %}{{ plant.id }},{% endfor %}];
+  const selectedZones = [{% for zone in session.zones.all %}{{ zone.id }},{% endfor %}];
+  const selectedLocations = [{% for loc in session.locations.all %}{{ loc.id }},{% endfor %}];
+  const selectedSubLocations = [{% for sub in session.sublocations.all %}{{ sub.id }},{% endfor %}];
+  const selectedTrainers = [{% for t in session.trainers.all %}{{ t.id }},{% endfor %}];
+  const selectedIncharges = [{% for i in session.incharges.all %}{{ i.id }},{% endfor %}];
+</script>
+
 <div class="row">
   <div class="col-md-11 mx-auto">
     <div class="ehs-card">
       <div class="card-header">
         <h3 class="card-title">
-          <i class="fas fa-calendar-plus">
-          </i>
-          {{ title }}
+          <i class="fas fa-calendar-plus"></i> {{ title }}
         </h3>
       </div>
-      <!-- /.card-header -->
+
       <div class="card-body">
         <form method="POST" id="sessionForm">
           {% csrf_token %}
-          <!-- Category Template Selection -->
-          <h5 class="mb-3">
-            <i class="fas fa-book">
-            </i>
-            Topic Information
-          </h5>
+
+          <!-- ======================== -->
+          <!-- TOPIC INFORMATION -->
+          <!-- ======================== -->
+          <h5 class="mb-3"><i class="fas fa-book"></i> Topic Information</h5>
           <div class="row">
-            <!-- Category -->
+
             <div class="col-md-6">
               <div class="form-group">
                 <label for="{{ form.category.id_for_label }}">
-                  Topic Category
-                  <span class="text-danger">
-                    *
-                  </span>
+                  Topic Category <span class="text-danger">*</span>
                 </label>
-                {{ form.category }} {% if form.category.errors %}
-                <div class="text-danger small">
-                  {{ form.category.errors }}
-                </div>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <div class="text-danger small">{{ form.category.errors }}</div>
                 {% endif %}
-                <small class="form-text text-muted">
-                  Select toolbox talk category
-                </small>
+                <small class="form-text text-muted">Select toolbox talk category</small>
               </div>
             </div>
-            <!-- Topic -->
+
             <div class="col-md-6">
               <div class="form-group">
                 <label for="{{ form.topic.id_for_label }}">
-                  Topic
-                  <span class="text-danger">
-                    *
-                  </span>
+                  Topic <span class="text-danger">*</span>
                 </label>
-                {{ form.topic }} {% if form.topic.errors %}
-                <div class="text-danger small">
-                  {{ form.topic.errors }}
-                </div>
+                {{ form.topic }}
+                {% if form.topic.errors %}
+                <div class="text-danger small">{{ form.topic.errors }}</div>
                 {% endif %}
-                <small class="form-text text-muted">
-                  Select toolbox talk topic
-                </small>
+                <small class="form-text text-muted">Select toolbox talk topic</small>
               </div>
             </div>
+
           </div>
           <hr>
+
+          <!-- ======================== -->
+          <!-- LOCATION ASSIGNMENT -->
+          <!-- ======================== -->
+          <h5 class="mb-3"><i class="fas fa-industry"></i> Location Assignment</h5>
+
           <!-- PLANTS -->
-          <h5 class="mb-3">
-            <i class="fas fa-industry">
-            </i>
-            Location Assignment
-          </h5>
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Plants
-                <span class="text-danger">
-                  *
-                </span>
-              </span>
-              <span class="badge-count" id="plantCount">
-                0
-              </span>
+              <span>Plants <span class="text-danger">*</span></span>
+              <span class="badge-count" id="plantCount">0</span>
             </div>
-            <small class="form-text text-muted mb-2 d-block">
-              Select one or more plants
-            </small>
+            <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
             <div class="select-all-bar">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount , loadZonesForPlants)">
-                <i class="fas fa-check-square mr-1">
-                </i>
-                Select All
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                onclick="selectAll('plant-checkbox', updatePlantCount, onPlantChange)">
+                <i class="fas fa-check-square mr-1"></i> Select All
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount, loadZonesForPlants)">
-                <i class="fas fa-square mr-1">
-                </i>
-                Deselect All
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                onclick="deselectAll('plant-checkbox', updatePlantCount, onPlantChange)">
+                <i class="fas fa-square mr-1"></i> Deselect All
               </button>
             </div>
             <div class="checkbox-grid" id="plantsGrid">
-              <div class="loading-text">
-                Loading plants...
-              </div>
+              <div class="loading-text">Loading plants...</div>
             </div>
           </div>
+
           <!-- ZONES -->
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Zones
-              </span>
-              <span class="badge-count" id="zoneCount">
-                0
-              </span>
+              <span>Zones</span>
+              <span class="badge-count" id="zoneCount">0</span>
             </div>
-            <small class="form-text text-muted mb-2 d-block">
-              Select plants first, then select zones
-            </small>
+            <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
             <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
-                <i class="fas fa-check-square mr-1">
-                </i>
-                Select All
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                onclick="selectAll('zone-checkbox', updateZoneCount, onZoneChange)">
+                <i class="fas fa-check-square mr-1"></i> Select All
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('zone-checkbox', updateZoneCount)">
-                <i class="fas fa-square mr-1">
-                </i>
-                Deselect All
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                onclick="deselectAll('zone-checkbox', updateZoneCount, onZoneChange)">
+                <i class="fas fa-square mr-1"></i> Deselect All
               </button>
             </div>
             <div class="checkbox-grid" id="zonesGrid">
-              <div class="loading-text">
-                Please select plants first
-              </div>
+              <div class="loading-text">Please select plants first</div>
             </div>
           </div>
+
           <!-- LOCATIONS -->
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Locations
-              </span>
-              <span class="badge-count" id="locationCount">
-                0
-              </span>
+              <span>Locations</span>
+              <span class="badge-count" id="locationCount">0</span>
             </div>
-            <small class="form-text text-muted mb-2 d-block">
-              Select zones first, then select locations
-            </small>
+            <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
             <div class="select-all-bar" id="locationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('location-checkbox', updateLocationCount)">
-                <i class="fas fa-check-square mr-1">
-                </i>
-                Select All
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                onclick="selectAll('location-checkbox', updateLocationCount, onLocationChange)">
+                <i class="fas fa-check-square mr-1"></i> Select All
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('location-checkbox', updateLocationCount)">
-                <i class="fas fa-square mr-1">
-                </i>
-                Deselect All
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                onclick="deselectAll('location-checkbox', updateLocationCount, onLocationChange)">
+                <i class="fas fa-square mr-1"></i> Deselect All
               </button>
             </div>
             <div class="checkbox-grid" id="locationsGrid">
-              <div class="loading-text">
-                Please select zones first
-              </div>
+              <div class="loading-text">Please select zones first</div>
             </div>
           </div>
+
           <!-- SUBLOCATIONS -->
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Sub-Locations
-              </span>
-              <span class="badge-count" id="sublocationCount">
-                0
-              </span>
+              <span>Sub-Locations</span>
+              <span class="badge-count" id="sublocationCount">0</span>
             </div>
-            <small class="form-text text-muted mb-2 d-block">
-              Select locations first, then select sub-locations
-            </small>
+            <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
             <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-check-square mr-1">
-                </i>
-                Select All
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
+                <i class="fas fa-check-square mr-1"></i> Select All
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-square mr-1">
-                </i>
-                Deselect All
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
+                <i class="fas fa-square mr-1"></i> Deselect All
               </button>
             </div>
             <div class="checkbox-grid" id="sublocationsGrid">
-              <div class="loading-text">
-                Please select locations first
-              </div>
+              <div class="loading-text">Please select locations first</div>
             </div>
           </div>
+
           <hr>
+
+          <!-- ======================== -->
+          <!-- TRAINER ASSIGNMENT -->
+          <!-- ======================== -->
           <div id="trainer-incharge-error" class="alert alert-danger" style="display:none;">
             Same user cannot be Trainer and Incharge.
           </div>
 
-          <h5 class="mb-3">
-            <i class="fas fa-chalkboard-teacher">
-            </i>
-            Trainer Assignment
-          </h5>
+          <h5 class="mb-3"><i class="fas fa-chalkboard-teacher"></i> Trainer Assignment</h5>
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Trainers
-                <span class="text-danger">
-                  *
-                </span>
-              </span>
-              <span class="badge-count" id="trainerCount">
-                0
-              </span>
+              <span>Trainers <span class="text-danger">*</span></span>
+              <span class="badge-count" id="trainerCount">0</span>
             </div>
             <div class="checkbox-grid" id="trainersGrid">
-              <div class="loading-text">
-                Please select plants first
-              </div>
+              <div class="loading-text">Please select plants first</div>
             </div>
           </div>
+
           <hr>
-          <h5 class="mb-3">
-            <i class="fas fa-user-tie">
-            </i>
-            Incharge Assignment
-          </h5>
+
+          <!-- ======================== -->
+          <!-- INCHARGE ASSIGNMENT -->
+          <!-- ======================== -->
+          <h5 class="mb-3"><i class="fas fa-user-tie"></i> Incharge Assignment</h5>
           <div class="mb-4">
             <div class="section-label">
-              <span>
-                Incharges
-                <span class="text-danger">
-                  *
-                </span>
-              </span>
-              <span class="badge-count" id="inchargeCount">
-                0
-              </span>
+              <span>Incharges <span class="text-danger">*</span></span>
+              <span class="badge-count" id="inchargeCount">0</span>
             </div>
             <div class="checkbox-grid" id="inchargesGrid">
-              <div class="loading-text">
-                Please select plants first
-              </div>
+              <div class="loading-text">Please select plants first</div>
             </div>
           </div>
+
           <hr>
-          <h5 class="mb-3">
-            <i class="fas fa-clock">
-            </i>
-            Session Details
-          </h5>
+
+          <!-- ======================== -->
+          <!-- SESSION DETAILS -->
+          <!-- ======================== -->
+          <h5 class="mb-3"><i class="fas fa-clock"></i> Session Details</h5>
           <div class="row">
-            <div class="col-md-6" id="id_session_date">
+            <div class="col-md-6">
               <div class="form-group">
-                <label>
-                  Planned Date
-                </label>
+                <label>Planned Date</label>
                 {{ form.planned_date }}
               </div>
             </div>
-            <div class="col-md-6" id="id_session_time">
+            <div class="col-md-6">
               <div class="form-group">
-                <label>
-                  Planned Time
-                </label>
+                <label>Planned Time</label>
                 {{ form.planned_time }}
               </div>
             </div>
           </div>
-          <!-- DEPARTMENT -->
+
           <div class="form-group">
-            <label for="{{ form.department.id_for_label }}">
-              Department
-            </label>
-            {{ form.department }} {% if form.department.errors %}
-            <div class="text-danger small">
-              {{ form.department.errors }}
-            </div>
+            <label for="{{ form.department.id_for_label }}">Department</label>
+            {{ form.department }}
+            {% if form.department.errors %}
+            <div class="text-danger small">{{ form.department.errors }}</div>
             {% endif %}
           </div>
+
           <hr>
+
           <div class="form-group">
-            <label>
-              Expected Participants
-            </label>
+            <label>Expected Participants</label>
             {{ form.expected_participants }}
           </div>
+
           <div class="form-group">
-            <label>
-              Remarks
-            </label>
+            <label>Remarks</label>
             {{ form.remarks }}
           </div>
-          <!-- ACTIONS -->
+
+          <!-- ======================== -->
+          <!-- FORM ACTIONS -->
+          <!-- ======================== -->
           <div class="d-flex justify-content-between mt-4">
-            <a href="#" class="btn btn-secondary">
-              <i class="fas fa-times">
-              </i>
-              Cancel
+            <a href="{% url 'toolbox_talk:session_list' %}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancel
             </a>
             <button type="submit" class="btn btn-primary" id="submitBtn">
-              <i class="fas fa-calendar-check">
-              </i>
-              {{ action }} Session
+              <i class="fas fa-calendar-check"></i> {{ action }} Session
             </button>
           </div>
+
         </form>
       </div>
-      <!-- /.card-body -->
     </div>
-    <!-- /.ehs-card -->
   </div>
 </div>
 
-
 {% endblock %}
+
 
 {% block extra_js %}
 <script>
 
-// when html page is fully rendered then only js must start working and check initial requirements 
-document.addEventListener('DOMContentLoaded', function () {
-    loadPlants();
+// ─────────────────────────────────────────────
+// UTILITY FUNCTIONS
+// ─────────────────────────────────────────────
 
-  // ─── Date constraints ───────────────────────────────────────
-  var today = new Date().toISOString().split('T')[0];
-  document.getElementById('id_session_date').setAttribute('min', today);
-
-
-    // ─── Submit guard ───────────────────────────────────────────
-  var isSubmitting = false;
-  document.getElementById('sessionForm').addEventListener('submit', function (e) {
-    if (isSubmitting) { e.preventDefault(); return; }
-    isSubmitting = true;
-    var btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
+function getCheckedValues(selector) {
+  var values = [];
+  document.querySelectorAll(selector + ':checked').forEach(function (cb) {
+    values.push(parseInt(cb.value));
   });
-
-  }); 
-  
-  
-
-// Detect the cateogry filed change 
-$('#id_category').change(function () {
-
-    var categoryId = $(this).val();
-
-    console.log(categoryId);
-
-});  
-
-// Call Django View Using AJAX to   load topics based on the selected category
-$(document).ready(function () {
-
-    $('#id_category').change(function () {
-
-        var categoryId = $(this).val();
-
-        $.ajax({
-
-            url: '/toolbox_talk/ajax/topics_by_category/',
-
-            data: {
-                category_id: categoryId
-            },
-
-            success: function (response) {
-
-                $('#id_topic').empty();
-
-                $('#id_topic').append(
-                    '<option value="">Select Topic</option>'
-                );
-
-                $.each(response, function(index, topic){
-
-                    $('#id_topic').append(
-                        `<option value="${topic.id}">
-                            ${topic.topic_title}
-                        </option>`
-                    );
-
-                });
-
-            }
-
-        });
-
-    });
-
-});
-
-
-
- // ─── Load Plants ──────────────────────────────────────────────
-function loadPlants() {
-  var grid = document.getElementById('plantsGrid');
-  grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
-
-  fetch('/organizations/ajax/get-all-plants/')
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      grid.innerHTML = '';
-      if (!data.length) {
-        grid.innerHTML = '<div class="loading-text">No plants available</div>';
-        return;
-      }
-      data.forEach(function (plant) {
-        var item = buildCheckboxItem(
-          'selected_plants', plant.id, 'plant_' + plant.id,
-          '<strong>' + plant.name + '</strong>' +
-          (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
-          'plant-checkbox',
-          function () {
-            updatePlantCount();
-            loadZonesForPlants();
-            loadTrainersForPlants();
-            loadInchargesForPlants();
-          }
-        );
-        grid.appendChild(item);
-      });
-      updatePlantCount();
-    })
-    .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
-    });
+  return values;
 }
 
-
-// ─── Generic helpers ──────────────────────────────────────────
-function selectAll(cls, countFn) {
-
-    document
-        .querySelectorAll('.' + cls)
-        .forEach(function(cb){
-
-            cb.checked = true;
-
-            cb.dispatchEvent(
-                new Event('change')
-            );
-
-        });
-
-    if (countFn) {
-        countFn();
-    }
+function resetGrid(gridId, message) {
+  document.getElementById(gridId).innerHTML =
+    '<div class="loading-text">' + message + '</div>';
 }
 
-
-function deselectAll(cls, countFn) {
-
-    document
-        .querySelectorAll('.' + cls)
-        .forEach(function(cb){
-
-            cb.checked = false;
-
-            cb.dispatchEvent(
-                new Event('change')
-            );
-
-        });
-
-    if (countFn) {
-        countFn();
-    }
-}
-
-
-
-function deselectAll(cls, countFn) {
-  document.querySelectorAll('.' + cls).forEach(function (cb) { cb.checked = false; });
+function selectAll(cls, countFn, changeFn) {
+  document.querySelectorAll('.' + cls).forEach(function (cb) {
+    cb.checked = true;
+  });
   if (countFn) countFn();
+  if (changeFn) changeFn();
 }
 
-
+function deselectAll(cls, countFn, changeFn) {
+  document.querySelectorAll('.' + cls).forEach(function (cb) {
+    cb.checked = false;
+  });
+  if (countFn) countFn();
+  if (changeFn) changeFn();
+}
 
 function updatePlantCount() {
   document.getElementById('plantCount').textContent =
@@ -615,29 +410,16 @@ function updateSublocationCount() {
   document.getElementById('sublocationCount').textContent =
     document.querySelectorAll('.sublocation-checkbox:checked').length;
 }
-/*
-function updateUserCount() {
-  document.getElementById('userCount').textContent =
-    document.querySelectorAll('.user-checkbox:checked').length;
-}
-*/
 
 function updateTrainerCount() {
-
-    document.getElementById('trainerCount').textContent =
-        document.querySelectorAll(
-            '.trainer-checkbox:checked'
-        ).length;
+  document.getElementById('trainerCount').textContent =
+    document.querySelectorAll('.trainer-checkbox:checked').length;
 }
 
 function updateInchargeCount() {
-
-    document.getElementById('inchargeCount').textContent =
-        document.querySelectorAll(
-            '.incharge-checkbox:checked'
-        ).length;
+  document.getElementById('inchargeCount').textContent =
+    document.querySelectorAll('.incharge-checkbox:checked').length;
 }
-
 
 function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
   var div = document.createElement('div');
@@ -646,7 +428,9 @@ function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
     '<input type="checkbox" name="' + name + '" value="' + value + '" ' +
     'id="' + id + '" class="' + cssClass + '">' +
     '<label for="' + id + '">' + labelHtml + '</label>';
-  div.querySelector('input').addEventListener('change', onChangeFn);
+  if (onChangeFn) {
+    div.querySelector('input').addEventListener('change', onChangeFn);
+  }
   return div;
 }
 
@@ -657,92 +441,89 @@ function buildGroupHeader(text, icon) {
   return div;
 }
 
-
-// ─── Utilities ────────────────────────────────────────────────
-function getCheckedValues(selector) {
-  var values = [];
-  document.querySelectorAll(selector + ':checked').forEach(function (cb) {
-    values.push(cb.value);
-  });
-  return values;
-}
-
-function resetGrid(gridId, message) {
-  document.getElementById(gridId).innerHTML =
-    '<div class="loading-text">' + message + '</div>';
-}
-
-
-// frontend validation for not allowing the trainers and incharge to be the same person 
 function validateTrainerIncharge() {
+  var trainers = getCheckedValues('.trainer-checkbox');
+  var duplicateFound = false;
+  document.querySelectorAll('.incharge-checkbox:checked').forEach(function (cb) {
+    if (trainers.includes(parseInt(cb.value))) duplicateFound = true;
+  });
+  document.getElementById('trainer-incharge-error').style.display =
+    duplicateFound ? 'block' : 'none';
+}
 
-    let trainers = [];
+// ─────────────────────────────────────────────
+// onChange TRIGGERS (used after cascade loads)
+// ─────────────────────────────────────────────
 
-    document
-        .querySelectorAll(
-            '.trainer-checkbox:checked'
-        )
-        .forEach(cb => {
-            trainers.push(cb.value);
-        });
+function onPlantChange() {
+  loadZonesForPlants();
+  loadTrainersForPlants();
+  loadInchargesForPlants();
+}
 
-    let duplicateFound = false;
+function onZoneChange() {
+  loadLocationsForZones();
+}
 
-    document
-        .querySelectorAll(
-            '.incharge-checkbox:checked'
-        )
-        .forEach(cb => {
+function onLocationChange() {
+  loadSublocationsForLocations();
+}
 
-            if (
-                trainers.includes(
-                    cb.value
-                )
-            ) {
-                duplicateFound = true;
-            }
+// ─────────────────────────────────────────────
+// LOAD PLANTS
+// ─────────────────────────────────────────────
 
-        });
+function loadPlants() {
+  var grid = document.getElementById('plantsGrid');
+  grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
 
-    const errorBox =
-        document.getElementById(
-            'trainer-incharge-error'
+  fetch('/organizations/ajax/get-all-plants/')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      grid.innerHTML = '';
+      if (!data.length) {
+        grid.innerHTML = '<div class="loading-text">No plants available</div>';
+        return;
+      }
+
+      data.forEach(function (plant) {
+        var item = buildCheckboxItem(
+          'selected_plants', plant.id, 'plant_' + plant.id,
+          '<strong>' + plant.name + '</strong>' +
+          (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
+          'plant-checkbox',
+          function () {
+            updatePlantCount();
+            onPlantChange();
+          }
         );
 
-    if (duplicateFound) {
+        // ── Edit mode: pre-check saved plants ──
+        if (IS_EDIT && selectedPlants.includes(plant.id)) {
+          item.querySelector('input').checked = true;
+        }
 
-        errorBox.style.display =
-            'block';
+        grid.appendChild(item);
+      });
 
-    } else {
+      updatePlantCount();
 
-        errorBox.style.display =
-            'none';
-
-    }
+      // ── Edit mode: trigger cascade after plants are rendered ──
+      if (IS_EDIT && selectedPlants.length > 0) {
+        loadZonesForPlants();
+        loadTrainersForPlants();
+        loadInchargesForPlants();
+      }
+    })
+    .catch(function () {
+      grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
+    });
 }
 
-document
-.querySelectorAll(
-    '.trainer-checkbox, .incharge-checkbox'
-)
-.forEach(cb => {
+// ─────────────────────────────────────────────
+// LOAD ZONES
+// ─────────────────────────────────────────────
 
-    cb.addEventListener(
-        'change',
-        validateTrainerIncharge
-    );
-
-});
-
-
-
-
-
-
-// load zones
-
-// ─── Load Zones ───────────────────────────────────────────────
 function loadZonesForPlants() {
   var plantIds = getCheckedValues('.plant-checkbox');
   var grid = document.getElementById('zonesGrid');
@@ -792,25 +573,36 @@ function loadZonesForPlants() {
             'zone-checkbox',
             function () {
               updateZoneCount();
-              loadLocationsForZones();
+              onZoneChange();
             }
           );
+
+          // ── Edit mode: pre-check saved zones ──
+          if (IS_EDIT && selectedZones.includes(zone.id)) {
+            item.querySelector('input').checked = true;
+          }
+
           grid.appendChild(item);
         });
       });
 
       bar.style.display = 'flex';
       updateZoneCount();
+
+      // ── Edit mode: trigger cascade ──
+      if (IS_EDIT && selectedZones.length > 0) {
+        loadLocationsForZones();
+      }
     })
     .catch(function () {
       grid.innerHTML = '<div class="loading-text text-danger">Error loading zones</div>';
     });
 }
 
+// ─────────────────────────────────────────────
+// LOAD LOCATIONS
+// ─────────────────────────────────────────────
 
-
-// load locations 
-// ─── Load Locations ───────────────────────────────────────────
 function loadLocationsForZones() {
   var zoneIds = getCheckedValues('.zone-checkbox');
   var grid = document.getElementById('locationsGrid');
@@ -857,23 +649,36 @@ function loadLocationsForZones() {
             'location-checkbox',
             function () {
               updateLocationCount();
-              loadSublocationsForLocations();
+              onLocationChange();
             }
           );
+
+          // ── Edit mode: pre-check saved locations ──
+          if (IS_EDIT && selectedLocations.includes(loc.id)) {
+            item.querySelector('input').checked = true;
+          }
+
           grid.appendChild(item);
         });
       });
 
       bar.style.display = 'flex';
       updateLocationCount();
+
+      // ── Edit mode: trigger cascade ──
+      if (IS_EDIT && selectedLocations.length > 0) {
+        loadSublocationsForLocations();
+      }
     })
     .catch(function () {
       grid.innerHTML = '<div class="loading-text text-danger">Error loading locations</div>';
     });
 }
 
-// load sublocations
-// ─── Load Sublocations ────────────────────────────────────────
+// ─────────────────────────────────────────────
+// LOAD SUBLOCATIONS
+// ─────────────────────────────────────────────
+
 function loadSublocationsForLocations() {
   var locationIds = getCheckedValues('.location-checkbox');
   var grid = document.getElementById('sublocationsGrid');
@@ -914,6 +719,12 @@ function loadSublocationsForLocations() {
             'sublocation-checkbox',
             function () { updateSublocationCount(); }
           );
+
+          // ── Edit mode: pre-check saved sublocations ──
+          if (IS_EDIT && selectedSubLocations.includes(sub.id)) {
+            item.querySelector('input').checked = true;
+          }
+
           grid.appendChild(item);
         });
       });
@@ -926,139 +737,154 @@ function loadSublocationsForLocations() {
     });
 }
 
+// ─────────────────────────────────────────────
+// LOAD TRAINERS
+// ─────────────────────────────────────────────
 
-// load trainers based on selected plant
 function loadTrainersForPlants() {
+  var plantIds = getCheckedValues('.plant-checkbox');
 
-    var plantIds =
-        getCheckedValues('.plant-checkbox');
+  if (!plantIds.length) {
+    resetGrid('trainersGrid', 'Please select plants first');
+    updateTrainerCount();
+    return;
+  }
 
-    if (!plantIds.length) {
+  fetch('/toolbox_talk/ajax/trainers/?plant_ids=' + plantIds.join(','))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var grid = document.getElementById('trainersGrid');
+      grid.innerHTML = '';
 
-        resetGrid(
-            'trainersGrid',
-            'Please select plants first'
-        );
-
+      if (!data.users || !data.users.length) {
+        grid.innerHTML = '<div class="loading-text">No trainers available for selected plants</div>';
         return;
-    }
+      }
 
-    fetch(
-        '/toolbox_talk/ajax/trainers/?plant_ids='
-        + plantIds.join(',')
-    )
-
-    .then(response => response.json())
-
-    .then(function(data) {
-
-        console.log(data);
-
-        let grid =
-            document.getElementById(
-                'trainersGrid'
-            );
-
-        grid.innerHTML = '';
-
-        data.users.forEach(function(user){
-
-            grid.innerHTML += `
-
-                <div>
-
-                    <input
-                        type="checkbox"
-                        class="trainer-checkbox"
-                        name="selected_trainers"
-                        value="${user.id}"
-                        id="trainer_${user.id}"
-                    >
-
-                    <label
-                        for="trainer_${user.id}"
-                    >
-                        ${user.full_name}
-                    </label>
-
-                </div>
-
-            `;
-
+      data.users.forEach(function (user) {
+        var isChecked = IS_EDIT && selectedTrainers.includes(user.id);
+        var item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML =
+          '<input type="checkbox" class="trainer-checkbox" name="selected_trainers" ' +
+          'value="' + user.id + '" id="trainer_' + user.id + '"' +
+          (isChecked ? ' checked' : '') + '>' +
+          '<label for="trainer_' + user.id + '">' + user.full_name + '</label>';
+        item.querySelector('input').addEventListener('change', function () {
+          updateTrainerCount();
+          validateTrainerIncharge();
         });
+        grid.appendChild(item);
+      });
 
+      updateTrainerCount();
+    })
+    .catch(function () {
+      document.getElementById('trainersGrid').innerHTML =
+        '<div class="loading-text text-danger">Error loading trainers</div>';
     });
-
 }
 
+// ─────────────────────────────────────────────
+// LOAD INCHARGES
+// ─────────────────────────────────────────────
 
-// load incharges based on selected plant
 function loadInchargesForPlants() {
+  var plantIds = getCheckedValues('.plant-checkbox');
 
-    var plantIds =
-        getCheckedValues('.plant-checkbox');
+  if (!plantIds.length) {
+    resetGrid('inchargesGrid', 'Please select plants first');
+    updateInchargeCount();
+    return;
+  }
 
-    if (!plantIds.length) {
+  fetch('/toolbox_talk/ajax/incharges/?plant_ids=' + plantIds.join(','))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var grid = document.getElementById('inchargesGrid');
+      grid.innerHTML = '';
 
-        resetGrid(
-            'inchargesGrid',
-            'Please select plants first'
-        );
-
+      if (!data.users || !data.users.length) {
+        grid.innerHTML = '<div class="loading-text">No incharges available for selected plants</div>';
         return;
-    }
+      }
 
-    fetch(
-        '/toolbox_talk/ajax/incharges/?plant_ids='
-        + plantIds.join(',')
-    )
-
-    .then(response => response.json())
-
-    .then(function(data) {
-
-        console.log(data);
-
-        let grid =
-            document.getElementById(
-                'inchargesGrid'
-            );
-
-        grid.innerHTML = '';
-
-        data.users.forEach(function(user){
-
-            grid.innerHTML += `
-
-                <div>
-
-                    <input
-                        type="checkbox"
-                        class="incharge-checkbox"
-                        name="selected_incharges"
-                        value="${user.id}"
-                        id="incharge_${user.id}"
-                    >
-
-                    <label
-                        for="incharge_${user.id}"
-                    >
-                        ${user.full_name}
-                    </label>
-
-                </div>
-
-            `;
-
+      data.users.forEach(function (user) {
+        var isChecked = IS_EDIT && selectedIncharges.includes(user.id);
+        var item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML =
+          '<input type="checkbox" class="incharge-checkbox" name="selected_incharges" ' +
+          'value="' + user.id + '" id="incharge_' + user.id + '"' +
+          (isChecked ? ' checked' : '') + '>' +
+          '<label for="incharge_' + user.id + '">' + user.full_name + '</label>';
+        item.querySelector('input').addEventListener('change', function () {
+          updateInchargeCount();
+          validateTrainerIncharge();
         });
+        grid.appendChild(item);
+      });
 
+      updateInchargeCount();
+    })
+    .catch(function () {
+      document.getElementById('inchargesGrid').innerHTML =
+        '<div class="loading-text text-danger">Error loading incharges</div>';
     });
-
 }
 
+// ─────────────────────────────────────────────
+// CATEGORY → TOPIC AJAX
+// ─────────────────────────────────────────────
+
+$(document).ready(function () {
+  $('#id_category').change(function () {
+    var categoryId = $(this).val();
+    $.ajax({
+      url: '/toolbox_talk/ajax/topics_by_category/',
+      data: { category_id: categoryId },
+      success: function (response) {
+        $('#id_topic').empty().append('<option value="">Select Topic</option>');
+        $.each(response, function (index, topic) {
+          $('#id_topic').append(
+            '<option value="' + topic.id + '">' + topic.topic_title + '</option>'
+          );
+        });
+      }
+    });
+  });
+});
+
+// ─────────────────────────────────────────────
+// PAGE INIT
+// ─────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Date constraint (create mode only)
+  if (!IS_EDIT) {
+    var dateInput = document.getElementById('id_planned_date');
+    if (dateInput) {
+      dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+    }
+  }
+
+  // Submit guard
+  var isSubmitting = false;
+  document.getElementById('sessionForm').addEventListener('submit', function (e) {
+    if (isSubmitting) { e.preventDefault(); return; }
+    isSubmitting = true;
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = IS_EDIT
+      ? '<i class="fas fa-spinner fa-spin mr-1"></i> Updating...'
+      : '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
+  });
+
+  // Load plants — cascades automatically in edit mode
+  loadPlants();
+
+});
 
 </script>
 {% endblock %}
-
-                
-

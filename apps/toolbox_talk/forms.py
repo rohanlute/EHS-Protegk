@@ -4,6 +4,7 @@ from .models import (
     ToolboxTalkCategory,
     ToolboxTalkTopic,
     ToolboxTalkSessionPlan,
+    #ToolboxTalkActionItem,
     
 )
 
@@ -350,4 +351,77 @@ class ToolboxTalkSessionPlanForm(forms.ModelForm):
             )
 
         return cleaned_data
+    
+#Actions management module
+
+'''
+
+class ToolboxTalkActionItemForm(forms.ModelForm):
+
+    class Meta:
+
+        model = ToolboxTalkActionItem
+
+        fields = [
+            'title',
+            'description',
+            'priority',
+            'assigned_to',
+            'target_date',
+            'status',
+            'closure_remark'
+        ]
+
+        widgets = {
+
+            'title': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4
+                }
+            ),
+
+            'priority': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'assigned_to': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'target_date': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control'
+                }
+            ),
+
+            'status': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'closure_remark': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4
+                }
+            ),
+
+        }
+        
+'''        
+    
+    
 
