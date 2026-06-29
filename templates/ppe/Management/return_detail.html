@@ -1,25 +1,20 @@
 {% extends 'base/base.html' %}
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Issue Details</li>
-{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
-                PPE Issue Details
+                PPE Return Details
             </h4>
         </div>
         <div class="card-body">
-            <!-- Issue Summary -->
             <table class="table table-bordered">
                 <tr>
-                    <th width="30%">
-                        Issue Number
+                    <th width="25%">
+                        Return No
                     </th>
                     <td>
-                        {{ issue.issue_group_no }}
+                        {{ return_obj.return_no }}
                     </td>
                 </tr>
                 <tr>
@@ -27,211 +22,148 @@
                         Plant Name
                     </th>
                     <td>
-                        {{ issue.plant }}
+                        {{ return_obj.plant.name}}
                     </td>
                 </tr>
-
                 <tr>
-                    <th>Issue to</th>
-                    <td>{{ issue.get_issue_to_display }}</td>
-                </tr>
-                <tr>
-                  <th>Employee / Contractor</th>
+                    <th>
+                        PPE Item
+                    </th>
                     <td>
-                        {% if issue.issue_to == 'EMPLOYEE' %}
-                            {{ issue.employee.get_full_name }}
-                        {% elif issue.issue_to == 'CONTRACTOR' %}
-                            {{ issue.contractor_name }}
-                        {% endif %}
+                        {{ return_obj.ppe_item.name }}
                     </td>
-                  </tr>
-                <tr>
-                    <th>Department</th>
-                    <td>{{ issue.department }}</td>
                 </tr>
                 <tr>
-                    <th>Available Quantity</th>
-                    <td>{{ issue.available_quantity }}</td>
-                </tr>
-                <tr>
-                    <th>Quantity Issued</th>
-                    <td>{{ issue.quantity_issue }}</td>
-                </tr>
-                <tr>
-                    <th>Issue Size</th>
+                    <th>
+                        Return Date
+                    </th>
                     <td>
-                        {{ issue.issue_date }}
+                        {{ return_obj.return_date|date:"d-m-Y" }}
                     </td>
                 </tr>
-
                 <tr>
                     <th>
                         Created By
                     </th>
                     <td>
-                        {{ issue.created_by }}
+                        {{ return_obj.created_by }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        Created Date
+                    </th>
+                    <td>
+                        {{ return_obj.created_at|date:"d-m-Y H:i" }}
                     </td>
                 </tr>
             </table>
-
-            <!-- Employee Details -->
-
+            <!-- Detail Table -->
             <h5 class="mt-4 mb-3">
-                Employee / Contractor Issue Details
+                Employee / Contractor Return Details
             </h5>
-
             <div class="table-responsive">
-
                 <table class="table table-bordered table-striped">
-
                     <thead>
-
                         <tr>
-
                             <th width="5%">
                                 Sr. No.
                             </th>
-
                             <th>
-                                Issue To
+                                Return To
                             </th>
-
                             <th>
                                 Employee / Contractor
                             </th>
-
                             <th>
                                 Department
                             </th>
-
+                            <th>
+                                Plant
+                            </th>
                             <th>
                                 Size
                             </th>
-
                             <th>
-                                Quantity
+                                Assigned Qty
                             </th>
-
-
+                            <th>
+                                Return Qty
+                            </th>
                         </tr>
-
                     </thead>
-
                     <tbody>
-
-                        {% for row in issues %}
-
+                    {% for row in returns %}
                         <tr>
-
                             <td>
                                 {{ forloop.counter }}
                             </td>
-
                             <td>
-                                {{ row.get_issue_to_display }}
+                                {{ row.get_return_to_display }}
                             </td>
-
                             <td>
-
-                                {% if row.issue_to == 'EMPLOYEE' %}
-
+                                {% if row.return_to == 'EMPLOYEE' %}
                                     {{ row.employee }}
-
                                 {% else %}
-
                                     {{ row.contractor_name }}
-
                                 {% endif %}
-
                             </td>
-
                             <td>
-
-                                {% if row.issue_to == 'EMPLOYEE' %}
-
+                                {% if row.return_to == 'EMPLOYEE' %}
                                     {{ row.department }}
-
                                 {% else %}
-
                                     {{ row.contractor_department }}
-
                                 {% endif %}
-
                             </td>
-
+                            <td>
+                                {{row.plant}}
+                            </td>
                             <td>
                                 {{ row.size.size }}
                             </td>
-
                             <td>
-                                {{ row.quantity_issue }}
+                                {{ row.assigned_qty }}
                             </td>
-
-
+                            <td>
+                                {{ row.return_qty }}
+                            </td>
                         </tr>
-
                         {% empty %}
-
                         <tr>
-
-                            <td colspan="7" class="text-center">
-
+                            <td colspan="8"
+                                class="text-center">
                                 No Records Found
-
                             </td>
-
                         </tr>
-
                         {% endfor %}
-
                     </tbody>
-
                     <tfoot>
-
-                        <tr>
-
-                            <th colspan="5" class="text-end">
-
-                                Total Persons
-
+                        <tr class="table-secondary">
+                            <th colspan="6"
+                                class="text-end">
+                                Total Quantity
                             </th>
-
-                            <th colspan="2">
-
-                                {{ issues|length }}
-
+                            <th>
+                                {{ total_assigned_qty }}
                             </th>
-
+                            <th>
+                                {{ total_return_qty }}
+                            </th>
                         </tr>
-
                     </tfoot>
-
                 </table>
-
             </div>
-
             <div class="mt-3">
-
-                <a href="{% url 'PPE:IssueManagement_list' %}"
+                <a href="{% url 'PPE:return_list' %}"
                    class="btn btn-secondary">
-
                     Back
-
                 </a>
-
-                <a href="{% url 'PPE:edit_issue' issue.id %}"
-                   class="btn btn-primary">
-
-                    Edit
-
-                </a>
-
+                {% comment %} <a href="{% url 'PPE:return_delete' return_obj.id %}"
+                   class="btn btn-danger">
+                    Delete
+                </a> {% endcomment %}
             </div>
-
         </div>
-
     </div>
-
 </div>
-
 {% endblock %}

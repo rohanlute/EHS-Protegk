@@ -1,0 +1,757 @@
+{% extends 'base/base.html' %}
+{% block title %}Fill Inspection{% endblock %}
+{% block page_title %}{{ schedule.schedule_code }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
+<li class="breadcrumb-item"><a href="{% url 'inspections:my_inspections' %}">My Inspections</a></li>
+<li class="breadcrumb-item active">{{ schedule.schedule_code }}</li>
+{% endblock %}
+{% block extra_css %}
+<style>
+
+.detail-box{
+    background:#f8f9fa;
+    padding:15px;
+    border-radius:10px;
+    height:100%;
+    border:1px solid #e5e5e5;
+}
+
+
+.detail-box i,
+label i,
+.card-header i,
+.inspection-header i,
+button i,
+a i{
+    color:#000 !important;
+}
+
+
+.detail-box i{
+    font-size:22px;
+    margin-bottom:8px;
+}
+
+
+
+.detail-box span{
+    display:block;
+    font-size:12px;
+    color:#666;
+    text-transform:uppercase;
+}
+
+
+.detail-box b{
+    display:block;
+    margin-top:5px;
+    color:#222;
+}
+
+
+
+
+.inspection-card{
+
+    border:1px solid #ddd;
+    border-radius:14px;
+    overflow:hidden;
+    background:white;
+    box-shadow:0 4px 15px rgba(0,0,0,.08);
+
+}
+
+
+
+.inspection-header{
+
+    background:#f1f3f5;
+    padding:15px;
+    font-size:17px;
+    font-weight:600;
+    color:#333;
+
+}
+
+
+
+
+.inspection-body{
+
+    padding:20px;
+
+}
+
+
+
+
+.value-box{
+
+    background:#f8f9fa;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #eee;
+
+}
+
+
+
+
+
+.qty-box{
+
+    color:white;
+    padding:10px;
+    text-align:center;
+    border-radius:20px;
+    font-weight:bold;
+
+}
+
+
+
+
+
+.status-buttons{
+
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+
+}
+
+
+
+
+.status{
+
+    padding:12px 22px;
+    border-radius:30px;
+    cursor:pointer;
+    font-weight:600;
+    border:2px solid;
+    transition:.2s;
+}
+
+
+
+.status input{
+
+    display:none;
+
+}
+
+
+
+
+/* reusable green */
+
+.status.reusable{
+
+    color:#198754;
+    border-color:#198754;
+    background:#e9f8ef;
+
+}
+
+
+.status.reusable:hover,
+.status.reusable:has(input:checked){
+
+    background:#198754;
+    color:white;
+
+}
+
+
+
+
+/* repair yellow */
+
+.status.repair{
+
+    color:#d39e00;
+    border-color:#ffc107;
+    background:#fff8df;
+
+}
+
+
+
+.status.repair:hover,
+.status.repair:has(input:checked){
+
+    background:#ffc107;
+    color:#000;
+
+}
+
+
+
+
+
+/* scrap red */
+
+.status.scrap{
+
+    color:#dc3545;
+    border-color:#dc3545;
+    background:#ffe9ec;
+
+}
+
+
+
+.status.scrap:hover,
+.status.scrap:has(input:checked){
+
+    background:#dc3545;
+    color:white;
+
+}
+
+
+
+
+
+.photo-box{
+
+    border:2px dashed #007bff;
+    border-radius:12px;
+    padding:25px;
+    text-align:center;
+    cursor:pointer;
+    color:#007bff;
+    background:#f8fbff;
+    transition:.3s;
+
+}
+
+
+
+.photo-box:hover{
+
+    background:#eaf4ff;
+
+}
+
+
+
+
+.preview-img{
+
+    width:120px;
+    height:120px;
+    object-fit:cover;
+    border-radius:10px;
+
+}
+
+
+
+
+.btn-success i,
+.btn-secondary i{
+
+    color:white !important;
+
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<form method="post"
+      enctype="multipart/form-data"
+      action="{% url 'PPE:submit_ppe_inspection' schedule.id %}">
+
+{% csrf_token %}
+<div class="card shadow-sm mb-4">
+
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-check"></i>
+            PPE Inspection Schedule Details
+        </h5>
+    </div>
+
+
+    <div class="card-body">
+
+        <div class="row">
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-hashtag"></i>
+                    <span>Inspection No</span>
+                    <b>{{ schedule.inspection_no }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>PPE Item</span>
+                    <b>{{ schedule.ppe_item.name }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-industry"></i>
+                    <span>Plant</span>
+                    <b>{{ schedule.plant.name }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-building"></i>
+                    <span>Department</span>
+                    <b>{{ schedule.department.name }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-user"></i>
+                    <span>Assigned To</span>
+                    <b>{{ schedule.assigned_user.get_full_name }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-user-tag"></i>
+                    <span>Role</span>
+                    <b>{{ schedule.get_assigned_role_display }}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-calendar"></i>
+                    <span>Scheduled Date</span>
+                    <b>{{schedule.scheduled_date}}</b>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-3 mb-3">
+                <div class="detail-box">
+                    <i class="fas fa-calendar-times"></i>
+                    <span>Due Date</span>
+                    <b>{{schedule.scheduled_end_date}}</b>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+<div class="card shadow-sm">
+<div class="card-header bg-info text-white">
+
+<h5 class="mb-0">
+<i class="fas fa-search"></i>
+Inspection Assessment
+</h5>
+
+</div>
+
+
+
+<div class="card-body">
+
+
+{% for return in returns %}
+
+
+
+<div class="inspection-card mb-4">
+
+
+
+<div class="inspection-header">
+
+<i class="fas fa-box"></i>
+
+Return Item {{forloop.counter}}
+
+</div>
+
+
+
+
+<div class="inspection-body">
+
+
+
+<div class="row mb-3">
+
+
+<div class="col-md-4">
+
+<label>
+<i class="fas fa-user"></i>
+Return To
+</label>
+
+
+<div class="value-box">
+
+{% if return.employee %}
+{{return.employee.get_full_name}}
+{% else %}
+{{return.contractor_name}}
+{% endif %}
+
+</div>
+
+</div>
+
+
+
+
+<div class="col-md-3">
+
+<label>
+<i class="fas fa-hard-hat"></i>
+PPE Item
+</label>
+
+<div class="value-box">
+
+{{return.ppe_item.name}}
+
+</div>
+
+</div>
+
+
+
+
+<div class="col-md-2">
+
+<label>
+Assigned
+</label>
+
+<div class="qty-box bg-info">
+
+{{return.assigned_qty}}
+
+</div>
+
+</div>
+
+
+
+<div class="col-md-2">
+
+<label>
+Returned
+</label>
+
+<div class="qty-box bg-warning">
+
+{{return.return_qty}}
+
+</div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<hr>
+
+
+
+
+
+
+<label>
+<i class="fas fa-check-circle"></i>
+Inspection Status
+</label>
+
+
+<div class="status-buttons">
+
+
+<label class="status reusable">
+
+<input type="radio"
+name="status_{{return.id}}"
+value="REUSABLE"
+required>
+
+<i class="fas fa-check"></i>
+Reusable
+
+</label>
+
+
+
+<label class="status repair">
+
+<input type="radio"
+name="status_{{return.id}}"
+value="REPAIR">
+
+<i class="fas fa-tools"></i>
+Repair
+
+</label>
+
+
+
+<label class="status scrap">
+
+<input type="radio"
+name="status_{{return.id}}"
+value="SCRAP">
+
+<i class="fas fa-trash"></i>
+Scrap
+
+</label>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="form-group mt-3">
+
+
+<label>
+<i class="fas fa-comment"></i>
+Remarks
+</label>
+
+
+<textarea
+
+name="remark_{{return.id}}"
+
+class="form-control"
+
+rows="2"
+
+placeholder="Enter inspection remarks">
+
+</textarea>
+
+
+</div>
+
+
+
+
+
+
+<label>
+<i class="fas fa-camera"></i>
+Photo Evidence</label>
+<div class="photo-box"
+
+onclick="openPhoto('{{return.id}}')">
+
+
+<i class="fas fa-camera fa-2x"></i>
+
+<br>
+
+Add Photo 
+
+
+</div>
+
+
+
+<input type="file"
+
+id="photo_{{return.id}}"
+
+name="photo_{{return.id}}"
+
+class="d-none inspection-photo-input"
+
+accept="image/*">
+
+
+
+<div id="preview_photo_{{return.id}}"
+class="mt-3">
+
+</div>
+
+
+
+
+
+
+</div>
+
+</div>
+
+
+
+
+{% endfor %}
+
+
+
+</div>
+
+</div>
+
+
+
+
+
+<div class="text-center my-4">
+
+
+<button class="btn btn-success btn-lg px-5">
+
+<i class="fas fa-check"></i>
+
+Submit Inspection
+
+</button>
+
+
+<a href="{% url 'PPE:my_ppe_inspections' %}"
+
+class="btn btn-secondary btn-lg px-5">
+
+<i class="fas fa-times"></i>
+
+Cancel
+
+</a>
+
+
+</div>
+
+
+</form>
+
+
+
+
+<script>
+function openPhoto(id){
+
+    let input = document.getElementById(
+        "photo_" + id
+    );
+
+    if(input){
+        input.click();
+    }
+
+}
+
+
+
+document.addEventListener(
+"DOMContentLoaded",
+function(){
+
+
+    document.querySelectorAll(
+        ".inspection-photo-input"
+    )
+    .forEach(function(input){
+
+
+        input.addEventListener(
+        "change",
+        function(){
+
+
+            let file = this.files[0];
+
+
+            if(!file){
+                return;
+            }
+
+
+            let id = this.id.replace(
+                "photo_",
+                ""
+            );
+
+
+            let reader = new FileReader();
+
+
+
+            reader.onload = function(e){
+
+
+                document.getElementById(
+                    "preview_photo_" + id
+                ).innerHTML = `
+
+                <img src="${e.target.result}"
+                style="
+                width:120px;
+                height:120px;
+                object-fit:cover;
+                border:1px solid #ccc;
+                border-radius:5px;">
+
+                `;
+
+            };
+
+
+            reader.readAsDataURL(file);
+
+
+
+        });
+
+    });
+
+
+});
+</script>
+
+
+{% endblock %}

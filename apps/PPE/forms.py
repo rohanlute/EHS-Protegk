@@ -10,7 +10,8 @@ from .models import (
     PPECategory,
     PPEItem,
     PPEStockTransaction,
-    PPEIssueManagement
+    PPEIssueManagement,
+    PPEReturnManagement,
 )
 class PPECategoryForm(forms.ModelForm):
     class Meta:
@@ -367,5 +368,103 @@ class PPEIssueManagementForm(forms.ModelForm):
                 raise ValidationError(
                     "Contractor Name is required."
                 )
+
+        return cleaned_data
+
+
+class PPEReturnManagementForm(forms.ModelForm):
+
+    class Meta:
+
+        model = PPEReturnManagement
+
+        fields = [
+            'issue',
+            'return_date',
+            'return_qty',
+            'remarks'
+        ]
+
+        widgets = {
+
+            'issue': forms.Select(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+
+            'return_date': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date'
+                }
+            ),
+
+            'return_qty': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'min': 1
+                }
+            ),
+
+            'remarks': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.fields['issue'].queryset = (
+            PPEIssueManagement.objects
+            .select_related(
+                'ppe_item',
+                'employee',
+                'department',
+                'size'
+            )
+            .order_by('-id')
+        )
+
+    def clean(self):
+
+        cleaned_data = super().clean()
+
+        issue = cleaned_data.get('issue')
+        return_qty = cleaned_data.get('return_qty')
+
+        if not issue:
+            raise ValidationError(
+                "Issue No is required."
+            )
+
+        if not return_qty:
+            raise ValidationError(
+                "Return Quantity is required."
+            )
+
+        total_returned = (
+            PPEReturnManagement.objects
+            .filter(issue=issue)
+            .exclude(pk=self.instance.pk)
+            .aggregate(
+                total=Sum('return_qty')
+            )['total'] or 0
+        )
+
+        pending_qty = (
+            issue.quantity_issue -
+            total_returned
+        )
+
+        if return_qty > pending_qty:
+
+            raise ValidationError(
+                f"Only {pending_qty} quantity is available for return."
+            )
 
         return cleaned_data

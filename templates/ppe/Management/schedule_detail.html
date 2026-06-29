@@ -1,0 +1,322 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Inspection Schedule Details{% endblock %}
+{% block page_title %}Inspection No : {{ schedule.inspection_no }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'PPE:schedule_list' %}">
+        PPE Inspection Schedule
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    {{ schedule.inspection_no }}
+</li>
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- Action Buttons -->
+        <div class="mb-3">
+            <a href="{% url 'PPE:schedule_list' %}"
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+            <a href="{% url 'PPE:schedule_edit' schedule.pk %}"
+               class="btn btn-warning">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+            <button type="button"
+                    class="btn btn-danger"
+                    data-toggle="modal"
+                    data-target="#deleteModal">
+                <i class="fas fa-trash"></i>
+                Delete
+            </button>
+        </div>
+        <div class="row">
+
+            <!-- Schedule Details -->
+            <div class="col-md-8">
+
+                <div class="ehs-card">
+
+                    <div class="card-header">
+
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle"></i>
+                            Schedule Details
+                        </h3>
+
+                        <div class="card-tools">
+
+                            <span class="badge
+                            {% if schedule.status == 'SCHEDULED' %}
+                                badge-primary
+                            {% elif schedule.status == 'IN_PROGRESS' %}
+                                badge-warning
+                            {% elif schedule.status == 'COMPLETED' %}
+                                badge-success
+                            {% elif schedule.status == 'OVERDUE' %}
+                                badge-danger
+                            {% else %}
+                                badge-secondary
+                            {% endif %}">
+                                {{ schedule.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th width="220">
+                                        Inspection No
+                                    </th>
+                                    <td>
+                                        <strong>
+                                            {{ schedule.inspection_no }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>PPE Item</th>
+                                    <td>
+                                        {{ schedule.ppe_item.name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Plant</th>
+                                    <td>
+                                        <span class="badge badge-primary">
+                                            {{ schedule.plant.name }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% if schedule.department %}
+                                <tr>
+                                    <th>Department</th>
+                                    <td>
+                                        {{ schedule.department.name }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Assigned To</th>
+                                    <td>
+                                        {{ schedule.assigned_user.get_full_name }}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Assigned Role</th>
+                                    <td>
+                                        {{ schedule.get_assigned_role_display }}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Assigned By</th>
+                                    <td>
+
+                                        {% if schedule.assigned_by %}
+                                            {{ schedule.assigned_by.get_full_name }}
+                                        {% else %}
+                                            <span class="text-muted">
+                                                System
+                                            </span>
+                                        {% endif %}
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Scheduled Date</th>
+                                    <td>
+                                        {{ schedule.scheduled_date|date:"d M Y" }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Scheduled End Date</th>
+                                    <td>
+                                        {{ schedule.scheduled_end_date|date:"d M Y" }}
+
+                                        {% if schedule.status == 'OVERDUE' %}
+                                            <span class="badge badge-danger ml-2">
+                                                Overdue
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if schedule.assignment_notes %}
+                                <tr>
+                                    <th>Assignment Notes</th>
+                                    <td>
+                                        {{ schedule.assignment_notes }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Created At</th>
+                                    <td>
+                                        {{ schedule.created_at|date:"d M Y H:i" }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Last Updated</th>
+                                    <td>
+                                        {{ schedule.updated_at|date:"d M Y H:i" }}
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+            </div>
+            <!-- Timeline -->
+            <div class="col-md-4">
+
+                <div class="ehs-card">
+
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-history"></i>
+                            Timeline
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="mb-4">
+
+                            <strong>
+                                Schedule Created
+                            </strong>
+
+                            <div class="text-muted">
+                                {{ schedule.created_at|date:"d M Y H:i" }}
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <strong>
+                                Assigned To
+                            </strong>
+
+                            <div class="text-muted">
+                                {{ schedule.assigned_user.get_full_name }}
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <strong>
+                                Current Status
+                            </strong>
+
+                            <div>
+                                <span class="badge
+                                {% if schedule.status == 'SCHEDULED' %}
+                                    badge-primary
+                                {% elif schedule.status == 'IN_PROGRESS' %}
+                                    badge-warning
+                                {% elif schedule.status == 'COMPLETED' %}
+                                    badge-success
+                                {% elif schedule.status == 'OVERDUE' %}
+                                    badge-danger
+                                {% else %}
+                                    badge-secondary
+                                {% endif %}">
+                                    {{ schedule.get_status_display }}
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Last Updated
+                            </strong>
+
+                            <div class="text-muted">
+                                {{ schedule.updated_at|date:"d M Y H:i" }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade"
+     id="deleteModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    Confirm Delete
+                </h5>
+            </div>
+
+            <div class="modal-body text-center">
+
+                <p>
+                    Delete inspection schedule
+                    <strong>
+                        {{ schedule.inspection_no }}
+                    </strong> ?
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-dismiss="modal">
+                    Cancel
+                </button>
+
+                <form method="POST"
+                      action="#">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-danger">
+                        Delete
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
