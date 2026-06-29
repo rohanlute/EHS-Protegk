@@ -11,12 +11,12 @@ from .models import PPESizeQuantity
 from itertools import zip_longest
 from .models import *
 from django.db.models import Min,Max,F
-from django.db.models import Q
+from .utils import *
 from .forms import *
+import json
 from django.db.models import Sum
 from .models import PPEReturnManagement
 from django.core.paginator import EmptyPage, Paginator
-from django.db.models import Sum
 from datetime import date
 # Create your views here.
 
@@ -857,9 +857,14 @@ def IssueManagement_create(request):
         return redirect(
             "PPE:IssueManagement_list"
         )
+    ppe_items = PPEItem.objects.filter(
+    stock_transactions__transaction_type='OPENING',
+    is_active=True
+    ).distinct()
     context = {
         "form": form,
         "plants": plants,
+        "ppe_items": ppe_items,
         "selected_item": selected_item,
         "selected_plant_id": plant_id,
         "available_quantity": available_quantity,
@@ -893,128 +898,110 @@ def get_employee_department(request):
         return JsonResponse({
             'department': ''
         })
+
 @login_required
 def edit_issue(request, pk):
     first_issue = get_object_or_404(
         PPEIssueManagement,
         pk=pk
     )
+    issue_group = first_issue.issue_group_no
     issues = list(
         PPEIssueManagement.objects.filter(
-            issue_group_no=first_issue.issue_group_no
+            issue_group_no=issue_group
         ).order_by('id')
     )
-    # Prevent edit if return already exists
+    # stop edit after return
     issue_ids = PPEIssueManagement.objects.filter(
-        issue_group_no=first_issue.issue_group_no
+        issue_group_no=issue_group
     ).values_list(
         'id',
         flat=True
     )
-    return_exists = PPEReturnManagement.objects.filter(
+    if PPEReturnManagement.objects.filter(
         issue_id__in=issue_ids
-    ).exists()
-    if return_exists:
+    ).exists():
         messages.error(
             request,
-            "This Issue cannot be edited because Return entry already exists against it."
+            "This Issue cannot be edited because Return entry already exists."
         )
         return redirect(
             'PPE:IssueManagement_list'
         )
-    size_stock = {}
-    for issue in issues:
-        size_id = issue.size.id
-        if size_id not in size_stock:
-            total_issued = (
-                PPEIssueManagement.objects.filter(
-                    issue_group_no=issue.issue_group_no,
-                    size=issue.size
-                ).aggregate(
-                    total=Sum('quantity_issue')
-                )['total'] or 0
-            )
-            size_stock[size_id] = (
-                issue.size.available_quantity +
-                total_issued
-            )
-        issue.display_stock = size_stock[size_id]
-        size_stock[size_id] -= issue.quantity_issue
-    original_stock = {}
-    for issue in issues:
-        size_id = issue.size.id
-        if size_id not in original_stock:
-            total_issued = (
-                PPEIssueManagement.objects.filter(
-                    issue_group_no=issue.issue_group_no,
-                    size=issue.size
-                ).aggregate(
-                    total=Sum('quantity_issue')
-                )['total'] or 0
-            )
-            original_stock[size_id] = (
-                issue.size.available_quantity +
-                total_issued
-            )
     employees = User.objects.filter(
         is_active=True
     ).select_related(
         'department'
     )
     selected_item = first_issue.ppe_item
+    sizes = PPESizeQuantity.objects.filter(
+        ppe_item=selected_item,
+        plant=first_issue.plant
+    )
+    # original stock for edit display
+    for size in sizes:
+
+        old_qty = sum(
+            x.quantity_issue
+            for x in issues
+            if x.size_id == size.id
+        )
+        size.original_qty = (
+            size.available_quantity +
+            old_qty
+        )
     available_quantity = (
-        PPESizeQuantity.objects.filter(
-            ppe_item=first_issue.ppe_item
-        ).aggregate(
+        sizes.aggregate(
             total=Sum('available_quantity')
         )['total'] or 0
     )
-    sizes = PPESizeQuantity.objects.filter(
-    ppe_item=selected_item,
-    plant=first_issue.plant
-    )
-    for size in sizes:
-        size.original_qty = original_stock.get(
-            size.id,
-            size.available_quantity
-        )
-    if request.method == 'POST':
+    if request.method == "POST":
         issue_date = request.POST.get(
-            'issue_date'
+            "issue_date"
         )
         issue_to_list = request.POST.getlist(
-            'issue_to[]'
+            "issue_to[]"
         )
+
         employee_list = request.POST.getlist(
-            'employee[]'
+            "employee[]"
         )
+
         contractor_list = request.POST.getlist(
-            'contractor_name[]'
+            "contractor_name[]"
         )
+
         department_list = request.POST.getlist(
-            'department[]'
+            "department[]"
         )
+
         contractor_department_list = request.POST.getlist(
-            'contractor_department[]'
+            "contractor_department[]"
         )
+
         size_list = request.POST.getlist(
-            'size[]'
+            "size[]"
         )
+
         qty_list = request.POST.getlist(
-            'quantity_issue[]'
+            "quantity_issue[]"
         )
+
         remarks_list = request.POST.getlist(
-            'remarks[]'
+            "remarks[]"
         )
-        old_issues = PPEIssueManagement.objects.filter(
-            issue_group_no=first_issue.issue_group_no
+        # restore old stock
+        old_records = PPEIssueManagement.objects.filter(
+            issue_group_no=issue_group
         )
-        for obj in old_issues:
+        for obj in old_records:
+
             obj.size.available_quantity += (
                 obj.quantity_issue
             )
             obj.size.save()
-        old_issues.delete()
+        # remove old entries
+        old_records.delete()
         for (
             issue_to,
             employee_id,
@@ -1032,134 +1019,119 @@ def edit_issue(request, pk):
             contractor_department_list,
             size_list,
             qty_list,
-            remarks_list
+            remarks_list,
+            fillvalue=''
         ):
             if not size_id or not qty:
                 continue
             qty = int(qty)
-            size_obj = PPESizeQuantity.objects.get(
-                id=size_list[i]
-            )
-
-            qty = int(
-                qty_list[i]
+            size_obj = get_object_or_404(
+                PPESizeQuantity,
+                id=size_id,
+                plant=first_issue.plant,
+                ppe_item=selected_item
             )
             if qty > size_obj.available_quantity:
                 messages.error(
                     request,
-                    f"{size_obj.size} has only "
-                    f"{size_obj.available_quantity} quantity available."
+                    f"{size_obj.size} only has {size_obj.available_quantity} available."
                 )
                 return redirect(
                     'PPE:edit_issue',
                     pk=pk
                 )
-            employee = None
-            if employee_id:
-                employee = User.objects.get(
-                    id=employee_id
-                )
             PPEIssueManagement.objects.create(
                 plant=first_issue.plant,
-                issue_group_no=first_issue.issue_group_no,
+
+                issue_group_no=issue_group,
+
                 issue_date=issue_date,
 
-                ppe_item=ppe_item,
+                ppe_item=selected_item,
 
-                available_quantity=
-                    size_obj.available_quantity,
+                available_quantity=size_obj.available_quantity,
 
-                issue_to=issue_to_list[i],
+                issue_to=issue_to,
 
-                employee_id=
-                    employee_list[i]
-                    if employee_list[i]
-                    else None,
+                employee_id=employee_id or None,
 
-                contractor_name=
-                    contractor_list[i],
+                contractor_name=contractor_name,
 
-                department_id=
-                    department_list[i]
-                    if department_list[i]
-                    else None,
+                department_id=department_id or None,
+
+                contractor_department=contractor_department,
 
                 size=size_obj,
 
                 quantity_issue=qty,
 
-                remarks=remarks_list[i],
+                remarks=remarks,
 
                 created_by=request.user
             )
             size_obj.available_quantity -= qty
             size_obj.save()
-        # -------------------------
-        # Update Stock Transaction
-        # -------------------------
+        # update stock transaction
         total_available = (
             PPESizeQuantity.objects.filter(
-                ppe_item=first_issue.ppe_item,
+                ppe_item=selected_item,
                 plant=first_issue.plant
-            ).aggregate(
+            )
+            .aggregate(
                 total=Sum('available_quantity')
             )['total'] or 0
         )
-
         latest_stock = (
             PPEStockTransaction.objects.filter(
                 plant=first_issue.plant,
-                ppe_item=first_issue.ppe_item
+                ppe_item=selected_item
             )
             .order_by('-id')
             .first()
         )
-
         if latest_stock:
             latest_stock.quantity = total_available
             latest_stock.total = total_available
             latest_stock.save()
-
         messages.success(
             request,
             "Issue Updated Successfully."
         )
-
         return redirect(
             'PPE:IssueManagement_list'
         )
-    ppe_items = PPEItem.objects.filter(
-    is_active=True
-    )
-    form = PPEIssueManagementForm()
     context = {
-        'form':form,
-        'ppe_items': ppe_items,
-        'issues': issues,
-        'issue': first_issue,
-        'selected_item': selected_item,
-        'plants': Plant.objects.filter(
-                is_active=True,
-            ),
-            'selected_plant_id': str(
-                first_issue.plant_id
-            ),
-        'available_quantity': available_quantity,
-        'sizes': sizes,
-        'employees': employees,
+        "form": PPEIssueManagementForm(),
 
-        'sizes': sizes,
+        "ppe_items": PPEItem.objects.filter(
+            is_active=True
+        ),
 
-        'selected_item':
-            current_record.ppe_item,
+        "issues": issues,
 
-        'available_quantity':
-            available_quantity,
+        "issue": first_issue,
 
+        "edit_mode": True,
+
+        "selected_item": selected_item,
+
+        "plants": Plant.objects.filter(
+            is_active=True
+        ),
+
+        "selected_plant_id": str(
+            first_issue.plant_id
+        ),
+
+        "available_quantity": available_quantity,
+
+        "sizes": sizes,
+
+        "employees": employees,
     }
     return render(
         request,
-        'ppe/Management/IssueManagement_create.html',
+        "ppe/Management/IssueManagement_create.html",
         context
     )
 @login_required
@@ -1774,5 +1746,736 @@ def return_detail(request, pk):
     return render(
         request,
         'PPE/management/return_detail.html',
+        context
+    )
+@login_required
+def schedule_create(request):
+    selected_ppe = request.GET.get('ppe_item')
+    selected_plant = request.GET.get('plant')
+    ppe_items = PPEItem.objects.filter(
+        ppereturnmanagement__isnull=False
+    ).distinct()
+    plants = Plant.objects.none()
+    assigned_users = User.objects.none()
+    # Load plants by PPE item
+    if selected_ppe:
+        plants = Plant.objects.filter(
+            id__in=PPEReturnManagement.objects.filter(
+                ppe_item_id=selected_ppe
+            ).values_list(
+                'plant_id',
+                flat=True
+            )
+        ).distinct()
+    # Load users by plant
+    if selected_plant:
+
+        assigned_users = User.objects.filter(
+            plant_id=selected_plant,
+            is_active=True,
+            role__name__in=[
+                'HOD',
+                'SAFETY MANAGER'
+            ]
+        ).select_related(
+            'role',
+            'plant'
+        )
+    departments = Department.objects.filter(
+        is_active=True
+    ).order_by('name')
+    if request.method == "POST":
+        try:
+            ppe_item_id = request.POST.get(
+                'ppe_item'
+            )
+
+            plant_id = request.POST.get(
+                'plant'
+            )
+            # selected users
+            user_ids = request.POST.getlist(
+                'assigned_to'
+            )
+            scheduled_date = date.fromisoformat(
+                request.POST.get("scheduled_date")
+            )
+
+            scheduled_end_date = date.fromisoformat(
+                request.POST.get("scheduled_end_date")
+            )
+            # PPE return record
+            ppe_return = (
+                PPEReturnManagement.objects
+                .filter(
+                    ppe_item_id=ppe_item_id,
+                    plant_id=plant_id
+                )
+                .first()
+            )
+            if not ppe_return:
+                messages.error(
+                    request,
+                    "No PPE return found for selected PPE and Plant"
+                )
+                return redirect(
+                    'PPE:schedule_list'
+                )
+            # Create schedule for every selected user
+            for user_id in user_ids:
+                assigned_user = (
+                    User.objects
+                    .select_related('role')
+                    .get(id=user_id)
+                )
+                role_name = (
+                    assigned_user.role.name.upper()
+                )
+                if role_name == "SAFETY MANAGER":
+                    assigned_role = "SAFETY_MANAGER"
+                elif role_name == "HOD":
+                    assigned_role = "HOD"
+                else:
+                    assigned_role = "HOD"
+                PPEInspectionSchedule.objects.create(
+
+                    ppe_item_id=ppe_item_id,
+
+                    ppe_return=ppe_return,
+
+                    plant_id=plant_id,
+
+                    assigned_user=assigned_user,
+
+                    assigned_role=assigned_role,
+
+                    assigned_by=request.user,
+
+                    department_id=request.POST.get(
+                        'department'
+                    ),
+
+                    scheduled_date=scheduled_date,
+
+                    scheduled_end_date=scheduled_end_date,
+
+                    assignment_notes=request.POST.get(
+                        'assignment_notes'
+                    )
+                )
+            messages.success(
+                request,
+                "Inspection Schedule Created Successfully."
+            )
+            return redirect(
+                'PPE:schedule_list'
+            )
+        except Exception as e:
+            messages.error(
+                request,
+                str(e)
+            )
+    context = {
+        'title': 'Create Inspection Schedule',
+        'ppe_items': ppe_items,
+        'plants': plants,
+        'assigned_users': assigned_users,
+        'departments': departments,
+        'selected_ppe': selected_ppe,
+        'selected_plant':selected_plant,
+        'is_edit': False,
+    }
+    return render(
+        request,
+        'ppe/management/inspection_schedule.html',
+        context
+    )
+@login_required
+def get_ppe_plants(request):
+    ppe_id = request.GET.get('ppe_id')
+    plants = Plant.objects.filter(
+        id__in=PPEReturnManagement.objects.filter(
+            ppe_item_id=ppe_id
+        ).values_list(
+            'plant_id',
+            flat=True
+        )
+    ).distinct()
+    return JsonResponse({
+        'plants': list(
+            plants.values(
+                'id',
+                'name'
+            )
+        )
+    })
+@login_required
+def get_plant_users(request):
+    plant_ids = request.GET.get('plant_id').split(',')
+    users = User.objects.filter(
+        plant_id__in=plant_ids,
+        role__name__in=[
+            'HOD',
+            'SAFETY MANAGER'
+        ],
+        is_active=True
+    )
+    return JsonResponse({
+        'users':[
+            {
+                'id':u.id,
+                'name':u.get_full_name(),
+                'role':u.role.name
+            }
+            for u in users
+        ]
+    })
+@login_required
+def get_departments(request):
+
+    departments = Department.objects.filter(
+        is_active=True
+    ).order_by('name')
+
+    return JsonResponse({
+        'departments': list(
+            departments.values(
+                'id',
+                'name'
+            )
+        )
+    })
+@login_required
+def schedule_list(request):
+    schedules = PPEInspectionSchedule.objects.select_related(
+        'assigned_user',
+        'assigned_by',
+        'plant',
+        'ppe_item'
+    )
+    status = request.GET.get('status')
+    plant_id = request.GET.get('plant')
+    assigned_to_id = request.GET.get('assigned_to')
+    search = request.GET.get('search')
+    hods = User.objects.filter(
+    role__name__in=[
+        'HOD',
+        'SAFETY MANAGER'
+    ],
+    is_active_employee=True
+    ).order_by('first_name')
+    if status:
+        schedules = schedules.filter(status=status)
+    if plant_id:
+        schedules = schedules.filter(
+            plant_id=plant_id
+        )
+    if assigned_to_id:
+        schedules = schedules.filter(
+            assigned_user_id=assigned_to_id
+        )
+    if search:
+        schedules = schedules.filter(
+            Q(inspection_no__icontains=search) |
+            Q(ppe_item__name__icontains=search) |
+            Q(plant__name__icontains=search) 
+        )
+    schedules = schedules.order_by('-created_at')
+    paginator = Paginator(
+        schedules,
+        20
+    )
+    page_obj = paginator.get_page(
+        request.GET.get('page')
+    )
+    plants = Plant.objects.filter(
+        is_active=True
+    )
+    safety_managers = User.objects.filter(
+        role__name__in=[
+            'HOD',
+            'SAFETY MANAGER'
+        ],
+        is_active_employee=True
+    )
+    context = {
+        'page_obj': page_obj,
+        'status_choices': PPEInspectionSchedule.STATUS_CHOICES,
+        'plants': plants,
+        'hods': hods,
+        'safety_managers': safety_managers,
+        'selected_status': status,
+        'selected_plant': plant_id,
+        'selected_assigned': assigned_to_id,
+        'search': search,
+        'querystring': '',
+        'today': timezone.now().date(),
+    }
+    return render(
+        request,
+        'ppe/management/ppe_schedule_list.html',
+        context
+    )
+def schedule_detail(request, pk):
+    schedule = get_object_or_404(
+        PPEInspectionSchedule.objects.select_related(
+            'ppe_item',
+            'ppe_return',
+            'plant',
+            'department',
+            'assigned_user',
+            'assigned_by'
+        ),
+        pk=pk
+    )
+    context = {
+        'schedule': schedule,
+    }
+    return render(
+        request,
+        'PPE/management/schedule_detail.html',
+        context
+    )
+def schedule_edit(request, pk):
+    schedule = get_object_or_404(
+        PPEInspectionSchedule,
+        pk=pk
+    )
+    if request.method == "POST":
+        schedule.ppe_item_id = request.POST.get(
+            "ppe_item"
+        )
+        schedule.plant_id = request.POST.get(
+            "plant"
+        )
+        schedule.assigned_user_id = request.POST.get(
+            "assigned_to"
+        )
+        department_id = request.POST.get(
+            "department"
+        )
+        schedule.department_id = (
+            department_id if department_id else None
+        )
+        schedule.scheduled_date = datetime.strptime(
+            request.POST.get('scheduled_date'),
+            '%Y-%m-%d'
+        ).date()
+        schedule.scheduled_end_date = datetime.strptime(
+            request.POST.get('scheduled_end_date'),
+            '%Y-%m-%d'
+        ).date()
+        schedule.assignment_notes = request.POST.get(
+            "assignment_notes"
+        )
+        schedule.save()
+        messages.success(
+            request,
+            "Inspection schedule updated successfully."
+        )
+        return redirect(
+            "PPE:schedule_list"
+        )
+    context = {
+        "schedule": schedule,
+        "is_edit": True,
+        "ppe_items": PPEItem.objects.all(),
+    }
+    return render(
+        request,
+        "PPE/management/inspection_schedule.html",
+        context
+    )
+def schedule_delete(request, pk):
+    schedule = get_object_or_404(
+        PPEInspectionSchedule,
+        pk=pk
+    )
+    if request.method == 'POST':
+        inspection_no = schedule.inspection_no
+        schedule.delete()
+        messages.success(
+            request,
+            f'Schedule {inspection_no} deleted successfully.'
+        )
+        return redirect('PPE:schedule_list')
+    return redirect('PPE:schedule_list')
+@login_required
+def my_ppe_inspections(request):
+    schedules = PPEInspectionSchedule.objects.select_related(
+        'assigned_user',
+        'assigned_by',
+        'plant',
+        'ppe_item'
+    ).filter(
+        assigned_user=request.user
+    )
+    status = request.GET.get('status')
+    if status:
+        schedules = schedules.filter(status=status)
+    schedules = schedules.order_by('-created_at')
+    stats = {
+        'scheduled': schedules.filter(status='SCHEDULED').count(),
+        'in_progress': schedules.filter(status='IN_PROGRESS').count(),
+        'completed': schedules.filter(status='COMPLETED').count(),
+        'overdue': schedules.filter(status='OVERDUE').count(),
+    }
+    paginator = Paginator(schedules, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {
+        'page_obj': page_obj,
+        'stats': stats,
+        'status_choices': PPEInspectionSchedule.STATUS_CHOICES,
+        'selected_status': status,
+    }
+    return render(
+        request,
+        'ppe/management/my_ppe_inspections.html',
+        context
+    )
+@login_required
+def start_inspection(request, schedule_id):
+    schedule = get_object_or_404(
+        PPEInspectionSchedule,
+        id=schedule_id,
+        assigned_user=request.user
+    )
+    if schedule.status == 'SCHEDULED':
+        schedule.status = 'IN_PROGRESS'
+        schedule.save(update_fields=['status'])
+    returns = PPEReturnManagement.objects.filter(
+    ppe_item=schedule.ppe_item,
+    plant=schedule.plant
+    )
+    context = {
+        'schedule': schedule,
+        'returns': returns,
+    }
+    return render(
+        request,
+        'PPE/management/start_inspection.html',
+        context
+    )
+@login_required
+def submit_ppe_inspection(request, schedule_id):
+
+    schedule = get_object_or_404(
+        PPEInspectionSchedule,
+        id=schedule_id,
+        assigned_user=request.user
+    )
+
+
+    if request.method == "POST":
+
+
+        # create one inspection header
+        inspection = PPEInspection.objects.create(
+            schedule=schedule,
+            status="COMPLETED",
+            remarks="Inspection Completed",
+            inspected_by=request.user
+        )
+
+
+        # GET ALL RETURNS FOR THIS PPE + PLANT
+        returns = PPEReturnManagement.objects.filter(
+            ppe_item=schedule.ppe_item,
+            plant=schedule.plant
+        )
+        for return_item in returns:
+            status = request.POST.get(
+                f"status_{return_item.id}"
+            )
+            remark = request.POST.get(
+                f"remark_{return_item.id}"
+            )
+            photo = request.FILES.get(
+                f"photo_{return_item.id}"
+            )
+            # skip empty rows
+            if not status:
+                continue
+            PPEInspectionAssessment.objects.create(
+
+                inspection=inspection,
+
+                return_item=return_item,
+
+                status=status,
+
+                remarks=remark,
+
+                photo=photo
+
+            )
+        schedule.status = "COMPLETED"
+        schedule.save(
+            update_fields=[
+                "status"
+            ]
+        )
+        messages.success(
+            request,
+            "PPE Inspection submitted successfully."
+        )
+        return redirect(
+            "PPE:my_ppe_inspections"
+        )
+    return redirect(
+        "PPE:start_inspection",
+        schedule_id=schedule.id
+    )
+@login_required
+def ppe_inspection_pdf_download(request, schedule_id):
+    schedule = get_object_or_404(
+        PPEInspectionSchedule.objects.select_related(
+            'ppe_item',
+            'plant',
+            'department',
+            'assigned_user',
+            'assigned_by'
+        ),
+        pk=schedule_id
+    )
+    return generate_ppe_inspection_pdf(schedule)
+@login_required
+def dashboard(request):
+    # =========================
+    # KPI CARDS
+    # =========================
+    total_stock = (
+        PPESizeQuantity.objects.aggregate(
+            total=Sum('available_quantity')
+        )['total'] or 0
+    )
+    total_issued = (
+        PPEIssueManagement.objects.aggregate(
+            total=Sum('quantity_issue')
+        )['total'] or 0
+    )
+    total_returned = (
+        PPEReturnManagement.objects.aggregate(
+            total=Sum('return_qty')
+        )['total'] or 0
+    )
+    total_inspections = PPEInspectionSchedule.objects.count()
+    # =========================
+    # ISSUE VS RETURN
+    # =========================
+
+    ppe_labels = []
+    issue_values = []
+    return_values = []
+
+    returned_items = (
+        PPEReturnManagement.objects
+        .values("ppe_item", "ppe_item__name")
+        .annotate(total_return=Sum("return_qty"))
+        .order_by("ppe_item__name")
+    )
+
+    for row in returned_items:
+
+        issued = (
+            PPEIssueManagement.objects.filter(
+                ppe_item_id=row["ppe_item"]
+            ).aggregate(
+                total=Sum("quantity_issue")
+            )["total"] or 0
+        )
+
+        ppe_labels.append(row["ppe_item__name"])
+        issue_values.append(issued)
+        return_values.append(row["total_return"])
+    # =========================
+    # INSPECTION STATUS
+    # =========================
+    inspection_labels = [
+        'Scheduled',
+        'In Progress',
+        'Completed',
+        'Overdue',
+        'Cancelled'
+    ]
+    completed_values = [
+        PPEInspectionSchedule.objects.filter(
+            status='SCHEDULED'
+        ).count(),
+
+        PPEInspectionSchedule.objects.filter(
+            status='IN_PROGRESS'
+        ).count(),
+
+        PPEInspectionSchedule.objects.filter(
+            status='COMPLETED'
+        ).count(),
+
+        PPEInspectionSchedule.objects.filter(
+            status='OVERDUE'
+        ).count(),
+
+        PPEInspectionSchedule.objects.filter(
+            status='CANCELLED'
+        ).count(),
+    ]
+    # =========================
+    # CATEGORY DONUT
+    # =========================
+    category_labels = []
+    category_values = []
+    for cat in PPECategory.objects.all():
+        stock = (
+            PPESizeQuantity.objects.filter(
+                ppe_item__category=cat
+            ).aggregate(
+                total=Sum('available_quantity')
+            )['total'] or 0
+        )
+        category_labels.append(
+            cat.category_name
+        )
+        category_values.append(
+            stock
+        )
+    # =========================
+    # PLANT STOCK
+    # =========================
+    plant_labels = []
+    plant_values = []
+    for row in (
+        PPESizeQuantity.objects
+        .values('plant__name')
+        .annotate(
+            total=Sum('available_quantity')
+        )
+    ):
+        plant_labels.append(
+            row['plant__name']
+        )
+        plant_values.append(
+            row['total']
+        )
+    # =========================
+    # MONTHLY ISSUE TREND
+    # =========================
+    month_labels = []
+    monthly_issue = []
+    monthly = (
+        PPEIssueManagement.objects
+        .extra(
+            select={
+                'month':
+                "strftime('%%m', issue_date)"
+            }
+        )
+        .values('month')
+        .annotate(
+            total=Sum(
+                'quantity_issue'
+            )
+        )
+        .order_by('month')
+    )
+
+    for m in monthly:
+
+        month_labels.append(
+            m['month']
+        )
+
+        monthly_issue.append(
+            m['total']
+        )
+
+    # =========================
+    # FUNNEL DATA
+    # =========================
+
+    opening_stock = (
+        PPEStockTransaction.objects.filter(
+            transaction_type='OPENING'
+        ).aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
+    )
+
+    total_scheduled = (
+        PPEInspectionSchedule.objects.count()
+    )
+
+    total_completed = (
+        PPEInspectionSchedule.objects.filter(
+            status='COMPLETED'
+        ).count()
+    )
+    plant_labels = []
+    plant_values = []
+
+    for plant in Plant.objects.filter(is_active=True):
+
+        stock = (
+            PPESizeQuantity.objects.filter(
+                plant=plant
+            ).aggregate(
+                total=Sum('available_quantity')
+            )['total'] or 0
+        )
+
+        plant_labels.append(str(plant))
+        plant_values.append(stock)
+    context = {
+
+        'total_stock': total_stock,
+        'total_issued': total_issued,
+        'total_returned': total_returned,
+        'total_inspections': total_inspections,
+
+        'ppe_labels': json.dumps(
+            ppe_labels
+        ),
+        'issue_values': json.dumps(
+            issue_values
+        ),
+        'return_values': json.dumps(
+            return_values
+        ),
+
+        'inspection_labels': json.dumps(
+            inspection_labels
+        ),
+        'completed_values': json.dumps(
+            completed_values
+        ),
+
+        'category_labels': json.dumps(
+            category_labels
+        ),
+        'category_values': json.dumps(
+            category_values
+        ),
+
+        'plant_labels': json.dumps(
+            plant_labels
+        ),
+        'plant_values': json.dumps(
+            plant_values
+        ),
+
+        'month_labels': json.dumps(
+            month_labels
+        ),
+        'monthly_issue': json.dumps(
+            monthly_issue
+        ),
+
+        'opening_stock': opening_stock,
+        'total_scheduled': total_scheduled,
+        'total_completed': total_completed,
+    }
+
+    return render(
+        request,
+        'PPE/management/dashboard.html',
         context
     )

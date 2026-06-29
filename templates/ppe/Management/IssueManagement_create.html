@@ -56,7 +56,7 @@
 
                             <option value="">Select PPE Item</option>
 
-                            {% for item in form.fields.ppe_item.queryset %}
+                            {% for item in ppe_items %} 
                                 <option value="{{ item.id }}"
                                     {% if selected_item and selected_item.id == item.id %}
                                         selected
@@ -140,221 +140,422 @@
                         </thead>
                         <tbody id="issueRows">
 
-                        {% if edit_mode %}
+{% if edit_mode %}
 
-                            {% for issue in issues %}
+    {% for issue in issues %}
 
-                            <tr class="issue-row">
+    <tr class="issue-row">
 
-                                <!-- Issue To -->
-                                <td>
-                                    <select class="issue_to form-control" name="issue_to[]">
-                                        <option value="">Select</option>
+        <input type="hidden"
+               name="issue_id[]"
+               value="{{ issue.id }}">
 
-                                        <option value="EMPLOYEE"
-                                            {% if issue.issue_to == 'EMPLOYEE' %}
-                                                selected
-                                            {% endif %}>
-                                            Employee
-                                        </option>
-                                        <option value="CONTRACTOR"
-                                            {% if issue.issue_to == 'CONTRACTOR' %}
-                                                selected
-                                            {% endif %}>
-                                            Contractor
-                                        </option>
-                                    </select>
-                                </td>
-                                <!-- Employee -->
-                                <td>
-                                <select class="employee_div form-control"
-                                        name="employee[]">
-                                    <option value="">Select Employee</option>
-                                    {% for emp in employees %}
-                                    <option value="{{ emp.id }}"
-                                            data-dept="{{ emp.department.id }}"
-                                            data-deptname="{{ emp.department.name }}"
-                                            {% if issue.employee and issue.employee.id == emp.id %}
-                                                selected
-                                            {% endif %}>
-                                        {{ emp.get_full_name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <input type="text"
-                                        name="contractor_name[]"
-                                        class="contractor_div form-control mt-1"
-                                        placeholder="Enter Contractor Name"
-                                        value="{{ issue.contractor_name|default:'' }}"
-                                        {% if issue.issue_to == 'CONTRACTOR' %}
-                                            style="display:block;"
-                                        {% else %}
-                                            style="display:none;"
-                                        {% endif %}>
-                                </td>
-                                <!-- Department -->
-                                <td>
-                                    <input
-                                        type="text"
-                                        class="department_name form-control"
-                                        value="{% if issue.department %}{{ issue.department.name }}{% endif %}"
-                                        readonly
-                                        {% if issue.issue_to == 'CONTRACTOR' %}
-                                            style="display:none;"
-                                        {% endif %}>
-                                    <input
-                                        type="hidden"
-                                        class="department"
-                                        name="department[]"
-                                        value="{% if issue.department %}{{ issue.department.id }}{% endif %}">
-                                    <input
-                                        type="text"
-                                        name="contractor_department[]"
-                                        value="{{ issue.contractor_department }}"
-                                        class="contractor_department form-control"
-                                        placeholder="Enter Department"
-                                        {% if issue.issue_to == 'CONTRACTOR' %}
-                                            style="display:block;"
-                                        {% else %}
-                                            style="display:none;"
-                                        {% endif %}>
-                                </td>
-                                <!-- Size -->
-                                <td>
-                                    <select name="size[]" class="form-control" required>
-                                        <option value="">Select Size</option>
-                                        {% for size in sizes %}
-                                            <option value="{{ size.id }}"
-                                                    data-qty="{% if edit_mode %}{{ size.original_qty }}{% else %}{{ size.available_quantity }}{% endif %}"
-                                                    {% if issue and issue.size.id == size.id %}selected{% endif %}>
-                                                    {{ size.size }}
-                                                    =
-                                                    {% if edit_mode %}
-                                                        {{ size.original_qty }}
-                                                    {% else %}
-                                                        {{ size.available_quantity }}
-                                                    {% endif %}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <!-- Quantity -->
-                                <td>
-                                    <input
-                                        type="number"
-                                        name="quantity_issue[]"
-                                        class="form-control"
-                                        min="1"
-                                        value="{{ issue.quantity_issue }}"
-                                        required>
-                                </td>
-                                <!-- Remarks -->
-                                <td>
-                                    <input
-                                        type="text"
-                                        name="remarks[]"
-                                        class="form-control"
-                                        value="{{ issue.remarks }}">
-                                </td>
-                                <!-- Delete -->
-                                <td class="text-center">
-                                    <button
-                                        type="button"
-                                        class="btn btn-danger btn-sm removeRow">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                             <tr class="issue-row">
-                                <!-- Issue To -->
-                                <td>
-                                    <select class="issue_to form-control" name="issue_to[]">
-                                        <option value="">Select</option>
-                                        <option value="EMPLOYEE" {% if issue and issue.issue_to == 'EMPLOYEE' %} selected {% endif %}>
-                                        Employee
-                                        </option>
-                                        <option value="CONTRACTOR" {% if issue and issue.issue_to == 'CONTRACTOR' %} selected {% endif %}>
-                                        Contractor
-                                        </option>
-                                    </select>
-                                </td>
-                                <!-- Employee -->
-                                <td>
-                                    <select class="employee_div form-control" name="employee[]" {% if issue and issue.issue_to == 'CONTRACTOR' %} style="display:none;" {% endif %}>
-                                        <option value="">Select Employee</option>
-                                        {% for emp in employees %}
-                                        <option value="{{ emp.id }}"
-                                            data-dept="{{ emp.department.id }}"
-                                            data-deptname="{{ emp.department.name }}"
-                                            {% if issue.employee and issue.employee.id == emp.id %}
-                                            selected
-                                            {% endif %}>
-                                            {{ emp.get_full_name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
 
-                                    <input type="text" name="contractor_name[]" class="contractor_div form-control mt-1" value="{% if issue %}{{ issue.contractor_name }}{% endif %}"
-                                        placeholder="Enter Contractor Name" {% if issue and issue.issue_to == 'CONTRACTOR' %} style="display:block;"
-                                        {% else %} style="display:none;" {% endif %}>
-                                </td>
-                                <!-- Department -->
-                                <td>
+        <!-- Issue To -->
+        <td>
+            <select class="issue_to form-control"
+                    name="issue_to[]">
 
-                                    <input type="text" class="department_name form-control" value="{% if issue.issue_to == 'CONTRACTOR' %}{{ issue.contractor_department }}{% endif %}"
-                                        readonly
-                                        {% if issue and issue.issue_to == 'CONTRACTOR' %}
-                                        style="display:none;"
-                                        {% endif %}>
-                                    <input type="hidden" class="department" name="department[]" value="{% if issue.department %}{{ issue.department.id }}{% endif %}">
-                                    <input type="text"
-                                        name="contractor_department[]"
-                                        value="{% if issue and issue.issue_to == 'CONTRACTOR' %}{{ issue.contractor_department }}{% endif %}"
-                                        class="contractor_department form-control"
-                                        placeholder="Enter Department"
-                                        {% if issue and issue.issue_to == 'CONTRACTOR' %}
-                                        style="display:block;"
-                                        {% else %}
-                                        style="display:none;"
-                                        {% endif %}>
-                                </td>
-                                <!-- Size -->
-                                   <td>
-                                    <select name="size[]" class="form-control" required>
-                                        <option value="">Select Size</option>
-                                        {% for size in sizes %}
-                                            <option value="{{ size.id }}"
-                                                    data-qty="{% if edit_mode %}{{ size.original_qty }}{% else %}{{ size.available_quantity }}{% endif %}"
-                                                    {% if issue and issue.size.id == size.id %}selected{% endif %}>
-                                                    {{ size.size }}
-                                                    =
-                                                    {% if edit_mode %}
-                                                        {{ size.original_qty }}
-                                                    {% else %}
-                                                        {{ size.available_quantity }}
-                                                    {% endif %}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <!-- Quantity -->
-                                <td>
-                                    <input type="number" name="quantity_issue[]" class="form-control" min="1" value="{% if issue %}{{ issue.quantity_issue }}{% endif %}"required>
-                                </td>
-                                <!-- Remarks -->
-                                <td>
-                                    <input type="text" name="remarks[]" class="form-control" value="{% if issue %}{{ issue.remarks }}{% endif %}">
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-danger btn-sm removeRow">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endif %}
-                        </tbody>
+                <option value="">
+                    Select
+                </option>
+
+                <option value="EMPLOYEE"
+                    {% if issue.issue_to == 'EMPLOYEE' %}
+                    selected
+                    {% endif %}>
+                    Employee
+                </option>
+
+                <option value="CONTRACTOR"
+                    {% if issue.issue_to == 'CONTRACTOR' %}
+                    selected
+                    {% endif %}>
+                    Contractor
+                </option>
+
+            </select>
+        </td>
+
+
+
+        <!-- Employee / Contractor -->
+
+        <td>
+
+            <select class="employee_div form-control"
+                    name="employee[]">
+
+                <option value="">
+                    Select Employee
+                </option>
+
+
+                {% for emp in employees %}
+
+                <option value="{{ emp.id }}"
+                    data-dept="{{ emp.department.id }}"
+                    data-deptname="{{ emp.department.name }}"
+
+                    {% if issue.employee_id == emp.id %}
+                    selected
+                    {% endif %}
+                >
+
+                {{ emp.get_full_name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+
+
+            <input type="text"
+                   name="contractor_name[]"
+                   class="contractor_div form-control mt-1"
+
+                   value="{{ issue.contractor_name|default:'' }}"
+
+                   placeholder="Enter Contractor Name"
+
+                   {% if issue.issue_to == 'CONTRACTOR' %}
+                   style="display:block;"
+                   {% else %}
+                   style="display:none;"
+                   {% endif %}>
+
+        </td>
+
+
+
+
+        <!-- Department -->
+
+        <td>
+
+
+            <input type="text"
+                   class="department_name form-control"
+
+                   value="{% if issue.department %}
+                          {{ issue.department.name }}
+                          {% endif %}"
+
+                   readonly>
+
+
+            <input type="hidden"
+                   class="department"
+                   name="department[]"
+
+                   value="{% if issue.department %}
+                          {{ issue.department.id }}
+                          {% endif %}">
+
+
+            <input type="text"
+                   name="contractor_department[]"
+
+                   class="contractor_department form-control"
+
+                   value="{{ issue.contractor_department|default:'' }}"
+
+                   placeholder="Enter Department"
+
+                   {% if issue.issue_to == 'CONTRACTOR' %}
+                   style="display:block;"
+                   {% else %}
+                   style="display:none;"
+                   {% endif %}>
+
+        </td>
+
+
+
+
+        <!-- Size -->
+
+        <td>
+
+            <select name="size[]"
+                    class="form-control"
+                    required>
+
+
+                <option value="">
+                    Select Size
+                </option>
+
+
+                {% for size in sizes %}
+
+                <option value="{{ size.id }}"
+
+                    data-qty="{{ size.original_qty }}"
+
+                    {% if issue.size_id == size.id %}
+                    selected
+                    {% endif %}>
+
+                    {{ size.size }}
+                    =
+                    {{ size.original_qty }}
+
+                </option>
+
+
+                {% endfor %}
+
+
+            </select>
+
+
+        </td>
+
+
+
+
+        <!-- Quantity -->
+
+        <td>
+
+
+            <input type="number"
+
+                   name="quantity_issue[]"
+
+                   class="form-control"
+
+                   min="1"
+
+                   value="{{ issue.quantity_issue }}"
+
+                   required>
+
+
+        </td>
+
+
+
+
+        <!-- Remarks -->
+
+
+        <td>
+
+
+            <input type="text"
+
+                   name="remarks[]"
+
+                   class="form-control"
+
+                   value="{{ issue.remarks|default:'' }}">
+
+
+        </td>
+
+
+
+        <td>
+
+            <button type="button"
+
+                    class="btn btn-danger btn-sm removeRow">
+
+                <i class="fas fa-trash"></i>
+
+            </button>
+
+        </td>
+
+
+    </tr>
+
+
+    {% endfor %}
+
+
+
+
+{% else %}
+
+
+
+<tr class="issue-row">
+
+<td>
+
+<select name="issue_to[]"
+        class="issue_to form-control">
+
+<option value="">
+Select
+</option>
+
+<option value="EMPLOYEE">
+Employee
+</option>
+
+<option value="CONTRACTOR">
+Contractor
+</option>
+
+</select>
+
+</td>
+
+
+<td>
+
+
+<select name="employee[]"
+        class="employee_div form-control">
+
+
+<option value="">
+Select Employee
+</option>
+
+
+{% for emp in employees %}
+
+<option value="{{ emp.id }}"
+        data-dept="{{ emp.department.id }}"
+        data-deptname="{{ emp.department.name }}">
+    {{ emp.get_full_name }}
+</option>
+{% endfor %}
+
+
+</select>
+
+
+<input type="text"
+       name="contractor_name[]"
+       class="contractor_div form-control mt-1"
+
+       placeholder="Enter Contractor Name"
+
+       style="display:none;">
+
+
+</td>
+
+
+<td>
+
+
+<input type="text"
+       class="department_name form-control"
+       readonly>
+
+
+<input type="hidden"
+       name="department[]"
+       class="department">
+
+
+<input type="text"
+       name="contractor_department[]"
+
+       class="contractor_department form-control"
+
+       style="display:none;"
+
+       placeholder="Enter Department">
+
+
+</td>
+
+
+
+<td>
+
+
+<select name="size[]"
+        class="form-control"
+        required>
+
+
+<option value="">
+Select Size
+</option>
+
+
+{% for size in sizes %}
+
+<option value="{{ size.id }}"
+
+data-qty="{{ size.available_quantity }}">
+
+{{ size.size }}
+=
+{{ size.available_quantity }}
+
+</option>
+
+{% endfor %}
+
+
+</select>
+
+
+</td>
+
+
+
+<td>
+
+<input type="number"
+
+name="quantity_issue[]"
+
+class="form-control"
+
+min="1"
+
+required>
+
+</td>
+
+
+
+<td>
+
+<input type="text"
+
+name="remarks[]"
+
+class="form-control">
+
+</td>
+
+
+
+<td>
+
+<button type="button"
+
+class="btn btn-danger btn-sm removeRow">
+
+<i class="fas fa-trash"></i>
+
+</button>
+
+</td>
+
+
+</tr>
+
+
+
+{% endif %}
+
+
+</tbody>
                     </table>
                 </div>
             </div>

@@ -1,0 +1,646 @@
+{% extends 'base/base.html' %}
+{% block title %}Schedule Inspection{% endblock %}
+{% block page_title %}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">Schedule Inspection</li>
+{% endblock %}
+{% load static %}
+{% block extra_css %}
+<style>
+.checkbox-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:10px;
+    max-height:250px;
+    overflow-y:auto;
+    border:1px solid #ddd;
+    padding:15px;
+    border-radius:6px;
+    background:#f8f9fa;
+}
+.checkbox-item{
+    display:flex;
+    align-items:center;
+    padding:10px;
+    background:#fff;
+    border:1px solid #e5e5e5;
+    border-radius:5px;
+}
+.checkbox-item input{
+    margin-right:10px;
+}
+.select-all-bar{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+    padding:8px;
+    background:#eee;
+    border-radius:5px;
+}
+.section-label{
+    display:flex;
+    justify-content:space-between;
+    font-weight:600;
+}
+.badge-count{
+    background:#007bff;
+    color:white;
+    padding:3px 10px;
+    border-radius:15px;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <form method="POST" id="scheduleForm">
+        {% csrf_token %}
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-plus mr-2"></i>
+                        {% if is_edit %}
+                            Edit Inspection Schedule
+                        {% else %}
+                            Create Inspection Schedule
+                        {% endif %}
+                    </h3>
+                </div>
+            <div class="card-body">
+            <!-- =====================
+                INSPECTION TEMPLATE
+            ===================== -->
+            <div class="form-group">
+                <label>
+                    Inspection Template (PPE Item)
+                    <span class="text-danger">*</span>
+                </label>
+
+                <select
+                    name="ppe_item"
+                    id="ppeItem"
+                    class="form-control"
+                    required>
+
+                    <option value="">Select PPE Item</option>
+
+                    {% for item in ppe_items %}
+                   <option value="{{ item.id }}"
+                        {% if is_edit and item.id == schedule.ppe_item.id %}
+                        selected
+                        {% endif %}
+                        >
+                            {{ item.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+            <hr>
+            <!-- =====================
+                    PLANTS
+            ===================== -->
+            <div class="mb-4">
+                <div class="section-label">
+                    <span>
+                        Plants
+                        <span class="text-danger">*</span>
+                    </span>
+                </div>
+                <div class="select-all-bar">
+                    <button type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    onclick="selectAll('plant-checkbox',updatePlantCount)">
+                    Select All
+                    </button>
+                    <button type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="deselectAll('plant-checkbox',updatePlantCount)">
+                    Deselect All
+                    </button>
+                </div>
+                <div class="checkbox-grid"
+                id="plantsGrid">
+                    <div class="loading-text">
+                        Select PPE Item First
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <!-- =====================
+                    ASSIGNED TO
+            ===================== -->
+            <div class="mb-4">
+                    <div class="section-label">
+                        <span>
+                        Assigned To (HOD / Safety Manager)
+                        <span class="text-danger">*</span>
+                        </span>
+                        </div>
+                        <div class="select-all-bar">
+                            <button type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            onclick="selectAll('user-checkbox',updateUserCount)">
+                            Select All
+                            </button>
+                            <button type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            onclick="deselectAll('user-checkbox',updateUserCount)">
+                            Deselect All
+                            </button>
+                        </div>
+                        <div class="checkbox-grid" id="usersGrid">
+                        <div class="loading-text">
+                        Select Plant First
+                        </div>
+                    </div>
+            </div>
+            <hr>
+            <!-- =====================
+            DATE ROW
+            ===================== -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Scheduled Start Date<span class="text-danger">*</span></label>
+                           <input type="date"
+                            name="scheduled_date"
+                            id="scheduledDate"
+                            class="form-control"
+                            value="{% if is_edit %}{{ schedule.scheduled_date|date:'Y-m-d' }}{% endif %}"
+                            required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Scheduled End Date<span class="text-danger">*</span></label>
+                            <input type="date"
+                                name="scheduled_end_date"
+                                id="scheduledEndDate"
+                                class="form-control"
+                                value="{% if is_edit %}{{ schedule.scheduled_end_date|date:'Y-m-d' }}{% endif %}"
+                                required>
+                        </div>
+                    </div>
+                </div>
+                <!-- =====================
+                DEPARTMENT
+                ===================== -->
+                <div class="form-group">
+                    <label>Department</label>
+                    <select
+                    name="department"
+                    id="department"
+                    class="form-control">
+                    <option value="">
+                    Select Department
+                    </option>
+                    </select>
+                </div>
+                <!-- =====================
+                NOTES
+                ===================== -->
+                <div class="form-group">
+                    <label>
+                    Assignment Notes
+                    </label>
+                   <textarea
+                    name="assignment_notes"
+                    rows="4"
+                    class="form-control">{% if is_edit %}{{ schedule.assignment_notes }}{% endif %}</textarea>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <a href="{% url 'PPE:schedule_list' %}"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if is_edit %}
+                        Update Schedule
+                    {% else %}
+                        Save Schedule
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+const isEdit = {{ is_edit|yesno:"true,false" }};
+
+const selectedPlant =
+"{% if is_edit and schedule.plant %}{{ schedule.plant.id }}{% endif %}";
+
+const selectedUser =
+"{% if is_edit %}{{ schedule.assigned_user.id }}{% endif %}";
+
+const selectedDepartment =
+"{% if is_edit and schedule.department %}{{ schedule.department.id }}{% endif %}";
+
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Date Min Validation
+    if (!isEdit) {
+        let today = new Date().toISOString().split('T')[0];
+        document.getElementById('scheduledDate').min = today;
+    }
+
+    // Load Departments
+    loadDepartments();
+
+    // PPE Item Change
+    document.getElementById('ppeItem')
+    .addEventListener('change', function () {
+
+        let ppeId = this.value;
+        let grid = document.getElementById('plantsGrid');
+
+        grid.innerHTML =
+        '<div class="loading-text">Loading Plants...</div>';
+
+        document.getElementById('usersGrid').innerHTML =
+        '<div class="loading-text">Select Plant First</div>';
+
+        if (!ppeId) {
+            grid.innerHTML =
+            '<div class="loading-text">Select PPE Item First</div>';
+            return;
+        }
+
+        fetch('/PPE/get_ppe_plants/?ppe_id=' + ppeId)
+
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error(response.status);
+            }
+
+            return response.json();
+        })
+
+        .then(data => {
+
+            grid.innerHTML = '';
+
+            if (!data.plants.length) {
+
+                grid.innerHTML =
+                '<div class="loading-text">No Plants Found</div>';
+
+                return;
+            }
+
+            data.plants.forEach(function (plant) {
+
+                let checked = '';
+
+                if (
+                    isEdit &&
+                    String(selectedPlant) === String(plant.id)
+                ) {
+                    checked = 'checked';
+                }
+
+                grid.innerHTML += `
+                <div class="checkbox-item">
+                    <input
+                        type="checkbox"
+                        class="plant-checkbox"
+                        name="plant"
+                        value="${plant.id}"
+                        id="plant_${plant.id}"
+                        ${checked}
+                    >
+                    <label for="plant_${plant.id}">
+                        ${plant.name}
+                    </label>
+                </div>`;
+            });
+
+            updatePlantCount();
+
+            document.querySelectorAll('.plant-checkbox')
+            .forEach(cb => {
+
+                cb.addEventListener('change', function () {
+
+                    updatePlantCount();
+                    loadUsers();
+
+                });
+
+            });
+
+            // Edit Mode Auto Load Users
+            if (isEdit) {
+                loadUsers();
+            }
+
+        })
+
+        .catch(error => {
+
+            console.log(error);
+
+            grid.innerHTML =
+            '<div class="text-danger">Error loading plants</div>';
+
+        });
+
+    });
+
+    // Auto Trigger PPE Change in Edit Mode
+    if (isEdit) {
+
+        document.getElementById('ppeItem')
+        .dispatchEvent(new Event('change'));
+
+    }
+
+});
+
+
+// ======================================
+// Plant Count
+// ======================================
+
+function updatePlantCount() {
+
+    let count =
+    document.querySelectorAll(
+    '.plant-checkbox:checked'
+    ).length;
+
+    let badge =
+    document.getElementById('plantCount');
+
+    if (badge) {
+        badge.innerText = count;
+    }
+}
+
+
+// ======================================
+// Select All
+// ======================================
+
+function selectAll(cls, callback) {
+
+    document.querySelectorAll('.' + cls)
+    .forEach(cb => {
+
+        cb.checked = true;
+
+    });
+
+    if (callback) {
+        callback();
+    }
+
+    if (cls === 'plant-checkbox') {
+        loadUsers();
+    }
+}
+
+function deselectAll(cls, callback) {
+
+    document.querySelectorAll('.' + cls)
+    .forEach(cb => {
+
+        cb.checked = false;
+
+    });
+
+    if (callback) {
+        callback();
+    }
+
+    if (cls === 'plant-checkbox') {
+
+        document.getElementById('usersGrid').innerHTML =
+        '<div class="loading-text">Select Plant First</div>';
+
+        updateUserCount();
+    }
+}
+
+
+// ======================================
+// Load Users
+// ======================================
+
+function loadUsers() {
+
+    let plantIds = [];
+
+    document.querySelectorAll(
+    '.plant-checkbox:checked'
+    )
+    .forEach(cb => {
+
+        plantIds.push(cb.value);
+
+    });
+
+    let grid =
+    document.getElementById('usersGrid');
+
+    if (!plantIds.length) {
+
+        grid.innerHTML =
+        '<div class="loading-text">Select Plant First</div>';
+
+        updateUserCount();
+
+        return;
+    }
+
+    grid.innerHTML =
+    '<div class="loading-text">Loading Users...</div>';
+
+    fetch(
+    '/PPE/get_plant_users/?plant_id=' +
+    plantIds.join(',')
+    )
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        grid.innerHTML = '';
+
+        if (!data.users.length) {
+
+            grid.innerHTML =
+            '<div class="loading-text">No HOD / Safety Manager Found</div>';
+
+            return;
+        }
+
+        data.users.forEach(function (user) {
+
+            let checked = '';
+
+            if (
+                isEdit &&
+                String(selectedUser) === String(user.id)
+            ) {
+                checked = 'checked';
+            }
+
+            grid.innerHTML += `
+            <div class="checkbox-item">
+                <input
+                    type="checkbox"
+                    class="user-checkbox"
+                    name="assigned_to"
+                    value="${user.id}"
+                    id="user_${user.id}"
+                    ${checked}
+                >
+                <label for="user_${user.id}">
+                    <strong>${user.name}</strong>
+                    <br>
+                    <small>${user.role}</small>
+                </label>
+            </div>`;
+        });
+
+        document.querySelectorAll('.user-checkbox')
+        .forEach(cb => {
+
+            cb.addEventListener(
+                'change',
+                updateUserCount
+            );
+
+        });
+
+        updateUserCount();
+
+    })
+
+    .catch(error => {
+
+        console.log(error);
+
+    });
+
+}
+
+
+// ======================================
+// User Count
+// ======================================
+
+function updateUserCount() {
+
+    let count =
+    document.querySelectorAll(
+    '.user-checkbox:checked'
+    ).length;
+
+    let badge =
+    document.getElementById('userCount');
+
+    if (badge) {
+        badge.innerText = count;
+    }
+}
+
+
+// ======================================
+// Load Departments
+// ======================================
+
+function loadDepartments() {
+
+    fetch('/PPE/get-departments/')
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        let html =
+        '<option value="">Select Department</option>';
+
+        data.departments.forEach(function (dept) {
+
+            let selected = '';
+
+            if (
+                isEdit &&
+                String(selectedDepartment) === String(dept.id)
+            ) {
+                selected = 'selected';
+            }
+
+            html += `
+            <option value="${dept.id}" ${selected}>
+                ${dept.name}
+            </option>`;
+        });
+
+        document.getElementById('department')
+        .innerHTML = html;
+
+    });
+
+}
+
+
+// ======================================
+// Date Validation
+// ======================================
+
+document.getElementById('scheduledDate')
+.addEventListener('change', function () {
+
+    document.getElementById('scheduledEndDate')
+    .min = this.value;
+
+});
+
+
+// ======================================
+// Form Validation
+// ======================================
+
+document.getElementById('scheduleForm')
+.addEventListener('submit', function (e) {
+
+    let plants =
+    document.querySelectorAll(
+    '.plant-checkbox:checked'
+    ).length;
+
+    let users =
+    document.querySelectorAll(
+    '.user-checkbox:checked'
+    ).length;
+
+    if (plants === 0) {
+
+        alert('Please select plant');
+
+        e.preventDefault();
+
+        return;
+    }
+
+    if (users === 0) {
+
+        alert('Please select assigned user');
+
+        e.preventDefault();
+
+        return;
+    }
+
+});
+</script>
+{% endblock %}

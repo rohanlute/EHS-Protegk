@@ -760,3 +760,209 @@ class PPEReturnManagement(models.Model):
             self.issue.quantity_issue -
             self.total_returned_qty
         )
+class PPEInspectionSchedule(models.Model):
+
+    STATUS_CHOICES = [
+        ('SCHEDULED', 'Scheduled'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('OVERDUE', 'Overdue'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+
+    inspection_no = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False
+    )
+
+    # PPE returned item
+    ppe_item = models.ForeignKey(
+        PPEItem,
+        on_delete=models.PROTECT,
+        related_name='inspection_schedules'
+    )
+
+    # Return reference
+    ppe_return = models.ForeignKey(
+        PPEReturnManagement,
+        on_delete=models.PROTECT,
+        related_name='inspection_schedules'
+    )
+
+    plant = models.ForeignKey(
+        Plant,
+        on_delete=models.PROTECT,
+        related_name='ppe_inspection_schedules'
+    )
+
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ppe_inspections'
+    )
+
+    ASSIGNED_TO_CHOICES = (
+        ('HOD', 'HOD'),
+        ('SAFETY_MANAGER', 'Safety Manager'),
+    )
+
+    assigned_role = models.CharField(
+        max_length=20,
+        choices=ASSIGNED_TO_CHOICES
+    )
+
+    assigned_user = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='assigned_ppe_inspections'
+    )
+
+    assigned_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_ppe_inspections'
+    )
+
+    scheduled_date = models.DateField()
+
+    scheduled_end_date = models.DateField()
+
+    assignment_notes = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='SCHEDULED'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        db_table = 'ppe_inspection_schedule'
+        ordering = ['-id']
+
+    def save(self, *args, **kwargs):
+
+        if not self.inspection_no:
+            self.inspection_no = self.generate_inspection_no()
+
+        if (
+            self.status not in ['COMPLETED', 'CANCELLED']
+            and timezone.now().date() > self.scheduled_end_date
+        ):
+            self.status = 'OVERDUE'
+
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_inspection_no():
+
+        last = (
+            PPEInspectionSchedule.objects
+            .order_by('-id')
+            .first()
+        )
+
+        if last and last.inspection_no:
+            try:
+                num = int(
+                    last.inspection_no.replace(
+                        'PPE-ISS-',
+                        ''
+                    )
+                ) + 1
+            except ValueError:
+                num = 1
+        else:
+            num = 1
+
+        return f'PPE-ISS-{num:03d}'
+class PPEInspection(models.Model):
+    STATUS_CHOICES = (
+        ('REUSABLE', 'Reusable'),
+        ('REPAIR', 'Repair'),
+        ('SCRAP', 'Scrap'),
+    )
+
+    schedule = models.ForeignKey(
+        PPEInspectionSchedule,
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES
+    )
+
+    remarks = models.TextField()
+
+    photo = models.ImageField(
+        upload_to='ppe_inspections/'
+    )
+
+    inspected_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+class PPEInspectionAssessment(models.Model):
+
+    inspection = models.ForeignKey(
+        PPEInspection,
+        on_delete=models.CASCADE,
+        related_name='assessments'
+    )
+
+    return_item = models.ForeignKey(
+        PPEReturnManagement,
+        on_delete=models.CASCADE
+    )
+
+
+    STATUS_CHOICES = (
+        ('REUSABLE', 'Reusable'),
+        ('REPAIR', 'Repair'),
+        ('SCRAP', 'Scrap'),
+    )
+
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES
+    )
+    remarks = models.TextField(
+        blank=True,
+        null=True
+    )
+    photo = models.ImageField(
+    upload_to='ppe_inspections/',
+    blank=True,
+    null=True
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    def __str__(self):
+        return f"{self.inspection.id} - {self.return_item}"
