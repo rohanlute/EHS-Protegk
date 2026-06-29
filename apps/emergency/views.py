@@ -192,6 +192,7 @@ class EmergencyAccessMixin(LoginRequiredMixin):
             "zone",
             "location",
             "sublocation",
+            "incident_department",
             "department",
             "reported_by",
             "closed_by",

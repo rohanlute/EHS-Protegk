@@ -526,6 +526,14 @@ class EmergencyReport(models.Model):
         related_name="emergency_reports",
     )
     additional_location_details = models.TextField(blank=True)
+    incident_department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="incident_emergency_reports",
+        verbose_name="Incident Department",
+    )
     department = models.ForeignKey(
         Department,
         on_delete=models.SET_NULL,

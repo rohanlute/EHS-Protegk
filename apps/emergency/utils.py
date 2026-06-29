@@ -245,32 +245,38 @@ def generate_emergency_report_pdf(report):
         [
             Paragraph("<b>Plant:</b>", styles["Label"]),
             Paragraph(get_val(report.plant.name if report.plant else ""), styles["Value"]),
-            Paragraph("<b>Department:</b>", styles["Label"]),
-            Paragraph(get_val(report.department.name if report.department else ""), styles["Value"]),
+            Paragraph("<b>Incident Department:</b>", styles["Label"]),
+            Paragraph(get_val(report.incident_department.name if report.incident_department else ""), styles["Value"]),
         ],
         [
             Paragraph("<b>Zone:</b>", styles["Label"]),
             Paragraph(get_val(report.zone.name if report.zone else ""), styles["Value"]),
-            Paragraph("<b>Location:</b>", styles["Label"]),
-            Paragraph(get_val(report.location.name if report.location else ""), styles["Value"]),
+            Paragraph("<b>Department:</b>", styles["Label"]),
+            Paragraph(get_val(report.department.name if report.department else ""), styles["Value"]),
         ],
         [
-            Paragraph("<b>Sub-Location:</b>", styles["Label"]),
-            Paragraph(get_val(report.sublocation.name if report.sublocation else ""), styles["Value"]),
+            Paragraph("<b>Location:</b>", styles["Label"]),
+            Paragraph(get_val(report.location.name if report.location else ""), styles["Value"]),
             Paragraph("<b>Reported By:</b>", styles["Label"]),
             Paragraph(get_val(report.reported_by.get_full_name() or report.reported_by.username), styles["Value"]),
         ],
         [
+            Paragraph("<b>Sub-Location:</b>", styles["Label"]),
+            Paragraph(get_val(report.sublocation.name if report.sublocation else ""), styles["Value"]),
             Paragraph("<b>Reported Date:</b>", styles["Label"]),
             Paragraph(report.reported_date.strftime("%d/%m/%Y %H:%M"), styles["Value"]),
-            Paragraph("<b>Last Updated:</b>", styles["Label"]),
-            Paragraph(report.updated_at.strftime("%d/%m/%Y %H:%M"), styles["Value"]),
         ],
         [
+            Paragraph("<b>Last Updated:</b>", styles["Label"]),
+            Paragraph(report.updated_at.strftime("%d/%m/%Y %H:%M"), styles["Value"]),
             Paragraph("<b>Additional Details:</b>", styles["Label"]),
             Paragraph(get_val(report.additional_location_details), styles["Value"]),
+        ],
+        [
             Paragraph("<b>Days to Close:</b>", styles["Label"]),
             Paragraph(get_val(report.days_to_close if report.days_to_close is not None else ""), styles["Value"]),
+            Paragraph("", styles["Label"]),
+            Paragraph("", styles["Value"]),
         ],
     ]
     section_one_table = Table(section_one_data, colWidths=[col_width] * 4)
