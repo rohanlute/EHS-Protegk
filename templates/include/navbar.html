@@ -44,13 +44,7 @@
 .pushmenu-toggle i {
   font-size: 20px;
   color: #0f766e;
-  transition: all 0.3s ease;
-}
-
-/* Rotate arrow when sidebar is open */
-.sidebar-open .pushmenu-toggle i {
-  transform: rotate(180deg);
-  color: #0d9488;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .pushmenu-toggle:hover {
@@ -66,6 +60,17 @@
 
 .pushmenu-toggle:active {
   transform: scale(0.92);
+}
+
+/* Arrow rotation based on sidebar state */
+body:not(.sidebar-collapse) .pushmenu-toggle i {
+  transform: rotate(180deg);
+  color: #0d9488;
+}
+
+body.sidebar-collapse .pushmenu-toggle i {
+  transform: rotate(0deg);
+  color: #0f766e;
 }
 
 /* ==================== RIGHT ICON GROUP ==================== */
@@ -377,7 +382,7 @@
   </div>
 </nav>
 
-<!-- ==================== FULLSCREEN SCRIPT ==================== -->
+<!-- ==================== SCRIPTS ==================== -->
 <script>
   document.getElementById('fullscreenToggle').addEventListener('click', function(e) {
     e.preventDefault();
@@ -390,66 +395,58 @@
     }
   });
 
-  // ===== SMOOTH SIDEBAR PUSHMENU =====
+  // ===== SIMPLE SIDEBAR TOGGLE WITH CSS ARROW =====
   $(document).ready(function() {
-    // Custom smooth toggle for sidebar
+    // Toggle sidebar on click
     $('#sidebarToggle').on('click', function(e) {
       e.preventDefault();
       
       var $body = $('body');
-      var $sidebar = $('.main-sidebar');
-      var $content = $('.content-wrapper, .main-header, .main-footer');
       
-      // Toggle sidebar class
+      // Toggle sidebar class - this will trigger CSS arrow rotation
       if ($body.hasClass('sidebar-collapse')) {
-        // Open sidebar
         $body.removeClass('sidebar-collapse');
         $body.addClass('sidebar-open');
-        $sidebar.css('transform', 'translateX(0)');
-        $content.css('margin-left', '270px');
+        $('.main-sidebar').css('transform', 'translateX(0)');
+        $('.content-wrapper, .main-header, .main-footer').css('margin-left', '270px');
       } else {
-        // Close sidebar
         $body.addClass('sidebar-collapse');
         $body.removeClass('sidebar-open');
-        $sidebar.css('transform', 'translateX(-100%)');
-        $content.css('margin-left', '0');
-      }
-    });
-
-    // Handle window resize for responsive
-    $(window).on('resize', function() {
-      if ($(window).width() > 768) {
-        var $body = $('body');
-        if ($body.hasClass('sidebar-collapse')) {
-          $('.main-sidebar').css('transform', 'translateX(-100%)');
-          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
-        } else {
-          $('.main-sidebar').css('transform', 'translateX(0)');
-          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '270px');
-        }
-      } else {
-        // On mobile, always hide sidebar initially
-        if (!$('body').hasClass('sidebar-open')) {
-          $('.main-sidebar').css('transform', 'translateX(-100%)');
-          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
-        }
+        $('.main-sidebar').css('transform', 'translateX(-100%)');
+        $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
       }
     });
 
     // Initialize sidebar state
-    if ($('body').hasClass('sidebar-collapse')) {
+    var $body = $('body');
+    if ($(window).width() <= 768) {
+      $body.addClass('sidebar-collapse');
       $('.main-sidebar').css('transform', 'translateX(-100%)');
       $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
     } else {
-      // Check if mobile
-      if ($(window).width() <= 768) {
-        $('body').addClass('sidebar-collapse');
-        $('.main-sidebar').css('transform', 'translateX(-100%)');
-        $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
-      } else {
+      if (!$body.hasClass('sidebar-collapse')) {
+        $body.addClass('sidebar-open');
         $('.main-sidebar').css('transform', 'translateX(0)');
         $('.content-wrapper, .main-header, .main-footer').css('margin-left', '270px');
       }
     }
+
+    // Handle window resize
+    $(window).on('resize', function() {
+      if ($(window).width() > 768) {
+        if (!$body.hasClass('sidebar-collapse')) {
+          $('.main-sidebar').css('transform', 'translateX(0)');
+          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '270px');
+        } else {
+          $('.main-sidebar').css('transform', 'translateX(-100%)');
+          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
+        }
+      } else {
+        if (!$body.hasClass('sidebar-open')) {
+          $('.main-sidebar').css('transform', 'translateX(-100%)');
+          $('.content-wrapper, .main-header, .main-footer').css('margin-left', '0');
+        }
+      }
+    });
   });
 </script>
