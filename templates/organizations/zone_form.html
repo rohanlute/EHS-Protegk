@@ -1,53 +1,534 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{% if object %}Edit Zone{% else %}Create Zone{% endif %}{% endblock %}
+{% block title %}{% if object %}Edit Zone{% else %}Create Zone{% endif %} | EHS-360{% endblock %}
 {% block page_title %}{% if object %}Edit Zone{% else %}Create New Zone{% endif %}{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'organizations:dashboard' %}">Organization</a></li>
-<li class="breadcrumb-item"><a href="{% url 'organizations:zone_list' %}">Zones</a></li>
-<li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}" style="color: #0d9488;">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'organizations:dashboard' %}" style="color: #0d9488;">Organization</a></li>
+<li class="breadcrumb-item"><a href="{% url 'organizations:zone_list' %}" style="color: #0d9488;">Zones</a></li>
+<li class="breadcrumb-item active" style="color: rgba(215, 245, 229, 0.6);">{% if object %}Edit{% else %}Create{% endif %}</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-  .location-row {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    border-left: 3px solid #28a745;
-    position: relative;
-  }
+  /* ===== DASHBOARD THEME MATCHING ===== */
   
-  .location-header {
-    background: #28a745;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px 5px 0 0;
-    margin: -15px -15px 15px -15px;
+  /* Card Styles */
+  .ehs-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(13, 148, 136, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .ehs-card:hover {
+    box-shadow: 0 8px 32px rgba(13, 148, 136, 0.08);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .ehs-card .card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(13, 148, 136, 0.06);
+    padding: 18px 24px;
+  }
+
+  .ehs-card .card-header h3 {
+    font-size: 17px;
     font-weight: 600;
+    color: #1a1a1a;
   }
-  
-  .sublocation-row {
-    background: #fff8e1;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 8px;
-    border-left: 3px solid #ffc107;
+
+  .ehs-card .card-header h3 i {
+    color: #0d9488;
+  }
+
+  .ehs-card .card-body {
+    padding: 24px;
+  }
+
+  /* Form Controls */
+  .form-control {
+    border-radius: 30px;
+    border: 1px solid rgba(13, 148, 136, 0.12);
+    padding: 10px 18px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.6);
+    color: #1a1a1a;
+  }
+
+  .form-control:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .form-control::placeholder {
+    color: #9ca3af;
+  }
+
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+
+  textarea.form-control {
+    border-radius: 16px;
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  /* Form Labels */
+  .form-label {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .form-label .required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+
+  .form-text {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* Form Sections */
+  .form-section {
+    margin-bottom: 24px;
+  }
+
+  .form-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(13, 148, 136, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section-title i {
+    color: #0d9488;
+  }
+
+  /* Checkbox */
+  .form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(13, 148, 136, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(13, 148, 136, 0.06);
+    transition: all 0.3s ease;
+  }
+
+  .form-check:hover {
+    background: rgba(13, 148, 136, 0.05);
+    border-color: rgba(13, 148, 136, 0.12);
+  }
+
+  .form-check-input {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid rgba(13, 148, 136, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    accent-color: #0d9488;
+  }
+
+  .form-check-input:checked {
+    background-color: #0d9488;
+    border-color: #0d9488;
+  }
+
+  .form-check-label {
+    color: #1a1a1a;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* ===== LOCATION & SUBLOCATION STYLES ===== */
+  .location-row {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border-left: 3px solid #0d9488;
     position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(13, 148, 136, 0.06);
+  }
+
+  .location-row:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(13, 148, 136, 0.15);
+    box-shadow: 0 2px 12px rgba(13, 148, 136, 0.04);
+  }
+
+  .location-header {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px 8px 0 0;
+    margin: -16px -16px 16px -16px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .location-header i {
+    font-size: 14px;
+  }
+
+  .remove-location-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #ef4444;
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .remove-location-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+  }
+
+  .remove-location-btn i {
+    font-size: 13px;
+  }
+
+  /* Sub-Location Styles */
+  .sublocation-row {
+    background: rgba(13, 148, 136, 0.03);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border-left: 3px solid #0d9488;
+    position: relative;
+    border: 1px solid rgba(13, 148, 136, 0.06);
+    transition: all 0.3s ease;
+  }
+
+  .sublocation-row:hover {
+    background: rgba(13, 148, 136, 0.05);
+    border-color: rgba(13, 148, 136, 0.12);
   }
 
   .sublocation-header {
-    background: #ffc107;
-    color: #000;
-    padding: 8px 12px;
-    border-radius: 5px 5px 0 0;
-    margin: -10px -10px 10px -10px;
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px 6px 0 0;
+    margin: -12px -12px 12px -12px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sublocation-header i {
+    font-size: 12px;
+  }
+
+  .remove-sublocation-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ef4444;
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  .remove-sublocation-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+  }
+
+  .add-location-btn {
+    border: 2px dashed rgba(13, 148, 136, 0.25);
+    background: rgba(13, 148, 136, 0.02);
+    color: #0d9488;
+    padding: 12px;
+    border-radius: 12px;
+    width: 100%;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .add-location-btn:hover {
+    background: rgba(13, 148, 136, 0.05);
+    border-color: #0d9488;
+    transform: translateY(-2px);
+  }
+
+  .add-location-btn i {
+    font-size: 16px;
+  }
+
+  .add-sublocation-btn {
+    border: 1px dashed rgba(13, 148, 136, 0.2);
+    background: transparent;
+    color: #0d9488;
+    padding: 8px;
+    border-radius: 8px;
+    width: 100%;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .add-sublocation-btn:hover {
+    background: rgba(13, 148, 136, 0.04);
+    border-color: #0d9488;
+  }
+
+  .add-sublocation-btn i {
+    font-size: 14px;
+  }
+
+  .location-row .form-group,
+  .sublocation-row .form-group {
+    margin-bottom: 10px;
+  }
+
+  .location-row .form-group:last-child,
+  .sublocation-row .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .location-row .form-control,
+  .sublocation-row .form-control {
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .location-row .form-control:focus,
+  .sublocation-row .form-control:focus {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .sublocation-row .form-check {
+    padding: 0;
+    background: transparent;
+    border: none;
+    gap: 6px;
+  }
+
+  .sublocation-row .form-check:hover {
+    background: transparent;
+  }
+
+  .sublocation-row .form-check-input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sublocation-row .form-check-label {
+    font-weight: 400;
+    font-size: 13px;
+  }
+
+  /* Buttons */
+  .btn-teal {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border: none;
+    color: #fff;
+    padding: 10px 28px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-teal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.30);
+    color: #fff;
+  }
+
+  .btn-teal i {
+    font-size: 14px;
+  }
+
+  .btn-secondary-custom {
+    background: transparent;
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    color: #0d9488;
+    padding: 10px 28px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-secondary-custom:hover {
+    background: rgba(13, 148, 136, 0.04);
+    border-color: #0d9488;
+    color: #0d9488;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary-custom i {
+    font-size: 14px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(13, 148, 136, 0.06);
+  }
+
+  /* Error Messages */
+  .text-danger {
+    color: #ef4444 !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .ehs-card .card-header {
+      padding: 14px 16px;
+    }
+
+    .ehs-card .card-header h3 {
+      font-size: 15px;
+    }
+
+    .ehs-card .card-body {
+      padding: 16px;
+    }
+
+    .form-control {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .location-row {
+      padding: 12px;
+    }
+
+    .location-header {
+      margin: -12px -12px 12px -12px;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .remove-location-btn {
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+    }
+
+    .sublocation-row {
+      padding: 10px;
+    }
+
+    .sublocation-header {
+      margin: -10px -10px 10px -10px;
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .form-check {
+      padding: 10px 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ehs-card .card-header {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px;
+    }
+
+    .form-section-title {
+      font-size: 14px;
+    }
+
+    .btn-teal,
+    .btn-secondary-custom {
+      padding: 8px 20px;
+      font-size: 13px;
+    }
   }
 </style>
 {% endblock %}
@@ -57,7 +538,7 @@
   <div class="col-md-10 offset-md-1">
     <div class="ehs-card">
       <div class="card-header">
-        <h3 class="card-title">
+        <h3 class="mb-0">
           <i class="fas fa-layer-group mr-2"></i>{% if object %}Edit Zone: {{ object.name }}{% else %}Create New Zone{% endif %}
         </h3>
       </div>
@@ -67,66 +548,71 @@
           {% csrf_token %}
           
           <!-- Basic Information -->
-          <h5 class="mb-3">
-            <i class="fas fa-info-circle mr-2"></i>Basic Information
-          </h5>
-          
-          <div class="row">
-            <div class="col-md-12 mb-3">
-              <label for="id_plant">Plant *</label>
-              {{ form.plant }}
-              {% if form.plant.errors %}
-                <div class="text-danger">{{ form.plant.errors }}</div>
-              {% endif %}
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-info-circle"></i> Basic Information
             </div>
-          </div>
-          
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="{{ form.name.id_for_label }}">Zone Name *</label>
-              {{ form.name }}
-              {% if form.name.errors %}
-                <div class="text-danger">{{ form.name.errors }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="{{ form.code.id_for_label }}">Zone Code *</label>
-              {{ form.code }}
-              {% if form.code.errors %}
-                <div class="text-danger">{{ form.code.errors }}</div>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-12 mb-3">
-              <label for="{{ form.description.id_for_label }}">Description</label>
-              {{ form.description }}
-              {% if form.description.errors %}
-                <div class="text-danger">{{ form.description.errors }}</div>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-12 mb-3">
-              <div class="form-check">
-                {{ form.is_active }}
-                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                  Active
+            
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="id_plant" class="form-label">
+                  Plant <span class="required">*</span>
                 </label>
+                {{ form.plant }}
+                {% if form.plant.errors %}
+                  <span class="text-danger">{{ form.plant.errors }}</span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  Zone Name <span class="required">*</span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                  <span class="text-danger">{{ form.name.errors }}</span>
+                {% endif %}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.code.id_for_label }}" class="form-label">
+                  Zone Code <span class="required">*</span>
+                </label>
+                {{ form.code }}
+                {% if form.code.errors %}
+                  <span class="text-danger">{{ form.code.errors }}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <span class="text-danger">{{ form.description.errors }}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-check">
+                  {{ form.is_active }}
+                  <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Active <span class="form-text" style="display:inline; margin-left:6px;">- Zone will be available for use</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
-          <hr class="my-4">
-
           <!-- Locations Section -->
-          <div class="locations-section">
-            <h5 class="mb-3">
-              <i class="fas fa-map-marker-alt mr-2"></i>Locations (Optional)
-            </h5>
-            <p class="text-muted mb-3">Add multiple locations under this zone</p>
+          <div class="form-section">
+            <div class="form-section-title">
+              <i class="fas fa-map-marker-alt"></i> Locations <span style="font-weight:400; color:#6b7280; font-size:13px;">(Optional)</span>
+            </div>
             
             <div id="locations-list">
               <!-- Existing locations (for edit mode) -->
@@ -134,16 +620,16 @@
                 {% for location in object.locations.all %}
                 <div class="location-row">
                   <div class="location-header">
-                    <i class="fas fa-map-marker-alt mr-2"></i>Location {{ forloop.counter }}
+                    <i class="fas fa-map-marker-alt"></i> Location {{ forloop.counter }}
                   </div>
-                  <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 10px; right: 10px;" onclick="this.closest('.location-row').remove()">
+                  <button type="button" class="remove-location-btn" onclick="this.closest('.location-row').remove()">
                     <i class="fas fa-trash"></i>
                   </button>
                   
                   <div class="row">
                     <div class="col-md-5">
                       <div class="form-group">
-                        <label>Location Name *</label>
+                        <label class="form-label" style="font-size:13px;">Location Name <span class="required">*</span></label>
                         <input type="text" name="location_name_{{ forloop.counter0 }}" 
                                class="form-control" 
                                value="{{ location.name }}"
@@ -154,7 +640,7 @@
                     
                     <div class="col-md-5">
                       <div class="form-group">
-                        <label>Location Code *</label>
+                        <label class="form-label" style="font-size:13px;">Location Code <span class="required">*</span></label>
                         <input type="text" name="location_code_{{ forloop.counter0 }}" 
                                class="form-control" 
                                value="{{ location.code }}"
@@ -164,8 +650,8 @@
                     
                     <div class="col-md-2">
                       <div class="form-group">
-                        <label>Active</label>
-                        <div class="form-check mt-2">
+                        <label class="form-label" style="font-size:13px;">Active</label>
+                        <div class="form-check" style="padding:4px 0; border:none;">
                           <input type="checkbox" name="location_active_{{ forloop.counter0 }}" 
                                  class="form-check-input" value="1" 
                                  {% if location.is_active %}checked{% endif %}>
@@ -177,7 +663,7 @@
                   <div class="row">
                     <div class="col-md-12">
                       <div class="form-group">
-                        <label>Description</label>
+                        <label class="form-label" style="font-size:13px;">Description</label>
                         <textarea name="location_description_{{ forloop.counter0 }}" 
                                   class="form-control" 
                                   rows="2" 
@@ -187,17 +673,14 @@
                   </div>
 
                   <!-- Sub-Locations for this Location -->
-                  <div class="sublocations-section">
-                    <h6 class="mb-2"><i class="fas fa-map-pin mr-2"></i>Sub-Locations</h6>
+                  <div class="sublocations-section" style="margin-top:12px;">
                     <div id="sublocations-list-{{ forloop.counter0 }}">
                       {% for sublocation in location.sublocations.all %}
                       <div class="sublocation-row">
                         <div class="sublocation-header">
-                          <i class="fas fa-map-pin mr-2"></i>Sub-Location {{ forloop.counter }}
+                          <i class="fas fa-map-pin"></i> Sub-Location {{ forloop.counter }}
                         </div>
-                        <button type="button" class="btn btn-danger btn-sm" 
-                                style="position: absolute; top: 5px; right: 5px;" 
-                                onclick="this.closest('.sublocation-row').remove()">
+                        <button type="button" class="remove-sublocation-btn" onclick="this.closest('.sublocation-row').remove()">
                           <i class="fas fa-times"></i>
                         </button>
                         
@@ -220,7 +703,7 @@
                                    placeholder="Code">
                           </div>
                           <div class="col-md-2">
-                            <div class="form-check">
+                            <div class="form-check" style="padding:4px 0; border:none;">
                               <input type="checkbox" 
                                      name="location_{{ forloop.parentloop.counter0 }}_sublocation_active_{{ forloop.counter0 }}" 
                                      class="form-check-input" value="1" 
@@ -233,9 +716,8 @@
                       {% endfor %}
                     </div>
                     <input type="hidden" name="sublocation_count_{{ forloop.counter0 }}" value="{{ location.sublocations.count }}">
-                    <button type="button" class="btn btn-sm btn-block btn-outline-warning" 
-                            onclick="addSublocation({{ forloop.counter0 }})">
-                      <i class="fas fa-plus mr-1"></i>Add Sub-Location
+                    <button type="button" class="add-sublocation-btn" onclick="addSublocation({{ forloop.counter0 }})">
+                      <i class="fas fa-plus"></i> Add Sub-Location
                     </button>
                   </div>
                 </div>
@@ -245,21 +727,19 @@
             
             <input type="hidden" name="location_count" id="location_count" value="{% if object %}{{ object.locations.count }}{% else %}0{% endif %}">
             
-            <button type="button" class="btn btn-block btn-success" onclick="addLocation()">
-              <i class="fas fa-plus-circle mr-2"></i>Add Location
+            <button type="button" class="add-location-btn" onclick="addLocation()" style="margin-top:12px;">
+              <i class="fas fa-plus-circle"></i> Add Location
             </button>
           </div>
 
           <!-- Form Actions -->
-          <div class="row mt-4">
-            <div class="col-12">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save mr-1"></i> {% if object %}Update Zone{% else %}Create Zone{% endif %}
-              </button>
-              <a href="{% url 'organizations:zone_list' %}" class="btn btn-secondary">
-                <i class="fas fa-times mr-1"></i> Cancel
-              </a>
-            </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-teal">
+              <i class="fas fa-save"></i> {% if object %}Update Zone{% else %}Create Zone{% endif %}
+            </button>
+            <a href="{% url 'organizations:zone_list' %}" class="btn-secondary-custom">
+              <i class="fas fa-times"></i> Cancel
+            </a>
           </div>
         </form>
       </div>
@@ -279,29 +759,29 @@ function addLocation() {
     const html = `
         <div class="location-row">
             <div class="location-header">
-                <i class="fas fa-map-marker-alt mr-2"></i>Location ${index + 1}
+                <i class="fas fa-map-marker-alt"></i> Location ${index + 1}
             </div>
-            <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 10px; right: 10px;" onclick="this.closest('.location-row').remove()">
+            <button type="button" class="remove-location-btn" onclick="this.closest('.location-row').remove()">
                 <i class="fas fa-trash"></i>
             </button>
             
             <div class="row">
                 <div class="col-md-5">
                     <div class="form-group">
-                        <label>Location Name *</label>
+                        <label class="form-label" style="font-size:13px;">Location Name <span class="required">*</span></label>
                         <input type="text" name="location_name_${index}" class="form-control" placeholder="e.g., Production Area 1" required>
                     </div>
                 </div>
                 <div class="col-md-5">
                     <div class="form-group">
-                        <label>Location Code *</label>
+                        <label class="form-label" style="font-size:13px;">Location Code <span class="required">*</span></label>
                         <input type="text" name="location_code_${index}" class="form-control" placeholder="e.g., L001" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Active</label>
-                        <div class="form-check mt-2">
+                        <label class="form-label" style="font-size:13px;">Active</label>
+                        <div class="form-check" style="padding:4px 0; border:none;">
                             <input type="checkbox" name="location_active_${index}" class="form-check-input" value="1" checked>
                         </div>
                     </div>
@@ -311,18 +791,17 @@ function addLocation() {
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label>Description</label>
+                        <label class="form-label" style="font-size:13px;">Description</label>
                         <textarea name="location_description_${index}" class="form-control" rows="2" placeholder="Optional description"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="sublocations-section">
-                <h6 class="mb-2"><i class="fas fa-map-pin mr-2"></i>Sub-Locations</h6>
+            <div class="sublocations-section" style="margin-top:12px;">
                 <div id="sublocations-list-${index}"></div>
                 <input type="hidden" name="sublocation_count_${index}" value="0">
-                <button type="button" class="btn btn-sm btn-block btn-outline-warning" onclick="addSublocation(${index})">
-                    <i class="fas fa-plus mr-1"></i>Add Sub-Location
+                <button type="button" class="add-sublocation-btn" onclick="addSublocation(${index})">
+                    <i class="fas fa-plus"></i> Add Sub-Location
                 </button>
             </div>
         </div>
@@ -341,9 +820,9 @@ function addSublocation(locationIndex) {
     const html = `
         <div class="sublocation-row">
             <div class="sublocation-header">
-                <i class="fas fa-map-pin mr-2"></i>Sub-Location ${sublocationIndex + 1}
+                <i class="fas fa-map-pin"></i> Sub-Location ${sublocationIndex + 1}
             </div>
-            <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 5px; right: 5px;" onclick="this.closest('.sublocation-row').remove()">
+            <button type="button" class="remove-sublocation-btn" onclick="this.closest('.sublocation-row').remove()">
                 <i class="fas fa-times"></i>
             </button>
             
@@ -355,7 +834,7 @@ function addSublocation(locationIndex) {
                     <input type="text" name="location_${locationIndex}_sublocation_code_${sublocationIndex}" class="form-control form-control-sm" placeholder="Code">
                 </div>
                 <div class="col-md-2">
-                    <div class="form-check">
+                    <div class="form-check" style="padding:4px 0; border:none;">
                         <input type="checkbox" name="location_${locationIndex}_sublocation_active_${sublocationIndex}" class="form-check-input" value="1" checked>
                         <label class="form-check-label" style="font-size: 0.85rem;">Active</label>
                     </div>
