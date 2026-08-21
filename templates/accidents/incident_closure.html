@@ -1,129 +1,696 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Close Injury - {{ incident.report_number }}{% endblock %}
-{% block page_title %}Close Injury - {{ incident.report_number }}{% endblock %}
+{% block title %}Close Injury - {{ incident.report_number }} | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'accidents:dashboard' %}">Injury Management</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_list' %}">All Injuries</a></li>
-<li class="breadcrumb-item">Close Injury</li>
+{% block extra_css %}
+<style>
+  /* ===== CLOSE INJURY - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 16px 24px;
+    background: var(--secondary-green);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 24px 28px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-info {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .alert-custom.alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-custom.alert-info .alert-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    font-size: 15px;
+  }
+
+  .alert-custom.alert-danger {
+    background: #fef2f2;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-red);
+  }
+
+  .alert-custom.alert-danger i {
+    color: var(--secondary-red);
+  }
+
+  .alert-custom.alert-danger .alert-title {
+    font-weight: 700;
+    color: var(--secondary-red);
+    margin: 0 0 4px 0;
+    font-size: 15px;
+  }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content p {
+    margin: 2px 0;
+  }
+
+  .alert-custom .alert-content .mb-1 {
+    margin-bottom: 4px;
+  }
+
+  .alert-custom .alert-content strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 20px;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control,
+  .form-group-custom .form-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: #fafbfc;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus,
+  .form-group-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    background: white;
+  }
+
+  .form-group-custom .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-group-custom textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  .text-danger {
+    color: var(--secondary-red) !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX                                                    */
+  /* ========================================================== */
+  .form-check-custom {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .form-check-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .form-check-custom input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .form-check-custom .form-check-label {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-check-custom .form-check-label strong {
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .form-check-custom .form-check-label .check-subtext {
+    display: block;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-submit-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 32px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--secondary-green);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-submit-teal:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    color: white;
+  }
+
+  .btn-submit-teal:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-submit-teal i {
+    font-size: 16px;
+  }
+
+  .btn-cancel-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-cancel-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 20px 22px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 16px 18px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 16px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 14px 18px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-submit-teal,
+    .dash-form-card .card-footer-custom .btn-cancel-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .form-group-custom textarea.form-control {
+      min-height: 60px;
+    }
+
+    .form-check-custom {
+      padding: 10px 12px;
+    }
+
+    .alert-custom {
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 12px 14px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .btn-submit-teal,
+    .btn-cancel-custom {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+
+    .form-check-custom .form-check-label strong {
+      font-size: 13px;
+    }
+
+    .form-check-custom .form-check-label .check-subtext {
+      font-size: 12px;
+    }
+  }
+</style>
 {% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-            
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-check-circle mr-2"></i>Close Injury
-                    </h3>
-                </div>
-                
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle mr-2"></i>Injury Details</h5>
-                        <p class="mb-1"><strong>Report Number:</strong> {{ incident.report_number }}</p>
-                        <p class="mb-1"><strong>Affected Person:</strong> {{ incident.affected_person_name }}</p>
-                        <p class="mb-1"><strong>Type:</strong> {{ incident.incident_type.name }}</p>
-                        <p class="mb-0"><strong>Reported Date:</strong> {{ incident.reported_date|date:"d M Y" }}</p>
-                    </div>
 
-                    {% if not can_close %}
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                            <strong>Cannot close:</strong> {{ closure_message }}
-                        </div>
-                    {% endif %}
+<div class="container-fluid" style="padding: 0;">
 
-                    <form method="POST" id="closureForm">
-                        {% csrf_token %}
-                        
-                        <h5 class="mt-4"><i class="fas fa-file-alt mr-2"></i>Closure Information</h5>
-                        <hr>
-                        
-                        <div class="form-group">
-                            <label for="{{ form.closure_remarks.id_for_label }}">
-                                Closure Remarks <span class="text-danger">*</span>
-                            </label>
-                            {{ form.closure_remarks }}
-                            <small class="form-text text-muted">
-                                Provide final remarks summarizing the injury resolution
-                            </small>
-                            {% if form.closure_remarks.errors %}
-                                <div class="text-danger">{{ form.closure_remarks.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group">
-                            <label for="{{ form.lessons_learned.id_for_label }}">
-                                Lessons Learned <span class="text-danger">*</span>
-                            </label>
-                            {{ form.lessons_learned }}
-                            <small class="form-text text-muted">
-                                Document key learnings from this incident
-                            </small>
-                            {% if form.lessons_learned.errors %}
-                                <div class="text-danger">{{ form.lessons_learned.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group">
-                            <label for="{{ form.preventive_measures.id_for_label }}">
-                                Preventive Measures Implemented <span class="text-danger">*</span>
-                            </label>
-                            {{ form.preventive_measures }}
-                            <small class="form-text text-muted">
-                                List the measures implemented to prevent recurrence
-                            </small>
-                            {% if form.preventive_measures.errors %}
-                                <div class="text-danger">{{ form.preventive_measures.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                {{ form.is_recurrence_possible }}
-                                <label for="{{ form.is_recurrence_possible.id_for_label }}">
-                                    <strong>Is recurrence of this injury possible?</strong>
-                                    <br><small class="text-muted">Check if there's still a risk of this injury happening again</small>
-                                </label>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success btn-lg px-5" {% if not can_close %}disabled{% endif %}>
-                                <i class="fas fa-check-circle mr-2"></i>Close Injury
-                            </button>
-                            <a href="{% url 'accidents:incident_closure_check' incident.pk %}" class="btn btn-secondary btn-lg px-5 ml-2">
-                                <i class="fas fa-times mr-2"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div>
+        <h1>Close Injury</h1>
+        <p class="subtitle">Close injury report {{ incident.report_number }}</p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-check-circle"></i>
+        Close Injury
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+
+      <!-- Injury Details Alert -->
+      <div class="alert-custom alert-info">
+        <i class="fas fa-info-circle"></i>
+        <div class="alert-content">
+          <div class="alert-title"><i class="fas fa-file-alt"></i> Injury Details</div>
+          <p class="mb-1"><strong>Report Number:</strong> {{ incident.report_number }}</p>
+          <p class="mb-1"><strong>Affected Person:</strong> {{ incident.affected_person_name }}</p>
+          <p class="mb-1"><strong>Type:</strong> {{ incident.incident_type.name }}</p>
+          <p class="mb-0"><strong>Reported Date:</strong> {{ incident.reported_date|date:"d M Y" }}</p>
+        </div>
+      </div>
+
+      <!-- Cannot Close Alert -->
+      {% if not can_close %}
+      <div class="alert-custom alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="alert-content">
+          <div class="alert-title"><i class="fas fa-times-circle"></i> Cannot Close</div>
+          <p>{{ closure_message }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Closure Form -->
+      <form method="POST" id="closureForm">
+        {% csrf_token %}
+
+        <h5 style="font-weight: 700; color: var(--text-primary); margin: 24px 0 16px 0;">
+          <i class="fas fa-file-alt" style="color: var(--primary-teal);"></i>
+          Closure Information
+        </h5>
+        <hr style="border-color: var(--border-color); margin-bottom: 20px;">
+
+        <!-- Closure Remarks -->
+        <div class="form-group-custom">
+          <label for="{{ form.closure_remarks.id_for_label }}">
+            Closure Remarks <span class="required-star">*</span>
+          </label>
+          {{ form.closure_remarks }}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Provide final remarks summarizing the injury resolution</span>
+          {% if form.closure_remarks.errors %}
+            <span class="text-danger">{{ form.closure_remarks.errors }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Lessons Learned -->
+        <div class="form-group-custom">
+          <label for="{{ form.lessons_learned.id_for_label }}">
+            Lessons Learned <span class="required-star">*</span>
+          </label>
+          {{ form.lessons_learned }}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Document key learnings from this incident</span>
+          {% if form.lessons_learned.errors %}
+            <span class="text-danger">{{ form.lessons_learned.errors }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Preventive Measures -->
+        <div class="form-group-custom">
+          <label for="{{ form.preventive_measures.id_for_label }}">
+            Preventive Measures Implemented <span class="required-star">*</span>
+          </label>
+          {{ form.preventive_measures }}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> List the measures implemented to prevent recurrence</span>
+          {% if form.preventive_measures.errors %}
+            <span class="text-danger">{{ form.preventive_measures.errors }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Recurrence Checkbox -->
+        <div class="form-group-custom">
+          <div class="form-check-custom">
+            {{ form.is_recurrence_possible }}
+            <label class="form-check-label" for="{{ form.is_recurrence_possible.id_for_label }}">
+              <strong><i class="fas fa-exclamation-triangle" style="color: var(--secondary-gold);"></i> Is recurrence of this injury possible?</strong>
+              <span class="check-subtext">Check if there's still a risk of this injury happening again</span>
+            </label>
+          </div>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 24px 0;">
+
+        <!-- Action Buttons -->
+        <div class="text-center">
+          <button type="submit" class="btn-submit-teal" {% if not can_close %}disabled{% endif %}>
+            <i class="fas fa-check-circle"></i> Close Injury
+          </button>
+          <a href="{% url 'accidents:incident_closure_check' incident.pk %}" class="btn-cancel-custom" style="margin-left: 10px;">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        let isSubmitting = false; 
-        $('#closureForm').on('submit', function(e) {
-            if (isSubmitting) {
-                e.preventDefault();
-                return false;
-            }
-            isSubmitting = true;
-            const $submitButton = $(this).find('button[type="submit"]');
-            $submitButton.prop('disabled', true);
-            $submitButton.html('<i class="fas fa-spinner fa-spin mr-2"></i>Closing...');
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('closureForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let isSubmitting = false;
+
+    form.addEventListener('submit', function(e) {
+        // Validate required fields
+        const closureRemarks = document.getElementById('{{ form.closure_remarks.id_for_label }}');
+        const lessonsLearned = document.getElementById('{{ form.lessons_learned.id_for_label }}');
+        const preventiveMeasures = document.getElementById('{{ form.preventive_measures.id_for_label }}');
+
+        if (!closureRemarks.value.trim()) {
+            e.preventDefault();
+            alert('Please enter Closure Remarks.');
+            closureRemarks.focus();
+            return false;
+        }
+
+        if (!lessonsLearned.value.trim()) {
+            e.preventDefault();
+            alert('Please enter Lessons Learned.');
+            lessonsLearned.focus();
+            return false;
+        }
+
+        if (!preventiveMeasures.value.trim()) {
+            e.preventDefault();
+            alert('Please enter Preventive Measures Implemented.');
+            preventiveMeasures.focus();
+            return false;
+        }
+
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        isSubmitting = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Closing...';
+        }
     });
+});
 </script>
 {% endblock %}

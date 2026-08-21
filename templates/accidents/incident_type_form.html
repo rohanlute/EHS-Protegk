@@ -1,98 +1,590 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{{ action }} Injury Type{% endblock %}
-{% block page_title %}{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_type_list' %}">Injury Types</a></li>
-<li class="breadcrumb-item active">{{ action }}</li>
-{% endblock %}
+{% block title %}{{ action }} Injury Type | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-.form-section {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
+  /* ===== INJURY TYPE FORM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 16px 24px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 24px 28px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                               */
+  /* ========================================================== */
+  .form-section-custom {
+    background: #fafbfc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
     margin-bottom: 20px;
-}
+    transition: all 0.3s ease;
+  }
 
-.form-section h6 {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #dee2e6;
-}
+  .form-section-custom:hover {
+    border-color: var(--primary-teal);
+  }
 
-.form-group label {
-    font-weight: 500;
-    color: #495057;
-    margin-bottom: 5px;
-}
-
-.required-indicator {
-    color: #dc3545;
-    font-weight: bold;
-}
-
-.form-check-label {
-    font-weight: 500;
-    color: #495057;
-    margin-left: 5px;
-}
-
-.ehs-card .card-header:not(.bg-danger):not(.bg-warning):not(.bg-success):not(.bg-info) {
-    background: linear-gradient(135deg, #0093ff, #0614ff);
-    border-bottom: 1px solid #f0f0f0;
-    padding: 15px 20px;
+  .form-section-custom h6 {
     color: var(--text-primary);
     font-weight: 600;
-}
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section-custom h6 i {
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 16px;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control,
+  .form-group-custom .form-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus,
+  .form-group-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .form-group-custom .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-group-custom textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  .text-danger {
+    color: var(--secondary-red) !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX                                                    */
+  /* ========================================================== */
+  .form-check-custom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .form-check-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .form-check-custom input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .form-check-custom .form-check-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-check-custom .form-check-label .check-subtext {
+    display: block;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-info {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .alert-custom.alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-custom.alert-danger {
+    background: #fef2f2;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-red);
+  }
+
+  .alert-custom.alert-danger i {
+    color: var(--secondary-red);
+  }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content h5 {
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    font-size: 15px;
+  }
+
+  .alert-custom .alert-content ul {
+    margin: 4px 0 0 0;
+    padding-left: 20px;
+  }
+
+  .alert-custom .alert-content ul li {
+    font-size: 14px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-submit-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-submit-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    color: white;
+  }
+
+  .btn-submit-teal:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-submit-teal i {
+    font-size: 16px;
+  }
+
+  .btn-cancel-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-cancel-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 20px 22px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 16px 18px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 16px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 14px 18px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-submit-teal,
+    .dash-form-card .card-footer-custom .btn-cancel-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-section-custom {
+      padding: 14px 16px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .form-check-custom {
+      padding: 8px 12px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .form-section-custom {
+      padding: 10px 12px;
+    }
+
+    .form-section-custom h6 {
+      font-size: 14px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-check-custom .form-check-label {
+      font-size: 14px;
+    }
+
+    .form-check-custom .form-check-label .check-subtext {
+      font-size: 12px;
+    }
+
+    .btn-submit-teal,
+    .btn-cancel-custom {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-8 offset-md-2">
-    <div class="ehs-card">
-      <div class="card-header bg-primary text-white">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-{% if action == 'Create' %}plus{% else %}edit{% endif %} mr-2"></i>
-          {{ action }} Injury Type
-        </h3>
-      </div>
-      
-      <form method="POST" id="incidentTypeForm">
-        {% csrf_token %}
-        
-        <div class="card-body">
-          <!-- Alert Info -->
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle mr-2"></i>
-            <strong>Note:</strong> All fields marked with <span class="text-danger">*</span> are mandatory.
-          </div>
 
-          <!-- Form Errors Display -->
-          {% if form.errors or form.non_field_errors %}
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h5 class="alert-heading">
-              <i class="fas fa-exclamation-triangle mr-2"></i>Please Correct the Following Errors:
-            </h5>
-            
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-{% if action == 'Create' %}plus{% else %}edit{% endif %}"></i>
+      </div>
+      <div>
+        <h1>{{ action }} Injury Type</h1>
+        <p class="subtitle">
+          {% if action == 'Create' %}
+            Add a new injury type to the system
+          {% else %}
+            Update existing injury type details
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-{% if action == 'Create' %}plus-circle{% else %}edit{% endif %}"></i>
+        {{ action }} Injury Type
+      </h3>
+    </div>
+
+    <form method="POST" id="incidentTypeForm">
+      {% csrf_token %}
+
+      <div class="card-body-custom">
+
+        <!-- Alert Info -->
+        <div class="alert-custom alert-info">
+          <i class="fas fa-info-circle"></i>
+          <div class="alert-content">
+            <strong>Note:</strong> All fields marked with <span style="color: var(--secondary-red); font-weight: 600;">*</span> are mandatory.
+          </div>
+        </div>
+
+        <!-- Form Errors Display -->
+        {% if form.errors or form.non_field_errors %}
+        <div class="alert-custom alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">
+            <h5>Please Correct the Following Errors:</h5>
             {% if form.non_field_errors %}
-              <ul class="mb-2">
+              <ul>
                 {% for error in form.non_field_errors %}
                   <li><strong>{{ error }}</strong></li>
                 {% endfor %}
               </ul>
             {% endif %}
-            
             {% if form.errors %}
-              <ul class="mb-0">
+              <ul>
                 {% for field in form %}
                   {% if field.errors %}
                     {% for error in field.errors %}
@@ -102,147 +594,147 @@
                 {% endfor %}
               </ul>
             {% endif %}
-            
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          {% endif %}
-
-          <!-- Basic Information Section -->
-          <div class="form-section">
-            <h6><i class="fas fa-info-circle mr-2"></i>Basic Information</h6>
-            
-            <!-- Name Field -->
-            <div class="form-group">
-              <label for="{{ form.name.id_for_label }}">
-                Injury Type Name <span class="text-danger">*</span>
-              </label>
-              {{ form.name }}
-              <small class="form-text text-muted">
-                Enter the full name of the injury type (e.g., Lost Time Injury, First Aid)
-              </small>
-              {% if form.name.errors %}
-                <div class="text-danger mt-1">
-                  {% for error in form.name.errors %}
-                    <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small><br>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- Code Field -->
-            <div class="form-group">
-              <label for="{{ form.code.id_for_label }}">
-                Short Code <span class="text-danger">*</span>
-              </label>
-              {{ form.code }}
-              <small class="form-text text-muted">
-                Enter a short, unique code (e.g., LTI, FA, MTC). Maximum 20 characters.
-              </small>
-              {% if form.code.errors %}
-                <div class="text-danger mt-1">
-                  {% for error in form.code.errors %}
-                    <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small><br>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- Description Field -->
-            <div class="form-group">
-              <label for="{{ form.description.id_for_label }}">
-                Description
-              </label>
-              {{ form.description }}
-              <small class="form-text text-muted">
-                Provide a detailed description of this injury type (optional)
-              </small>
-              {% if form.description.errors %}
-                <div class="text-danger mt-1">
-                  {% for error in form.description.errors %}
-                    <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small><br>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- Status Section -->
-          <div class="form-section">
-            <h6><i class="fas fa-toggle-on mr-2"></i>Status</h6>
-            
-            <!-- Active/Inactive Checkbox -->
-            <div class="form-group">
-              <div class="form-check">
-                {{ form.is_active }}
-                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                  <strong>Active</strong>
-                </label>
-              </div>
-              <small class="form-text text-muted">
-                <i class="fas fa-info-circle mr-1"></i>
-                When checked, this injury type will be available in injury reporting forms. 
-                Uncheck to deactivate (it will be hidden from forms but existing injuries will retain their type).
-              </small>
-              {% if form.is_active.errors %}
-                <div class="text-danger mt-1">
-                  {% for error in form.is_active.errors %}
-                    <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small><br>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
           </div>
         </div>
-        
-        <div class="card-footer">
-          <button type="submit" class="btn btn-primary btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ action }} Injury Type
-          </button>
-          <a href="{% url 'accidents:incident_type_list' %}" class="btn btn-secondary btn-lg ml-2">
-            <i class="fas fa-times mr-2"></i>Cancel
-          </a>
+        {% endif %}
+
+        <!-- ========================================================== -->
+        <!-- BASIC INFORMATION SECTION                                   -->
+        <!-- ========================================================== -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-info-circle"></i> Basic Information</h6>
+
+          <!-- Name Field -->
+          <div class="form-group-custom">
+            <label for="{{ form.name.id_for_label }}">
+              Injury Type Name <span class="required-star">*</span>
+            </label>
+            {{ form.name }}
+            <span class="form-helper-text">
+              <i class="fas fa-info-circle"></i> Enter the full name of the injury type (e.g., Lost Time Injury, First Aid)
+            </span>
+            {% if form.name.errors %}
+              <span class="text-danger">{{ form.name.errors }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Code Field -->
+          <div class="form-group-custom">
+            <label for="{{ form.code.id_for_label }}">
+              Short Code <span class="required-star">*</span>
+            </label>
+            {{ form.code }}
+            <span class="form-helper-text">
+              <i class="fas fa-info-circle"></i> Enter a short, unique code (e.g., LTI, FA, MTC). Maximum 20 characters.
+            </span>
+            {% if form.code.errors %}
+              <span class="text-danger">{{ form.code.errors }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Description Field -->
+          <div class="form-group-custom">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            <span class="form-helper-text">
+              <i class="fas fa-info-circle"></i> Provide a detailed description of this injury type (optional)
+            </span>
+            {% if form.description.errors %}
+              <span class="text-danger">{{ form.description.errors }}</span>
+            {% endif %}
+          </div>
         </div>
-      </form>
-    </div>
+
+        <!-- ========================================================== -->
+        <!-- STATUS SECTION                                              -->
+        <!-- ========================================================== -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-toggle-on"></i> Status</h6>
+
+          <!-- Active/Inactive Checkbox -->
+          <div class="form-group-custom">
+            <div class="form-check-custom">
+              {{ form.is_active }}
+              <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                <strong>Active</strong>
+                <span class="check-subtext">
+                  <i class="fas fa-info-circle"></i> When checked, this injury type will be available in injury reporting forms.
+                  Uncheck to deactivate (existing injuries will retain their type).
+                </span>
+              </label>
+            </div>
+            {% if form.is_active.errors %}
+              <span class="text-danger">{{ form.is_active.errors }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- FORM FOOTER                                                -->
+      <!-- ========================================================== -->
+      <div class="card-footer-custom">
+        <button type="submit" class="btn-submit-teal" id="submitBtn">
+          <i class="fas fa-save"></i> {{ action }} Injury Type
+        </button>
+        <a href="{% url 'accidents:incident_type_list' %}" class="btn-cancel-custom">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </form>
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation before submission
     const form = document.getElementById('incidentTypeForm');
-    
+    const nameField = document.getElementById('{{ form.name.id_for_label }}');
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    const submitBtn = document.getElementById('submitBtn');
+    let isSubmitting = false;
+
+    // Auto-uppercase the code field as user types
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+
     form.addEventListener('submit', function(e) {
-        const nameField = document.getElementById('{{ form.name.id_for_label }}');
-        const codeField = document.getElementById('{{ form.code.id_for_label }}');
-        
-        // Check if required fields are filled
+        // Validate required fields
         if (!nameField.value.trim()) {
             e.preventDefault();
             alert('Please enter the Incident Type Name.');
             nameField.focus();
             return false;
         }
-        
+
         if (!codeField.value.trim()) {
             e.preventDefault();
             alert('Please enter the Short Code.');
             codeField.focus();
             return false;
         }
-        
-        // Convert code to uppercase automatically
+
+        // Prevent double submission
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        isSubmitting = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+        }
+
+        // Convert code to uppercase
         codeField.value = codeField.value.trim().toUpperCase();
-    });
-    
-    // Auto-uppercase the code field as user types
-    const codeField = document.getElementById('{{ form.code.id_for_label }}');
-    codeField.addEventListener('input', function() {
-        this.value = this.value.toUpperCase();
     });
 });
 </script>

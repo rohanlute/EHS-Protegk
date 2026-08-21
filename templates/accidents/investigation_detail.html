@@ -2,408 +2,960 @@
 {% load static %}
 {% load permission_tags %}
 
-{% block title %}Investigation Report - {{ investigation.incident.report_number }}{% endblock %}
-{% block page_title %}Investigation Report - {{ investigation.incident.report_number }}{% endblock %}
+{% block title %}Investigation Report - {{ investigation.incident.report_number }} | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_list' %}">Incident List</a></li>
-<li class="breadcrumb-item active">Investigation Report</li>
-{% endblock %}
 {% block extra_css %}
 <style>
-.content-header h1 {
-    font-size: 1.6rem !important; 
-}
-.action-footer {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
+  /* ===== INVESTIGATION REPORT - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.action-footer .left-actions,
-.action-footer .right-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-.action-footer form {
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
     margin: 0;
-}
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h3,
+  .dash-card .card-header-custom h5 {
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h3 i,
+  .dash-card .card-header-custom h5 i {
+    font-size: 18px;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  .dash-card .card-footer-custom {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+  }
+
+  /* ===== CARD HEADER VARIANTS ===== */
+  .card-header-teal {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-teal h3,
+  .card-header-teal h5 { color: white; }
+  .card-header-teal i { color: rgba(255, 255, 255, 0.9); }
+
+  .card-header-warning {
+    background: #fffbeb;
+    border-left: 4px solid var(--secondary-gold);
+  }
+  .card-header-warning h3,
+  .card-header-warning h5 { color: var(--secondary-gold); }
+  .card-header-warning i { color: var(--secondary-gold); }
+
+  .card-header-danger {
+    background: #fef2f2;
+    border-left: 4px solid var(--secondary-red);
+  }
+  .card-header-danger h3,
+  .card-header-danger h5 { color: var(--secondary-red); }
+  .card-header-danger i { color: var(--secondary-red); }
+
+  .card-header-success {
+    background: #dcfce7;
+    border-left: 4px solid var(--secondary-green);
+  }
+  .card-header-success h3,
+  .card-header-success h5 { color: var(--secondary-green); }
+  .card-header-success i { color: var(--secondary-green); }
+
+  .card-header-info {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+  }
+  .card-header-info h3,
+  .card-header-info h5 { color: var(--primary-teal); }
+  .card-header-info i { color: var(--primary-teal); }
+
+  .card-header-primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-primary h3,
+  .card-header-primary h5 { color: white; }
+  .card-header-primary i { color: rgba(255, 255, 255, 0.9); }
+
+  /* ========================================================== */
+  /* BADGES                                                       */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .dash-alert {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .dash-alert i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .dash-alert.alert-warning {
+    background: #fffbeb;
+    border-left: 4px solid var(--secondary-gold);
+  }
+  .dash-alert.alert-warning i { color: var(--secondary-gold); }
+
+  .dash-alert.alert-success {
+    background: #dcfce7;
+    border-left: 4px solid var(--secondary-green);
+  }
+  .dash-alert.alert-success i { color: var(--secondary-green); }
+
+  .dash-alert.alert-danger {
+    background: #fef2f2;
+    border-left: 4px solid var(--secondary-red);
+  }
+  .dash-alert.alert-danger i { color: var(--secondary-red); }
+
+  .dash-alert .alert-content {
+    flex: 1;
+  }
+  .dash-alert .alert-content strong {
+    color: var(--text-primary);
+  }
+  .dash-alert .alert-content p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* ========================================================== */
+  /* INFO ROWS                                                   */
+  /* ========================================================== */
+  .info-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .info-value.text-teal { color: var(--primary-teal); }
+
+  /* ===== SUMMARY ROW ===== */
+  .dash-summary-row {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .dash-summary-item {
+    padding: 0 4px;
+  }
+
+  .dash-summary-item .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .dash-summary-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .dash-summary-item .value.text-teal { color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* CONTENT BLOCKS                                              */
+  /* ========================================================== */
+  .dash-content-block {
+    padding: 12px 16px;
+    border-left: 3px solid;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: #fafbfc;
+  }
+
+  .dash-content-block.border-danger { border-left-color: var(--secondary-red); }
+  .dash-content-block.border-success { border-left-color: var(--secondary-green); }
+  .dash-content-block.border-teal { border-left-color: var(--primary-teal); }
+  .dash-content-block.border-gold { border-left-color: var(--secondary-gold); }
+
+  .dash-content-block p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  /* ========================================================== */
+  /* ACTION ITEMS                                                */
+  /* ========================================================== */
+  .dash-action-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-action-item:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .dash-action-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .dash-action-item .action-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin: 0 0 4px 0;
+  }
+
+  .dash-action-item .action-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0 0 8px 0;
+  }
+
+  .dash-action-item .action-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+
+  .dash-action-item .action-meta .meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .dash-action-item .action-meta .meta-value {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash-primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash-primary:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-dash-success {
+    background: #22c55e;
+    color: white;
+  }
+  .btn-dash-success:hover {
+    background: #16a34a;
+    color: white;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-dash-warning {
+    background: #d97706;
+    color: white;
+  }
+  .btn-dash-warning:hover {
+    background: #b45309;
+    color: white;
+    box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3);
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-summary-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-summary-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .dash-summary-item {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .dash-content-block {
+      padding: 10px 14px;
+    }
+
+    .dash-action-item {
+      padding: 12px 14px;
+    }
+
+    .dash-action-item .action-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .dash-card .card-footer-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-card .card-footer-custom .btn-dash {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-card .card-footer-custom .action-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-card .card-footer-custom .action-footer .left-actions,
+    .dash-card .card-footer-custom .action-footer .right-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-card .card-footer-custom .action-footer .left-actions .btn-dash,
+    .dash-card .card-footer-custom .action-footer .right-actions .btn-dash {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-card .card-footer-custom .action-footer .right-actions form {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-summary-row {
+      padding: 10px 12px;
+    }
+
+    .dash-content-block p {
+      font-size: 13px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .btn-dash {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            
-            <!-- Header -->
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h3 class="card-title">
-                        <i class="fas fa-search mr-2"></i>Investigation Report
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-8">
-                            <h4 class="mb-1 font-weight-bold">{{ incident.report_number }} - {{ incident.incident_title|default:"Incident Report" }}</h4>
-                            <div class="d-flex flex-wrap">
-                                <span class="badge badge-dark mr-2 mb-1">{{ incident.incident_type.name }}</span>
-                                <span class="badge badge-info mr-2 mb-1">Status: {{ incident.get_status_display }}</span>
-                                {% if incident.incident_type == 'LTI' %}
-                                    <span class="badge badge-danger mb-1">High Severity</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-md-right mt-2 mt-md-0">
-                            <small class="text-muted d-block">Reported On: <strong>{{ incident.reported_date|date:"d M Y H:i" }}</strong></small>
-                        </div>
-                    </div>
 
-                    <div class="row bg-light p-3 rounded mx-0">
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Injury Date & Time</small>
-                            <span class="font-weight-bold">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Location / Plant</small>
-                            <span class="font-weight-bold">{{ incident.plant.name }} - {{ incident.location.name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Affected Person</small>
-                            <span class="font-weight-bold text-primary">{{ incident.affected_person_name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                            <small class="text-muted d-block">Department</small>
-                            <span class="font-weight-bold">{{ incident.affected_person_department.name|default:"N/A" }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid" style="padding: 0;">
 
-            <!-- Investigation Details -->
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-clipboard-list mr-2"></i>Investigation Details
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Investigation Date:</label>
-                            <p class="font-weight-bold">{{ investigation.investigation_date|date:"d M Y" }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Lead Investigator:</label>
-                            <p class="font-weight-bold">{{ investigation.investigator.get_full_name }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="text-muted">Investigation Team Members Emails:</label>
-                            <p>{{ investigation.investigation_team }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Approval Status Alert Box -->
-            {% with incident=investigation.incident %}
-                {% if incident.approval_status == 'PENDING' %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-clock mr-2"></i>
-                    <strong>Status:</strong> This investigation report is currently pending approval.
-                </div>
-                {% elif incident.approval_status == 'APPROVED' %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <strong>Status:</strong> Approved by <strong>{{ incident.approved_by.get_full_name }}</strong> on {{ incident.approved_date|date:"d M Y" }}.
-                </div>
-                {% elif incident.approval_status == 'REJECTED' %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-times-circle mr-2"></i>
-                    <strong>Status:</strong> This report has been rejected.
-                    <p class="mb-0 mt-2"><strong>Remarks:</strong> {{ incident.rejection_remarks|linebreaks }}</p>
-                </div>
-                {% endif %}
-            {% endwith %}
-
-            <!-- Findings -->
-            <div class="card mt-3">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Findings
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Sequence of Events:</strong></label>
-                            <div class="border-left border-danger pl-3">
-                                <p>{{ investigation.sequence_of_events|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Root Cause Analysis:</strong></label>
-                            <div class="border-left border-danger pl-3">
-                                <p>{{ investigation.root_cause_analysis|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Contributing Factors:</strong></label>
-                            <div class="border-left border-warning pl-3">
-                                <p>{{ investigation.contributing_factors|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div> -->
-
-                    {% if investigation.personal_factors %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Personal Factors:</strong></label>
-                            <div class="pl-3">
-                                {% for factor in investigation.personal_factors %}
-                                <span class="badge badge-warning mr-1 mb-1">{{ factor }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if investigation.job_factors %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Job Factors:</strong></label>
-                            <div class="pl-3">
-                                {% for factor in investigation.job_factors %}
-                                <span class="badge badge-info mr-1 mb-1">{{ factor }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- {% if investigation.unsafe_conditions_identified %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Unsafe Conditions Identified:</strong></label>
-                            <p>{{ investigation.unsafe_conditions_identified|linebreaks }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if investigation.unsafe_acts_identified %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Unsafe Acts Identified:</strong></label>
-                            <p>{{ investigation.unsafe_acts_identified|linebreaks }}</p>
-                        </div>
-                    </div>
-                    {% endif %} -->
-                </div>
-            </div>
-
-            <!-- Evidence -->
-            {% if investigation.evidence_collected or investigation.witness_statements %}
-            <div class="card mt-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-file-alt mr-2"></i>Evidence & Statements
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if investigation.evidence_collected %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Evidence Collected:</strong></label>
-                            <p>{{ investigation.evidence_collected|linebreaks }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if investigation.witness_statements %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Witness Statements:</strong></label>
-                            <p>{{ investigation.witness_statements|linebreaks }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Recommendations -->
-            <div class="card mt-3">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb mr-2"></i>Recommendations
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Immediate Corrective Actions:</strong></label>
-                            <div class="border-left border-success pl-3">
-                                <p>{{ investigation.immediate_corrective_actions|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Preventive Measures:</strong></label>
-                            <div class="border-left border-success pl-3">
-                                <p>{{ investigation.preventive_measures|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- {% if investigation.long_term_recommendations %}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="text-muted"><strong>Long-term Recommendations:</strong></label>
-                            <div class="border-left border-primary pl-3">
-                                <p>{{ investigation.long_term_recommendations|linebreaks }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %} -->
-                </div>
-            </div>
-
-            <!-- Action Items -->
-            <div class="card mt-3">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-tasks mr-2"></i>Action Plan
-                    </h5>
-                </div>
-
-                <div class="card-body">
-
-                    {% if investigation.incident.action_items.exists %}
-                        {% for action in investigation.incident.action_items.all %}
-                            <div class="border rounded p-3 mb-3">
-
-                                <p>
-                                    <strong>Action:</strong><br>
-                                    {{ action.action_description|linebreaks }}
-                                </p>
-
-                                <p>
-                                    <strong>Target Completion Date:</strong><br>
-                                    {{ action.target_date|date:"d M Y" }}
-                                </p>
-
-                                <p>
-                                    <strong>Status:</strong>
-                                    <span class="badge 
-                                        {% if action.status == 'COMPLETED' %}badge-success
-                                        {% elif action.is_overdue %}badge-danger
-                                        {% else %}badge-warning{% endif %}">
-                                        {{ action.get_status_display }}
-                                    </span>
-                                </p>
-
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted font-italic">
-                            No action items defined.
-                        </p>
-                    {% endif %}
-
-                </div>
-            </div>
-
-
-            <!-- Sign-off -->
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-pen mr-2"></i>Sign-off
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Completed By:</label>
-                            <p class="font-weight-bold">{{ investigation.completed_by.get_full_name }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Completed Date:</label>
-                            <p class="font-weight-bold">{{ investigation.completed_date|date:"d M Y" }}</p>
-                        </div>
-                    </div>
-
-                    {% if investigation.reviewed_by %}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Reviewed By:</label>
-                            <p class="font-weight-bold">{{ investigation.reviewed_by.get_full_name }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted">Reviewed Date:</label>
-                            <p class="font-weight-bold">{{ investigation.reviewed_date|date:"d M Y" }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="card mt-3">
-                <div class="card-footer">
-                    <div class="action-footer">
-
-                        <!-- Left actions -->
-                        <div class="left-actions">
-                            <a href="{{ cancel_url }}"
-                               class="btn btn-primary">
-                                <i class="fas fa-arrow-left mr-1"></i> Back to Incident
-                            </a>
-                        </div>
-
-                        <!-- Right actions -->
-                        <div class="right-actions">
-                            {% if incident.status == 'CLOSED' %}
-                                {% if user|has_perm:'CLOSE_INJURY' %}
-                                    <form method="POST"
-                                          action="{% url 'accidents:incident_reopen' incident.pk %}">
-                                        {% csrf_token %}
-                                        <button type="submit"
-                                                class="btn btn-warning"
-                                                onclick="return confirm('Are you sure you want to reopen this incident?')">
-                                            <i class="fas fa-redo mr-1"></i> Reopen Incident
-                                        </button>
-                                    </form>
-                                {% endif %}
-                            {% else %}
-                                {% if user|has_perm:'CLOSE_INJURY' %}
-                                    <a href="{% url 'accidents:incident_closure_check' incident.pk %}"
-                                       class="btn btn-success">
-                                        <i class="fas fa-check-circle mr-1"></i> Close Injury
-                                    </a>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div>
+        <h1>Investigation Report</h1>
+        <p class="subtitle">
+          {{ investigation.incident.report_number }} - {{ investigation.incident.incident_title|default:"Incident Report" }}
+        </p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INCIDENT HEADER CARD                                        -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-warning">
+      <h3>
+        <i class="fas fa-file-alt"></i>
+        Investigation Report
+      </h3>
+    </div>
+    <div class="card-body-custom">
+      <!-- Header Row -->
+      <div class="row align-items-center mb-3">
+        <div class="col-md-8">
+          <h4 class="mb-1 font-weight-bold" style="color: var(--text-primary);">
+            {{ incident.report_number }} - {{ incident.incident_title|default:"Incident Report" }}
+          </h4>
+          <div class="d-flex flex-wrap gap-2" style="gap: 6px;">
+            <span class="dash-badge badge-dark">{{ incident.incident_type.name }}</span>
+            <span class="dash-badge badge-info">Status: {{ incident.get_status_display }}</span>
+            {% if incident.incident_type.code == 'LTI' %}
+              <span class="dash-badge badge-danger">High Severity</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-4 text-md-right mt-2 mt-md-0">
+          <small class="text-muted d-block">Reported On: <strong>{{ incident.reported_date|date:"d M Y H:i" }}</strong></small>
+        </div>
+      </div>
+
+      <!-- Summary Row -->
+      <div class="dash-summary-row">
+        <div class="dash-summary-item">
+          <span class="label">Injury Date &amp; Time</span>
+          <span class="value">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Location / Plant</span>
+          <span class="value">{{ incident.plant.name }} - {{ incident.location.name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Affected Person</span>
+          <span class="value text-teal">{{ incident.affected_person_name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Department</span>
+          <span class="value">{{ incident.affected_person_department.name|default:"N/A" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INVESTIGATION DETAILS                                       -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-info">
+      <h5>
+        <i class="fas fa-clipboard-list"></i>
+        Investigation Details
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Investigation Date</span>
+          <p class="info-value">{{ investigation.investigation_date|date:"d M Y" }}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Lead Investigator</span>
+          <p class="info-value">{{ investigation.investigator.get_full_name }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <span class="info-label">Investigation Team Members Emails</span>
+          <p class="info-value" style="font-weight: 400;">{{ investigation.investigation_team }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- APPROVAL STATUS ALERT                                       -->
+  <!-- ========================================================== -->
+  {% with incident=investigation.incident %}
+    {% if incident.approval_status == 'PENDING' %}
+    <div class="dash-alert alert-warning">
+      <i class="fas fa-clock"></i>
+      <div class="alert-content">
+        <strong>Status:</strong> This investigation report is currently pending approval.
+      </div>
+    </div>
+    {% elif incident.approval_status == 'APPROVED' %}
+    <div class="dash-alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      <div class="alert-content">
+        <strong>Status:</strong> Approved by <strong>{{ incident.approved_by.get_full_name }}</strong> on {{ incident.approved_date|date:"d M Y" }}.
+      </div>
+    </div>
+    {% elif incident.approval_status == 'REJECTED' %}
+    <div class="dash-alert alert-danger">
+      <i class="fas fa-times-circle"></i>
+      <div class="alert-content">
+        <strong>Status:</strong> This report has been rejected.
+        <p><strong>Remarks:</strong> {{ incident.rejection_remarks|linebreaks }}</p>
+      </div>
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- ========================================================== -->
+  <!-- FINDINGS                                                    -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-danger">
+      <h5>
+        <i class="fas fa-exclamation-triangle"></i>
+        Findings
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <!-- Sequence of Events -->
+      <div class="mb-3">
+        <span class="info-label">Sequence of Events</span>
+        <div class="dash-content-block border-danger">
+          <p>{{ investigation.sequence_of_events|linebreaks }}</p>
+        </div>
+      </div>
+
+      <!-- Root Cause Analysis -->
+      <div class="mb-3">
+        <span class="info-label">Root Cause Analysis</span>
+        <div class="dash-content-block border-danger">
+          <p>{{ investigation.root_cause_analysis|linebreaks }}</p>
+        </div>
+      </div>
+
+      <!-- Personal Factors -->
+      {% if investigation.personal_factors %}
+      <div class="mb-3">
+        <span class="info-label">Personal Factors</span>
+        <div class="pt-1">
+          {% for factor in investigation.personal_factors %}
+            <span class="dash-badge badge-warning mr-1 mb-1">{{ factor }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Job Factors -->
+      {% if investigation.job_factors %}
+      <div class="mb-3">
+        <span class="info-label">Job Factors</span>
+        <div class="pt-1">
+          {% for factor in investigation.job_factors %}
+            <span class="dash-badge badge-info mr-1 mb-1">{{ factor }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- EVIDENCE & STATEMENTS                                       -->
+  <!-- ========================================================== -->
+  {% if investigation.evidence_collected or investigation.witness_statements %}
+  <div class="dash-card">
+    <div class="card-header-custom card-header-teal">
+      <h5>
+        <i class="fas fa-file-alt"></i>
+        Evidence &amp; Statements
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      {% if investigation.evidence_collected %}
+      <div class="mb-3">
+        <span class="info-label">Evidence Collected</span>
+        <div class="dash-content-block border-teal">
+          <p>{{ investigation.evidence_collected|linebreaks }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if investigation.witness_statements %}
+      <div class="mb-3">
+        <span class="info-label">Witness Statements</span>
+        <div class="dash-content-block border-teal">
+          <p>{{ investigation.witness_statements|linebreaks }}</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- RECOMMENDATIONS                                             -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-success">
+      <h5>
+        <i class="fas fa-lightbulb"></i>
+        Recommendations
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <!-- Immediate Corrective Actions -->
+      <div class="mb-3">
+        <span class="info-label">Immediate Corrective Actions</span>
+        <div class="dash-content-block border-success">
+          <p>{{ investigation.immediate_corrective_actions|linebreaks }}</p>
+        </div>
+      </div>
+
+      <!-- Preventive Measures -->
+      <div class="mb-3">
+        <span class="info-label">Preventive Measures</span>
+        <div class="dash-content-block border-success">
+          <p>{{ investigation.preventive_measures|linebreaks }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION PLAN                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-primary">
+      <h5>
+        <i class="fas fa-tasks"></i>
+        Action Plan
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      {% if investigation.incident.action_items.exists %}
+        {% for action in investigation.incident.action_items.all %}
+        <div class="dash-action-item">
+          <div class="action-title">
+            <i class="fas fa-check-circle" style="color: var(--primary-teal);"></i>
+            Action Item
+          </div>
+          <div class="action-desc">{{ action.action_description|linebreaks }}</div>
+          <div class="action-meta">
+            <span>
+              <span class="meta-label">Target Date:</span>
+              <span class="meta-value">{{ action.target_date|date:"d M Y" }}</span>
+            </span>
+            <span>
+              <span class="meta-label">Status:</span>
+              <span class="dash-badge 
+                {% if action.status == 'COMPLETED' %}badge-success
+                {% elif action.is_overdue %}badge-danger
+                {% else %}badge-warning{% endif %}">
+                {{ action.get_status_display }}
+              </span>
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted font-italic" style="font-size: 14px;">No action items defined.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SIGN-OFF                                                    -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom">
+      <h5>
+        <i class="fas fa-pen"></i>
+        Sign-off
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Completed By</span>
+          <p class="info-value">{{ investigation.completed_by.get_full_name }}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Completed Date</span>
+          <p class="info-value">{{ investigation.completed_date|date:"d M Y" }}</p>
+        </div>
+      </div>
+
+      {% if investigation.reviewed_by %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Reviewed By</span>
+          <p class="info-value">{{ investigation.reviewed_by.get_full_name }}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Reviewed Date</span>
+          <p class="info-value">{{ investigation.reviewed_date|date:"d M Y" }}</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION BUTTONS                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-footer-custom">
+      <div class="action-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <!-- Left actions -->
+        <div class="left-actions d-flex gap-2">
+          <a href="{{ cancel_url }}" class="btn-dash btn-dash-primary">
+            <i class="fas fa-arrow-left"></i> Back to Incident
+          </a>
+        </div>
+
+        <!-- Right actions -->
+        <div class="right-actions d-flex gap-2">
+          {% if incident.status == 'CLOSED' %}
+            {% if user|has_perm:'CLOSE_INJURY' %}
+              <form method="POST" action="{% url 'accidents:incident_reopen' incident.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-dash btn-dash-warning" onclick="return confirm('Are you sure you want to reopen this incident?')">
+                  <i class="fas fa-redo"></i> Reopen Incident
+                </button>
+              </form>
+            {% endif %}
+          {% else %}
+            {% if user|has_perm:'CLOSE_INJURY' %}
+              <a href="{% url 'accidents:incident_closure_check' incident.pk %}" class="btn-dash btn-dash-success">
+                <i class="fas fa-check-circle"></i> Close Injury
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}

@@ -1,336 +1,1014 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Closure Verification - {{ incident.report_number }}{% endblock %}
-{% block page_title %}Closure Verification - {{ incident.report_number }}{% endblock %}
+{% block title %}Closure Verification - {{ incident.report_number }} | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:dashboard' %}">Injury Management</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_list' %}">All Injuries</a></li>
-<li class="breadcrumb-item">Close Injury</li>
+{% block extra_css %}
+<style>
+  /* ===== CLOSURE VERIFICATION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h3,
+  .dash-card .card-header-custom h4,
+  .dash-card .card-header-custom h5 {
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h3 i,
+  .dash-card .card-header-custom h4 i,
+  .dash-card .card-header-custom h5 i {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  .dash-card .card-footer-custom {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+  }
+
+  /* ===== CARD HEADER VARIANTS ===== */
+  .card-header-teal {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-teal h3,
+  .card-header-teal h4,
+  .card-header-teal h5 { color: white; }
+
+  .card-header-gold {
+    background: #fffbeb;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-gold h3,
+  .card-header-gold h4,
+  .card-header-gold h5 { color: var(--secondary-gold); }
+  .card-header-gold i { color: var(--secondary-gold); }
+
+  .card-header-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .card-header-success h3,
+  .card-header-success h4,
+  .card-header-success h5 { color: white; }
+
+  .card-header-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .card-header-danger h3,
+  .card-header-danger h4,
+  .card-header-danger h5 { color: white; }
+
+  .card-header-blue {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-blue h3,
+  .card-header-blue h4,
+  .card-header-blue h5 { color: white; }
+
+  .card-header-info {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-info h3,
+  .card-header-info h4,
+  .card-header-info h5 { color: var(--primary-teal); }
+  .card-header-info i { color: var(--primary-teal); }
+
+  .card-header-secondary {
+    background: #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-secondary h3,
+  .card-header-secondary h4,
+  .card-header-secondary h5 { color: var(--text-secondary); }
+
+  /* ========================================================== */
+  /* BADGES                                                       */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+  .dash-badge.badge-info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* SUMMARY ROW                                                 */
+  /* ========================================================== */
+  .dash-summary-row {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .dash-summary-item .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .dash-summary-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .dash-summary-item .value.text-teal { color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-success {
+    background: #dcfce7;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-green);
+  }
+  .alert-custom.alert-success i { color: var(--secondary-green); }
+
+  .alert-custom.alert-danger {
+    background: #fef2f2;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-red);
+  }
+  .alert-custom.alert-danger i { color: var(--secondary-red); }
+
+  .alert-custom.alert-warning {
+    background: #fffbeb;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-gold);
+  }
+  .alert-custom.alert-warning i { color: var(--secondary-gold); }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* INFO BOXES                                                  */
+  /* ========================================================== */
+  .dash-info-box {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .dash-info-box:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .dash-info-box .info-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .dash-info-box .info-icon.primary { background: var(--primary-teal); }
+  .dash-info-box .info-icon.success { background: var(--secondary-green); }
+  .dash-info-box .info-icon.danger { background: var(--secondary-red); }
+
+  .dash-info-box .info-content {
+    flex: 1;
+  }
+
+  .dash-info-box .info-content .info-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .dash-info-box .info-content .info-number {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                       */
+  /* ========================================================== */
+  .dash-table {
+    font-size: 14px;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* FILE DROP AREA                                              */
+  /* ========================================================== */
+  .file-drop-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+    cursor: pointer;
+  }
+
+  .file-drop-area:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .file-drop-area .file-drop-zone-title {
+    pointer-events: none;
+  }
+
+  .file-drop-area .file-drop-zone-title i {
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  .file-drop-area .file-drop-message {
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 8px 0 4px 0;
+  }
+
+  .file-drop-area input[type="file"] {
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+  }
+
+  .file-drop-area .file-drop-zone-title {
+    position: relative;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash:active {
+    transform: translateY(0);
+  }
+
+  .btn-dash-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-dash-success:hover {
+    background: #16a34a;
+    color: white;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-dash-primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash-primary:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-dash-disabled {
+    background: #e2e8f0;
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+  .btn-dash-disabled:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-summary-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-card .card-footer-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-card .card-footer-custom .btn-dash {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-summary-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .dash-summary-item {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .dash-info-box {
+      padding: 10px 14px;
+    }
+
+    .dash-info-box .info-content .info-number {
+      font-size: 18px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .file-drop-area {
+      padding: 20px 16px;
+    }
+
+    .btn-dash {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .dash-info-box .info-content .info-number {
+      font-size: 16px;
+    }
+
+    .file-drop-area .file-drop-message {
+      font-size: 13px;
+    }
+
+    .file-drop-area small {
+      font-size: 12px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            
-            <!-- Header -->
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h3 class="card-title">
-                        <i class="fas fa-check-circle mr-2"></i>Injury Closure Verification
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-8">
-                            <h4 class="mb-1 font-weight-bold">{{ incident.report_number }} - {{ incident.incident_title|default:"Incident Report" }}</h4>
-                            <div class="d-flex flex-wrap">
-                                <span class="badge badge-dark mr-2 mb-1">{{ incident.incident_type.name }}</span>
-                                <span class="badge badge-info mr-2 mb-1">Status: {{ incident.get_status_display }}</span>
-                                <!-- NEW: Show Approval Status Badge -->
-                                <span class="badge 
-                                    {% if incident.approval_status == 'APPROVED' %}badge-success
-                                    {% elif incident.approval_status == 'REJECTED' %}badge-danger
-                                    {% else %}badge-secondary{% endif %} mr-2 mb-1">
-                                    Approval: {{ incident.get_approval_status_display }}
-                                </span>
-                                {% if incident.incident_type == 'LTI' %}
-                                    <span class="badge badge-danger mb-1">High Severity</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-md-right mt-2 mt-md-0">
-                            <small class="text-muted d-block">Reported On: <strong>{{ incident.reported_date|date:"d M Y H:i" }}</strong></small>
-                        </div>
-                    </div>
 
-                    <div class="row bg-light p-3 rounded mx-0">
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Injury Date & Time</small>
-                            <span class="font-weight-bold">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Location / Plant</small>
-                            <span class="font-weight-bold">{{ incident.plant.name }} - {{ incident.location.name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Affected Person</small>
-                            <span class="font-weight-bold text-primary">{{ incident.affected_person_name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                            <small class="text-muted d-block">Department</small>
-                            <span class="font-weight-bold">{{ incident.affected_person_department.name|default:"N/A" }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid" style="padding: 0;">
 
-            <!-- Approval Status Check First -->
-            {% if incident.approval_status != 'APPROVED' %}
-            <div class="card mt-3">
-                <div class="card-header bg-secondary">
-                    <h4 class="card-title text-white mb-0">
-                        <i class="fas fa-gavel mr-2"></i>Approval Status
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        <strong>Pending Approval:</strong> This injury report must be approved before it can be closed.
-                    </div>
-                    <!-- <a href="{% url 'accidents:incident_approve' incident.pk %}" class="btn btn-primary">
-                        <i class="fas fa-check-double mr-1"></i>Go to Approval Page
-                    </a> -->
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Closure Eligibility Check -->
-            <div class="card mt-3">
-                <div class="card-header {% if can_close %}bg-success{% else %}bg-danger{% endif %}">
-                    <h4 class="card-title text-white mb-0">
-                        {% if can_close %}
-                            <i class="fas fa-check-circle mr-2"></i>Ready for Closure
-                        {% else %}
-                            <i class="fas fa-times-circle mr-2"></i>Cannot Close Injury
-                        {% endif %}
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if can_close %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            All requirements met. This injury is ready to be closed.
-                        </div>
-                    {% else %}
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                            <strong>Closure Blocked:</strong> {{ closure_message }}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Investigation Status -->
-            <div class="card mt-3">
-                <div class="card-header bg-primary">
-                    <h5 class="card-title text-white mb-0">
-                        <i class="fas fa-search mr-2"></i>Investigation Status
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if investigation %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Investigation Completed:</strong> 
-                                    {% if incident.investigation_completed %}
-                                        <span class="badge badge-success">Yes</span>
-                                    {% else %}
-                                        <span class="badge badge-danger">No</span>
-                                    {% endif %}
-                                </p>
-                                <p><strong>Completed Date:</strong> {{ incident.investigation_completed_date|date:"d M Y"|default:"Pending" }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Investigator:</strong> {{ investigation.investigator.get_full_name }}</p>
-                                <p><strong>Root Cause Identified:</strong> 
-                                    {% if investigation.root_cause %}
-                                        <span class="badge badge-success">Yes</span>
-                                    {% else %}
-                                        <span class="badge badge-warning">No</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        <a href="{% url 'accidents:investigation_detail' investigation.pk %}" class="btn btn-sm btn-info">
-                            <i class="fas fa-eye mr-1"></i>View Investigation Report
-                        </a>
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                            No investigation report found
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Action Items and Attachment Section -->
-            <!-- This section is only relevant if the incident is approved -->
-            {% if incident.approval_status == 'APPROVED' %}
-                <div class="card mt-3">
-                    <div class="card-header bg-info">
-                        <h5 class="card-title text-white mb-0">
-                            <i class="fas fa-tasks mr-2"></i>Action Items & Attachment
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Action Items Status -->
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="info-box bg-light">
-                                    <span class="info-box-icon bg-primary"><i class="fas fa-list"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Total Actions</span>
-                                        <span class="info-box-number">{{ total_actions }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box bg-light">
-                                    <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Completed</span>
-                                        <span class="info-box-number">{{ completed_count }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box bg-light">
-                                    <span class="info-box-icon bg-danger"><i class="fas fa-hourglass-half"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Pending</span>
-                                        <span class="info-box-number">{{ pending_actions.count }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% if pending_actions %}
-                            <h6 class="text-danger">Pending Action Items:</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Action Taken</th>
-                                            <th>Responsible Person</th>
-                                            <th>Target Date</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for action in pending_actions %}
-                                        <tr>
-                                            <td>{{ action.action_description }}</td>
-                                            <td>
-                                                {% for user in action.responsible_person.all %}
-                                                    <span class="badge badge-pill badge-secondary font-weight-normal">{{ user.email }}</span>
-                                                {% empty %}
-                                                    <span class="text-muted">No person assigned</span>
-                                                {% endfor %}
-                                            </td>
-                                            <td>{{ action.target_date|date:"d M Y" }}</td>
-                                            <td><span class="badge badge-warning">{{ action.get_status_display }}</span></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            All action items have been completed!
-                        </div>
-
-                        {# START: Replace the entire form section with this code #}
-                        <hr>
-                        <h5 class="mt-3 font-weight-bold">
-                            <i class="fas fa-paperclip mr-1"></i>Attachment <span class="text-danger">*</span>
-                        </h5>
-                        <p>Please attach the final closure document to proceed. This is required.</p>
-
-                        <!-- The form tag now has an ID for JavaScript to target -->
-                        <form id="attachmentUploadForm" method="post" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            
-                            <!-- This is the styled dropzone -->
-                            <div class="file-drop-area">
-                                <div class="file-drop-zone-title">
-                                    <i class="fas fa-cloud-upload-alt fa-3x text-secondary mb-3"></i>
-                                    <p class="file-drop-message">Click to upload file or drag and drop</p>
-                                    <small class="text-muted">PDF, DOC, Excel, Images (Max 10MB)</small>
-                                </div>
-                                <!-- This is the actual file input, which is now watched by JavaScript -->
-                                {{ attachment_form.attachment }}
-                            </div>
-                            
-                            <!-- NEW: Add a loading indicator, initially hidden -->
-                            <div id="uploading-indicator" style="display: none;" class="alert alert-info mt-3 py-2">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>
-                                <strong>Uploading...</strong> Please wait, the page will refresh automatically.
-                            </div>
-                            
-                            <!-- Display errors if any -->
-                            {% if attachment_form.attachment.errors %}
-                                <div class="invalid-feedback d-block mt-2">
-                                    {{ attachment_form.attachment.errors }}
-                                </div>
-                            {% endif %}
-                            
-                            <!-- Display the name of the currently attached file -->
-                                {% if incident.attachment %}
-                                    <div class="alert alert-info py-2 mt-3">
-                                        <strong>Current File:</strong> 
-                                        <a href="{{ incident.attachment.url }}" target="_blank">{{ incident.attachment.name|truncatechars:50 }}</a>
-                                        <p class="mb-0 small text-muted">Uploading a new file will replace this one.</p>
-                                    </div>
-                                {% endif %}
-                                
-                                <!-- <button type="submit" class="btn btn-primary mt-3">
-                                    <i class="fas fa-upload mr-2"></i>Upload Attachment
-                                </button> -->
-                            </form>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
-
-            <!-- Action Buttons -->
-            <div class="card mt-3">
-                <div class="card-footer">
-                    {% if can_close %}
-                        <a href="{% url 'accidents:incident_close' incident.pk %}" class="btn btn-success btn-lg">
-                            <i class="fas fa-check-circle mr-2"></i>Proceed to Close Injury
-                        </a>
-                    {% else %}
-                        <button class="btn btn-secondary btn-lg" disabled>
-                            <i class="fas fa-lock mr-2"></i>Closure Not Available
-                        </button>
-                    {% endif %}
-                    
-                    <a href="{% url 'accidents:incident_detail' incident.pk %}" class="btn btn-secondary btn-lg ml-2">
-                        <i class="fas fa-arrow-left mr-2"></i>Back to Injury
-                    </a>
-                </div>
-            </div>
-
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div>
+        <h1>Closure Verification</h1>
+        <p class="subtitle">Verify closure requirements for {{ incident.report_number }}</p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INCIDENT HEADER                                             -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-gold">
+      <h3>
+        <i class="fas fa-file-alt"></i>
+        Injury Closure Verification
+      </h3>
+    </div>
+    <div class="card-body-custom">
+      <!-- Header Row -->
+      <div class="row align-items-center mb-3">
+        <div class="col-md-8">
+          <h4 class="mb-1 font-weight-bold" style="color: var(--text-primary);">
+            {{ incident.report_number }} - {{ incident.incident_title|default:"Incident Report" }}
+          </h4>
+          <div class="d-flex flex-wrap gap-2" style="gap: 6px;">
+            <span class="dash-badge badge-dark">{{ incident.incident_type.name }}</span>
+            <span class="dash-badge badge-info">Status: {{ incident.get_status_display }}</span>
+            <span class="dash-badge 
+              {% if incident.approval_status == 'APPROVED' %}badge-success
+              {% elif incident.approval_status == 'REJECTED' %}badge-danger
+              {% else %}badge-secondary{% endif %}">
+              Approval: {{ incident.get_approval_status_display }}
+            </span>
+            {% if incident.incident_type.code == 'LTI' %}
+              <span class="dash-badge badge-danger">High Severity</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-4 text-md-right mt-2 mt-md-0">
+          <small class="text-muted d-block">Reported On: <strong>{{ incident.reported_date|date:"d M Y H:i" }}</strong></small>
+        </div>
+      </div>
+
+      <!-- Summary Row -->
+      <div class="dash-summary-row">
+        <div class="dash-summary-item">
+          <span class="label">Injury Date &amp; Time</span>
+          <span class="value">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Location / Plant</span>
+          <span class="value">{{ incident.plant.name }} - {{ incident.location.name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Affected Person</span>
+          <span class="value text-teal">{{ incident.affected_person_name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Department</span>
+          <span class="value">{{ incident.affected_person_department.name|default:"N/A" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- APPROVAL STATUS CHECK                                       -->
+  <!-- ========================================================== -->
+  {% if incident.approval_status != 'APPROVED' %}
+  <div class="dash-card">
+    <div class="card-header-custom card-header-secondary">
+      <h4>
+        <i class="fas fa-gavel"></i>
+        Approval Status
+      </h4>
+    </div>
+    <div class="card-body-custom">
+      <div class="alert-custom alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div class="alert-content">
+          <strong>Pending Approval:</strong> This injury report must be approved before it can be closed.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- CLOSURE ELIGIBILITY                                        -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom {% if can_close %}card-header-success{% else %}card-header-danger{% endif %}">
+      <h4>
+        {% if can_close %}
+          <i class="fas fa-check-circle"></i> Ready for Closure
+        {% else %}
+          <i class="fas fa-times-circle"></i> Cannot Close Injury
+        {% endif %}
+      </h4>
+    </div>
+    <div class="card-body-custom">
+      {% if can_close %}
+        <div class="alert-custom alert-success">
+          <i class="fas fa-info-circle"></i>
+          <div class="alert-content">All requirements met. This injury is ready to be closed.</div>
+        </div>
+      {% else %}
+        <div class="alert-custom alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">
+            <strong>Closure Blocked:</strong> {{ closure_message }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INVESTIGATION STATUS                                        -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-blue">
+      <h5>
+        <i class="fas fa-search"></i>
+        Investigation Status
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      {% if investigation %}
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Investigation Completed:</strong> 
+              {% if incident.investigation_completed %}
+                <span class="dash-badge badge-success">Yes</span>
+              {% else %}
+                <span class="dash-badge badge-danger">No</span>
+              {% endif %}
+            </p>
+            <p><strong>Completed Date:</strong> {{ incident.investigation_completed_date|date:"d M Y"|default:"Pending" }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Investigator:</strong> {{ investigation.investigator.get_full_name }}</p>
+            <p><strong>Root Cause Identified:</strong> 
+              {% if investigation.root_cause_analysis %}
+                <span class="dash-badge badge-success">Yes</span>
+              {% else %}
+                <span class="dash-badge badge-warning">No</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <a href="{% url 'accidents:investigation_detail' investigation.pk %}" class="btn-dash btn-dash-primary" style="font-size: 13px; padding: 6px 16px;">
+          <i class="fas fa-eye"></i> View Investigation Report
+        </a>
+      {% else %}
+        <div class="alert-custom alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">No investigation report found</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION ITEMS & ATTACHMENT                                   -->
+  <!-- ========================================================== -->
+  {% if incident.approval_status == 'APPROVED' %}
+  <div class="dash-card">
+    <div class="card-header-custom card-header-info">
+      <h5>
+        <i class="fas fa-tasks"></i>
+        Action Items &amp; Attachment
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <!-- Action Items Status -->
+      <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+          <div class="dash-info-box">
+            <div class="info-icon primary"><i class="fas fa-list"></i></div>
+            <div class="info-content">
+              <span class="info-text">Total Actions</span>
+              <div class="info-number">{{ total_actions }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="dash-info-box">
+            <div class="info-icon success"><i class="fas fa-check"></i></div>
+            <div class="info-content">
+              <span class="info-text">Completed</span>
+              <div class="info-number">{{ completed_count }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="dash-info-box">
+            <div class="info-icon danger"><i class="fas fa-hourglass-half"></i></div>
+            <div class="info-content">
+              <span class="info-text">Pending</span>
+              <div class="info-number">{{ pending_actions.count }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if pending_actions %}
+        <h6 style="color: var(--secondary-red); font-weight: 600; margin-bottom: 10px;">
+          <i class="fas fa-exclamation-triangle"></i> Pending Action Items:
+        </h6>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Action Taken</th>
+                <th>Responsible Person</th>
+                <th>Target Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for action in pending_actions %}
+              <tr>
+                <td data-label="Action Taken">{{ action.action_description }}</td>
+                <td data-label="Responsible Person">
+                  {% for user in action.responsible_person.all %}
+                    <span class="dash-badge badge-secondary" style="font-size: 12px; padding: 2px 12px;">{{ user.email }}</span>
+                  {% empty %}
+                    <span class="text-muted">No person assigned</span>
+                  {% endfor %}
+                </td>
+                <td data-label="Target Date">{{ action.target_date|date:"d M Y" }}</td>
+                <td data-label="Status"><span class="dash-badge badge-warning">{{ action.get_status_display }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert-custom alert-success">
+          <i class="fas fa-check-circle"></i>
+          <div class="alert-content">All action items have been completed!</div>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 16px 0;">
+
+        <!-- Attachment Upload -->
+        <h5 style="font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+          <i class="fas fa-paperclip" style="color: var(--primary-teal);"></i>
+          Attachment <span style="color: var(--secondary-red);">*</span>
+        </h5>
+        <p style="color: var(--text-muted); font-size: 14px;">Please attach the final closure document to proceed. This is required.</p>
+
+        <form id="attachmentUploadForm" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <div class="file-drop-area">
+            <div class="file-drop-zone-title">
+              <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--text-muted); opacity: 0.5;"></i>
+              <p class="file-drop-message">Click to upload file or drag and drop</p>
+              <small style="color: var(--text-muted);">PDF, DOC, Excel, Images (Max 10MB)</small>
+            </div>
+            {{ attachment_form.attachment }}
+          </div>
+          
+          <div id="uploading-indicator" style="display: none;" class="alert-custom alert-info mt-3 py-2">
+            <i class="fas fa-spinner fa-spin"></i>
+            <div class="alert-content">
+              <strong>Uploading...</strong> Please wait, the page will refresh automatically.
+            </div>
+          </div>
+          
+          {% if attachment_form.attachment.errors %}
+            <div class="text-danger mt-2" style="font-size: 13px;">
+              {{ attachment_form.attachment.errors }}
+            </div>
+          {% endif %}
+          
+          {% if incident.attachment %}
+            <div class="alert-custom alert-info py-2 mt-3">
+              <i class="fas fa-paperclip"></i>
+              <div class="alert-content">
+                <strong>Current File:</strong> 
+                <a href="{{ incident.attachment.url }}" target="_blank" style="color: var(--primary-teal); text-decoration: none;">
+                  {{ incident.attachment.name|truncatechars:50 }}
+                </a>
+                <p class="mb-0 small text-muted">Uploading a new file will replace this one.</p>
+              </div>
+            </div>
+          {% endif %}
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- ACTION BUTTONS                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-footer-custom">
+      {% if can_close %}
+        <a href="{% url 'accidents:incident_close' incident.pk %}" class="btn-dash btn-dash-success">
+          <i class="fas fa-check-circle"></i> Proceed to Close Injury
+        </a>
+      {% else %}
+        <button class="btn-dash btn-dash-disabled" disabled>
+          <i class="fas fa-lock"></i> Closure Not Available
+        </button>
+      {% endif %}
+      
+      <a href="{% url 'accidents:incident_detail' incident.pk %}" class="btn-dash btn-dash-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Injury
+      </a>
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Find the file input field generated by Django's form
     const fileInput = document.querySelector('#id_attachment');
-    // Find the form using the ID we added
     const attachmentForm = document.querySelector('#attachmentUploadForm');
-    // Find the loading indicator
     const uploadingIndicator = document.querySelector('#uploading-indicator');
 
-    // Ensure all elements are present before adding the listener
     if (fileInput && attachmentForm && uploadingIndicator) {
-        
-        // Listen for the 'change' event on the file input
         fileInput.addEventListener('change', function() {
-            // Check if the user has actually selected a file
             if (this.files.length > 0) {
-                // Show the "Uploading..." message to the user
                 uploadingIndicator.style.display = 'block';
-                
-                // Automatically submit the form
                 attachmentForm.submit();
             }
         });

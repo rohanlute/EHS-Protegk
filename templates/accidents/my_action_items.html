@@ -1,205 +1,815 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}My Injury Action Items{% endblock %}
-{% block page_title %}My Injury Action Items{% endblock %}
+{% block title %}My Injury Action Items | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">My Action Items</li>
+{% block extra_css %}
+<style>
+  /* ===== MY ACTION ITEMS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS                                            */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-card {
+    border-radius: var(--radius-card);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+  }
+
+  .dash-stat-card .stat-icon {
+    font-size: 32px;
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-card .stat-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card .stat-info .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: white;
+  }
+
+  .dash-stat-card .stat-info .stat-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+  }
+
+  .dash-stat-card.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card.gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  .dash-stat-card.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-main-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-main-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-main-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-main-card .card-header-custom h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-main-card .card-header-custom h3 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-main-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  /* ========================================================== */
+  /* FILTER SECTION                                              */
+  /* ========================================================== */
+  .dash-filter-section {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .dash-filter-section .filter-select {
+    padding: 8px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    min-width: 200px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .dash-filter-section .filter-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .btn-filter-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-filter-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  .btn-reset-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+  }
+
+  .btn-reset-teal:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES - WIDE & FIT PROPERLY                         */
+  /* ========================================================== */
+  .dash-table-wrapper {
+    overflow-x: auto;
+    margin: 0 -4px;
+  }
+
+  .dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 820px;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .dash-table thead th.text-center {
+    text-align: center;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dash-table tbody tr.overdue {
+    background: #fef2f2;
+  }
+
+  .dash-table tbody tr.overdue:hover {
+    background: #fee2e2;
+  }
+
+  /* Column Widths */
+  .dash-table .col-incident { width: 14%; }
+  .dash-table .col-action { width: 26%; }
+  .dash-table .col-target { width: 13%; }
+  .dash-table .col-status { width: 14%; }
+  .dash-table .col-created { width: 15%; }
+  .dash-table .col-actions { width: 18%; text-align: center; }
+
+  /* ===== BADGES ===== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+
+  /* ===== LINKS ===== */
+  .dash-link {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-size: 13px;
+  }
+
+  .dash-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                              */
+  /* ========================================================== */
+  .btn-action-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .btn-action:hover {
+    text-decoration: none;
+  }
+
+  .btn-action.view:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-action.complete:hover {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #16a34a;
+  }
+
+  .btn-action.attachment:hover {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #d97706;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 48px;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .dash-empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-stat-card {
+      padding: 14px 16px;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 22px;
+    }
+
+    .dash-stat-card .stat-icon {
+      font-size: 26px;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-main-card .card-header-custom {
+      padding: 10px 14px;
+    }
+
+    .dash-filter-section {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px 14px;
+    }
+
+    .dash-filter-section .filter-select {
+      min-width: auto;
+    }
+
+    .btn-filter-teal,
+    .btn-reset-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Table becomes card-style on mobile */
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .btn-action-group {
+      flex-wrap: nowrap;
+    }
+
+    .btn-action {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      font-size: 11px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 20px;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-table tbody td {
+      padding: 6px 10px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 11px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .btn-action {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      font-size: 10px;
+    }
+
+    .dash-link {
+      font-size: 12px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Statistics Cards -->
-   <div class="row mb-4"> 
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-primary text-white shadow">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-uppercase mb-1">Total Assigned</h6>
-                            <h2 class="mb-0">{{ total_assigned }}</h2>
-                        </div>
-                        <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning text-dark shadow">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-uppercase mb-1">Pending</h6>
-                            <h2 class="mb-0">{{ pending_count }}</h2>
-                        </div>
-                        <i class="fas fa-clock fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-info text-white shadow">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-uppercase mb-1">In Progress</h6>
-                            {# Note: You need to pass 'in_progress_count' from your view #}
-                            <h2 class="mb-0">{{ in_progress_count|default:0 }}</h2>
-                        </div>
-                        <i class="fas fa-spinner fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-danger text-white shadow">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="text-uppercase mb-1">Overdue</h6>
-                            <h2 class="mb-0">{{ overdue_count }}</h2>
-                        </div>
-                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-tasks"></i>
+      </div>
+      <div>
+        <h1>My Injury Action Items</h1>
+        <p class="subtitle">Track and manage your assigned injury action items</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <div class="dash-stat-card teal">
+      <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total_assigned }}</div>
+        <div class="stat-label">Total Assigned</div>
+      </div>
     </div>
 
-    <!-- Main Card -->
-    <div class="card shadow">
-        <div class="card-header bg-light">
-            <h3 class="card-title mb-0"><i class="fas fa-tasks text-primary mr-2"></i> My Assigned Injury Action Items</h3>
-        </div>
-        <div class="card-body">
-            <!-- Filters -->
-            <form method="GET" class="mb-4">
-                <div class="row">
-                    <div class="col-md-5 mb-2">
-                        <select name="status" class="form-control">
-                            <option value="">All Statuses</option>
-                            {% for key, value in status_choices %}
-                            <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ value }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4 mb-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> Filter</button>
-                        <a href="{% url 'accidents:my_action_items' %}" class="btn btn-secondary"><i class="fas fa-redo"></i> Reset</a>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Action Items Table -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="thead-light">
-                        <tr class="text-center">
-                            <th class="text-left">Incident No.</th>
-                            <th class="text-left">Action</th>
-                            <th style="width: 130px;">Target Date</th>
-                            <th style="width: 140px;">Status</th>
-                            <th style="width: 150px;">Created By</th>
-                            <th style="width: 140px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in action_items %}
-                        <tr {% if item.is_overdue %}class="table-danger"{% endif %}>
-                            
-                            <!-- Incident -->
-                            <td>
-                                <a href="{% url 'accidents:incident_detail' item.incident.pk %}" 
-                                class="font-weight-bold d-block">
-                                    {{ item.incident.report_number }}
-                                </a>
-                                <small class="text-muted">
-                                    {{ item.incident.plant.name }}
-                                </small>
-                            </td>
-
-                            <!-- Action Description -->
-                            <td>
-                                {{ item.action_description|truncatewords:15 }}
-                            </td>
-
-                            <!-- Target Date -->
-                            <td class="text-center">
-                                <div>{{ item.target_date|date:"d M Y" }}</div>
-                                {% if item.is_overdue %}
-                                    <span class="badge badge-danger mt-1">Overdue</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- Status -->
-                            <td class="text-center">
-                                {% if item.status == 'COMPLETED' or item.is_done_by_me %}
-                                    <span class="badge badge-success px-3 py-2">
-                                        Completed {% if item.status != 'COMPLETED' %}{% endif %}
-                                    </span>
-                                {% elif item.status == 'IN_PROGRESS' %}
-                                    <span class="badge badge-info px-3 py-2">
-                                        {{ item.get_status_display }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-warning px-3 py-2">
-                                        {{ item.get_status_display }}
-                                    </span>
-                                {% endif %}
-                            </td>
-
-                            <!-- Created By -->
-                            <td class="text-center">
-                                {{ item.created_by.get_full_name|default:"N/A" }}
-                            </td>
-
-                            <!-- Action Buttons -->
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{% url 'accidents:incident_detail' item.incident.pk %}" 
-                                    class="btn btn-info" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-
-                                    {% if not item.is_done_by_me and item.status != 'COMPLETED' %}
-                                    <a href="{% url 'accidents:action_item_complete' item.pk %}" 
-                                    class="btn btn-success" title="Mark Complete">
-                                        <i class="fas fa-check-circle"></i>
-                                    </a>
-                                    {% endif %}
-
-                                    {% if item.attachment %}
-                                    <a href="{{ item.attachment.url }}" 
-                                    class="btn btn-secondary" 
-                                    target="_blank" 
-                                    title="Attachment">
-                                        <i class="fas fa-paperclip"></i>
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <div class="alert alert-info mb-0">
-                                    No action items assigned to you.
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination (Add if you need it) -->
-        </div>
+    <div class="dash-stat-card gold">
+      <div class="stat-icon"><i class="fas fa-clock"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ pending_count }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
     </div>
+
+    <div class="dash-stat-card blue">
+      <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ in_progress_count|default:0 }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card red">
+      <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ overdue_count }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-main-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-tasks"></i>
+        My Assigned Injury Action Items
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+
+      <!-- Filters -->
+      <div class="dash-filter-section">
+        <form method="GET" class="d-flex flex-wrap align-items-center gap-2" style="width: 100%;">
+          <select name="status" class="filter-select">
+            <option value="">All Statuses</option>
+            {% for key, value in status_choices %}
+            <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-filter-teal">
+            <i class="fas fa-filter"></i> Filter
+          </button>
+          <a href="{% url 'accidents:my_action_items' %}" class="btn-reset-teal">
+            <i class="fas fa-redo"></i> Reset
+          </a>
+        </form>
+      </div>
+
+      <!-- Action Items Table - WIDE & FITTED -->
+      <div class="dash-table-wrapper">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th class="col-incident">Incident No.</th>
+              <th class="col-action">Action</th>
+              <th class="col-target">Target Date</th>
+              <th class="col-status">Status</th>
+              <th class="col-created">Created By</th>
+              <th class="col-actions text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in action_items %}
+            <tr {% if item.is_overdue %}class="overdue"{% endif %}>
+              <td data-label="Incident No.">
+                <a href="{% url 'accidents:incident_detail' item.incident.pk %}" class="dash-link">
+                  {{ item.incident.report_number }}
+                </a>
+                <br>
+                <small class="text-muted" style="font-size: 11px;">{{ item.incident.plant.name|truncatechars:18 }}</small>
+              </td>
+
+              <td data-label="Action" style="font-size: 13px;">
+                {{ item.action_description|truncatewords:18 }}
+              </td>
+
+              <td data-label="Target Date" style="text-align: center;">
+                <div>{{ item.target_date|date:"d M Y" }}</div>
+                {% if item.is_overdue %}
+                  <span class="dash-badge badge-danger mt-1" style="font-size: 10px; padding: 2px 10px;">Overdue</span>
+                {% endif %}
+              </td>
+
+              <td data-label="Status" style="text-align: center;">
+                {% if item.status == 'COMPLETED' or item.is_done_by_me %}
+                  <span class="dash-badge badge-success">Completed</span>
+                {% elif item.status == 'IN_PROGRESS' %}
+                  <span class="dash-badge badge-info">{{ item.get_status_display }}</span>
+                {% else %}
+                  <span class="dash-badge badge-warning">{{ item.get_status_display }}</span>
+                {% endif %}
+              </td>
+
+              <td data-label="Created By" style="text-align: center; font-size: 13px;">
+                {{ item.created_by.get_full_name|default:"N/A" }}
+              </td>
+
+              <td data-label="Actions" style="text-align: center;">
+                <div class="btn-action-group">
+                  <a href="{% url 'accidents:incident_detail' item.incident.pk %}" 
+                     class="btn-action view" title="View Incident">
+                    <i class="fas fa-eye"></i>
+                  </a>
+
+                  {% if not item.is_done_by_me and item.status != 'COMPLETED' %}
+                  <a href="{% url 'accidents:action_item_complete' item.pk %}" 
+                     class="btn-action complete" title="Mark Complete">
+                    <i class="fas fa-check-circle"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if item.attachment %}
+                  <a href="{{ item.attachment.url }}" 
+                     class="btn-action attachment" 
+                     target="_blank" 
+                     title="Attachment">
+                    <i class="fas fa-paperclip"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6">
+                <div class="dash-empty-state">
+                  <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                  <h4>No Action Items</h4>
+                  <p>No action items assigned to you at the moment.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
 </div>
-{% endblock %} 
+
+{% endblock %}

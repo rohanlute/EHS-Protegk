@@ -1,187 +1,799 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Approve Investigation - {{ incident.report_number }}{% endblock %}
-{% block page_title %}Investigation Approval{% endblock %}
+{% block title %}Approve Investigation - {{ incident.report_number }} | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_list' %}">All Incidents</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:incident_detail' incident.pk %}">{{ incident.report_number }}</a></li>
-<li class="breadcrumb-item active">Approval</li>
+{% block extra_css %}
+<style>
+  /* ===== APPROVE INVESTIGATION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h3,
+  .dash-card .card-header-custom h4 {
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h3 i,
+  .dash-card .card-header-custom h4 i {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  /* ===== CARD HEADER VARIANTS ===== */
+  .card-header-teal {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-teal h3,
+  .card-header-teal h4 { color: white; }
+
+  .card-header-warning {
+    background: #fffbeb;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-warning h3,
+  .card-header-warning h4 { color: var(--secondary-gold); }
+  .card-header-warning i { color: var(--secondary-gold); }
+
+  .card-header-info {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-info h3,
+  .card-header-info h4 { color: var(--primary-teal); }
+  .card-header-info i { color: var(--primary-teal); }
+
+  .card-header-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .card-header-success h3,
+  .card-header-success h4 { color: white; }
+  .card-header-success i { color: rgba(255, 255, 255, 0.9); }
+
+  /* ========================================================== */
+  /* BADGES                                                       */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* SUMMARY ROW                                                 */
+  /* ========================================================== */
+  .dash-summary-row {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .dash-summary-item .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .dash-summary-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .dash-summary-item .value.text-teal { color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* DEFINITION LIST                                              */
+  /* ========================================================== */
+  .dash-dl {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px 16px;
+  }
+
+  .dash-dl dt {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .dash-dl dd {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .dash-dl dd p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                       */
+  /* ========================================================== */
+  .dash-table {
+    font-size: 14px;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* APPROVAL CARD                                               */
+  /* ========================================================== */
+  .dash-approval-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 2px solid var(--secondary-green);
+    overflow: hidden;
+    margin-top: 20px;
+  }
+
+  .dash-approval-card .card-body-custom {
+    padding: 24px 28px;
+    text-align: center;
+  }
+
+  .dash-approval-card .lead {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .dash-approval-card .sub-text {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .dash-approval-card .divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 16px 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash:active {
+    transform: translateY(0);
+  }
+
+  .btn-dash-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-dash-success:hover {
+    background: #16a34a;
+    color: white;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-dash-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .btn-dash-danger:hover {
+    background: #b91c1c;
+    color: white;
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-dash-info {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash-info:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* MODAL                                                       */
+  /* ========================================================== */
+  .dash-modal .modal-content {
+    border-radius: var(--radius-card);
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dash-modal .modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background: #fef2f2;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+
+  .dash-modal .modal-header .modal-title {
+    font-weight: 700;
+    color: var(--secondary-red);
+  }
+
+  .dash-modal .modal-footer {
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-summary-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dash-dl {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .dash-dl dt {
+      margin-top: 8px;
+    }
+    .dash-dl dt:first-child {
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-summary-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .dash-summary-item {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .dash-approval-card .card-body-custom {
+      padding: 18px 16px;
+    }
+
+    .dash-approval-card .lead {
+      font-size: 16px;
+    }
+
+    .btn-dash {
+      width: 100%;
+      justify-content: center;
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .dash-modal .modal-dialog {
+      margin: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-approval-card .card-body-custom {
+      padding: 14px 12px;
+    }
+
+    .dash-approval-card .lead {
+      font-size: 15px;
+    }
+
+    .btn-dash {
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+
+    .dash-dl dt {
+      font-size: 12px;
+    }
+    .dash-dl dd {
+      font-size: 13px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            
-            <!-- 1. Main Incident Header Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-file-alt mr-2"></i>Incident Overview
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <!-- Main details with action buttons -->
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-8">
-                            <h4 class="mb-1 font-weight-bold">{{ incident.report_number }}</h4>
-                            <div class="d-flex flex-wrap">
-                                <span class="badge badge-dark mr-2 mb-1">{{ incident.incident_type.name }}</span>
-                                <span class="badge badge-warning mr-2 mb-1">Status: {{ incident.get_status_display }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-md-right mt-2 mt-md-0">
-                            <a href="{% url 'accidents:incident_detail' incident.pk %}" class="btn btn-sm btn-info"><i class="fas fa-eye mr-1"></i> View Full Details</a>
-                            <a href="{% url 'accidents:incident_update' incident.pk %}" class="btn btn-sm btn-secondary"><i class="fas fa-edit mr-1"></i> Edit Incident</a>
-                        </div>
-                    </div>
 
-                    <!-- Light background summary row -->
-                    <div class="row bg-light p-3 rounded mx-0">
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Incident Date & Time</small>
-                            <span class="font-weight-bold">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Location / Plant</small>
-                            <span class="font-weight-bold">{{ incident.plant.name }} - {{ incident.location.name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3 border-right mb-2 mb-md-0">
-                            <small class="text-muted d-block">Affected Person</small>
-                            <span class="font-weight-bold text-primary">{{ incident.affected_person_name }}</span>
-                        </div>
-                        <div class="col-sm-6 col-md-3">
-                            <small class="text-muted d-block">Department</small>
-                            <span class="font-weight-bold">{{ incident.affected_person_department.name|default:"N/A" }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid" style="padding: 0;">
 
-            <!-- 2. Investigation Summary Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-warning d-flex align-items-center">
-                    <h4 class="card-title text-dark mb-0">
-                        <i class="fas fa-search mr-2"></i> Investigation Findings
-                    </h4>
-
-                    <a href="{% url 'accidents:investigation_detail' investigation_report.pk %}"
-                    class="btn btn-sm btn-info ml-auto">
-                        <i class="fas fa-eye mr-1"></i> View Full Report
-                    </a>
-                </div>
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-3 text-muted">Investigator</dt>
-                        <dd class="col-sm-9 font-weight-bold">{{ investigation_report.investigator.get_full_name }}</dd>
-
-                        <dt class="col-sm-3 text-muted">Investigation Date</dt>
-                        <dd class="col-sm-9">{{ investigation_report.investigation_date|date:"d M Y" }}</dd>
-
-                        <dt class="col-sm-3 text-muted">Sequence of Events</dt>
-                        <dd class="col-sm-9">{{ investigation_report.sequence_of_events|linebreaks }}</dd>
-
-                        <dt class="col-sm-3 text-muted">Root Cause Analysis</dt>
-                        <dd class="col-sm-9">{{ investigation_report.root_cause_analysis|linebreaks }}</dd>
-
-                        <dt class="col-sm-3 text-muted">Preventive Measures</dt>
-                        <dd class="col-sm-9">{{ investigation_report.preventive_measures|linebreaks }}</dd>
-                    </dl>
-                </div>
-            </div>
-            
-            <!-- 3. Action Items Summary Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-info">
-                    <h4 class="card-title text-white mb-0">
-                        <i class="fas fa-tasks mr-2"></i>Proposed Action Items
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if incident.action_items.all %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>Action Taken</th>
-                                        <th>Responsible Person(s)</th>
-                                        <th>Target Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for action in incident.action_items.all %}
-                                    <tr>
-                                        <td>{{ action.action_description }}</td>
-                                        <td>
-                                            {% for user in action.responsible_person.all %}
-                                                <span class="badge badge-pill badge-secondary font-weight-normal">{{ user.email }}</span>
-                                            {% empty %}
-                                                <span class="text-muted">N/A</span>
-                                            {% endfor %}
-                                        </td>
-                                        <td>{{ action.target_date|date:"d M Y" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-secondary">No action items were created during the investigation.</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- 4. Approval Action Card -->
-            <div class="card mt-4 border-success shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="card-title mb-0">
-                        <i class="fas fa-check-double mr-2"></i>Final Approval
-                    </h4>
-                </div>
-                <div class="card-body text-center">
-                    <p class="lead">Please review all information carefully before taking an action.</p>
-                    <p>Approving this report will move the incident to the next stage. Rejecting it will require the investigator to make corrections.</p>
-                    <hr>
-                    <!-- Action Buttons -->
-                    <form method="POST" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" name="approve_action" class="btn btn-success btn-lg">
-                            <i class="fas fa-check-circle mr-2"></i>Approve Investigation
-                        </button>
-                    </form>
-                    <button type="button" class="btn btn-danger btn-lg ml-2" data-toggle="modal" data-target="#rejectModal">
-                        <i class="fas fa-times-circle mr-2"></i>Reject Investigation
-                    </button>
-                </div>
-            </div>
-
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-check-double"></i>
+      </div>
+      <div>
+        <h1>Investigation Approval</h1>
+        <p class="subtitle">Review and approve investigation report for {{ incident.report_number }}</p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INCIDENT OVERVIEW                                           -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-teal">
+      <h3>
+        <i class="fas fa-file-alt"></i>
+        Incident Overview
+      </h3>
+      <div>
+        <a href="{% url 'accidents:incident_detail' incident.pk %}" class="btn-dash btn-dash-info" style="font-size: 13px; padding: 6px 16px;">
+          <i class="fas fa-eye"></i> View Full Details
+        </a>
+        <a href="{% url 'accidents:incident_update' incident.pk %}" class="btn-dash btn-dash-secondary" style="font-size: 13px; padding: 6px 16px;">
+          <i class="fas fa-edit"></i> Edit Incident
+        </a>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <!-- Header Row -->
+      <div class="row align-items-center mb-3">
+        <div class="col-md-8">
+          <h4 class="mb-1 font-weight-bold" style="color: var(--text-primary);">{{ incident.report_number }}</h4>
+          <div class="d-flex flex-wrap gap-2" style="gap: 6px;">
+            <span class="dash-badge badge-dark">{{ incident.incident_type.name }}</span>
+            <span class="dash-badge badge-warning">Status: {{ incident.get_status_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Row -->
+      <div class="dash-summary-row">
+        <div class="dash-summary-item">
+          <span class="label">Incident Date &amp; Time</span>
+          <span class="value">{{ incident.incident_date|date:"d M Y" }} | {{ incident.incident_time|time:"H:i" }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Location / Plant</span>
+          <span class="value">{{ incident.plant.name }} - {{ incident.location.name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Affected Person</span>
+          <span class="value text-teal">{{ incident.affected_person_name }}</span>
+        </div>
+        <div class="dash-summary-item">
+          <span class="label">Department</span>
+          <span class="value">{{ incident.affected_person_department.name|default:"N/A" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INVESTIGATION FINDINGS                                      -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-warning">
+      <h4>
+        <i class="fas fa-search"></i>
+        Investigation Findings
+      </h4>
+      <a href="{% url 'accidents:investigation_detail' investigation_report.pk %}" class="btn-dash btn-dash-info" style="font-size: 13px; padding: 6px 16px;">
+        <i class="fas fa-eye"></i> View Full Report
+      </a>
+    </div>
+    <div class="card-body-custom">
+      <div class="dash-dl">
+        <dt>Investigator</dt>
+        <dd>{{ investigation_report.investigator.get_full_name }}</dd>
+
+        <dt>Investigation Date</dt>
+        <dd>{{ investigation_report.investigation_date|date:"d M Y" }}</dd>
+
+        <dt>Sequence of Events</dt>
+        <dd>{{ investigation_report.sequence_of_events|linebreaks }}</dd>
+
+        <dt>Root Cause Analysis</dt>
+        <dd>{{ investigation_report.root_cause_analysis|linebreaks }}</dd>
+
+        <dt>Preventive Measures</dt>
+        <dd>{{ investigation_report.preventive_measures|linebreaks }}</dd>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION ITEMS SUMMARY                                        -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-info">
+      <h4>
+        <i class="fas fa-tasks"></i>
+        Proposed Action Items
+      </h4>
+    </div>
+    <div class="card-body-custom">
+      {% if incident.action_items.all %}
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Action Taken</th>
+                <th>Responsible Person(s)</th>
+                <th>Target Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for action in incident.action_items.all %}
+              <tr>
+                <td data-label="Action Taken">{{ action.action_description }}</td>
+                <td data-label="Responsible Person(s)">
+                  {% for user in action.responsible_person.all %}
+                    <span class="dash-badge badge-secondary" style="font-size: 12px; padding: 2px 12px;">{{ user.email }}</span>
+                  {% empty %}
+                    <span class="text-muted">N/A</span>
+                  {% endfor %}
+                </td>
+                <td data-label="Target Date">{{ action.target_date|date:"d M Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert" style="background: #f1f5f9; border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text-muted);">
+          <i class="fas fa-info-circle"></i> No action items were created during the investigation.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FINAL APPROVAL                                             -->
+  <!-- ========================================================== -->
+  <div class="dash-approval-card">
+    <div class="card-header-custom card-header-success">
+      <h4>
+        <i class="fas fa-check-double"></i>
+        Final Approval
+      </h4>
+    </div>
+    <div class="card-body-custom">
+      <p class="lead">Please review all information carefully before taking an action.</p>
+      <p class="sub-text">Approving this report will move the incident to the next stage. Rejecting it will require the investigator to make corrections.</p>
+      <hr class="divider">
+      <div class="d-flex justify-content-center gap-3 flex-wrap" style="gap: 12px;">
+        <form method="POST" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" name="approve_action" class="btn-dash btn-dash-success">
+            <i class="fas fa-check-circle"></i> Approve Investigation
+          </button>
+        </form>
+        <button type="button" class="btn-dash btn-dash-danger" data-toggle="modal" data-target="#rejectModal">
+          <i class="fas fa-times-circle"></i> Reject Investigation
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- Rejection Modal (No changes needed here) -->
-<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
+<!-- ========================================================== -->
+<!-- REJECTION MODAL                                             -->
+<!-- ========================================================== -->
+<div class="modal fade dash-modal" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <form method="POST">
         {% csrf_token %}
-        <div class="modal-header"><h5 class="modal-title" id="rejectModalLabel">Reject Investigation Report</h5><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
+        <div class="modal-header">
+          <h5 class="modal-title" id="rejectModalLabel">
+            <i class="fas fa-times-circle mr-2"></i> Reject Investigation Report
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
         <div class="modal-body">
-          <p>Please provide the reason for rejecting this investigation report. This is a required field.</p>
+          <p style="color: var(--text-secondary);">Please provide the reason for rejecting this investigation report. This is a required field.</p>
           <div class="form-group">
-            <label for="rejection_remarks">Rejection Remarks</label>
-            <textarea class="form-control" id="rejection_remarks" name="rejection_remarks" rows="4" required></textarea>
+            <label for="rejection_remarks" style="font-weight: 600; color: var(--text-primary);">Rejection Remarks <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="rejection_remarks" name="rejection_remarks" rows="4" required style="border: 2px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; font-family: 'Inter', sans-serif; transition: all 0.25s ease;"></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="submit" name="reject_action" class="btn btn-danger">Submit Rejection</button>
+          <button type="button" class="btn-dash btn-dash-secondary" data-dismiss="modal" style="font-size: 14px; padding: 8px 20px;">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button type="submit" name="reject_action" class="btn-dash btn-dash-danger" style="font-size: 14px; padding: 8px 20px;">
+            <i class="fas fa-times-circle"></i> Submit Rejection
+          </button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
 {% endblock %}

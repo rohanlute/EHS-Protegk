@@ -2,298 +2,994 @@
 {% load static %}
 {% load permission_tags %}
 
-{% block title %}Injury Management Dashboard{% endblock %}
-{% block page_title %}Injury Management Dashboard{% endblock %}
+{% block title %}Injury Management Dashboard | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Injury Management</li>
+{% block extra_css %}
+<style>
+  /* ===== INJURY MANAGEMENT DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS                                            */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .dash-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+    text-decoration: none;
+  }
+
+  .dash-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-card .stat-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dash-stat-card .stat-icon.gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card .stat-icon.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+  .dash-stat-card .stat-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card .stat-info .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .dash-stat-card .stat-info .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .dash-stat-card .stat-info .stat-trend {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .dash-stat-card .stat-info .stat-trend i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* INJURY TYPES CARDS                                          */
+  /* ========================================================== */
+  .dash-types-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .dash-type-card {
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: none;
+    color: white;
+  }
+
+  .dash-type-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dash-type-card h3 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .dash-type-card p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+
+  .dash-type-card.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dash-type-card.warning { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-type-card.info { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-type-card.dark { background: linear-gradient(135deg, #1e293b, #0f172a); }
+
+  /* ========================================================== */
+  /* QUICK ACTION CARDS                                          */
+  /* ========================================================== */
+  .dash-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .dash-action-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 24px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dash-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .dash-action-card .action-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-action-card:hover .action-icon {
+    transform: scale(1.05);
+  }
+
+  .dash-action-card .action-icon.primary { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-action-card .action-icon.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+  .dash-action-card h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  .dash-action-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 12px 0;
+  }
+
+  .dash-action-card .btn-action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .dash-action-card .btn-action-link.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .dash-action-card .btn-action-link.primary:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    text-decoration: none;
+    color: white;
+  }
+
+  .dash-action-card .btn-action-link.success {
+    background: #22c55e;
+    color: white;
+  }
+
+  .dash-action-card .btn-action-link.success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    text-decoration: none;
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* OVERDUE ALERT                                               */
+  /* ========================================================== */
+  .dash-alert-overdue {
+    background: #fef2f2;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid #dc2626;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .dash-alert-overdue .alert-title {
+    font-weight: 700;
+    color: #dc2626;
+    font-size: 15px;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-alert-overdue .alert-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+  }
+
+  .dash-alert-overdue .alert-list {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .dash-alert-overdue .alert-list li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+  }
+
+  .dash-alert-overdue .alert-list li a {
+    color: #dc2626;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .dash-alert-overdue .alert-list li a:hover {
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* CARD HEADER                                                 */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom .header-title i {
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .dash-card .card-header-custom .header-title h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 16px 20px;
+  }
+
+  .btn-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .btn-view-all:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES - FIXED TO FIT IN CARD                         */
+  /* ========================================================== */
+  .dash-table-wrapper {
+    overflow-x: auto;
+    margin: 0 -4px;
+  }
+
+  .dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 600px;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .dash-table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ===== BADGES ===== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+
+  /* ===== ACTION BUTTON ===== */
+  .btn-action-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 12px;
+  }
+
+  .btn-action-sm:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .dash-empty-state i {
+    font-size: 32px;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dash-types-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-stat-card {
+      padding: 14px 16px;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 20px;
+    }
+
+    .dash-stat-card .stat-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+
+    .dash-types-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .dash-type-card {
+      padding: 12px 14px;
+    }
+
+    .dash-type-card h3 {
+      font-size: 22px;
+    }
+
+    .dash-action-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .btn-view-all {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Table becomes card-style on mobile */
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .dash-table tbody td .dash-badge {
+      font-size: 10px;
+      padding: 2px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 18px;
+    }
+
+    .dash-types-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-type-card h3 {
+      font-size: 20px;
+    }
+
+    .dash-type-card {
+      padding: 10px 12px;
+    }
+
+    .dash-action-card {
+      padding: 18px 16px;
+    }
+
+    .dash-action-card .action-icon {
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
+    }
+
+    .dash-action-card h5 {
+      font-size: 15px;
+    }
+
+    .dash-alert-overdue {
+      padding: 12px 14px;
+    }
+
+    .dash-alert-overdue .alert-title {
+      font-size: 14px;
+    }
+
+    .dash-table tbody td {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 10px;
+    }
+
+    .dash-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+    }
+
+    .btn-action-sm {
+      width: 26px;
+      height: 26px;
+      font-size: 11px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Statistics Cards -->
-<div class="row mb-4">
-  <div class="col-lg-3 col-md-6">
-    <div class="ehs-stat-card">
-      <div class="ehs-stat-icon" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-briefcase-medical"></i>
+      </div>
+      <div>
+        <h1>Injury Management Dashboard</h1>
+        <p class="subtitle">Monitor and track workplace injuries and incidents</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <!-- Total Injuries -->
+    <div class="dash-stat-card">
+      <div class="stat-icon red">
         <i class="fas fa-file-medical"></i>
       </div>
-      <div class="ehs-stat-content">
-        <div class="ehs-stat-title">Total Injuries</div>
-        <div class="ehs-stat-value">{{ total_incidents }}</div>
-        <div class="ehs-stat-trend">
-          <span>All Time</span>
-        </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total_incidents }}</div>
+        <div class="stat-label">Total Injuries</div>
+        <div class="stat-trend"><i class="fas fa-calendar-alt"></i> All Time</div>
       </div>
     </div>
-  </div>
-  
-  <div class="col-lg-3 col-md-6">
-    <div class="ehs-stat-card">
-      <div class="ehs-stat-icon" style="background: linear-gradient(135deg, #ffc107, #ff9800);">
+
+    <!-- Open Injuries -->
+    <div class="dash-stat-card">
+      <div class="stat-icon gold">
         <i class="fas fa-folder-open"></i>
       </div>
-      <div class="ehs-stat-content">
-        <div class="ehs-stat-title">Open Injuries</div>
-        <div class="ehs-stat-value">{{ open_incidents }}</div>
-        <div class="ehs-stat-trend">
-          <span>Pending Action</span>
-        </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ open_incidents }}</div>
+        <div class="stat-label">Open Injuries</div>
+        <div class="stat-trend"><i class="fas fa-clock"></i> Pending Action</div>
       </div>
     </div>
-  </div>
-  
-  <div class="col-lg-3 col-md-6">
-    <div class="ehs-stat-card">
-      <div class="ehs-stat-icon" style="background: linear-gradient(135deg, #17a2b8, #117a8b);">
+
+    <!-- This Month -->
+    <div class="dash-stat-card">
+      <div class="stat-icon teal">
         <i class="fas fa-calendar-alt"></i>
       </div>
-      <div class="ehs-stat-content">
-        <div class="ehs-stat-title">This Month</div>
-        <div class="ehs-stat-value">{{ this_month_incidents }}</div>
-        <div class="ehs-stat-trend">
-          <span>Current Month</span>
-        </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ this_month_incidents }}</div>
+        <div class="stat-label">This Month</div>
+        <div class="stat-trend"><i class="fas fa-calendar-check"></i> Current Month</div>
       </div>
     </div>
-  </div>
-  
-  <div class="col-lg-3 col-md-6">
-    <div class="ehs-stat-card">
-      <div class="ehs-stat-icon" style="background: linear-gradient(135deg, #6f42c1, #5a32a3);">
+
+    <!-- Investigation Pending -->
+    <div class="dash-stat-card">
+      <div class="stat-icon purple">
         <i class="fas fa-search"></i>
       </div>
-      <div class="ehs-stat-content">
-        <div class="ehs-stat-title">Investigation Pending</div>
-        <div class="ehs-stat-value">{{ investigation_pending }}</div>
-        <div class="ehs-stat-trend">
-          <span>Requires Action</span>
+      <div class="stat-info">
+        <div class="stat-value">{{ investigation_pending }}</div>
+        <div class="stat-label">Investigation Pending</div>
+        <div class="stat-trend"><i class="fas fa-exclamation-circle"></i> Requires Action</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INJURY TYPES                                               -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-chart-pie"></i>
+        <h3>Injuries by Type</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div class="dash-types-grid">
+        <div class="dash-type-card danger">
+          <h3>{{ lti_count }}</h3>
+          <p>Lost Time Injury (LTI)</p>
+        </div>
+        <div class="dash-type-card warning">
+          <h3>{{ mtc_count }}</h3>
+          <p>Medical Treatment (MTC)</p>
+        </div>
+        <div class="dash-type-card info">
+          <h3>{{ fa_count }}</h3>
+          <p>First Aid (FA)</p>
+        </div>
+        <div class="dash-type-card dark">
+          <h3>{{ hlfi_count }}</h3>
+          <p>HLFI</p>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Incident Types -->
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-chart-pie mr-2"></i>Injuries by Type
-        </h3>
+  <!-- ========================================================== -->
+  <!-- QUICK ACTIONS                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-action-grid">
+    {% if user|has_perm:'CREATE_INJURY' %}
+    <div class="dash-action-card">
+      <div class="action-icon primary">
+        <i class="fas fa-plus"></i>
       </div>
-      <div class="card-body">
-        <div class="row text-center">
-          <div class="col-md-3">
-            <div class="card bg-danger text-white mb-3">
-              <div class="card-body">
-                <h3>{{ lti_count }}</h3>
-                <p class="mb-0">Lost Time Injury (LTI)</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-warning text-white mb-3">
-              <div class="card-body">
-                <h3>{{ mtc_count }}</h3>
-                <p class="mb-0">Medical Treatment (MTC)</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-info text-white mb-3">
-              <div class="card-body">
-                <h3>{{ fa_count }}</h3>
-                <p class="mb-0">First Aid (FA)</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-dark text-white mb-3">
-              <div class="card-body">
-                <h3>{{ hlfi_count }}</h3>
-                <p class="mb-0">HLFI</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <h5>Report New Injury</h5>
+      <p>Report LTI, MTC, FA, or HLFI injuries</p>
+      <a href="{% url 'accidents:incident_create' %}" class="btn-action-link primary">
+        <i class="fas fa-file-medical"></i> Report Injury
+      </a>
     </div>
+    {% endif %}
+
+    {% if user|has_perm:'VIEW_INJURY' %}
+    <div class="dash-action-card">
+      <div class="action-icon success">
+        <i class="fas fa-list"></i>
+      </div>
+      <h5>View All Injuries</h5>
+      <p>Browse and filter injury reports</p>
+      <a href="{% url 'accidents:incident_list' %}" class="btn-action-link success">
+        <i class="fas fa-folder-open"></i> View All
+      </a>
+    </div>
+    {% endif %}
   </div>
-</div>
 
-<div class="row mb-4">
-  <!-- Left Card -->
-   {% if user|has_perm:'CREATE_INJURY' %}
-  <div class="col-md-6 mb-3">
-    <div class="card h-100 border-0 shadow-sm text-center">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <div class="mb-3">
-          <a href="{% url 'accidents:incident_create' %}" class="btn btn-primary btn-lg rounded-circle">
-            <i class="fas fa-plus"></i>
-          </a>
-        </div>
-        <h5 class="card-title">Report New Injury</h5>
-        <p class="card-text text-muted">
-          Report LTI, MTC, FA, or HLFI injuries
-        </p>
-        <!-- Center smaller button -->
-        <div class="d-flex justify-content-center">
-          <a href="{% url 'accidents:incident_create' %}" class="btn btn-primary btn-md">
-            <i class="fas fa-file-medical mr-2"></i> Report Injury
-          </a>
-        </div>
-      </div>
+  <!-- ========================================================== -->
+  <!-- OVERDUE INVESTIGATIONS                                      -->
+  <!-- ========================================================== -->
+  {% if overdue_investigations %}
+  <div class="dash-alert-overdue">
+    <div class="alert-title">
+      <i class="fas fa-exclamation-triangle"></i>
+      Overdue Investigations ({{ overdue_investigations.count }})
     </div>
+    <p class="alert-text">The following incidents have overdue investigations (7-day deadline exceeded):</p>
+    <ul class="alert-list">
+      {% for incident in overdue_investigations %}
+      <li>
+        <a href="{% url 'accidents:incident_detail' incident.pk %}">
+          <strong>{{ incident.report_number }}</strong> - {{ incident.incident_title }}
+          (Due: {{ incident.investigation_deadline }})
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
   </div>
   {% endif %}
 
-  <!-- Right Card -->
-   {% if user|has_perm:'VIEW_INJURY' %}
-  <div class="col-md-6 mb-3">
-    <div class="card h-100 border-0 shadow-sm text-center">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <div class="mb-3">
-          {% if user|has_perm:'VIEW_INJURY' %}
-          <a href="{% url 'accidents:incident_list' %}" class="btn btn-success btn-lg rounded-circle">
-            <i class="fas fa-list"></i>
-          </a>
-          {% endif %}
-        </div>
-        <h5 class="card-title">View All Injuries</h5>
-        <p class="card-text text-muted">
-          Browse and filter injury reports
-        </p>
-        <!-- Center smaller button -->
-        <div class="d-flex justify-content-center">
-          {% if user|has_perm:'VIEW_INJURY' %}
-          <a href="{% url 'accidents:incident_list' %}" class="btn btn-success btn-md">
-            <i class="fas fa-folder-open mr-2"></i> View All
-          </a>
-          {% endif %}
-        </div>
+  <!-- ========================================================== -->
+  <!-- RECENT INCIDENTS - TABLE FIXED TO FIT IN CARD              -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-clock"></i>
+        <h3>Recent Injuries</h3>
+      </div>
+      {% if user|has_perm:'VIEW_INJURY' %}
+      <a href="{% url 'accidents:incident_list' %}" class="btn-view-all">
+        View All <i class="fas fa-arrow-right"></i>
+      </a>
+      {% endif %}
+    </div>
+    <div class="card-body-custom">
+      <div class="dash-table-wrapper">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th style="width: 18%;">Report No.</th>
+              <th style="width: 14%;">Type</th>
+              <th style="width: 16%;">Date</th>
+              <th style="width: 20%;">Plant</th>
+              <th style="width: 18%;">Status</th>
+              {% if user|has_perm:'VIEW_INJURY' %}<th style="width: 14%; text-align: center;">Actions</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for incident in recent_incidents %}
+            <tr>
+              <td data-label="Report No.">
+                <strong style="font-size: 12px;">{{ incident.report_number }}</strong>
+              </td>
+              <td data-label="Type">
+                <span class="dash-badge 
+                  {% if incident.incident_type.code == 'LTI' %}badge-danger
+                  {% elif incident.incident_type.code == 'MTC' %}badge-warning
+                  {% elif incident.incident_type.code == 'FA' %}badge-info
+                  {% else %}badge-dark{% endif %}">
+                  {{ incident.incident_type.name|default:incident.incident_type.code }}
+                </span>
+              </td>
+              <td data-label="Date">{{ incident.incident_date|date:"d/m/Y" }}</td>
+              <td data-label="Plant" style="font-size: 12px;">{{ incident.plant.name|truncatechars:15 }}</td>
+              <td data-label="Status">
+                <span class="dash-badge 
+                  {% if incident.status == 'CLOSED' %}badge-success
+                  {% elif incident.status == 'REPORTED' %}badge-secondary
+                  {% else %}badge-primary{% endif %}">
+                  {{ incident.get_status_display }}
+                </span>
+              </td>
+              {% if user|has_perm:'VIEW_INJURY' %}
+              <td data-label="Actions" style="text-align: center;">
+                <a href="{% url 'accidents:incident_detail' incident.pk %}" 
+                   class="btn-action-sm" 
+                   title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{% if user|has_perm:'VIEW_INJURY' %}6{% else %}5{% endif %}">
+                <div class="dash-empty-state">
+                  <i class="fas fa-inbox"></i>
+                  <p>No incidents reported yet.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-  {% endif %}
+
 </div>
 
-<!-- Overdue Investigations Alert -->
-{% if overdue_investigations %}
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="alert alert-danger">
-      <h5 class="alert-heading">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        Overdue Investigations ({{ overdue_investigations.count }})
-      </h5>
-      <p>The following incidents have overdue investigations (7-day deadline exceeded):</p>
-      <ul class="mb-0">
-        {% for incident in overdue_investigations %}
-        <li>
-          <a href="{% url 'accidents:incident_detail' incident.pk %}" class="text-white">
-            <strong>{{ incident.report_number }}</strong> - {{ incident.incident_title }}
-            (Due: {{ incident.investigation_deadline }})
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<!-- Recent Incidents -->
-<div class="row">
-  <div class="col-12">
-    <div class="ehs-card">
-      <div class="card-header">
-        <div class="row align-items-center">
-          <div class="col">
-            <h3 class="card-title mb-0">
-              <i class="fas fa-clock mr-2"></i>Recent Injuries
-            </h3>
-          </div>
-          <div class="col-auto">
-            {% if user|has_perm:'VIEW_INJURY' %}
-            <a href="{% url 'accidents:incident_list' %}" class="btn btn-primary btn-sm">
-              View All <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Report No.</th>
-                <th>Type</th>
-                <!-- <th>Title</th> -->
-                <th>Date</th>
-                <th>Plant</th>
-                <!-- <th>Severity</th> -->
-                <th>Status</th>
-                {% if user|has_perm:'VIEW_INJURY' %}<th>Actions</th>{% endif %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for incident in recent_incidents %}
-              <tr>
-                <td><strong>{{ incident.report_number }}</strong></td>
-                <td>
-                  <span class="badge 
-                    {% if incident.incident_type == 'LTI' %}badge-danger
-                    {% elif incident.incident_type == 'MTC' %}badge-warning
-                    {% elif incident.incident_type == 'FA' %}badge-info
-                    {% else %}badge-dark{% endif %}">
-                    {{ incident.incident_type.name }}
-                  </span>
-                </td>
-                <!-- <td>{{ incident.incident_title|truncatewords:8 }}</td> -->
-                <td>{{ incident.incident_date|date:"d/m/Y" }}</td>
-                <td>{{ incident.plant.name }}</td>
-                <!-- <td>
-                  <span class="badge 
-                    {% if incident.severity_level == 'Critical' or incident.severity_level == 'Fatal' %}badge-danger
-                    {% elif incident.severity_level == 'Serious' %}badge-warning
-                    {% else %}badge-info{% endif %}">
-                    {{ incident.severity_level }}
-                  </span>
-                </td> -->
-                <td>
-                  <span class="badge 
-                    {% if incident.status == 'CLOSED' %}badge-success
-                    {% elif incident.status == 'REPORTED' %}badge-secondary
-                    {% else %}badge-primary{% endif %}">
-                    {{ incident.get_status_display }}
-                  </span>
-                </td>
-                {% if user|has_perm:'VIEW_INJURY' %}
-                <td>
-                  <a href="{% url 'accidents:incident_detail' incident.pk %}" 
-                     class="btn btn-sm btn-info" title="View Details">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                </td>
-                {% endif %} 
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="8" class="text-center">
-                  <div class="alert alert-info mb-0">
-                    <i class="fas fa-info-circle mr-2"></i>No incidents reported yet.
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %}

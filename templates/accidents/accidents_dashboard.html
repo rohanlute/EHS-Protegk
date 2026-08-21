@@ -1,680 +1,1058 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Injury Management Dashboard{% endblock %}
-{% block page_title %}Injury Management Dashboard{% endblock %}
+{% block title %}Injury Management Dashboard | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-/* Dashboard Cards */
-.dashboard-card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin-bottom: 20px;
-}
+  /* ===== INJURY MANAGEMENT DASHBOARD - Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-}
+  :root {
+    /* Primary Colors - Teal */
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    /* Secondary Colors */
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-red: #ef4444;
+    --secondary-red-light: rgba(239, 68, 68, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    /* Text Colors */
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    /* UI Colors */
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+    --radius-lg: 20px;
+  }
 
-.stat-card {
-    padding: 20px;
-    border-left: 4px solid;
-}
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
 
-.stat-card.danger {
-    border-left-color: #dc3545;
-    background: linear-gradient(135deg, #fff 0%, #ffebee 100%);
-}
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
 
-.stat-card.warning {
-    border-left-color: #ffc107;
-    background: linear-gradient(135deg, #fff 0%, #fff9e6 100%);
-}
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
 
-.stat-card.info {
-    border-left-color: #17a2b8;
-    background: linear-gradient(135deg, #fff 0%, #e6f7ff 100%);
-}
-
-.stat-card.success {
-    border-left-color: #28a745;
-    background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
-}
-
-.stat-card.primary {
-    border-left-color: #007bff;
-    background: linear-gradient(135deg, #fff 0%, #e3f2fd 100%);
-}
-
-.stat-card .stat-icon {
-    font-size: 3rem;
-    opacity: 0.3;
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.stat-card .stat-number {
-    font-size: 2.5rem;
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
     font-weight: 700;
+    color: var(--text-primary);
     margin: 0;
-    line-height: 1;
-}
+  }
 
-.stat-card .stat-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-top: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
 
-.stat-card .stat-change {
-    font-size: 0.85rem;
-    margin-top: 8px;
-}
+  /* ========================================================== */
+  /* FILTER SECTION                                              */
+  /* ========================================================== */
+  .dash-filter-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
 
-.stat-card .stat-change.up {
-    color: #28a745;
-}
+  .dash-filter-section:hover {
+    box-shadow: var(--shadow-hover);
+  }
 
-.stat-card .stat-change.down {
-    color: #dc3545;
-}
-
-/* Filter Section */
-.filter-section {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.filter-section .form-label {
+  .dash-filter-section .form-label {
     font-weight: 600;
-    color: #495057;
+    color: var(--text-secondary);
     margin-bottom: 5px;
-    font-size: 0.9rem;
-}
-
-.filter-section .form-control,
-.filter-section .form-select {
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    padding: 8px 12px;
-    font-size: 0.9rem;
-}
-
-.filter-section .btn {
-    padding: 8px 20px;
-    font-size: 0.9rem;
-    border-radius: 6px;
-}
-
-/* Chart Containers */
-.chart-container {
-    position: relative;
-    height: 300px;
-    padding: 20px;
-}
-
-.chart-container canvas {
-    max-height: 300px;
-}
-
-/* Table Styling */
-.incident-table {
-    font-size: 0.9rem;
-}
-
-.incident-table th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
+    font-size: 12px;
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-}
+    letter-spacing: 0.3px;
+  }
 
-.incident-table tbody tr {
-    transition: background-color 0.2s ease;
-}
+  .dash-filter-section .form-control,
+  .dash-filter-section .form-select {
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: #fafbfc;
+    color: var(--text-primary);
+    width: 100%;
+  }
 
-.incident-table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-.stat-card.warning .stat-number,
-.stat-card.info .stat-number {
-    color: #007bff;   /* Same blue as primary */
-}
+  .dash-filter-section .form-control:focus,
+  .dash-filter-section .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    background: white;
+  }
 
-/* Badge Enhancements */
-.badge-custom {
-    padding: 5px 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 4px;
-}
-
-/* Alert Cards */
-.alert-card {
-    border-left: 4px solid;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.alert-card.alert-danger {
-    border-left-color: #dc3545;
-    background-color: #f8d7da;
-}
-
-.alert-card.alert-warning {
-    border-left-color: #ffc107;
-    background-color: #fff3cd;
-}
-
-.alert-card.alert-info {
-    border-left-color: #17a2b8;
-    background-color: #d1ecf1;
-}
-
-/* Quick Action Buttons */
-.quick-action-btn {
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    display: block;
+  .dash-filter-section .btn-filter {
+    background: var(--primary-teal);
     color: white;
+    border: none;
+    padding: 9px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dash-filter-section .btn-filter:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .dash-filter-section .btn-filter:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ===== ACTIVE FILTER BADGES ===== */
+  .active-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid rgba(13, 148, 136, 0.12);
+    margin: 4px 6px 4px 0;
+  }
+
+  .active-filter-badge i {
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  .active-filter-badge i:hover {
+    opacity: 1;
+  }
+
+  .btn-clear-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-clear-filters:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS                                            */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+  }
+
+  .dash-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+    text-decoration: none;
+  }
+
+  .dash-stat-card .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-card .stat-icon.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card .stat-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .dash-stat-card .stat-icon.gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card .stat-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+  .dash-stat-card .stat-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card .stat-info .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .dash-stat-card .stat-info .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .dash-stat-card .stat-info .stat-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-top: 2px;
+  }
+
+  .dash-stat-card .stat-info .stat-change.up {
+    color: #16a34a;
+    background: #dcfce7;
+  }
+
+  .dash-stat-card .stat-info .stat-change.down {
+    color: #dc2626;
+    background: #fef2f2;
+  }
+
+  .dash-stat-card .stat-info .stat-change.neutral {
+    color: #64748b;
+    background: #f1f5f9;
+  }
+
+  /* ========================================================== */
+  /* CHART CARDS                                                 */
+  /* ========================================================== */
+  .dash-chart-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .dash-chart-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-chart-card .card-header-custom {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+  }
+
+  .dash-chart-card .card-header-custom h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-chart-card .card-header-custom h5 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-chart-card .card-body-custom {
+    padding: 20px;
+  }
+
+  .dash-chart-container {
+    position: relative;
+    height: 280px;
+  }
+
+  /* ========================================================== */
+  /* ALERT CARDS                                                 */
+  /* ========================================================== */
+  .dash-alert-card {
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid;
+    transition: all 0.2s ease;
+  }
+
+  .dash-alert-card:hover {
+    transform: translateX(4px);
+  }
+
+  .dash-alert-card.alert-danger {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+  }
+
+  .dash-alert-card.alert-warning {
+    border-left-color: #d97706;
+    background: #fffbeb;
+  }
+
+  .dash-alert-card.alert-info {
+    border-left-color: #0d9488;
+    background: #ecfdf5;
+  }
+
+  .dash-alert-card .alert-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+    font-size: 14px;
+  }
+
+  .dash-alert-card .alert-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .dash-alert-card .alert-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .dash-alert-card .alert-action {
+    float: right;
+    margin-top: -6px;
+  }
+
+  /* ========================================================== */
+  /* QUICK ACTION BUTTONS                                        */
+  /* ========================================================== */
+  .dash-quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
     text-decoration: none;
     transition: all 0.3s ease;
     margin-bottom: 10px;
-}
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }
 
-.quick-action-btn:hover {
+  .dash-quick-action-btn:hover {
+    transform: translateX(6px);
     color: white;
     text-decoration: none;
-    transform: translateX(5px);
-}
+    box-shadow: var(--shadow-lg);
+  }
 
-.quick-action-btn i {
-    display: block;
-    font-size: 2rem;
-    margin-bottom: 10px;
-}
-
-/* Section Headers */
-.section-header {
-    border-bottom: 3px solid #007bff;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.section-header h5 {
-    margin: 0;
-    font-weight: 700;
-    color: #343a40;
-}
-
-/* Loading Animation */
-.loading-spinner {
+  .dash-quick-action-btn i {
+    font-size: 22px;
+    width: 36px;
     text-align: center;
-    padding: 20px;
-}
+  }
 
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
+  .dash-quick-action-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dash-quick-action-btn.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-quick-action-btn.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .stat-card .stat-number {
-        font-size: 2rem;
+  /* ========================================================== */
+  /* TABLE STYLES                                                */
+  /* ========================================================== */
+  .dash-incident-table {
+    font-size: 14px;
+  }
+
+  .dash-incident-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+  }
+
+  .dash-incident-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-incident-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-incident-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-incident-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ===== BADGES ===== */
+  .dash-badge {
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+  }
+
+  .dash-badge.danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.teal { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.dark { background: #f1f5f9; color: #334155; }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
-    
-    .stat-card .stat-icon {
-        font-size: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
     }
-    
-    .chart-container {
-        height: 250px;
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
-}
 
-/* Progress Bar */
-.progress-thin {
-    height: 8px;
-    border-radius: 4px;
-}
+    .dash-stat-card {
+      padding: 14px 16px;
+    }
 
-/* Severity Indicators */
-.severity-indicator {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 5px;
-}
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 22px;
+    }
 
-.severity-fatal { background-color: #000; }
-.severity-critical { background-color: #dc3545; }
-.severity-serious { background-color: #ffc107; }
-.severity-moderate { background-color: #17a2b8; }
-.severity-minor { background-color: #28a745; }
+    .dash-stat-card .stat-icon {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
 
-/* Active Filter Badge */
-.active-filter-badge {
-    display: inline-block;
-    background: #007bff;
-    color: white;
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 0.85rem;
-    margin: 5px;
-}
+    .dash-filter-section {
+      padding: 16px 18px;
+    }
 
-.active-filter-badge i {
-    margin-left: 5px;
-    cursor: pointer;
-}
+    .dash-filter-section .btn-filter {
+      width: 100%;
+    }
+
+    .dash-chart-container {
+      height: 220px;
+    }
+
+    .dash-incident-table thead {
+      display: none;
+    }
+
+    .dash-incident-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-incident-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-incident-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-incident-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .dash-quick-action-btn {
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 20px;
+    }
+
+    .dash-filter-section {
+      padding: 12px 14px;
+    }
+
+    .dash-filter-section .form-control,
+    .dash-filter-section .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .dash-chart-container {
+      height: 200px;
+    }
+
+    .dash-incident-table tbody td {
+      padding: 6px 10px;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .dash-incident-table tbody td::before {
+      font-size: 11px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .dash-quick-action-btn {
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+
+    .dash-quick-action-btn i {
+      font-size: 18px;
+      width: 30px;
+    }
+  }
 </style>
-{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Injury Management Dashboard</li>
 {% endblock %}
 
 {% block content %}
 
-<!-- Filter Section -->
-<div class="filter-section">
-    {# ==================================================================== #}
-    {# THE CRITICAL FIX: The action URL now correctly points to its own view.#}
-    {# ==================================================================== #}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-briefcase-medical"></i>
+      </div>
+      <div>
+        <h1>Injury Management Dashboard</h1>
+        <p class="subtitle">Monitor and track workplace injuries and incidents</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER SECTION                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-filter-section">
     <form method="GET" action="{% url 'accidents:IncidentAccidentDashboardView' %}" id="filterForm">
-        <div class="row align-items-end">
-            <div class="col-md-2 mb-3">
-                <label for="plant_filter" class="form-label small font-weight-bold"><i class="fas fa-industry mr-1"></i> Plant
-                </label>
-                <select name="plant" id="plant_filter" class="form-control"> 
-                    <option value="">All Plants</option>
-                    {% for plant in plants %}
-                        <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
-                            {{ plant.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-2 mb-3">
-                <label for="zone_filter" class="form-label small font-weight-bold"><i class="fas fa-map-marker-alt mr-1"></i> Zone
-                </label>
-                <select name="zone" id="zone_filter" class="form-control">
-                    <option value="">All Zones</option>
-                    {% for zone in zones %}
-                        <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>
-                            {{ zone.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-2 mb-3">
-                <label for="location_filter" class="form-label small font-weight-bold"><i class="fas fa-location-arrow mr-1"></i> Location
-                </label>
-                <select name="location" id="location_filter" class="form-control">
-                    <option value="">All Locations</option>
-                    {% for location in locations %}
-                        <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>
-                            {{ location.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-2 mb-3">
-                <label for="sublocation_filter" class="form-label small font-weight-bold"><i class="fas fa-map-pin mr-1"></i> Sub-Location
-                </label>
-                <select name="sublocation" id="sublocation_filter" class="form-control">
-                    <option value="">All Sub-Locations</option>
-                    {% for sublocation in sublocations %}
-                        <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>
-                            {{ sublocation.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-2 mb-3">
-                <label for="month_filter" class="form-label small font-weight-bold"><i class="fas fa-calendar mr-1"></i> Month
-                </label>
-                <select name="month" id="month_filter" class="form-control">
-                    <option value="">All Time</option>
-                    {% for month_option in month_options %}
-                        <option value="{{ month_option.value }}" {% if selected_month == month_option.value %}selected{% endif %}>
-                            {{ month_option.label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-md-2 mb-3">
-                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter mr-1"></i> Apply Filter
-                </button>
-            </div>
+      <div class="row align-items-end">
+        <div class="col-md-2 mb-3">
+          <label for="plant_filter" class="form-label">
+            <i class="fas fa-industry mr-1"></i> Plant
+          </label>
+          <select name="plant" id="plant_filter" class="form-control form-select">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+              <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
+                {{ plant.name }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
         
-        <!-- Active Filters Display -->
-        {% if has_active_filters %}
-        <div class="row mt-3">
-            <div class="col-md-12">
-                <strong>Active Filters:</strong>
-                {% if selected_plant_name %}
-                    <span class="active-filter-badge">
-                        Plant: {{ selected_plant_name }}
-                        <i class="fas fa-times" onclick="removeFilter('plant')"></i>
-                    </span>
-                {% endif %}
-                {% if selected_zone_name %}
-                    <span class="active-filter-badge">
-                        Zone: {{ selected_zone_name }}
-                        <i class="fas fa-times" onclick="removeFilter('zone')"></i>
-                    </span>
-                {% endif %}
-                {% if selected_location_name %}
-                    <span class="active-filter-badge">
-                        Location: {{ selected_location_name }}
-                        <i class="fas fa-times" onclick="removeFilter('location')"></i>
-                    </span>
-                {% endif %}
-                {% if selected_sublocation_name %}
-                    <span class="active-filter-badge">
-                        Sub-Location: {{ selected_sublocation_name }}
-                        <i class="fas fa-times" onclick="removeFilter('sublocation')"></i>
-                    </span>
-                {% endif %}
-                {% if selected_month_label %}
-                    <span class="active-filter-badge">
-                        Month: {{ selected_month_label }}
-                        <i class="fas fa-times" onclick="removeFilter('month')"></i>
-                    </span>
-                {% endif %}
-                {# The "Clear All" link also needs to point to the correct URL #}
-                <a href="{% url 'accidents:IncidentAccidentDashboardView' %}" class="btn btn-sm btn-outline-danger ms-2">
-                    <i class="fas fa-times-circle"></i> Clear All
-                </a>
-            </div>
+        <div class="col-md-2 mb-3">
+          <label for="zone_filter" class="form-label">
+            <i class="fas fa-map-marker-alt mr-1"></i> Zone
+          </label>
+          <select name="zone" id="zone_filter" class="form-control form-select">
+            <option value="">All Zones</option>
+            {% for zone in zones %}
+              <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>
+                {{ zone.name }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
-        {% endif %}
+        
+        <div class="col-md-2 mb-3">
+          <label for="location_filter" class="form-label">
+            <i class="fas fa-location-arrow mr-1"></i> Location
+          </label>
+          <select name="location" id="location_filter" class="form-control form-select">
+            <option value="">All Locations</option>
+            {% for location in locations %}
+              <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>
+                {{ location.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-2 mb-3">
+          <label for="sublocation_filter" class="form-label">
+            <i class="fas fa-map-pin mr-1"></i> Sub-Location
+          </label>
+          <select name="sublocation" id="sublocation_filter" class="form-control form-select">
+            <option value="">All Sub-Locations</option>
+            {% for sublocation in sublocations %}
+              <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>
+                {{ sublocation.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-2 mb-3">
+          <label for="month_filter" class="form-label">
+            <i class="fas fa-calendar mr-1"></i> Month
+          </label>
+          <select name="month" id="month_filter" class="form-control form-select">
+            <option value="">All Time</option>
+            {% for month_option in month_options %}
+              <option value="{{ month_option.value }}" {% if selected_month == month_option.value %}selected{% endif %}>
+                {{ month_option.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-md-2 mb-3">
+          <button type="submit" class="btn-filter" id="applyFilterBtn">
+            <i class="fas fa-filter mr-1"></i> Apply Filters
+          </button>
+        </div>
+      </div>
+      
+      <!-- Active Filters Display -->
+      {% if has_active_filters %}
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-bold" style="font-size: 13px; color: var(--text-secondary);">Active Filters:</span>
+            {% if selected_plant_name %}
+              <span class="active-filter-badge">
+                Plant: {{ selected_plant_name }}
+                <i class="fas fa-times" onclick="removeFilter('plant')"></i>
+              </span>
+            {% endif %}
+            {% if selected_zone_name %}
+              <span class="active-filter-badge">
+                Zone: {{ selected_zone_name }}
+                <i class="fas fa-times" onclick="removeFilter('zone')"></i>
+              </span>
+            {% endif %}
+            {% if selected_location_name %}
+              <span class="active-filter-badge">
+                Location: {{ selected_location_name }}
+                <i class="fas fa-times" onclick="removeFilter('location')"></i>
+              </span>
+            {% endif %}
+            {% if selected_sublocation_name %}
+              <span class="active-filter-badge">
+                Sub-Location: {{ selected_sublocation_name }}
+                <i class="fas fa-times" onclick="removeFilter('sublocation')"></i>
+              </span>
+            {% endif %}
+            {% if selected_month_label %}
+              <span class="active-filter-badge">
+                Month: {{ selected_month_label }}
+                <i class="fas fa-times" onclick="removeFilter('month')"></i>
+              </span>
+            {% endif %}
+            <a href="{% url 'accidents:IncidentAccidentDashboardView' %}" class="btn-clear-filters">
+              <i class="fas fa-times-circle"></i> Clear All
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </form>
-</div>
+  </div>
 
-<!-- Summary Statistics Row -->
-<div class="row mb-4">
-    <!-- Total Injuries (Keep as is) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'accidents:incident_list' %}" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card primary">
-                    <i class="fas fa-exclamation-triangle stat-icon"></i>
-                    <p class="stat-number">{{ total_incidents }}</p>
-                    <p class="stat-label">Total Injuries</p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Closed Injuries (Keep as is) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'accidents:incident_list' %}?status=CLOSED" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card success">
-                    <i class="fas fa-check-circle stat-icon"></i>
-                    <p class="stat-number">{{ closed_incidents }}</p>
-                    <p class="stat-label">Closed Injuries</p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- This Month Card (RE-FILTER DASHBOARD) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="?month={{ current_month_value }}" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card warning">
-                    <i class="fas fa-calendar-alt stat-icon"></i>
-                    <p class="stat-number">{{ this_month_incidents }}</p>
-                    <p class="stat-label">
-                        {% if selected_month_label %}{{ selected_month_label }}{% else %}This Month{% endif %}
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Rejected Reports Card (FILTER LIST VIEW) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'accidents:incident_list' %}?status=REJECTED" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card danger"> <!-- Changed to danger/red color -->
-                    <i class="fas fa-times-circle stat-icon"></i>
-                    <p class="stat-number">{{ rejected_incidents_count }}</p>
-                    <p class="stat-label">Rejected Reports</p>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
-<!-- Charts Row -->
-<div class="row mb-4">
-    <!-- Incidents by Type Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-chart-pie mr-2"></i>Injuries by Type</h5>
-                </div>
-                <div class="chart-container">
-                    <canvas id="incidentTypeChart"></canvas>
-                </div>
-            </div>
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <!-- Total Injuries -->
+    <a href="{% url 'accidents:incident_list' %}" class="dash-stat-card">
+      <div class="stat-icon teal">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total_incidents }}</div>
+        <div class="stat-label">Total Injuries</div>
+        <div class="stat-change neutral">
+          <i class="fas fa-database"></i> All records
         </div>
-    </div>
+      </div>
+    </a>
 
-    <!-- Monthly Trend Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-chart-line mr-2"></i>Monthly Trend (Last 6 Months)</h5>
-                </div>
-                <div class="chart-container">
-                    <canvas id="monthlyTrendChart"></canvas>
-                </div>
-            </div>
+    <!-- Closed Injuries -->
+    <a href="{% url 'accidents:incident_list' %}?status=CLOSED" class="dash-stat-card">
+      <div class="stat-icon green">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ closed_incidents }}</div>
+        <div class="stat-label">Closed Injuries</div>
+        <div class="stat-change up">
+          <i class="fas fa-arrow-up"></i> Resolved
         </div>
-    </div>
-</div>
+      </div>
+    </a>
 
-<!-- Severity Distribution and Status Charts -->
-<div class="row mb-4">
+    <!-- This Month -->
+    <a href="?month={{ current_month_value }}" class="dash-stat-card">
+      <div class="stat-icon gold">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ this_month_incidents }}</div>
+        <div class="stat-label">
+          {% if selected_month_label %}{{ selected_month_label }}{% else %}This Month{% endif %}
+        </div>
+        <div class="stat-change neutral">
+          <i class="fas fa-calendar"></i> Current period
+        </div>
+      </div>
+    </a>
+
+    <!-- Rejected Reports -->
+    <a href="{% url 'accidents:incident_list' %}?status=REJECTED" class="dash-stat-card">
+      <div class="stat-icon red">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">{{ rejected_incidents_count }}</div>
+        <div class="stat-label">Rejected Reports</div>
+        <div class="stat-change down">
+          <i class="fas fa-arrow-down"></i> Needs review
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW                                                 -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <!-- Incidents by Type -->
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-chart-pie"></i> Injuries by Type</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="dash-chart-container">
+            <canvas id="incidentTypeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Trend -->
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-chart-line"></i> Monthly Trend (Last 6 Months)</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="dash-chart-container">
+            <canvas id="monthlyTrendChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SEVERITY & STATUS CHARTS                                   -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <!-- Severity Distribution -->
     <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-exclamation-circle mr-2"></i>Severity Distribution</h5>
-                </div>
-                <div class="chart-container">
-                    <canvas id="severityChart"></canvas>
-                </div>
-            </div>
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-exclamation-circle"></i> Severity Distribution</h5>
         </div>
+        <div class="card-body-custom">
+          <div class="dash-chart-container">
+            <canvas id="severityChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Status Distribution -->
     <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-tasks mr-2"></i>Status Distribution</h5>
-                </div>
-                <div class="chart-container">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-tasks"></i> Status Distribution</h5>
         </div>
+        <div class="card-body-custom">
+          <div class="dash-chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Alerts and Recent Incidents Row -->
-<div class="row">
+  <!-- ========================================================== -->
+  <!-- ALERTS & RECENT INCIDENTS                                   -->
+  <!-- ========================================================== -->
+  <div class="row">
     <!-- Left Column: Alerts & Quick Actions -->
     <div class="col-lg-4 mb-4">
-        <!-- Overdue Investigations Alert -->
-        {% if overdue_investigations %}
-        <div class="dashboard-card mb-3">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5 class="text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Overdue Investigations</h5>
-                </div>
-                {% for incident in overdue_investigations|slice:":5" %}
-                <div class="alert-card alert-danger">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">{{ incident.report_number }}</h6>
-                            <p class="mb-1 small">{{ incident.incident_title|truncatewords:8 }}</p>
-                            <small class="text-muted">
-                                Deadline: {{ incident.investigation_deadline|date:"d/m/Y" }}
-                                ({{ incident.investigation_deadline|timesince }} ago)
-                            </small>
-                        </div>
-                        <a href="{% url 'accidents:investigation_create' incident.pk %}" class="btn btn-sm btn-danger">
-                            <i class="fas fa-search"></i>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+      <!-- Overdue Investigations Alert -->
+      {% if overdue_investigations %}
+      <div class="dash-chart-card mb-3">
+        <div class="card-header-custom" style="background: #fef2f2; border-color: #fca5a5;">
+          <h5 style="color: #dc2626;">
+            <i class="fas fa-exclamation-triangle"></i> Overdue Investigations
+          </h5>
         </div>
-        {% endif %}
+        <div class="card-body-custom">
+          {% for incident in overdue_investigations|slice:":5" %}
+          <div class="dash-alert-card alert-danger">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="alert-title">{{ incident.report_number }}</div>
+                <div class="alert-text">{{ incident.incident_title|truncatewords:8 }}</div>
+                <div class="alert-meta">
+                  <i class="fas fa-clock"></i> Deadline: {{ incident.investigation_deadline|date:"d/m/Y" }}
+                  <span class="text-danger">({{ incident.investigation_deadline|timesince }} ago)</span>
+                </div>
+              </div>
+              <a href="{% url 'accidents:investigation_create' incident.pk %}" class="btn btn-sm btn-danger alert-action" title="Investigate">
+                <i class="fas fa-search"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
 
-        <!-- Quick Actions -->
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-bolt mr-2"></i>Quick Actions</h5>
-                </div>
-                <a href="{% url 'accidents:incident_create' %}" class="quick-action-btn bg-danger">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Report New Injury</span>
-                </a>
-                <a href="{% url 'accidents:incident_list' %}" class="quick-action-btn bg-primary">
-                    <i class="fas fa-list"></i>
-                    <span>View All Injuries</span>
-                </a>
-                <a href="#" id="exportExcelBtn" class="quick-action-btn bg-success">
-                    <i class="fas fa-file-excel"></i><span>Export to Excel</span>
-                </a>
-                <!-- <a href="#" class="quick-action-btn bg-info">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
-                </a> -->
-            </div>
+      <!-- Quick Actions -->
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
         </div>
+        <div class="card-body-custom">
+          <a href="{% url 'accidents:incident_create' %}" class="dash-quick-action-btn danger">
+            <i class="fas fa-plus-circle"></i> Report New Injury
+          </a>
+          <a href="{% url 'accidents:incident_list' %}" class="dash-quick-action-btn teal">
+            <i class="fas fa-list"></i> View All Injuries
+          </a>
+          <a href="#" id="exportExcelBtn" class="dash-quick-action-btn success">
+            <i class="fas fa-file-excel"></i> Export to Excel
+          </a>
+        </div>
+      </div>
     </div>
 
     <!-- Right Column: Recent Incidents Table -->
-<div class="col-lg-8 mb-4">
-    <div class="dashboard-card">
-        <div class="card-body">
-            <div class="section-header">
-                <h5><i class="fas fa-clock mr-2"></i>Recent Incidents</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover incident-table">
-                    <thead>
-                        <tr>
-                            <th>Report #</th>
-                            <!-- <th>Title</th> -->
-                            <th>Type</th>
-                            <!-- The 'Severity' column that caused the error has been removed -->
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for incident in recent_incidents %}
-                        <tr>
-                            <td><strong>{{ incident.report_number }}</strong></td>
-                            <!-- <td>{{ incident.incident_title|truncatewords:5 }}</td> -->
-                            <td>
-                                {% with code=incident.incident_type.code|default:'' %}
-                                <span class="badge badge-custom 
-                                    {% if code == 'LTI' %}bg-danger
-                                    {% elif code == 'MTC' %}bg-warning text-dark
-                                    {% elif code == 'FA' %}bg-info
-                                    {% elif code == 'HLFI' %}bg-success
-                                    {% else %}bg-dark{% endif %}">
-                                    {{ incident.incident_type.name|default:'N/A' }}
-                                </span>
-                                {% endwith %}
-                            </td>
-                            <!-- 
-                                THIS COMMENTED-OUT BLOCK HAS BEEN REMOVED AS IT WOULD CAUSE AN ERROR
-                                <td>
-                                    <span class="severity-indicator severity-{{ incident.severity_level|lower }}"></span>
-                                    {{ incident.severity_level }}
-                                </td> 
-                            -->
-                            <td>{{ incident.incident_date|date:"d/m/Y" }}</td>
-                            <td>
-                                <span class="badge badge-custom 
-                                    {% if incident.status == 'CLOSED' %}bg-success
-                                    {% elif incident.status == 'REPORTED' %}bg-secondary
-                                    {% else %}bg-primary{% endif %}">
-                                    {{ incident.get_status_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <a href="{% url 'accidents:incident_detail' incident.pk %}" 
-                                   class="btn btn-sm btn-outline-primary" 
-                                   title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4"> {# Note: colspan changed from 7 to 6 #}
-                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                No recent incidents found
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            {% if recent_incidents %}
-            <div class="text-center mt-3">
-                <a href="{% url 'accidents:incident_list' %}" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-right mr-2"></i>View All Injuries
-                </a>
-            </div>
-            {% endif %}
+    <div class="col-lg-8 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-clock"></i> Recent Incidents</h5>
         </div>
+        <div class="card-body-custom" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="table dash-incident-table">
+              <thead>
+                <tr>
+                  <th>Report #</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for incident in recent_incidents %}
+                <tr>
+                  <td data-label="Report #">
+                    <strong>{{ incident.report_number }}</strong>
+                  </td>
+                  <td data-label="Type">
+                    {% with code=incident.incident_type.code|default:'' %}
+                    <span class="dash-badge 
+                      {% if code == 'LTI' %}danger
+                      {% elif code == 'MTC' %}warning
+                      {% elif code == 'FA' %}info
+                      {% elif code == 'HLFI' %}success
+                      {% else %}secondary{% endif %}">
+                      {{ incident.incident_type.name|default:'N/A' }}
+                    </span>
+                    {% endwith %}
+                  </td>
+                  <td data-label="Date">{{ incident.incident_date|date:"d/m/Y" }}</td>
+                  <td data-label="Status">
+                    <span class="dash-badge 
+                      {% if incident.status == 'CLOSED' %}success
+                      {% elif incident.status == 'REPORTED' %}secondary
+                      {% else %}teal{% endif %}">
+                      {{ incident.get_status_display }}
+                    </span>
+                  </td>
+                  <td data-label="Action">
+                    <a href="{% url 'accidents:incident_detail' incident.pk %}" 
+                       class="btn btn-sm" 
+                       title="View Details"
+                       style="border-radius: var(--radius-sm); border: 1px solid var(--primary-teal); color: var(--primary-teal); background: transparent; padding: 4px 10px;">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3 d-block" style="color: var(--primary-teal-light);"></i>
+                    No recent incidents found
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          {% if recent_incidents %}
+          <div class="text-center p-3">
+            <a href="{% url 'accidents:incident_list' %}" class="btn" style="background: var(--primary-teal); color: white; border-radius: var(--radius-sm); font-weight: 600; padding: 8px 24px;">
+              <i class="fas fa-arrow-right mr-2"></i> View All Injuries
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+
 </div>
 
 {% endblock %}
@@ -682,19 +1060,17 @@
 {% block extra_js %}
 <!-- Chart.js Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<!-- ✅ STEP 1: Datalabels Plugin Library ko add kiya gaya hai -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // ... (Aapka saara filter aur cascading dropdown ka logic waise hi rahega) ...
     // ============================================================
-    // SCRIPT FOR INTERACTIVE, AUTO-SUBMITTING FILTERS
+    // FILTER AUTO-SUBMIT
     // ============================================================
     const filterForm = document.getElementById('filterForm');
-    const filterSelects = filterForm.querySelectorAll('select.form-control'); // Corrected selector
-    const applyButton = filterForm.querySelector('button[type="submit"]');
+    const filterSelects = filterForm.querySelectorAll('select.form-control');
+    const applyButton = document.getElementById('applyFilterBtn');
 
     filterSelects.forEach(select => {
         select.addEventListener('change', function() {
@@ -707,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // SCRIPT FOR CASCADING DROPDOWNS (Plant -> Zone -> Etc.)
+    // CASCADING DROPDOWNS
     // ============================================================
     document.getElementById('plant_filter').addEventListener('change', function() {
         const plantId = this.value;
@@ -769,12 +1145,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ============================================================
+    // REMOVE FILTER
+    // ============================================================
     window.removeFilter = function(filterName) {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.delete(filterName);
         window.location.href = window.location.pathname + '?' + urlParams.toString();
-    }
-    
+    };
+
+    // ============================================================
+    // EXPORT TO EXCEL
+    // ============================================================
     document.getElementById('exportExcelBtn').addEventListener('click', function(e) {
         e.preventDefault();
         const currentParams = window.location.search;
@@ -783,15 +1165,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // CHART RENDERING CODE (UPDATED WITH DATALABELS)
+    // CHART RENDERING
     // ============================================================
     const colors = {
-        danger: '#dc3545', warning: '#ffc107', info: '#17a2b8',
-        success: '#28a745', primary: '#007bff', secondary: '#6c757d',
-        purple: '#6f42c1', orange: '#fd7e14'
+        danger: '#ef4444', 
+        warning: '#d97706', 
+        info: '#0d9488',
+        success: '#22c55e', 
+        teal: '#0d9488',
+        secondary: '#64748b',
+        purple: '#7c3aed', 
+        orange: '#f59e0b',
+        red: '#dc2626',
+        gold: '#d97706'
     };
 
-    // Incident Type Doughnut Chart - UPDATED
+    // Incident Type Doughnut Chart
     const incidentTypeCtx = document.getElementById('incidentTypeChart')?.getContext('2d');
     if (incidentTypeCtx) {
         new Chart(incidentTypeCtx, {
@@ -800,28 +1189,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: {{ type_chart_labels|safe }},
                 datasets: [{
                     data: {{ type_chart_data|safe }},
-                    backgroundColor: [colors.danger, colors.warning, colors.info, colors.success, colors.primary, colors.purple, colors.orange]
+                    backgroundColor: [colors.danger, colors.warning, colors.info, colors.success, colors.teal, colors.purple, colors.orange]
                 }]
             },
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' },
-                    // Datalabels config for doughnut chart
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } },
                     datalabels: {
                         color: '#fff',
-                        font: { weight: 'bold', size: 16 },
+                        font: { weight: 'bold', size: 14, family: 'Inter' },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 }
             },
-            // ✅ STEP 2: Plugin ko register kiya gaya hai
             plugins: [ChartDataLabels]
         });
     }
 
-    // Monthly Trend Line Chart (No change needed here)
+    // Monthly Trend Line Chart
     const monthlyTrendCtx = document.getElementById('monthlyTrendChart')?.getContext('2d');
     if (monthlyTrendCtx) {
         new Chart(monthlyTrendCtx, {
@@ -831,59 +1218,76 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Incidents',
                     data: {{ monthly_data|safe }},
-                    borderColor: colors.primary,
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderColor: colors.teal,
+                    backgroundColor: 'rgba(13, 148, 136, 0.1)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointBackgroundColor: colors.teal,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
                 }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } } 
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter' } }
+                    }
+                }
             }
         });
     }
 
-    // Severity Distribution Bar Chart - UPDATED
+    // Severity Distribution Bar Chart
     const severityCtx = document.getElementById('severityChart')?.getContext('2d');
     if (severityCtx) {
         new Chart(severityCtx, {
             type: 'bar',
             data: {
-                // labels: ['LTI', 'MTC/RWC', 'First Aid (FA)', 'HLFI', 'Fatality'],
                 labels: {{ severity_labels|safe }},
                 datasets: [{
                     label: 'Incidents',
                     data: {{ severity_data|safe }},
-                    backgroundColor: ['#dc3545', '#ffc107', '#17a2b8', '#28a745', '#000000']
+                    backgroundColor: ['#dc2626', '#d97706', '#0d9488', '#22c55e', '#1e293b']
                 }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, 
+                maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
-                    // Datalabels config for Severity chart (inside the bar)
                     datalabels: {
                         anchor: 'end',
-                        align: 'bottom',
-                        color: '#fff',
-                        font: { weight: 'bold' },
+                        align: 'top',
+                        color: '#334155',
+                        font: { weight: 'bold', size: 14, family: 'Inter' },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
                 scales: { 
                     y: { 
                         beginAtZero: true, 
-                        ticks: { stepSize: 1, precision: 0 } 
-                    } 
+                        ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } } 
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter', size: 11 } }
+                    }
                 }
             },
-            // ✅ STEP 2: Plugin ko register kiya gaya hai
             plugins: [ChartDataLabels]
         });
     }
 
-    // Status Distribution Horizontal Bar Chart - UPDATED
+    // Status Distribution Horizontal Bar Chart
     const statusCtx = document.getElementById('statusChart')?.getContext('2d');
     if (statusCtx) {
         const statusData = {{ status_data|safe }};
@@ -893,8 +1297,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: {{ status_labels|safe }},
                 datasets: [{
                     label: 'Incidents',
-                    data: statusData.map(item => item.count), 
-                    backgroundColor: colors.primary
+                    data: statusData.map(item => item.count),
+                    backgroundColor: [
+                        '#22c55e', '#d97706', '#0d9488', '#0d9488', '#64748b'
+                    ]
                 }]
             },
             options: {
@@ -903,16 +1309,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
-                    // Datalabels config for Status chart (inside the bar)
                     datalabels: {
                         anchor: 'end',
-                        align: 'left', // 'left' for horizontal bars to be inside
-                        color: '#fff',
-                        font: { weight: 'bold' },
+                        align: 'right',
+                        color: '#334155',
+                        font: { weight: 'bold', size: 14, family: 'Inter' },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
-                scales: { x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
+                scales: { 
+                    x: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } } 
+                    },
+                    y: {
+                        ticks: { font: { family: 'Inter', size: 12 } }
+                    }
+                },
                 onClick: (event, elements) => {
                     if (elements.length > 0) {
                         const clickedElementIndex = elements[0].index;
@@ -924,7 +1337,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                 }
             },
-            // ✅ STEP 2: Plugin ko register kiya gaya hai
             plugins: [ChartDataLabels]
         });
     }
