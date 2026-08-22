@@ -1,300 +1,963 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}Edit Permit{% endblock %}
-{% block page_title %}{% endblock %}
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'permit:permit_list' %}">All Permits</a></li>
-<li class="breadcrumb-item active">Edit Permit</li>
-{% endblock %}
+
+{% block title %}Edit Permit | EHS-360{% endblock %}
+
 {% block extra_css %}
 <style>
-   .permit-type-shell { max-width: 1200px; margin: auto; }
-   .form-section { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-   .form-section h6 { font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 8px; }
-   .permit-form-grid {
-   display: grid;
-   grid-template-columns: repeat(3, 1fr);
-   gap: 15px;
-   }
-   .full-width { grid-column: 1 / -1; }
-   input, select, textarea {
-   width: 100%;
-   padding: 10px;
-   border-radius: 6px;
-   border: 1px solid #ced4da;
-   }
-   .checkbox-grid {
-   display: grid;
-   grid-template-columns: repeat(3, 1fr);
-   gap: 12px 20px;
-   }
-   .checkbox-item {
-   display: flex;
-   align-items: center;
-   gap: 8px;
-   font-weight: 500;
-   cursor: pointer;
-   }
-   .checkbox-item input {
-   width: 16px;
-   height: 16px;
-   }
-   .delete-toggle {
-   display: flex;
-   align-items: center;
-   gap: 6px;
-   background: #fff5f5;
-   border: 1px solid #f5c2c7;
-   color: #dc3545;
-   padding: 6px 10px;
-   border-radius: 6px;
-   cursor: pointer;
-   }
-   .card-footer { display: flex; gap: 10px; }
-   @media(max-width:768px){
-   .permit-form-grid { grid-template-columns: 1fr; }
-   }
+  /* ===== EDIT PERMIT - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 16px 24px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 24px 28px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                               */
+  /* ========================================================== */
+  .form-section-custom {
+    background: #fafbfc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .form-section-custom:hover {
+    border-color: var(--primary-teal);
+  }
+
+  .form-section-custom h6 {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section-custom h6 i {
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* FORM GRID                                                  */
+  /* ========================================================== */
+  .permit-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .permit-form-grid .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 0;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control,
+  .form-group-custom .form-select,
+  .form-group-custom select,
+  .form-group-custom input,
+  .form-group-custom textarea {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus,
+  .form-group-custom .form-select:focus,
+  .form-group-custom select:focus,
+  .form-group-custom input:focus,
+  .form-group-custom textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .form-group-custom .form-control:disabled,
+  .form-group-custom .form-control[readonly],
+  .form-group-custom input:disabled,
+  .form-group-custom input[readonly] {
+    background: #f1f5f9;
+    cursor: not-allowed;
+  }
+
+  .form-group-custom .form-control::placeholder,
+  .form-group-custom input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-group-custom textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  .text-danger {
+    color: var(--secondary-red) !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GRID                                               */
+  /* ========================================================== */
+  .checkbox-grid-custom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 20px;
+    margin-top: 8px;
+  }
+
+  .checkbox-item-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .checkbox-item-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: rgba(13, 148, 136, 0.1);
+  }
+
+  .checkbox-item-custom input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--primary-teal);
+    flex-shrink: 0;
+  }
+
+  .checkbox-item-custom span {
+    cursor: pointer;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-danger {
+    background: #fef2f2;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-red);
+  }
+
+  .alert-custom.alert-danger i {
+    color: var(--secondary-red);
+  }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content strong {
+    color: var(--text-primary);
+  }
+
+  .alert-custom .alert-content ul {
+    margin: 4px 0 0 0;
+    padding-left: 20px;
+  }
+
+  .alert-custom .alert-content ul li {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* ========================================================== */
+  /* DELETE TOGGLE                                               */
+  /* ========================================================== */
+  .delete-toggle-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: var(--secondary-red);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+
+  .delete-toggle-custom:hover {
+    background: #fee2e2;
+  }
+
+  .delete-toggle-custom input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--secondary-red);
+    cursor: pointer;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-submit-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-submit-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    color: white;
+  }
+
+  .btn-submit-teal:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-submit-teal i {
+    font-size: 16px;
+  }
+
+  .btn-cancel-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-cancel-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .btn-add-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--primary-teal);
+    background: transparent;
+    color: var(--primary-teal);
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-add-custom:hover {
+    background: var(--primary-teal-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-add-custom i {
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 20px 22px;
+    }
+    .permit-form-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .checkbox-grid-custom {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 16px 18px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 16px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 14px 18px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-submit-teal,
+    .dash-form-card .card-footer-custom .btn-cancel-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .permit-form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .permit-form-grid .full-width {
+      grid-column: 1;
+    }
+
+    .form-section-custom {
+      padding: 14px 16px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select,
+    .form-group-custom select,
+    .form-group-custom input,
+    .form-group-custom textarea {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .checkbox-grid-custom {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+
+    .checkbox-item-custom {
+      font-size: 13px;
+      padding: 4px 8px;
+    }
+
+    .btn-add-custom {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .form-section-custom {
+      padding: 10px 12px;
+    }
+
+    .form-section-custom h6 {
+      font-size: 14px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select,
+    .form-group-custom select,
+    .form-group-custom input,
+    .form-group-custom textarea {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .checkbox-grid-custom {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-submit-teal,
+    .btn-cancel-custom {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+
+    .delete-toggle-custom {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="permit-type-shell">
-   <div class="ehs-card">
-      <div class="card-header">
-         <h3><i class="fas fa-edit mr-2"></i>Edit Permit</h3>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-edit"></i>
       </div>
-      <form method="POST" enctype="multipart/form-data">
-         {% csrf_token %}
-         <div class="card-body">
-            <!-- ERRORS -->
-            {% if form.errors %}
-            <div class="alert alert-danger">
-               <strong>Please fix the following errors:</strong>
-               <ul>
-                  {% for field in form %}
-                  {% for error in field.errors %}
+      <div>
+        <h1>Edit Permit</h1>
+        <p class="subtitle">Update permit details</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-file-signature"></i>
+        Edit Permit
+      </h3>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="card-body-custom">
+
+        <!-- Form Errors -->
+        {% if form.errors %}
+        <div class="alert-custom alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+              {% for field in form %}
+                {% for error in field.errors %}
                   <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                  {% endfor %}
-                  {% endfor %}
-                  {% for error in form.non_field_errors %}
-                  <li>{{ error }}</li>
-                  {% endfor %}
-               </ul>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Basic Information -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-info-circle"></i> Basic Information</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.permit_type.label_tag }} {{ form.permit_type }}</div>
+            <div class="form-group-custom">
+              <label>Requester</label>
+              <input type="text" value="{{ form.instance.requester_name }}" readonly>
             </div>
-            {% endif %}
-            <!-- BASIC -->
-            <div class="form-section">
-               <h6>Basic Information</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.permit_type.label_tag }} {{ form.permit_type }}</div>
-                  <div>
-                     <label>Requester</label>
-                     <input type="text" value="{{ form.instance.requester_name }}" readonly>
-                  </div>
-                  <div>{{ form.priority.label_tag }} {{ form.priority }}</div>
-               </div>
-            </div>
-            <!-- LOCATION -->
-            <div class="form-section">
-               <h6>Location</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.plant.label_tag }} {{ form.plant }}</div>
-                  <div>{{ form.zone.label_tag }} {{ form.zone }}</div>
-                  <div>{{ form.location.label_tag }} {{ form.location }}</div>
-                  <div>{{ form.sublocation.label_tag }} {{ form.sublocation }}</div>
-                  <div>{{ form.department.label_tag }} {{ form.department }}</div>
-               </div>
-            </div>
-            <!-- WORK -->
-            <div class="form-section">
-               <h6>Work Details</h6>
-               <div class="permit-form-grid">
-                  <div class="full-width">{{ form.job_description.label_tag }} {{ form.job_description }}</div>
-                  <div>{{ form.start_date.label_tag }} {{ form.start_date }}</div>
-                  <div>{{ form.end_date.label_tag }} {{ form.end_date }}</div>
-               </div>
-            </div>
-            <!-- CONTRACTOR -->
-            <div class="form-section">
-               <h6>Supervisor / Contractor</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.contractor_company.label_tag }} {{ form.contractor_company }}</div>
-                  <div>{{ form.reporting_engineer.label_tag }} {{ form.reporting_engineer }}</div>
-                  <div>{{ form.supervisor_name.label_tag }} {{ form.supervisor_name }}</div>
-                  <div>{{ form.contact_number.label_tag }} {{ form.contact_number }}</div>
-               </div>
-            </div>
-            <!-- HAZARDS -->
-            <div class="form-section">
-               <h6>Hazard Assessment</h6>
-               <div>{{ form.hazard_risk_level.label_tag }} {{ form.hazard_risk_level }}</div>
-               <label class="mt-2">Hazards:</label>
-               <div class="checkbox-grid">
-                  {% for value, label in form.fields.hazards.choices %}
-                  <label class="checkbox-item">
-                  <input type="checkbox" name="hazards" value="{{ value }}"
+            <div class="form-group-custom">{{ form.priority.label_tag }} {{ form.priority }}</div>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-map-marker-alt"></i> Location</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.plant.label_tag }} {{ form.plant }}</div>
+            <div class="form-group-custom">{{ form.zone.label_tag }} {{ form.zone }}</div>
+            <div class="form-group-custom">{{ form.location.label_tag }} {{ form.location }}</div>
+            <div class="form-group-custom">{{ form.sublocation.label_tag }} {{ form.sublocation }}</div>
+            <div class="form-group-custom">{{ form.department.label_tag }} {{ form.department }}</div>
+          </div>
+        </div>
+
+        <!-- Work Details -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-tools"></i> Work Details</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom full-width">{{ form.job_description.label_tag }} {{ form.job_description }}</div>
+            <div class="form-group-custom">{{ form.start_date.label_tag }} {{ form.start_date }}</div>
+            <div class="form-group-custom">{{ form.end_date.label_tag }} {{ form.end_date }}</div>
+          </div>
+        </div>
+
+        <!-- Supervisor / Contractor -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-user-tie"></i> Supervisor / Contractor</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.contractor_company.label_tag }} {{ form.contractor_company }}</div>
+            <div class="form-group-custom">{{ form.reporting_engineer.label_tag }} {{ form.reporting_engineer }}</div>
+            <div class="form-group-custom">{{ form.supervisor_name.label_tag }} {{ form.supervisor_name }}</div>
+            <div class="form-group-custom">{{ form.contact_number.label_tag }} {{ form.contact_number }}</div>
+          </div>
+        </div>
+
+        <!-- Hazard Assessment -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-exclamation-triangle"></i> Hazard Assessment</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.hazard_risk_level.label_tag }} {{ form.hazard_risk_level }}</div>
+          </div>
+          <div class="form-group-custom" style="margin-top: 10px;">
+            <label>Hazards:</label>
+            <div class="checkbox-grid-custom">
+              {% for value, label in form.fields.hazards.choices %}
+              <label class="checkbox-item-custom">
+                <input type="checkbox" name="hazards" value="{{ value }}"
                   {% if value in selected_hazards %}checked{% endif %}>
-                  <span>{{ label }}</span>
-                  </label>
-                  {% endfor %}
-               </div>
-               <div class="full-width mt-2">
-                  {{ form.safety_measures.label_tag }} {{ form.safety_measures }}
-               </div>
+                <span>{{ label }}</span>
+              </label>
+              {% endfor %}
             </div>
-            <!-- CHECKLIST -->
-            <div class="form-section">
-               <h6>Checklist</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.plant_running.label_tag }} {{ form.plant_running }}</div>
-                  <div>{{ form.equipment_isolated.label_tag }} {{ form.equipment_isolated }}</div>
-                  <div>{{ form.valves_closed.label_tag }} {{ form.valves_closed }}</div>
-                  <div>{{ form.equipment_drained.label_tag }} {{ form.equipment_drained }}</div>
-                  <div>{{ form.equipment_disconnected.label_tag }} {{ form.equipment_disconnected }}</div>
-                  <div>{{ form.pipeline_depressurized.label_tag }} {{ form.pipeline_depressurized }}</div>
-                  <div>{{ form.pipeline_drained.label_tag }} {{ form.pipeline_drained }}</div>
-                  <div>{{ form.pipeline_purged.label_tag }} {{ form.pipeline_purged }}</div>
-                  <div>{{ form.pipeline_ventilated.label_tag }} {{ form.pipeline_ventilated }}</div>
-                  <div>{{ form.electrical_earthing.label_tag }} {{ form.electrical_earthing }}</div>
-                  <div>{{ form.area_protected.label_tag }} {{ form.area_protected }}</div>
-                  <div>{{ form.gas_test.label_tag }} {{ form.gas_test }}</div>
-                  <div>{{ form.gas_test_value.label_tag }} {{ form.gas_test_value }}</div>
-                  <div>{{ form.spillage_removed.label_tag }} {{ form.spillage_removed }}</div>
-               </div>
+          </div>
+          <div class="form-group-custom full-width" style="margin-top: 10px;">
+            {{ form.safety_measures.label_tag }} {{ form.safety_measures }}
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-check-double"></i> Checklist</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.plant_running.label_tag }} {{ form.plant_running }}</div>
+            <div class="form-group-custom">{{ form.equipment_isolated.label_tag }} {{ form.equipment_isolated }}</div>
+            <div class="form-group-custom">{{ form.valves_closed.label_tag }} {{ form.valves_closed }}</div>
+            <div class="form-group-custom">{{ form.equipment_drained.label_tag }} {{ form.equipment_drained }}</div>
+            <div class="form-group-custom">{{ form.equipment_disconnected.label_tag }} {{ form.equipment_disconnected }}</div>
+            <div class="form-group-custom">{{ form.pipeline_depressurized.label_tag }} {{ form.pipeline_depressurized }}</div>
+            <div class="form-group-custom">{{ form.pipeline_drained.label_tag }} {{ form.pipeline_drained }}</div>
+            <div class="form-group-custom">{{ form.pipeline_purged.label_tag }} {{ form.pipeline_purged }}</div>
+            <div class="form-group-custom">{{ form.pipeline_ventilated.label_tag }} {{ form.pipeline_ventilated }}</div>
+            <div class="form-group-custom">{{ form.electrical_earthing.label_tag }} {{ form.electrical_earthing }}</div>
+            <div class="form-group-custom">{{ form.area_protected.label_tag }} {{ form.area_protected }}</div>
+            <div class="form-group-custom">{{ form.gas_test.label_tag }} {{ form.gas_test }}</div>
+            <div class="form-group-custom">{{ form.gas_test_value.label_tag }} {{ form.gas_test_value }}</div>
+            <div class="form-group-custom">{{ form.spillage_removed.label_tag }} {{ form.spillage_removed }}</div>
+          </div>
+        </div>
+
+        <!-- PPE -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-helmet-safety"></i> PPE</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.ppe_safety_shoe.label_tag }} {{ form.ppe_safety_shoe }}</div>
+            <div class="form-group-custom">{{ form.ppe_helmet.label_tag }} {{ form.ppe_helmet }}</div>
+            <div class="form-group-custom">{{ form.ppe_safety_belt.label_tag }} {{ form.ppe_safety_belt }}</div>
+            <div class="form-group-custom">{{ form.ppe_gloves.label_tag }} {{ form.ppe_gloves }}</div>
+            <div class="form-group-custom">{{ form.ppe_respiratory.label_tag }} {{ form.ppe_respiratory }}</div>
+            <div class="form-group-custom">{{ form.ppe_ear.label_tag }} {{ form.ppe_ear }}</div>
+            <div class="form-group-custom">{{ form.ppe_eye.label_tag }} {{ form.ppe_eye }}</div>
+            <div class="form-group-custom">{{ form.ppe_other.label_tag }} {{ form.ppe_other }}</div>
+            <div class="form-group-custom full-width">{{ form.ppe_other_specify.label_tag }} {{ form.ppe_other_specify }}</div>
+          </div>
+        </div>
+
+        <!-- Safety Equipment -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-shield-alt"></i> Safety Equipment</h6>
+          <div class="permit-form-grid">
+            <div class="form-group-custom">{{ form.electrical_clearance.label_tag }} {{ form.electrical_clearance }}</div>
+            <div class="form-group-custom">{{ form.ventilation_adequate.label_tag }} {{ form.ventilation_adequate }}</div>
+            <div class="form-group-custom">{{ form.fire_extinguishers.label_tag }} {{ form.fire_extinguishers }}</div>
+            <div class="form-group-custom">{{ form.fire_extinguishers_details.label_tag }} {{ form.fire_extinguishers_details }}</div>
+            <div class="form-group-custom">{{ form.grinder_guard.label_tag }} {{ form.grinder_guard }}</div>
+            <div class="form-group-custom">{{ form.welding_elcb.label_tag }} {{ form.welding_elcb }}</div>
+            <div class="form-group-custom">{{ form.gas_cutting_fba.label_tag }} {{ form.gas_cutting_fba }}</div>
+            <div class="form-group-custom">{{ form.gas_hosepipe.label_tag }} {{ form.gas_hosepipe }}</div>
+            <div class="form-group-custom">{{ form.cylinder_key.label_tag }} {{ form.cylinder_key }}</div>
+            <div class="form-group-custom">{{ form.esi_insurance.label_tag }} {{ form.esi_insurance }}</div>
+          </div>
+        </div>
+
+        <!-- Workers -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-users"></i> Workers</h6>
+          {{ contractor_formset.management_form }}
+          <div id="contractor-forms">
+            {% for f in contractor_formset %}
+            {{ f.id }}
+            <div class="permit-form-grid" style="margin-bottom: 12px;">
+              <div class="form-group-custom">{{ f.name.label_tag }} {{ f.name }}</div>
+              <div class="form-group-custom">{{ f.trade.label_tag }} {{ f.trade }}</div>
+              <div class="form-group-custom">{{ f.id_number.label_tag }} {{ f.id_number }}</div>
+              <div class="form-group-custom">{{ f.esi_number.label_tag }} {{ f.esi_number }}</div>
+              <div class="form-group-custom">{{ f.contact_number.label_tag }} {{ f.contact_number }}</div>
+              <div class="form-group-custom" style="display: flex; align-items: flex-end;">
+                {% if f.instance.pk %}
+                <label class="delete-toggle-custom">
+                  {{ f.DELETE }} Remove
+                </label>
+                {% endif %}
+              </div>
             </div>
-            <!-- PPE -->
-            <div class="form-section">
-               <h6>PPE</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.ppe_safety_shoe.label_tag }} {{ form.ppe_safety_shoe }}</div>
-                  <div>{{ form.ppe_helmet.label_tag }} {{ form.ppe_helmet }}</div>
-                  <div>{{ form.ppe_safety_belt.label_tag }} {{ form.ppe_safety_belt }}</div>
-                  <div>{{ form.ppe_gloves.label_tag }} {{ form.ppe_gloves }}</div>
-                  <div>{{ form.ppe_respiratory.label_tag }} {{ form.ppe_respiratory }}</div>
-                  <div>{{ form.ppe_ear.label_tag }} {{ form.ppe_ear }}</div>
-                  <div>{{ form.ppe_eye.label_tag }} {{ form.ppe_eye }}</div>
-                  <div>{{ form.ppe_other.label_tag }} {{ form.ppe_other }}</div>
-                  <div class="full-width">{{ form.ppe_other_specify.label_tag }} {{ form.ppe_other_specify }}</div>
-               </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn-add-custom mt-2" id="add-contractor">
+            <i class="fas fa-plus"></i> Add Worker
+          </button>
+          <div id="empty-contractor-form" style="display:none;">
+            <div class="permit-form-grid" style="margin-bottom: 12px;">
+              {{ contractor_formset.empty_form.id }}
+              <div class="form-group-custom">{{ contractor_formset.empty_form.name.label_tag }} {{ contractor_formset.empty_form.name }}</div>
+              <div class="form-group-custom">{{ contractor_formset.empty_form.trade.label_tag }} {{ contractor_formset.empty_form.trade }}</div>
+              <div class="form-group-custom">{{ contractor_formset.empty_form.id_number.label_tag }} {{ contractor_formset.empty_form.id_number }}</div>
+              <div class="form-group-custom">{{ contractor_formset.empty_form.esi_number.label_tag }} {{ contractor_formset.empty_form.esi_number }}</div>
+              <div class="form-group-custom">{{ contractor_formset.empty_form.contact_number.label_tag }} {{ contractor_formset.empty_form.contact_number }}</div>
+              <div class="form-group-custom"><label class="delete-toggle-custom">{{ contractor_formset.empty_form.DELETE }} Remove</label></div>
             </div>
-            <!-- SAFETY EQUIPMENT -->
-            <div class="form-section">
-               <h6>Safety Equipment</h6>
-               <div class="permit-form-grid">
-                  <div>{{ form.electrical_clearance.label_tag }} {{ form.electrical_clearance }}</div>
-                  <div>{{ form.ventilation_adequate.label_tag }} {{ form.ventilation_adequate }}</div>
-                  <div>{{ form.fire_extinguishers.label_tag }} {{ form.fire_extinguishers }}</div>
-                  <div>{{ form.fire_extinguishers_details.label_tag }} {{ form.fire_extinguishers_details }}</div>
-                  <div>{{ form.grinder_guard.label_tag }} {{ form.grinder_guard }}</div>
-                  <div>{{ form.welding_elcb.label_tag }} {{ form.welding_elcb }}</div>
-                  <div>{{ form.gas_cutting_fba.label_tag }} {{ form.gas_cutting_fba }}</div>
-                  <div>{{ form.gas_hosepipe.label_tag }} {{ form.gas_hosepipe }}</div>
-                  <div>{{ form.cylinder_key.label_tag }} {{ form.cylinder_key }}</div>
-                  <div>{{ form.esi_insurance.label_tag }} {{ form.esi_insurance }}</div>
-               </div>
+          </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="form-section-custom">
+          <h6><i class="fas fa-paperclip"></i> Attachments</h6>
+          {{ attachment_formset.management_form }}
+          <div id="attachment-forms">
+            {% for f in attachment_formset %}
+            {{ f.id }}
+            <div class="permit-form-grid" style="margin-bottom: 12px;">
+              <div class="form-group-custom">{{ f.file.label_tag }} {{ f.file }}</div>
+              <div class="form-group-custom">{{ f.description.label_tag }} {{ f.description }}</div>
+              <div class="form-group-custom" style="display: flex; align-items: flex-end;">
+                {% if f.instance.pk %}
+                <label class="delete-toggle-custom">
+                  {{ f.DELETE }} Remove
+                </label>
+                {% endif %}
+              </div>
             </div>
-            <!-- WORKERS -->
-            <div class="form-section">
-               <h6>Workers</h6>
-               {{ contractor_formset.management_form }}
-               <div id="contractor-forms">
-                  {% for f in contractor_formset %}
-                  {{ f.id }}
-                  <div class="permit-form-grid">
-                     <div>{{ f.name.label_tag }} {{ f.name }}</div>
-                     <div>{{ f.trade.label_tag }} {{ f.trade }}</div>
-                     <div>{{ f.id_number.label_tag }} {{ f.id_number }}</div>
-                     <div>{{ f.esi_number.label_tag }} {{ f.esi_number }}</div>
-                     <div>{{ f.contact_number.label_tag }} {{ f.contact_number }}</div>
-                     <div>
-                        {% if f.instance.pk %}
-                        <label class="delete-toggle">
-                        {{ f.DELETE }} Remove
-                        </label>
-                        {% endif %}
-                     </div>
-                  </div>
-                  {% endfor %}
-               </div>
-               <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-contractor">+ Add Worker</button>
-               <div id="empty-contractor-form" style="display:none;">
-                  <div class="permit-form-grid">
-                     {{ contractor_formset.empty_form.id }}
-                     <div>{{ contractor_formset.empty_form.name.label_tag }} {{ contractor_formset.empty_form.name }}</div>
-                     <div>{{ contractor_formset.empty_form.trade.label_tag }} {{ contractor_formset.empty_form.trade }}</div>
-                     <div>{{ contractor_formset.empty_form.id_number.label_tag }} {{ contractor_formset.empty_form.id_number }}</div>
-                     <div>{{ contractor_formset.empty_form.esi_number.label_tag }} {{ contractor_formset.empty_form.esi_number }}</div>
-                     <div>{{ contractor_formset.empty_form.contact_number.label_tag }} {{ contractor_formset.empty_form.contact_number }}</div>
-                     <div><label class="delete-toggle">{{ contractor_formset.empty_form.DELETE }} Remove</label></div>
-                  </div>
-               </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn-add-custom mt-2" id="add-attachment">
+            <i class="fas fa-plus"></i> Add Attachment
+          </button>
+          <div id="empty-attachment-form" style="display:none;">
+            <div class="permit-form-grid" style="margin-bottom: 12px;">
+              {{ attachment_formset.empty_form.id }}
+              <div class="form-group-custom">{{ attachment_formset.empty_form.file.label_tag }} {{ attachment_formset.empty_form.file }}</div>
+              <div class="form-group-custom">{{ attachment_formset.empty_form.description.label_tag }} {{ attachment_formset.empty_form.description }}</div>
+              <div class="form-group-custom"><label class="delete-toggle-custom">{{ attachment_formset.empty_form.DELETE }} Remove</label></div>
             </div>
-            <!-- ATTACHMENTS -->
-            <div class="form-section">
-               <h6>Attachments</h6>
-               {{ attachment_formset.management_form }}
-               <div id="attachment-forms">
-                  {% for f in attachment_formset %}
-                  {{ f.id }}
-                  <div class="permit-form-grid">
-                     <div>{{ f.file.label_tag }} {{ f.file }}</div>
-                     <div>{{ f.description.label_tag }} {{ f.description }}</div>
-                     <div>
-                        {% if f.instance.pk %}
-                        <label class="delete-toggle">
-                        {{ f.DELETE }} Remove
-                        </label>
-                        {% endif %}
-                     </div>
-                  </div>
-                  {% endfor %}
-               </div>
-               <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-attachment">+ Add Attachment</button>
-               <div id="empty-attachment-form" style="display:none;">
-                  <div class="permit-form-grid">
-                     {{ attachment_formset.empty_form.id }}
-                     <div>{{ attachment_formset.empty_form.file.label_tag }} {{ attachment_formset.empty_form.file }}</div>
-                     <div>{{ attachment_formset.empty_form.description.label_tag }} {{ attachment_formset.empty_form.description }}</div>
-                     <div><label class="delete-toggle">{{ attachment_formset.empty_form.DELETE }} Remove</label></div>
-                  </div>
-               </div>
-            </div>
-         </div>
-         <div class="card-footer">
-            <button class="btn btn-primary btn-lg">Update Permit</button>
-            <a href="{% url 'permit:permit_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
-         </div>
-      </form>
-   </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- FORM FOOTER                                                -->
+      <!-- ========================================================== -->
+      <div class="card-footer-custom">
+        <button type="submit" class="btn-submit-teal" id="submitBtn">
+          <i class="fas fa-save"></i> Update Permit
+        </button>
+        <a href="{% url 'permit:permit_list' %}" class="btn-cancel-custom">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
-   function updateFormIndices(html, index) {
-       return html.replace(/__prefix__/g, index);
-   }
-   
-   // ADD WORKER
-   document.getElementById('add-contractor').onclick = function () {
-       let total = document.getElementById('id_contractors-TOTAL_FORMS');
-       let count = parseInt(total.value);
-   
-       let html = document.getElementById('empty-contractor-form').innerHTML;
-       html = updateFormIndices(html, count);
-   
-       document.getElementById('contractor-forms').insertAdjacentHTML('beforeend', html);
-       total.value = count + 1;
-   };
-   
-   // ADD ATTACHMENT
-   document.getElementById('add-attachment').onclick = function () {
-       let total = document.getElementById('id_attachments-TOTAL_FORMS');
-       let count = parseInt(total.value);
-   
-       let html = document.getElementById('empty-attachment-form').innerHTML;
-       html = updateFormIndices(html, count);
-   
-       document.getElementById('attachment-forms').insertAdjacentHTML('beforeend', html);
-       total.value = count + 1;
-   };
+function updateFormIndices(html, index) {
+    return html.replace(/__prefix__/g, index);
+}
+
+// ADD WORKER
+document.getElementById('add-contractor').onclick = function () {
+    let total = document.getElementById('id_contractors-TOTAL_FORMS');
+    let count = parseInt(total.value);
+
+    let html = document.getElementById('empty-contractor-form').innerHTML;
+    html = updateFormIndices(html, count);
+
+    document.getElementById('contractor-forms').insertAdjacentHTML('beforeend', html);
+    total.value = count + 1;
+};
+
+// ADD ATTACHMENT
+document.getElementById('add-attachment').onclick = function () {
+    let total = document.getElementById('id_attachments-TOTAL_FORMS');
+    let count = parseInt(total.value);
+
+    let html = document.getElementById('empty-attachment-form').innerHTML;
+    html = updateFormIndices(html, count);
+
+    document.getElementById('attachment-forms').insertAdjacentHTML('beforeend', html);
+    total.value = count + 1;
+};
+
+// Form validation before submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Check if at least one hazard is selected
+    const hazardCheckboxes = document.querySelectorAll('input[name="hazards"]:checked');
+    if (hazardCheckboxes.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one hazard.');
+        return false;
+    }
+
+    // Check required fields
+    const requiredFields = this.querySelectorAll('[required]');
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            field.focus();
+            return false;
+        }
+    }
+
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Updating...';
+    return true;
+});
 </script>
 {% endblock %}

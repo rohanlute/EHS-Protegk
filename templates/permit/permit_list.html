@@ -2,255 +2,893 @@
 {% load permission_tags %}
 {% load static %}
 
-{% block title %}Permits{% endblock %}
-{% block page_title %}Permit Management{% endblock %}
+{% block title %}Permits | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Permits</li>
+{% block extra_css %}
+<style>
+  /* ===== PERMITS LIST - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-main-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-main-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-main-card .card-header-custom {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dash-main-card .card-header-custom .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-main-card .card-header-custom .header-title i {
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .dash-main-card .card-header-custom .header-title h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-main-card .card-header-custom .header-title .count-badge {
+    background: var(--primary-teal);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 12px;
+  }
+
+  .btn-create-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .btn-create-teal:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    text-decoration: none;
+  }
+
+  .dash-main-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  /* ========================================================== */
+  /* FILTER SECTION                                              */
+  /* ========================================================== */
+  .dash-filter-section {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+
+  .dash-filter-section .form-control,
+  .dash-filter-section .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .dash-filter-section .form-control:focus,
+  .dash-filter-section .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .dash-filter-section .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .dash-filter-section .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .dash-filter-section .form-select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230d9488' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  }
+
+  .dash-filter-section .filter-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .btn-filter-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-filter-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-reset-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+  }
+
+  .btn-reset-teal:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                                */
+  /* ========================================================== */
+  .dash-table {
+    font-size: 14px;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ===== BADGES ===== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ===== LINKS ===== */
+  .dash-link {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .dash-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                              */
+  /* ========================================================== */
+  .btn-action-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .btn-action:hover {
+    text-decoration: none;
+  }
+
+  .btn-action.view:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-action.edit:hover {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #d97706;
+  }
+
+  .btn-action.pdf:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                  */
+  /* ========================================================== */
+  .dash-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .dash-pagination .page-item .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .dash-pagination .page-item .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .dash-pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .dash-pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 48px;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .dash-empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-main-card .card-body-custom {
+      padding: 18px 20px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .dash-page-header .header-right .btn-create-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-main-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-main-card .card-header-custom .btn-create-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-filter-section {
+      padding: 12px 14px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .btn-action-group {
+      flex-wrap: nowrap;
+    }
+
+    .btn-action {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      font-size: 11px;
+    }
+
+    .dash-pagination {
+      gap: 2px;
+    }
+
+    .dash-pagination .page-item .page-link {
+      min-width: 32px;
+      height: 32px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-table tbody td {
+      padding: 6px 10px;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 11px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .btn-action {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      font-size: 10px;
+    }
+
+    .btn-create-teal {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .btn-filter-teal {
+      font-size: 13px;
+      padding: 6px 12px;
+    }
+
+    .btn-reset-teal {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="ehs-card">
-  <div class="card-header">
-    <div class="row align-items-center">
-      <div class="col">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-file-alt mr-2"></i>All Permits
-        </h3>
-      </div>
 
-      <div class="col-auto">
-        <a href="{% url 'permit:permit_create' %}" class="btn btn-primary">
-          <i class="fas fa-plus mr-1"></i> Create Permit
-        </a>
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-file-alt"></i>
       </div>
+      <div>
+        <h1>Permit Management</h1>
+        <p class="subtitle">View and manage all work permits</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="{% url 'permit:permit_create' %}" class="btn-create-teal">
+        <i class="fas fa-plus"></i> Create Permit
+      </a>
     </div>
   </div>
 
-  <div class="card-body">
-
-    <!-- FILTERS -->
-    <form method="GET" class="mb-4">
-      <div class="row">
-
-        <!-- Search -->
-        <div class="col-md-3 mb-2">
-          <input type="text" name="search" class="form-control"
-                 placeholder="Search permit no, requester..."
-                 value="{{ request.GET.search }}">
-        </div>
-
-        <!-- Status -->
-        <div class="col-md-2 mb-2">
-          <select name="status" class="form-control">
-            <option value="">All Status</option>
-            {% for key, value in status_choices %}
-              <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
-                {{ value }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Priority -->
-        <div class="col-md-2 mb-2">
-          <select name="priority" class="form-control">
-            <option value="">All Priority</option>
-            {% for key, value in priority_choices %}
-              <option value="{{ key }}" {% if request.GET.priority == key %}selected{% endif %}>
-                {{ value }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Risk -->
-        <div class="col-md-2 mb-2">
-          <select name="risk" class="form-control">
-            <option value="">Risk Level</option>
-            {% for key, value in risk_choices %}
-              <option value="{{ key }}" {% if request.GET.risk == key %}selected{% endif %}>
-                {{ value }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Filter Button -->
-        <div class="col-md-2 mb-2">
-          <button class="btn btn-primary btn-block">
-            <i class="fas fa-search"></i> Filter
-          </button>
-        </div>
-
+  <!-- ========================================================== -->
+  <!-- MAIN CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-main-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-list"></i>
+        <h3>All Permits</h3>
+        <span class="count-badge">{{ permits|length }}</span>
       </div>
+    </div>
 
-      <!-- Date Filter -->
-      <div class="row mt-2">
-        <div class="col-md-3">
-          <label class="small">From</label>
-          <input type="date" name="date_from" class="form-control form-control-sm"
-                 value="{{ request.GET.date_from }}">
-        </div>
-        <div class="col-md-3">
-          <label class="small">To</label>
-          <input type="date" name="date_to" class="form-control form-control-sm"
-                 value="{{ request.GET.date_to }}">
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <a href="{% url 'permit:permit_list' %}" class="btn btn-secondary btn-sm">
-            Reset
-          </a>
-        </div>
-      </div>
-    </form>
+    <div class="card-body-custom">
 
-    <!-- TABLE -->
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead class="thead-light">
-          <tr>
-            <th>Permit No</th>
-            <th>Type</th>
-            <th>Requester</th>
-            <th>Plant / Location</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {% for permit in permits %}
-          <tr>
-            <td>
-              <a href="#" class="text-primary font-weight-bold">
-                {{ permit.permit_number }}
-              </a>
-
-              {% if permit.is_overdue %}
-              <br><span class="badge badge-danger mt-1">Overdue</span>
-              {% endif %}
-            </td>
-
-            <td>{{ permit.permit_type.name }}</td>
-
-            <td>{{ permit.requester_name }}</td>
-
-            <td>
-              <strong>{{ permit.plant.code }}</strong><br>
-              <small class="text-muted">{{ permit.location.name }}</small>
-            </td>
-
-            <td>
-              {{ permit.start_date|date:"d/m/Y" }}<br>
-              <small>{{ permit.start_date|time:"H:i" }}</small>
-            </td>
-
-            <td>
-              {{ permit.end_date|date:"d/m/Y" }}<br>
-              <small>{{ permit.end_date|time:"H:i" }}</small>
-            </td>
-
-            <!-- Priority -->
-            <td>
-              <span class="badge
-                {% if permit.priority == 'high' %}badge-danger
-                {% elif permit.priority == 'medium' %}badge-warning
-                {% else %}badge-success{% endif %}">
-                {{ permit.get_priority_display }}
-              </span>
-            </td>
+      <!-- Filter Section -->
+      <div class="dash-filter-section">
+        <form method="GET">
+          <div class="row">
+            <!-- Search -->
+            <div class="col-md-3 mb-2">
+              <input type="text" name="search" class="form-control"
+                     placeholder="Search permit no, requester..."
+                     value="{{ request.GET.search }}">
+            </div>
 
             <!-- Status -->
-            <td>
-              <span class="badge
-                {% if permit.status == 'approved' %}badge-success
-                {% elif permit.status == 'pending' %}badge-warning
-                {% elif permit.status == 'rejected' %}badge-danger
-                {% else %}badge-secondary{% endif %}">
-                {{ permit.get_status_display }}
-              </span>
-            </td>
+            <div class="col-md-2 mb-2">
+              <select name="status" class="form-select">
+                <option value="">All Status</option>
+                {% for key, value in status_choices %}
+                  <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
+                    {{ value }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
 
-            <!-- Actions -->
-            <td>
-              <div class="btn-group">
-                <a href="{% url 'permit:permit_detail' permit.pk %}" class="btn btn-sm btn-info">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{% url 'permit:permit_update' permit.pk %}" class="btn btn-sm btn-primary">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <a href="{% url 'permit:permit_pdf' permit.pk %}" class="btn btn-sm btn-danger" target="_blank" title="Download PDF">
-                  <i class="fas fa-file-pdf"></i>
-                </a>
-              </div>
-            </td>
-          </tr>
+            <!-- Priority -->
+            <div class="col-md-2 mb-2">
+              <select name="priority" class="form-select">
+                <option value="">All Priority</option>
+                {% for key, value in priority_choices %}
+                  <option value="{{ key }}" {% if request.GET.priority == key %}selected{% endif %}>
+                    {{ value }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
 
-          {% empty %}
-          <tr>
-            <td colspan="9" class="text-center">
-              <div class="alert alert-info mb-0">
-                No permits found.
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+            <!-- Risk -->
+            <div class="col-md-2 mb-2">
+              <select name="risk" class="form-select">
+                <option value="">Risk Level</option>
+                {% for key, value in risk_choices %}
+                  <option value="{{ key }}" {% if request.GET.risk == key %}selected{% endif %}>
+                    {{ value }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
 
-    <!-- PAGINATION -->
-    {% if is_paginated %}
-    <nav class="mt-4">
-      <ul class="pagination justify-content-center">
+            <!-- Filter Button -->
+            <div class="col-md-2 mb-2">
+              <button class="btn-filter-teal">
+                <i class="fas fa-search"></i> Filter
+              </button>
+            </div>
+          </div>
+
+          <!-- Date Filter -->
+          <div class="row mt-2">
+            <div class="col-md-3">
+              <label class="filter-label">From</label>
+              <input type="date" name="date_from" class="form-control"
+                     value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+              <label class="filter-label">To</label>
+              <input type="date" name="date_to" class="form-control"
+                     value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <a href="{% url 'permit:permit_list' %}" class="btn-reset-teal">
+                <i class="fas fa-redo"></i> Reset
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Permits Table -->
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Permit No</th>
+              <th>Type</th>
+              <th>Requester</th>
+              <th>Plant / Location</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for permit in permits %}
+            <tr>
+              <td data-label="Permit No">
+                <a href="{% url 'permit:permit_detail' permit.pk %}" class="dash-link">
+                  {{ permit.permit_number }}
+                </a>
+                {% if permit.is_overdue %}
+                  <br><span class="dash-badge badge-danger mt-1" style="font-size: 10px; padding: 2px 10px;">Overdue</span>
+                {% endif %}
+              </td>
+
+              <td data-label="Type">{{ permit.permit_type.name }}</td>
+
+              <td data-label="Requester">{{ permit.requester_name }}</td>
+
+              <td data-label="Plant / Location">
+                <strong>{{ permit.plant.code }}</strong><br>
+                <small class="text-muted">{{ permit.location.name }}</small>
+              </td>
+
+              <td data-label="Start">
+                {{ permit.start_date|date:"d/m/Y" }}<br>
+                <small class="text-muted">{{ permit.start_date|time:"H:i" }}</small>
+              </td>
+
+              <td data-label="End">
+                {{ permit.end_date|date:"d/m/Y" }}<br>
+                <small class="text-muted">{{ permit.end_date|time:"H:i" }}</small>
+              </td>
+
+              <!-- Priority -->
+              <td data-label="Priority">
+                <span class="dash-badge
+                  {% if permit.priority == 'high' %}badge-danger
+                  {% elif permit.priority == 'medium' %}badge-warning
+                  {% else %}badge-success{% endif %}">
+                  {{ permit.get_priority_display }}
+                </span>
+              </td>
+
+              <!-- Status -->
+              <td data-label="Status">
+                <span class="dash-badge
+                  {% if permit.status == 'approved' %}badge-success
+                  {% elif permit.status == 'pending' %}badge-warning
+                  {% elif permit.status == 'rejected' %}badge-danger
+                  {% else %}badge-secondary{% endif %}">
+                  {{ permit.get_status_display }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td data-label="Actions">
+                <div class="btn-action-group">
+                  <a href="{% url 'permit:permit_detail' permit.pk %}" class="btn-action view" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'permit:permit_update' permit.pk %}" class="btn-action edit" title="Edit">
+                    <i class="fas fa-pen"></i>
+                  </a>
+                  <a href="{% url 'permit:permit_pdf' permit.pk %}" class="btn-action pdf" target="_blank" title="Download PDF">
+                    <i class="fas fa-file-pdf"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="dash-empty-state">
+                  <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                  <h4>No Permits Found</h4>
+                  <p>No permits match your search criteria.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav class="dash-pagination">
         {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-          </li>
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            <i class="fas fa-angle-left"></i>
+          </a>
         {% endif %}
 
-        <li class="page-item active">
-          <span class="page-link">
-            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-          </span>
-        </li>
+        <span class="page-link active">
+          {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
 
         {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-          </li>
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            <i class="fas fa-angle-right"></i>
+          </a>
         {% endif %}
-      </ul>
-    </nav>
-    {% endif %}
+      </nav>
+      {% endif %}
 
+    </div>
   </div>
+
 </div>
-
-<style>
-.ehs-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.table-hover tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-.badge {
-  font-size: 0.85rem;
-}
-</style>
 
 {% endblock %}

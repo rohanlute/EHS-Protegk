@@ -1,446 +1,922 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Permit Analytics Dashboard{% endblock %}
-{% block page_title %}Permit Analytics Dashboard{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'permit:permit_list' %}">Permits</a></li>
-<li class="breadcrumb-item active">Analytics</li>
-{% endblock %}
+{% block title %}Permit Analytics Dashboard | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-.dashboard-card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin-bottom: 20px;
-}
+  /* ===== PERMIT ANALYTICS DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-.stat-card {
-    padding: 20px;
-    border-left: 4px solid;
-    position: relative;
-}
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
 
-.stat-card.primary { border-left-color: #007bff; background: linear-gradient(135deg,#fff 0%,#e3f2fd 100%); }
-.stat-card.success { border-left-color: #28a745; background: linear-gradient(135deg,#fff 0%,#e8f5e9 100%); }
-.stat-card.warning { border-left-color: #ffc107; background: linear-gradient(135deg,#fff 0%,#fff9e6 100%); }
-.stat-card.danger { border-left-color: #dc3545; background: linear-gradient(135deg,#fff 0%,#ffebee 100%); }
-
-.stat-card .stat-icon {
-    font-size: 3rem;
-    opacity: 0.25;
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.stat-card .stat-number {
-    font-size: 2.3rem;
-    font-weight: 700;
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
     margin: 0;
-    line-height: 1;
-}
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
 
-.stat-card .stat-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-top: 5px;
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* FILTER SECTION                                              */
+  /* ========================================================== */
+  .dash-filter-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-filter-section:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-filter-section .filter-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .dash-filter-section .filter-select {
+    padding: 8px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    min-width: 180px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .dash-filter-section .filter-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .btn-filter-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-filter-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    text-decoration: none;
+  }
+
+  .btn-outline-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--primary-teal);
+    background: transparent;
+    color: var(--primary-teal);
+    font-weight: 500;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-outline-teal:hover {
+    background: var(--primary-teal-light);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  .btn-primary-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-primary-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS                                            */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-card {
+    border-radius: var(--radius-card);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+  }
+
+  .dash-stat-card .stat-icon {
+    font-size: 32px;
+    opacity: 0.3;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-card .stat-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card .stat-info .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: white;
+  }
+
+  .dash-stat-card .stat-info .stat-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-.stat-card .stat-change {
-    font-size: 0.85rem;
-    margin-top: 8px;
-    font-weight: 600;
-}
-
-.filter-section {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.section-header {
-    border-bottom: 3px solid #007bff;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.section-header h5 {
-    margin: 0;
-    font-weight: 700;
-    color: #343a40;
-}
-
-.chart-container {
-    position: relative;
-    height: 300px;
-    padding: 10px 0;
-}
-
-.chart-container.large {
-    height: 380px;
-}
-
-.analytics-card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 1rem 1.25rem;
-    border-radius: 10px 10px 0 0;
-}
+  }
 
-.analytics-card-body {
-    padding: 20px;
-}
+  .dash-stat-card .stat-info .stat-change {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
 
-.dept-performance {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid #667eea;
-}
+  .dash-stat-card .stat-info .stat-change i {
+    margin-right: 4px;
+  }
 
-.dept-name {
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 0.75rem;
-}
+  .dash-stat-card.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .dash-stat-card.gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
-.dept-stats {
+  /* ========================================================== */
+  /* CHART CARDS                                                 */
+  /* ========================================================== */
+  .dash-chart-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .dash-chart-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-chart-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-chart-card .card-header-custom h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-chart-card .card-header-custom h5 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-chart-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 280px;
+  }
+
+  .chart-container.large {
+    height: 350px;
+  }
+
+  /* ========================================================== */
+  /* DEPARTMENT PERFORMANCE                                      */
+  /* ========================================================== */
+  .dept-performance-custom {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary-teal);
+    transition: all 0.3s ease;
+  }
+
+  .dept-performance-custom:hover {
+    border-color: var(--primary-teal-dark);
+    background: var(--primary-teal-light);
+  }
+
+  .dept-performance-custom .dept-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .dept-performance-custom .dept-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-}
+    gap: 8px;
+  }
 
-.dept-stat {
+  .dept-performance-custom .dept-stat {
     text-align: center;
-    padding: 0.75rem 0.5rem;
+    padding: 8px 4px;
     background: white;
-    border-radius: 8px;
-}
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
 
-.dept-stat-number {
-    font-weight: bold;
-    font-size: 1.05rem;
-    color: #667eea;
-}
+  .dept-performance-custom .dept-stat .dept-stat-number {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary-teal);
+  }
 
-.dept-stat-label {
-    color: #666;
-    font-size: 0.75rem;
-}
+  .dept-performance-custom .dept-stat .dept-stat-label {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
 
-.progress-item {
-    margin-bottom: 1.25rem;
-}
+  /* ========================================================== */
+  /* RISK PROGRESS                                               */
+  /* ========================================================== */
+  .progress-item-custom {
+    margin-bottom: 16px;
+  }
 
-.progress-label {
+  .progress-item-custom .progress-label {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 4px;
     font-weight: 500;
-    font-size: 0.9rem;
-}
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
 
-.progress {
-    height: 9px;
+  .progress-item-custom .progress {
+    height: 8px;
     border-radius: 999px;
-}
+    background: #e2e8f0;
+  }
 
-.progress-bar {
+  .progress-item-custom .progress .progress-bar {
     border-radius: 999px;
-}
+  }
 
-.risk-heatmap {
+  .progress-item-custom .progress .progress-bar.bg-success { background: var(--secondary-green); }
+  .progress-item-custom .progress .progress-bar.bg-warning { background: var(--secondary-gold); }
+  .progress-item-custom .progress .progress-bar.bg-danger { background: var(--secondary-red); }
+  .progress-item-custom .progress .progress-bar.bg-dark { background: #1e293b; }
+
+  /* ========================================================== */
+  /* RISK HEATMAP                                                */
+  /* ========================================================== */
+  .risk-heatmap-custom {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
+    gap: 6px;
+    margin-top: 12px;
+  }
 
-.risk-cell {
+  .risk-heatmap-custom .risk-cell {
     aspect-ratio: 1;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: 700;
-}
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
 
-.risk-low { background: #28a745; }
-.risk-medium { background: #ffc107; color: #212529; }
-.risk-high { background: #fd7e14; }
-.risk-critical { background: #dc3545; }
+  .risk-heatmap-custom .risk-cell:hover {
+    transform: scale(1.05);
+  }
 
-.insight-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  .risk-heatmap-custom .risk-cell.low { background: var(--secondary-green); }
+  .risk-heatmap-custom .risk-cell.medium { background: var(--secondary-gold); color: #0f172a; }
+  .risk-heatmap-custom .risk-cell.high { background: #fd7e14; }
+  .risk-heatmap-custom .risk-cell.critical { background: var(--secondary-red); }
+
+  /* ========================================================== */
+  /* INSIGHT CARDS                                               */
+  /* ========================================================== */
+  .insight-card-custom {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
     color: white;
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    min-height: 210px;
-}
+    border-radius: var(--radius-card);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    min-height: 180px;
+    transition: all 0.3s ease;
+  }
 
-.insight-icon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+  .insight-card-custom:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .insight-card-custom .insight-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
     opacity: 0.85;
-}
+  }
 
-.insight-title {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
+  .insight-card-custom .insight-title {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
 
-.insight-description {
+  .insight-card-custom .insight-description {
     opacity: 0.9;
-    font-size: 0.92rem;
+    font-size: 14px;
     line-height: 1.6;
-}
+  }
 
-@media (max-width: 768px) {
-    .dept-stats {
-        grid-template-columns: 1fr;
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
-}
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .dash-page-header .header-right .btn-filter-teal,
+    .dash-page-header .header-right .btn-outline-teal,
+    .dash-page-header .header-right .btn-primary-teal {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-stat-card {
+      padding: 14px 16px;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 22px;
+    }
+
+    .dash-stat-card .stat-icon {
+      font-size: 26px;
+    }
+
+    .dash-filter-section {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 14px 16px;
+    }
+
+    .dash-filter-section .filter-select {
+      min-width: auto;
+    }
+
+    .chart-container {
+      height: 220px;
+    }
+
+    .chart-container.large {
+      height: 260px;
+    }
+
+    .dept-performance-custom .dept-stats {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .risk-heatmap-custom {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .insight-card-custom {
+      min-height: auto;
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 20px;
+    }
+
+    .dash-chart-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .chart-container {
+      height: 200px;
+    }
+
+    .chart-container.large {
+      height: 220px;
+    }
+
+    .risk-heatmap-custom {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .risk-heatmap-custom .risk-cell {
+      font-size: 12px;
+    }
+
+    .insight-card-custom {
+      padding: 14px 16px;
+    }
+
+    .insight-card-custom .insight-title {
+      font-size: 14px;
+    }
+
+    .insight-card-custom .insight-description {
+      font-size: 13px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="filter-section">
-    <form method="GET" action="{% url 'permit:permit_analytics' %}" class="row align-items-end">
-        <div class="col-md-6 mb-2">
-            <label for="period" class="small font-weight-bold mb-1"><i class="fas fa-calendar-alt mr-1"></i> Analysis Period</label>
-            <select class="form-control" name="period" id="period" onchange="this.form.submit()">
-                <option value="7" {% if selected_period == '7' %}selected{% endif %}>Last 7 Days</option>
-                <option value="30" {% if selected_period == '30' %}selected{% endif %}>Last 30 Days</option>
-                <option value="90" {% if selected_period == '90' %}selected{% endif %}>Last 3 Months</option>
-                <option value="365" {% if selected_period == '365' %}selected{% endif %}>Last Year</option>
-            </select>
-        </div>
-        <div class="col-md-6 mb-2 text-md-right">
-            <a href="{% url 'permit:permit_list' %}" class="btn btn-outline-primary mr-2">
-                <i class="fas fa-list mr-1"></i> View Permits
-            </a>
-            <a href="{% url 'permit:permit_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus mr-1"></i> Create Permit
-            </a>
-        </div>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div>
+        <h1>Permit Analytics Dashboard</h1>
+        <p class="subtitle">Monitor permit performance and trends</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER SECTION                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-filter-section">
+    <form method="GET" action="{% url 'permit:permit_analytics' %}" class="d-flex flex-wrap align-items-center gap-2" style="width: 100%;">
+      <div style="flex: 1; min-width: 150px;">
+        <label for="period" class="filter-label">Analysis Period</label>
+        <select class="filter-select" name="period" id="period" onchange="this.form.submit()">
+          <option value="7" {% if selected_period == '7' %}selected{% endif %}>Last 7 Days</option>
+          <option value="30" {% if selected_period == '30' %}selected{% endif %}>Last 30 Days</option>
+          <option value="90" {% if selected_period == '90' %}selected{% endif %}>Last 3 Months</option>
+          <option value="365" {% if selected_period == '365' %}selected{% endif %}>Last Year</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2" style="flex-wrap: wrap;">
+        <a href="{% url 'permit:permit_list' %}" class="btn-outline-teal">
+          <i class="fas fa-list"></i> View Permits
+        </a>
+        <a href="{% url 'permit:permit_create' %}" class="btn-primary-teal">
+          <i class="fas fa-plus"></i> Create Permit
+        </a>
+      </div>
     </form>
-</div>
+  </div>
 
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6">
-        <div class="dashboard-card">
-            <div class="stat-card primary">
-                <i class="fas fa-file-signature stat-icon"></i>
-                <p class="stat-number">{{ active_permits_count }}</p>
-                <p class="stat-label">Active Permits</p>
-                <div class="stat-change text-success"><i class="fas fa-arrow-up mr-1"></i>{{ new_permits_this_week }} new this week</div>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <div class="dash-stat-card teal">
+      <div class="stat-icon"><i class="fas fa-file-signature"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ active_permits_count }}</div>
+        <div class="stat-label">Active Permits</div>
+        <div class="stat-change"><i class="fas fa-arrow-up"></i> {{ new_permits_this_week }} new this week</div>
+      </div>
     </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="dashboard-card">
-            <div class="stat-card success">
-                <i class="fas fa-layer-group stat-icon"></i>
-                <p class="stat-number">{{ total_permits_count }}</p>
-                <p class="stat-label">Total Permits</p>
-                <div class="stat-change text-success"><i class="fas fa-arrow-up mr-1"></i>{{ permits_this_month }} this month</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="dashboard-card">
-            <div class="stat-card warning">
-                <i class="fas fa-hourglass-half stat-icon"></i>
-                <p class="stat-number">{{ pending_permits_count }}</p>
-                <p class="stat-label">Pending Approval</p>
-                <div class="stat-change {% if pending_change >= 0 %}text-warning{% else %}text-success{% endif %}">
-                    <i class="fas fa-arrow-{% if pending_change >= 0 %}up{% else %}down{% endif %} mr-1"></i>{{ pending_change }} vs previous period
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="dashboard-card">
-            <div class="stat-card danger">
-                <i class="fas fa-exclamation-triangle stat-icon"></i>
-                <p class="stat-number">{{ expired_permits_count }}</p>
-                <p class="stat-label">Expired / Overdue</p>
-                <div class="stat-change {% if expired_permits_count %}text-danger{% else %}text-success{% endif %}">
-                    <i class="fas fa-{% if expired_permits_count %}triangle-exclamation{% else %}check{% endif %} mr-1"></i>
-                    {% if expired_permits_count %}Needs attention{% else %}All current{% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-lg-8">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>Permit Trends Over Time</h5>
-            </div>
-            <div class="analytics-card-body">
-                <div class="chart-container large"><canvas id="permitTrendsChart"></canvas></div>
-            </div>
+    <div class="dash-stat-card green">
+      <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total_permits_count }}</div>
+        <div class="stat-label">Total Permits</div>
+        <div class="stat-change"><i class="fas fa-arrow-up"></i> {{ permits_this_month }} this month</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card gold">
+      <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ pending_permits_count }}</div>
+        <div class="stat-label">Pending Approval</div>
+        <div class="stat-change">
+          <i class="fas fa-arrow-{% if pending_change >= 0 %}up{% else %}down{% endif %}"></i>
+          {{ pending_change }} vs previous period
         </div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card red">
+      <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ expired_permits_count }}</div>
+        <div class="stat-label">Expired / Overdue</div>
+        <div class="stat-change">
+          <i class="fas fa-{% if expired_permits_count %}triangle-exclamation{% else %}check{% endif %}"></i>
+          {% if expired_permits_count %}Needs attention{% else %}All current{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW                                                 -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-chart-line"></i> Permit Trends Over Time</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="chart-container large">
+            <canvas id="permitTrendsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-chart-pie"></i> Permit Types</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="chart-container">
+            <canvas id="permitTypesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW 2                                               -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-tasks"></i> Status Distribution</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-clock"></i> Permit Processing Time Analysis</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="chart-container">
+            <canvas id="processingTimeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- DEPARTMENT PERFORMANCE & RISK ANALYSIS                      -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-building"></i> Department Permit Performance</h5>
+        </div>
+        <div class="card-body-custom">
+          {% for dept in department_performance %}
+          <div class="dept-performance-custom">
+            <div class="dept-name">{{ dept.name }}</div>
+            <div class="dept-stats">
+              <div class="dept-stat">
+                <div class="dept-stat-number">{{ dept.total_permits }}</div>
+                <div class="dept-stat-label">Total Permits</div>
+              </div>
+              <div class="dept-stat">
+                <div class="dept-stat-number">{{ dept.approval_rate }}%</div>
+                <div class="dept-stat-label">Approval Rate</div>
+              </div>
+              <div class="dept-stat">
+                <div class="dept-stat-number">{{ dept.avg_processing_time }}h</div>
+                <div class="dept-stat-label">Avg Time</div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted mb-0">No department performance data available for this period.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-shield-alt"></i> Permit Risk Analysis</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="progress-item-custom">
+            <div class="progress-label">
+              <span>Low Risk</span>
+              <span>{{ low_risk_permits }} permits ({{ low_risk_percentage }}%)</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-success" style="width: {{ low_risk_percentage }}%"></div>
+            </div>
+          </div>
+          <div class="progress-item-custom">
+            <div class="progress-label">
+              <span>Medium Risk</span>
+              <span>{{ medium_risk_permits }} permits ({{ medium_risk_percentage }}%)</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-warning" style="width: {{ medium_risk_percentage }}%"></div>
+            </div>
+          </div>
+          <div class="progress-item-custom">
+            <div class="progress-label">
+              <span>High Risk</span>
+              <span>{{ high_risk_permits }} permits ({{ high_risk_percentage }}%)</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-danger" style="width: {{ high_risk_percentage }}%"></div>
+            </div>
+          </div>
+          <div class="progress-item-custom">
+            <div class="progress-label">
+              <span>Critical Risk</span>
+              <span>{{ critical_risk_permits }} permits ({{ critical_risk_percentage }}%)</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-dark" style="width: {{ critical_risk_percentage }}%"></div>
+            </div>
+          </div>
+
+          <h6 style="font-weight: 700; color: var(--text-primary); margin: 20px 0 12px 0;">Weekly Permit Activity Heatmap</h6>
+          <div class="risk-heatmap-custom">
+            {% for week in weekly_activity %}
+            <div class="risk-cell {{ week.risk_class }}" title="Week {{ forloop.counter }}">{{ week.count }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INSIGHT CARDS                                              -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="insight-card-custom">
+        <div class="insight-icon"><i class="fas fa-clock"></i></div>
+        <div class="insight-title">Peak Permit Hours</div>
+        <div class="insight-description">Permit submissions are clustering into the same weekly windows. Use this trend view to schedule approvers before the backlog builds.</div>
+      </div>
     </div>
     <div class="col-lg-4">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-pie mr-2"></i>Permit Types</h5>
-            </div>
-            <div class="analytics-card-body">
-                <div class="chart-container"><canvas id="permitTypesChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-lg-4">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-tasks mr-2"></i>Status Distribution</h5>
-            </div>
-            <div class="analytics-card-body">
-                <div class="chart-container"><canvas id="statusChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-8">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-clock mr-2"></i>Permit Processing Time Analysis</h5>
-            </div>
-            <div class="analytics-card-body">
-                <div class="chart-container"><canvas id="processingTimeChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-lg-6">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-building mr-2"></i>Department Permit Performance</h5>
-            </div>
-            <div class="analytics-card-body">
-                {% for dept in department_performance %}
-                <div class="dept-performance">
-                    <div class="dept-name">{{ dept.name }}</div>
-                    <div class="dept-stats">
-                        <div class="dept-stat">
-                            <div class="dept-stat-number">{{ dept.total_permits }}</div>
-                            <div class="dept-stat-label">Total Permits</div>
-                        </div>
-                        <div class="dept-stat">
-                            <div class="dept-stat-number">{{ dept.approval_rate }}%</div>
-                            <div class="dept-stat-label">Approval Rate</div>
-                        </div>
-                        <div class="dept-stat">
-                            <div class="dept-stat-number">{{ dept.avg_processing_time }}h</div>
-                            <div class="dept-stat-label">Avg Time</div>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-muted mb-0">No department performance data available for this period.</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-6">
-        <div class="dashboard-card">
-            <div class="analytics-card-header">
-                <h5 class="mb-0"><i class="fas fa-shield-alt mr-2"></i>Permit Risk Analysis</h5>
-            </div>
-            <div class="analytics-card-body">
-                <div class="progress-item">
-                    <div class="progress-label">
-                        <span>Low Risk</span>
-                        <span>{{ low_risk_permits }} permits ({{ low_risk_percentage }}%)</span>
-                    </div>
-                    <div class="progress"><div class="progress-bar bg-success" style="width: {{ low_risk_percentage }}%"></div></div>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-label">
-                        <span>Medium Risk</span>
-                        <span>{{ medium_risk_permits }} permits ({{ medium_risk_percentage }}%)</span>
-                    </div>
-                    <div class="progress"><div class="progress-bar bg-warning" style="width: {{ medium_risk_percentage }}%"></div></div>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-label">
-                        <span>High Risk</span>
-                        <span>{{ high_risk_permits }} permits ({{ high_risk_percentage }}%)</span>
-                    </div>
-                    <div class="progress"><div class="progress-bar bg-danger" style="width: {{ high_risk_percentage }}%"></div></div>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-label">
-                        <span>Critical Risk</span>
-                        <span>{{ critical_risk_permits }} permits ({{ critical_risk_percentage }}%)</span>
-                    </div>
-                    <div class="progress"><div class="progress-bar bg-dark" style="width: {{ critical_risk_percentage }}%"></div></div>
-                </div>
-
-                <h6 class="mt-4 mb-3">Weekly Permit Activity Heatmap</h6>
-                <div class="risk-heatmap">
-                    {% for week in weekly_activity %}
-                    <div class="risk-cell {{ week.risk_class }}" title="Week {{ forloop.counter }}">{{ week.count }}</div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-4">
-        <div class="insight-card">
-            <div class="insight-icon"><i class="fas fa-clock"></i></div>
-            <div class="insight-title">Peak Permit Hours</div>
-            <div class="insight-description">Permit submissions are clustering into the same weekly windows. Use this trend view to schedule approvers before the backlog builds.</div>
-        </div>
+      <div class="insight-card-custom">
+        <div class="insight-icon"><i class="fas fa-trending-up"></i></div>
+        <div class="insight-title">Processing Efficiency</div>
+        <div class="insight-description">Approval turnaround improved by {{ processing_improvement }}% versus the previous period based on permits that reached approved status.</div>
+      </div>
     </div>
     <div class="col-lg-4">
-        <div class="insight-card">
-            <div class="insight-icon"><i class="fas fa-trending-up"></i></div>
-            <div class="insight-title">Processing Efficiency</div>
-            <div class="insight-description">Approval turnaround improved by {{ processing_improvement }}% versus the previous period based on permits that reached approved status.</div>
-        </div>
+      <div class="insight-card-custom">
+        <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="insight-title">Safety Focus Required</div>
+        <div class="insight-description">{{ high_risk_permits|add:critical_risk_permits }} major and critical risk permits were created in this period. Review controls and escalation coverage for these jobs.</div>
+      </div>
     </div>
-    <div class="col-lg-4">
-        <div class="insight-card">
-            <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="insight-title">Safety Focus Required</div>
-            <div class="insight-description">{{ high_risk_permits|add:critical_risk_permits }} major and critical risk permits were created in this period. Review controls and escalation coverage for these jobs.</div>
-        </div>
-    </div>
+  </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -458,6 +934,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const processingLabels = {{ processing_labels_json|safe }};
     const processingData = {{ processing_data_json|safe }};
 
+    // Permit Trends Chart
     const trendsCtx = document.getElementById('permitTrendsChart');
     if (trendsCtx) {
         new Chart(trendsCtx.getContext('2d'), {
@@ -465,15 +942,26 @@ document.addEventListener('DOMContentLoaded', function () {
             data: {
                 labels: trendLabels,
                 datasets: [
-                    { label: 'Submitted', data: submittedTrend, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.12)', tension: 0.4, fill: true },
-                    { label: 'Approved', data: approvedTrend, borderColor: '#4facfe', backgroundColor: 'rgba(79,172,254,0.12)', tension: 0.4, fill: true },
-                    { label: 'Rejected', data: rejectedTrend, borderColor: '#ff9a9e', backgroundColor: 'rgba(255,154,158,0.12)', tension: 0.4, fill: true }
+                    { label: 'Submitted', data: submittedTrend, borderColor: '#0d9488', backgroundColor: 'rgba(13,148,136,0.12)', tension: 0.4, fill: true, pointBackgroundColor: '#0d9488' },
+                    { label: 'Approved', data: approvedTrend, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)', tension: 0.4, fill: true, pointBackgroundColor: '#22c55e' },
+                    { label: 'Rejected', data: rejectedTrend, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', tension: 0.4, fill: true, pointBackgroundColor: '#dc2626' }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { family: 'Inter' } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, font: { family: 'Inter' } } },
+                    x: { ticks: { font: { family: 'Inter' } } }
+                }
+            }
         });
     }
 
+    // Permit Types Chart
     const typesCtx = document.getElementById('permitTypesChart');
     if (typesCtx) {
         new Chart(typesCtx.getContext('2d'), {
@@ -482,13 +970,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: permitTypeLabels,
                 datasets: [{
                     data: permitTypeData,
-                    backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#563d7c']
+                    backgroundColor: ['#0d9488', '#22c55e', '#3b82f6', '#8b5cf6', '#d97706', '#ef4444', '#64748b']
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter' } } }
+                }
+            }
         });
     }
 
+    // Status Chart
     const statusCtx = document.getElementById('statusChart');
     if (statusCtx) {
         new Chart(statusCtx.getContext('2d'), {
@@ -497,13 +992,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: statusLabels,
                 datasets: [{
                     data: statusData,
-                    backgroundColor: ['#2ecc71', '#3498db', '#f39c12', '#ff7f50', '#95a5a6', '#e74c3c', '#7f8c8d']
+                    backgroundColor: ['#22c55e', '#0d9488', '#d97706', '#fd7e14', '#64748b', '#dc2626', '#94a3b8']
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter' } } }
+                }
+            }
         });
     }
 
+    // Processing Time Chart
     const processingCtx = document.getElementById('processingTimeChart');
     if (processingCtx) {
         new Chart(processingCtx.getContext('2d'), {
@@ -513,12 +1015,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Avg Processing Time (hours)',
                     data: processingData,
-                    backgroundColor: ['rgba(102,126,234,0.85)', 'rgba(79,172,254,0.85)', 'rgba(250,112,154,0.85)', 'rgba(255,154,158,0.85)', 'rgba(168,237,234,0.85)'],
-                    borderColor: ['#667eea', '#4facfe', '#fa709a', '#ff9a9e', '#a8edea'],
+                    backgroundColor: ['rgba(13,148,136,0.85)', 'rgba(13,148,136,0.75)', 'rgba(13,148,136,0.65)', 'rgba(13,148,136,0.55)', 'rgba(13,148,136,0.45)'],
+                    borderColor: ['#0d9488', '#0d9488', '#0d9488', '#0d9488', '#0d9488'],
                     borderWidth: 2
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Hours', font: { family: 'Inter' } },
+                        ticks: { font: { family: 'Inter' } }
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter' } }
+                    }
+                }
+            }
         });
     }
 });
