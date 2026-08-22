@@ -9,485 +9,1383 @@
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'hazards:dashboard' %}">Hazard Management</a></li>
 <li class="breadcrumb-item active">All Hazards</li>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== HAZARD LIST - TEAL THEME ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    /* ===== TEAL COLOR PALETTE ===== */
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-darker: #0f5e5a;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    --primary-teal-strong: rgba(13, 148, 136, 0.20);
+    
+    /* ===== STATUS COLORS ===== */
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    /* ===== NEUTRAL COLORS ===== */
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+    --radius-pill: 50px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB - TEAL LINKS                                    */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    justify-content: flex-end;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .list-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .list-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .list-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .list-page-header .header-left h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .list-page-header .header-left .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .btn-report-hazard {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+    box-shadow: 0 4px 16px var(--primary-teal-light);
+    transition: all 0.3s ease;
+  }
+
+  .btn-report-hazard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px var(--primary-teal-medium);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-report-hazard i {
+    font-size: 16px;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dash-card .card-header-custom .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom .header-title i {
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .dash-card .card-header-custom .header-title h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 24px;
+  }
+
+  /* ========================================================== */
+  /* FILTER FORM                                                */
+  /* ========================================================== */
+  .filter-form {
+    margin-bottom: 24px;
+  }
+
+  .filter-form .form-control {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 42px;
+  }
+
+  .filter-form .form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px var(--primary-teal-light);
+    outline: none;
+  }
+
+  .filter-form .form-control-sm {
+    height: 38px;
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .filter-form label {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    height: 42px;
+  }
+
+  .btn-filter:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-filter i {
+    font-size: 14px;
+  }
+
+  .btn-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 28px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    height: 42px;
+  }
+
+  .btn-reset:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES - PROPERLY FORMATTED                          */
+  /* ========================================================== */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px;
+  }
+
+  .table-hazard {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    min-width: 1100px;
+  }
+
+  .table-hazard thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 14px 16px;
+    white-space: nowrap;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .table-hazard thead th:last-child {
+    text-align: center;
+  }
+
+  .table-hazard tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .table-hazard tbody td:last-child {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table-hazard tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table-hazard tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table-hazard tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Column Widths */
+  .table-hazard .col-report { width: 11%; }
+  .table-hazard .col-type { width: 9%; }
+  .table-hazard .col-title { width: 14%; }
+  .table-hazard .col-date { width: 10%; }
+  .table-hazard .col-location { width: 10%; }
+  .table-hazard .col-risk { width: 8%; }
+  .table-hazard .col-assigned-by { width: 10%; }
+  .table-hazard .col-assigned-to { width: 14%; }
+  .table-hazard .col-status { width: 9%; }
+  .table-hazard .col-actions { width: 5%; text-align: center; }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS - HORIZONTALLY ALIGNED                      */
+  /* ========================================================== */
+  .action-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .btn-action-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .btn-action-sm i {
+    font-size: 13px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-action-sm:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .btn-action-sm.danger:hover {
+    border-color: var(--secondary-red);
+    color: var(--secondary-red);
+    background: var(--secondary-red-light);
+  }
+
+  .btn-action-sm.success:hover {
+    border-color: var(--secondary-green);
+    color: var(--secondary-green);
+    background: var(--secondary-green-light);
+  }
+
+  .btn-action-sm .fa-eye { color: var(--primary-teal); }
+  .btn-action-sm .fa-edit { color: var(--secondary-gold); }
+  .btn-action-sm .fa-file-pdf { color: var(--secondary-red); }
+  .btn-action-sm .fa-trash { color: var(--secondary-red); }
+
+  .btn-action-sm:hover .fa-eye,
+  .btn-action-sm:hover .fa-edit,
+  .btn-action-sm:hover .fa-file-pdf,
+  .btn-action-sm:hover .fa-trash {
+    color: inherit;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+
+  .dash-badge-sm {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
+
+  /* Status Badges */
+  .badge-status-reported { background: var(--primary-teal); color: white; }
+  .badge-status-pending { background: #64748b; color: white; }
+  .badge-status-approved { background: var(--secondary-green); color: white; }
+  .badge-status-action-assigned { background: var(--secondary-gold); color: white; }
+  .badge-status-in-progress { background: var(--primary-teal); color: white; }
+  .badge-status-closed { background: var(--secondary-green); color: white; }
+  .badge-status-late-closed { background: var(--secondary-red); color: white; }
+  .badge-status-rejected { background: var(--secondary-red); color: white; }
+
+  /* Severity Badges */
+  .badge-severity-critical { background: var(--secondary-red); color: white; }
+  .badge-severity-high { background: var(--secondary-gold); color: white; }
+  .badge-severity-medium { background: #f59e0b; color: #0f172a; }
+  .badge-severity-low { background: var(--secondary-green); color: white; }
+
+  /* Category Badges */
+  .badge-category { 
+    background: var(--primary-teal-light); 
+    color: var(--primary-teal); 
+  }
+  .badge-category-warning { 
+    background: var(--secondary-gold-light); 
+    color: var(--secondary-gold); 
+  }
+  .badge-category-danger { 
+    background: var(--secondary-red-light); 
+    color: var(--secondary-red); 
+  }
+  .badge-category-info { 
+    background: var(--primary-teal-light); 
+    color: var(--primary-teal); 
+  }
+  .badge-category-secondary { 
+    background: var(--bg-page); 
+    color: var(--text-muted); 
+  }
+
+  /* User Badges */
+  .badge-user-completed {
+    background: var(--secondary-green-light);
+    color: var(--secondary-green);
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+    margin: 2px 3px;
+    white-space: nowrap;
+  }
+
+  .badge-user-pending {
+    background: var(--secondary-gold-light);
+    color: var(--secondary-gold);
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+    margin: 2px 3px;
+    white-space: nowrap;
+  }
+
+  .badge-user-not-assigned {
+    background: var(--bg-page);
+    color: var(--text-muted);
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+  }
+
+  /* Overdue Badge */
+  .badge-overdue {
+    background: var(--secondary-red);
+    color: white;
+    padding: 2px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  /* ========================================================== */
+  /* REPORT LINK                                                */
+  /* ========================================================== */
+  .report-link {
+    color: var(--primary-teal);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .report-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* MODAL - TEAL THEME                                         */
+  /* ========================================================== */
+  .modal-content {
+    border-radius: var(--radius-card);
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: 16px 24px;
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .modal-header .modal-title {
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+  }
+
+  .modal-header .close {
+    color: white;
+    opacity: 0.8;
+    font-size: 24px;
+  }
+
+  .modal-header .close:hover {
+    opacity: 1;
+  }
+
+  .modal-body {
+    padding: 24px;
+    text-align: center;
+  }
+
+  .modal-body .modal-icon {
+    font-size: 52px;
+    color: var(--secondary-red);
+    margin-bottom: 16px;
+  }
+
+  .modal-body h5 {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+  }
+
+  .modal-body p {
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .modal-body .text-danger {
+    color: var(--secondary-red) !important;
+    font-weight: 600;
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 16px 24px;
+  }
+
+  .btn-modal-secondary {
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-modal-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-modal-danger {
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--secondary-red);
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-modal-danger:hover {
+    background: #b91c1c;
+  }
+
+  /* ========================================================== */
+  /* ALERT / SUMMARY                                            */
+  /* ========================================================== */
+  .alert-summary {
+    background: var(--primary-teal-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  .alert-summary i {
+    color: var(--primary-teal);
+    margin-right: 8px;
+  }
+
+  .alert-summary strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* PAGINATION - TEAL                                          */
+  /* ========================================================== */
+  .pagination-custom {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pagination-custom .page-link {
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pagination-custom .page-link:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+  }
+
+  .pagination-custom .page-link.active {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .pagination-custom .page-link.active:hover {
+    background: var(--primary-teal-dark);
+    border-color: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* SELECT2 OVERRIDES                                          */
+  /* ========================================================== */
+  .select2-container {
+    width: 100% !important;
+  }
+
+  .select2-container .select2-selection--single {
+    height: 42px !important;
+    border: 1.5px solid var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 4px 12px !important;
+  }
+
+  .select2-container--default .select2-selection--single:focus {
+    border-color: var(--primary-teal) !important;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 32px !important;
+    color: var(--text-primary) !important;
+    padding-left: 0 !important;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+    right: 8px !important;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: var(--text-muted) !important;
+  }
+
+  .select2-dropdown {
+    border-color: var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+  }
+
+  .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: var(--primary-teal) !important;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+  }
+
+  .empty-state i {
+    font-size: 56px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+  }
+
+  .empty-state h5 {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE - PROPERLY FORMATTED                            */
+  /* ========================================================== */
+  @media (max-width: 1200px) {
+    .table-hazard {
+      min-width: 1000px;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .table-hazard {
+      min-width: 900px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .list-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .list-page-header .header-left h3 {
+      font-size: 19px;
+    }
+
+    .list-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .btn-report-hazard {
+      width: 100%;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-header-custom .header-title h3 {
+      font-size: 16px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 16px;
+    }
+
+    .filter-form .row > div {
+      margin-bottom: 10px;
+    }
+
+    .btn-filter, .btn-reset {
+      width: 100%;
+      justify-content: center;
+      height: 40px;
+    }
+
+    /* Mobile Card View */
+    .table-hazard thead {
+      display: none;
+    }
+
+    .table-hazard tbody tr {
+      display: block;
+      margin-bottom: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table-hazard tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .table-hazard tbody td:last-child {
+      border-bottom: none;
+      justify-content: center;
+    }
+
+    .table-hazard tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .table-hazard tbody td .dash-badge {
+      font-size: 11px;
+      padding: 3px 12px;
+    }
+
+    .action-group {
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    .btn-action-sm {
+      width: 32px;
+      height: 32px;
+      font-size: 12px;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .pagination-custom .page-link {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .badge-user-completed,
+    .badge-user-pending {
+      font-size: 10px;
+      padding: 2px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .list-page-header .header-left h3 {
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 12px;
+    }
+
+    .table-hazard tbody td {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .table-hazard tbody td::before {
+      font-size: 11px;
+      min-width: 60px;
+    }
+
+    .report-link {
+      font-size: 13px;
+    }
+
+    .btn-action-sm {
+      width: 30px;
+      height: 30px;
+      font-size: 11px;
+    }
+
+    .dash-badge {
+      font-size: 10px;
+      padding: 3px 10px;
+    }
+
+    .action-group {
+      gap: 3px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="ehs-card">
-  <div class="card-header">
-    <div class="row align-items-center">
-      <div class="col">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-exclamation-triangle mr-2"></i>All Hazard Reports
-        </h3>
-      </div>
-
-      {% if user|has_perm:'CREATE_HAZARD' %}
-      <div class="col-auto">
-        <a href="{% url 'hazards:hazard_create' %}" class="btn btn-warning">
-          <i class="fas fa-plus mr-1"></i> Report New Hazard
-        </a>
-      </div>
-      {% endif %}
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="list-page-header">
+    <div class="header-left">
+        <div class="header-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div>
+            <h3>All Hazard Reports</h3>
+            <p class="subtitle">View and manage all reported hazards</p>
+        </div>
     </div>
-  </div>
-
-  <div class="card-body">
-
-    <!-- Search and Filter -->
-    <form method="GET" class="mb-4">
-      <div class="row">
-        <!-- Search -->
-        <div class="col-md-3 mb-2">
-          <input type="text" name="search" class="form-control"
-                 placeholder="Search report no, title..."
-                 value="{{ search_query }}">
-        </div>
-
-        <!-- Hazard Type Filter -->
-        <div class="col-md-3 mb-2">
-          <select name="hazard_type" class="form-control">
-            <option value="">All Types</option>
-            {% for type_key, type_name in hazard_types %}
-            <option value="{{ type_key }}" {% if selected_hazard_type == type_key %}selected{% endif %}>
-              {{ type_name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Risk Level Filter -->
-        <div class="col-md-3 mb-2">
-          <select name="risk_level" class="form-control">
-            <option value="">All Risk Levels</option>
-            {% for risk_key, risk_name in risk_levels %}
-            <option value="{{ risk_key }}" {% if selected_risk_level == risk_key %}selected{% endif %}>
-              {{ risk_name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Status Filter -->
-        <div class="col-md-3 mb-2">
-          <select name="status" class="form-control">
-            <option value="">All Status</option>
-            {% for status_key, status_name in status_choices %}
-            <option value="{{ status_key }}" {% if selected_status == status_key %}selected{% endif %}>
-              {{ status_name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- Assigned By Filter -->
-        <div class="col-md-3 mb-2">
-            <select name="assigned_by"
-                    id="assignedByFilter"
-                    class="form-control select2">
-
-                <option value="">Assigned By</option>
-
-                {% for user_obj in assigned_by_users %}
-
-                <option value="{{ user_obj.id }}"
-                    {% if selected_assigned_by == user_obj.id|stringformat:"s" %}
-                        selected
-                    {% endif %}>
-
-                    {% firstof user_obj.get_full_name user_obj.username %}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
-        </div>
-
-        <!-- Assigned To Filter -->
-        <div class="col-md-3 mb-2">
-            <select name="assigned_to"
-                    id="assignedToFilter"
-                    class="form-control select2">
-
-                <option value="">Assigned To</option>
-
-                {% for user_obj in assigned_to_users %}
-
-                <option value="{{ user_obj.id }}"
-                    {% if selected_assigned_to == user_obj.id|stringformat:"s" %}
-                        selected
-                    {% endif %}>
-
-                    {% firstof user_obj.get_full_name user_obj.username %}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
-        </div>
-
-        <!-- Filter Buttons -->
-        <div class="col-md-2 mb-2">
-          <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search"></i> Filter
-          </button>
-        </div>
-      </div>
-
-      <!-- Date Range Filter -->
-      <div class="row mt-2">
-        <div class="col-md-3">
-          <label class="small">Date From:</label>
-          <input type="date" name="date_from" class="form-control form-control-sm"
-                 value="{{ request.GET.date_from }}">
-        </div>
-        <div class="col-md-3">
-          <label class="small">Date To:</label>
-          <input type="date" name="date_to" class="form-control form-control-sm"
-                 value="{{ request.GET.date_to }}">
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <a href="{% url 'hazards:hazard_list' %}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-redo"></i> Reset All
-          </a>
-        </div>
-      </div>
-    </form>
-
-    <!-- Hazards Table -->
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead class="thead-light">
-          <tr>
-            <th>Report No.</th>
-            <th>Type</th>
-            <th>Hazard Title</th>
-            <th>Date & Time</th>
-            <th>Plant / Location</th>
-            <th>Risk Level</th>
-            <th>Assigned By</th>
-            <th>Assigned To</th>
-            <th>Status</th>
-            {% if user.role.name != 'EMPLOYEE' %}
-            <th>Actions</th>
-            {% else %}
-                <th></th>
-            {% endif %}
-          </tr>
-        </thead>
-
-        <tbody>
-          {% for hazard in hazards %}
-          <tr>
-            <!-- Report Number -->
-            <td>
-              <a href="{% url 'hazards:hazard_detail' hazard.pk %}" class="text-primary font-weight-bold">
-                {{ hazard.report_number }}
-              </a>
-              {% if hazard.is_action_overdue %}
-              <br><span class="badge badge-danger badge-sm mt-1">
-                <i class="fas fa-clock"></i> Overdue
-              </span>
-              {% endif %}
-            </td>
-
-            <!-- Type -->
-            <td>
-              <span class="badge 
-                {% if hazard.hazard_category == 'slip_trip_fall' %}badge-warning
-                {% elif hazard.hazard_category == 'chemical' %}badge-danger
-                {% elif hazard.hazard_category == 'electrical' %}badge-info
-                {% elif hazard.hazard_category == 'fire' %}badge-danger
-                {% else %}badge-secondary{% endif %}">
-                {{ hazard.get_hazard_category_display }}
-              </span>
-            </td>
-
-            <!-- Hazard Title -->
-            <td>{{ hazard.hazard_title|truncatewords:8 }}</td>
-
-            <!-- Date & Time -->
-            <td>
-              {{ hazard.incident_datetime|date:"d/m/Y" }}<br>
-              <small class="text-muted">{{ hazard.incident_datetime|time:"H:i" }}</small>
-            </td>
-
-            <!-- Plant / Location -->
-            <td>
-              <strong>{{ hazard.plant.code }}</strong><br>
-              <small class="text-muted">{{ hazard.location.name }}</small>
-            </td>
-
-            <!-- Risk Level -->
-            <td>
-              <span class="badge 
-                {% if hazard.severity == 'critical' %}badge-dark
-                {% elif hazard.severity == 'high' %}badge-danger
-                {% elif hazard.severity == 'medium' %}badge-warning
-                {% else %}badge-success{% endif %}">
-                {{ hazard.get_severity_display }}
-              </span>
-            </td>
-
-            <!-- Assigned By -->
-            <td>
-                {% if hazard.reported_by %}
-                    {{ hazard.reported_by.get_full_name|default:hazard.reported_by.username }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-
-            <!-- Assigned To -->
-            <td>
-
-                {% if hazard.action_items.exists %}
-
-                    {% for action_item in hazard.action_items.all %}
-
-                        <!-- Completed Users -->
-                        {% for user in action_item.completed_by_users.all %}
-
-                            <span class="badge badge-success mr-1 mb-1">
-                                <i class="fas fa-check-circle"></i>
-                                {% firstof user.get_full_name user.username %}
-                            </span>
-
-                        {% endfor %}
-
-                        <!-- Pending Users -->
-                        {% for user in action_item.get_pending_users %}
-
-                            <span class="badge badge-warning mr-1 mb-1">
-                                <i class="fas fa-clock"></i>
-                                {% firstof user.get_full_name user.username %}
-                            </span>
-
-                        {% endfor %}
-
-                    {% endfor %}
-
-                {% else %}
-
-                    <span class="text-muted">Not Assigned</span>
-
-                {% endif %}
-
-            </td>
-
-            <!-- Workflow Status -->
-            <td>
-              <span class="badge {{ hazard.status_badge_class }}">
-                {{ hazard.effective_status_display }}
-              </span>
-            </td>
-
-            <!-- Actions -->
-            <td>
-              <div class="btn-group" role="group">
-                {% if user|has_perm:'VIEW_HAZARD' %}
-                <a href="{% url 'hazards:hazard_detail' hazard.pk %}" 
-                   class="btn btn-sm btn-info" 
-                   title="View Details">
-                  <i class="fas fa-eye"></i>
-                </a>
-                {% endif %}
-                {% if user|has_perm:'EDIT_HAZARD' %}
-                <a href="{% url 'hazards:hazard_update' hazard.pk %}" 
-                   class="btn btn-sm btn-primary" 
-                   title="Edit Hazard">
-                  <i class="fas fa-edit"></i>
-                </a>
-                {% endif %}
-                {% if user|has_perm:'EXPORT_HAZARD_PDF' %}
-                <a href="{% url 'hazards:hazard_pdf' hazard.pk %}" 
-                   class="btn btn-sm btn-danger" 
-                   target="_blank"
-                   title="Download PDF">
-                  <i class="fas fa-file-pdf"></i>
-                </a>
-                {% endif %}
-                {% if request.user.is_admin_user %}
-                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ hazard.pk }}" title="Delete Hazard">
-                    <i class="fas fa-trash"></i>
-                </button>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          <div class="modal fade" id="deleteModal{{ hazard.pk }}" tabindex="-1" role="dialog" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered" role="document">
-                  <div class="modal-content">
-                      <div class="modal-header bg-danger text-white">
-                          <h5 class="modal-title">
-                              <i class="fas fa-exclamation-triangle mr-2"></i>
-                              Confirm Delete
-                          </h5>
-                          <button type="button" class="close text-white" data-dismiss="modal">
-                              <span>&times;</span>
-                          </button>
-                      </div>
-                      <div class="modal-body text-center">
-                          <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-                          <h5>Are you sure?</h5>
-                          <p class="mb-1">
-                              This hazard will be <strong>permanently deleted</strong>.
-                          </p>
-                          <p class="text-danger mb-0">
-                              This action cannot be undone.
-                          </p>
-                      </div>
-                      <div class="modal-footer">
-                          <button type="button"
-                                  class="btn btn-secondary"
-                                  data-dismiss="modal">
-                              Cancel
-                          </button>
-                          <form method="POST"
-                                action="{% url 'hazards:hazard_delete' hazard.pk %}">
-                              {% csrf_token %}
-                              <button type="submit" class="btn btn-danger">
-                                  Yes, Delete
-                              </button>
-                          </form>
-                      </div>
-
-                  </div>
-              </div>
-          </div>
-          {% empty %}
-          <tr>
-            <td colspan="{% if user.role.name != 'EMPLOYEE' %}10{% else %}9{% endif %}" class="text-center">
-              <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle mr-2"></i>No hazards found matching your filters.
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Summary Stats -->
-    {% if hazards %}
-    <div class="row mt-3">
-      <div class="col-md-12">
-        <div class="alert alert-light border">
-          <i class="fas fa-info-circle mr-2"></i>
-          <strong>Showing {{ hazards|length }} hazard(s)</strong> 
-          {% if search_query %}matching "{{ search_query }}"{% endif %}
-        </div>
-      </div>
-    </div>
+    {% if user|has_perm:'CREATE_HAZARD' %}
+    <a href="{% url 'hazards:hazard_create' %}" class="btn-report-hazard">
+        <i class="fas fa-plus-circle"></i> Report New Hazard
+    </a>
     {% endif %}
-
-    <!-- Pagination -->
-    {% if is_paginated %}
-    <nav aria-label="Page navigation" class="mt-4">
-      <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-            <i class="fas fa-angle-double-left"></i>
-          </a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-            <i class="fas fa-angle-left"></i> Previous
-          </a>
-        </li>
-        {% endif %}
-
-        <li class="page-item active">
-          <span class="page-link">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          </span>
-        </li>
-
-        {% if page_obj.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-            Next <i class="fas fa-angle-right"></i>
-          </a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-            <i class="fas fa-angle-double-right"></i>
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-    </nav>
-    {% endif %}
-
-  </div>
 </div>
 
-<style>
-/* Additional styling */
-.badge {
-  font-size: 0.85rem;
-  padding: 0.35rem 0.65rem;
-}
+<!-- ========================================================== -->
+<!-- MAIN CARD                                                  -->
+<!-- ========================================================== -->
+<div class="dash-card">
+    <div class="card-header-custom">
+        <div class="header-title">
+            <i class="fas fa-filter"></i>
+            <h3>Filter Hazards</h3>
+        </div>
+        <span style="font-size: 14px; color: var(--text-muted); font-family: 'Inter', sans-serif;">
+            <i class="fas fa-file-alt"></i> Total: {{ hazards|length }}
+        </span>
+    </div>
+    <div class="card-body-custom">
+        <!-- Search and Filter -->
+        <form method="GET" class="filter-form">
+            <div class="row">
+                <!-- Search -->
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search report no, title..."
+                           value="{{ search_query }}">
+                </div>
 
-.table td {
-  vertical-align: middle;
-}
+                <!-- Hazard Type Filter -->
+                <div class="col-md-3 mb-2">
+                    <select name="hazard_type" class="form-control">
+                        <option value="">All Types</option>
+                        {% for type_key, type_name in hazard_types %}
+                        <option value="{{ type_key }}" {% if selected_hazard_type == type_key %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-.btn-group .btn {
-  margin: 0 2px;
-}
+                <!-- Risk Level Filter -->
+                <div class="col-md-3 mb-2">
+                    <select name="risk_level" class="form-control">
+                        <option value="">All Risk Levels</option>
+                        {% for risk_key, risk_name in risk_levels %}
+                        <option value="{{ risk_key }}" {% if selected_risk_level == risk_key %}selected{% endif %}>
+                            {{ risk_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-.ehs-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+                <!-- Status Filter -->
+                <div class="col-md-3 mb-2">
+                    <select name="status" class="form-control">
+                        <option value="">All Status</option>
+                        {% for status_key, status_name in status_choices %}
+                        <option value="{{ status_key }}" {% if selected_status == status_key %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-  padding: 1rem 1.25rem;
-}
+            <div class="row mt-2">
+                <!-- Assigned By Filter -->
+                <div class="col-md-3 mb-2">
+                    <select name="assigned_by"
+                            id="assignedByFilter"
+                            class="form-control select2">
+                        <option value="">Assigned By</option>
+                        {% for user_obj in assigned_by_users %}
+                        <option value="{{ user_obj.id }}"
+                                {% if selected_assigned_by == user_obj.id|stringformat:"s" %}
+                                selected
+                                {% endif %}>
+                            {% firstof user_obj.get_full_name user_obj.username %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-.table-hover tbody tr:hover {
-  background-color: #f5f5f5;
-}
+                <!-- Assigned To Filter -->
+                <div class="col-md-3 mb-2">
+                    <select name="assigned_to"
+                            id="assignedToFilter"
+                            class="form-control select2">
+                        <option value="">Assigned To</option>
+                        {% for user_obj in assigned_to_users %}
+                        <option value="{{ user_obj.id }}"
+                                {% if selected_assigned_to == user_obj.id|stringformat:"s" %}
+                                selected
+                                {% endif %}>
+                            {% firstof user_obj.get_full_name user_obj.username %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-/* Select2 Styling */
-.select2-container {
-    width: 100% !important;
-}
+                <!-- Date From -->
+                <div class="col-md-3 mb-2">
+                    <label>Date From</label>
+                    <input type="date" name="date_from" class="form-control form-control-sm"
+                           value="{{ request.GET.date_from }}">
+                </div>
 
-.select2-container .select2-selection--single {
-    height: calc(2.25rem + 2px) !important;
-    border: 1px solid #ced4da !important;
-    border-radius: .25rem !important;
-    padding: .375rem .75rem !important;
-}
+                <!-- Date To -->
+                <div class="col-md-3 mb-2">
+                    <label>Date To</label>
+                    <input type="date" name="date_to" class="form-control form-control-sm"
+                           value="{{ request.GET.date_to }}">
+                </div>
+            </div>
 
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 34px !important;
-    color: #495057 !important;
-    padding-left: 0 !important;
-}
+            <!-- Filter Buttons -->
+            <div class="row mt-3">
+                <div class="col-md-6 d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'hazards:hazard_list' %}" class="btn-reset">
+                        <i class="fas fa-redo"></i> Reset All
+                    </a>
+                </div>
+            </div>
+        </form>
 
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: calc(2.25rem + 2px) !important;
-    right: 8px !important;
-}
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #495057 !important;
-}
-</style>
+        <!-- ========================================================== -->
+        <!-- HAZARDS TABLE - PROPERLY FORMATTED                         -->
+        <!-- ========================================================== -->
+        <div class="table-wrapper">
+            <table class="table-hazard">
+                <thead>
+                    <tr>
+                        <th class="col-report">Report No.</th>
+                        <th class="col-type">Type</th>
+                        <th class="col-title">Hazard Title</th>
+                        <th class="col-date">Date &amp; Time</th>
+                        <th class="col-location">Plant / Location</th>
+                        <th class="col-risk">Risk Level</th>
+                        <th class="col-assigned-by">Assigned By</th>
+                        <th class="col-assigned-to">Assigned To</th>
+                        <th class="col-status">Status</th>
+                        {% if user.role.name != 'EMPLOYEE' %}
+                        <th class="col-actions">Actions</th>
+                        {% else %}
+                        <th class="col-actions"></th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hazard in hazards %}
+                    <tr>
+                        <!-- Report Number -->
+                        <td data-label="Report No.">
+                            <a href="{% url 'hazards:hazard_detail' hazard.pk %}" class="report-link">
+                                {{ hazard.report_number }}
+                            </a>
+                            {% if hazard.is_action_overdue %}
+                            <br>
+                            <span class="badge-overdue">
+                                <i class="fas fa-clock"></i> Overdue
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Type -->
+                        <td data-label="Type">
+                            <span class="dash-badge dash-badge-sm 
+                                {% if hazard.hazard_category == 'slip_trip_fall' %}badge-category-warning
+                                {% elif hazard.hazard_category == 'chemical' %}badge-category-danger
+                                {% elif hazard.hazard_category == 'electrical' %}badge-category-info
+                                {% elif hazard.hazard_category == 'fire' %}badge-category-danger
+                                {% else %}badge-category-secondary{% endif %}">
+                                {{ hazard.get_hazard_category_display }}
+                            </span>
+                        </td>
+
+                        <!-- Hazard Title -->
+                        <td data-label="Hazard Title" style="font-weight: 500; color: var(--text-primary);">
+                            {{ hazard.hazard_title|truncatewords:8 }}
+                        </td>
+
+                        <!-- Date & Time -->
+                        <td data-label="Date &amp; Time">
+                            <div>{{ hazard.incident_datetime|date:"d/m/Y" }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                {{ hazard.incident_datetime|time:"H:i" }}
+                            </div>
+                        </td>
+
+                        <!-- Plant / Location -->
+                        <td data-label="Plant / Location">
+                            <div style="font-weight: 600; color: var(--text-primary);">
+                                {{ hazard.plant.code }}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                {{ hazard.location.name }}
+                            </div>
+                        </td>
+
+                        <!-- Risk Level -->
+                        <td data-label="Risk Level">
+                            <span class="dash-badge dash-badge-sm badge-severity-{{ hazard.severity }}">
+                                {{ hazard.get_severity_display }}
+                            </span>
+                        </td>
+
+                        <!-- Assigned By -->
+                        <td data-label="Assigned By" style="font-size: 13px;">
+                            {% if hazard.reported_by %}
+                                {{ hazard.reported_by.get_full_name|default:hazard.reported_by.username }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Assigned To -->
+                        <td data-label="Assigned To">
+                            {% if hazard.action_items.exists %}
+                                {% for action_item in hazard.action_items.all %}
+                                    <!-- Completed Users -->
+                                    {% for user in action_item.completed_by_users.all %}
+                                        <span class="badge-user-completed">
+                                            <i class="fas fa-check-circle"></i>
+                                            {% firstof user.get_full_name user.username %}
+                                        </span>
+                                    {% endfor %}
+                                    <!-- Pending Users -->
+                                    {% for user in action_item.get_pending_users %}
+                                        <span class="badge-user-pending">
+                                            <i class="fas fa-clock"></i>
+                                            {% firstof user.get_full_name user.username %}
+                                        </span>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge-user-not-assigned">
+                                    Not Assigned
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Status -->
+                        <td data-label="Status">
+                            <span class="dash-badge dash-badge-sm badge-status-{{ hazard.status_css_class }}">
+                                {{ hazard.effective_status_display }}
+                            </span>
+                        </td>
+
+                        <!-- Actions - Horizontally Aligned -->
+                        <td data-label="Actions">
+                            <div class="action-group">
+                                {% if user|has_perm:'VIEW_HAZARD' %}
+                                <a href="{% url 'hazards:hazard_detail' hazard.pk %}" 
+                                   class="btn-action-sm" 
+                                   title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                                {% if user|has_perm:'EDIT_HAZARD' %}
+                                <a href="{% url 'hazards:hazard_update' hazard.pk %}" 
+                                   class="btn-action-sm" 
+                                   title="Edit Hazard">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                {% if user|has_perm:'EXPORT_HAZARD_PDF' %}
+                                <a href="{% url 'hazards:hazard_pdf' hazard.pk %}" 
+                                   class="btn-action-sm success" 
+                                   target="_blank"
+                                   title="Download PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                                {% if request.user.is_admin_user %}
+                                <button type="button" 
+                                        class="btn-action-sm danger" 
+                                        data-toggle="modal" 
+                                        data-target="#deleteModal{{ hazard.pk }}" 
+                                        title="Delete Hazard">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{ hazard.pk }}" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Confirm Delete
+                                    </h5>
+                                    <button type="button" class="close" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="modal-icon">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </div>
+                                    <h5>Are you sure?</h5>
+                                    <p>This hazard will be <strong>permanently deleted</strong>.</p>
+                                    <p class="text-danger">This action cannot be undone.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn-modal-secondary" data-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <form method="POST" action="{% url 'hazards:hazard_delete' hazard.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-modal-danger">
+                                            Yes, Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if user.role.name != 'EMPLOYEE' %}10{% else %}9{% endif %}">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h5>No Hazards Found</h5>
+                                <p>No hazards match your current filters. Try adjusting your search criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary Stats -->
+        {% if hazards %}
+        <div class="alert-summary">
+            <i class="fas fa-info-circle"></i>
+            <strong>Showing {{ hazards|length }} hazard(s)</strong>
+            {% if search_query %} matching "<strong>{{ search_query }}</strong>"{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="pagination-custom">
+            {% if page_obj.has_previous %}
+            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                <i class="fas fa-angle-left"></i> Previous
+            </a>
+            {% endif %}
+
+            <span class="page-link active">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                Next <i class="fas fa-angle-right"></i>
+            </a>
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.hazard_type %}&hazard_type={{ request.GET.hazard_type }}{% endif %}{% if request.GET.risk_level %}&risk_level={{ request.GET.risk_level }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_js %}
-
 <script>
 window.addEventListener('load', function () {
-
     if (typeof jQuery !== 'undefined') {
-
         $('#assignedByFilter').select2({
             placeholder: "Assigned By",
             allowClear: true,
@@ -500,18 +1398,17 @@ window.addEventListener('load', function () {
             width: '100%'
         });
 
+        // Auto-submit on filter change
         $('#assignedByFilter').on('change', function () {
             this.form.submit();
         });
 
+        $('#assignedToFilter').on('change', function () {
+            this.form.submit();
+        });
     } else {
-
         console.log('jQuery not loaded');
-
     }
-
 });
 </script>
-
-{% endblock %}
 {% endblock %}

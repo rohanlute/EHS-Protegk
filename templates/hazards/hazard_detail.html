@@ -1,6 +1,7 @@
 {% extends 'base/base.html' %}
 {% load static %}
 {% load permission_tags %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'hazards:dashboard' %}">Hazard Management</a></li>
@@ -10,689 +11,1361 @@
 
 {% block extra_css %}
 <style>
-    .breadcrumb{
-        justify-content: flex-end;
-        margin-bottom: 0;
+  /* ===== HAZARD DETAIL - DASHBOARD THEME ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    /* Primary Dashboard Colors */
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    /* Neutral Colors */
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+    --radius-pill: 50px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    justify-content: flex-end;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .detail-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .detail-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .detail-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .detail-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .detail-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-action-secondary {
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-action-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+  }
+
+  .btn-action-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 4px 16px var(--primary-teal-light);
+  }
+
+  .btn-action-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px var(--primary-teal-medium);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-action-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-action-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                      */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom .header-title i {
+    font-size: 18px;
+  }
+
+  .dash-card .card-header-custom .header-title h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 20px;
+  }
+
+  /* Card Header Colors */
+  .card-header-teal {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+  }
+
+  .card-header-teal .header-title i {
+    color: var(--primary-teal);
+  }
+
+  .card-header-teal .header-title h3 {
+    color: var(--primary-teal);
+  }
+
+  .card-header-info {
+    background: rgba(13, 148, 136, 0.08);
+    border-bottom: 2px solid var(--primary-teal);
+  }
+
+  .card-header-info .header-title i {
+    color: var(--primary-teal);
+  }
+
+  .card-header-info .header-title h3 {
+    color: var(--primary-teal);
+  }
+
+  .card-header-warning {
+    background: var(--secondary-gold-light);
+    border-bottom: 2px solid var(--secondary-gold);
+  }
+
+  .card-header-warning .header-title i {
+    color: var(--secondary-gold);
+  }
+
+  .card-header-warning .header-title h3 {
+    color: var(--secondary-gold);
+  }
+
+  .card-header-secondary {
+    background: var(--bg-page);
+    border-bottom: 2px solid var(--text-muted);
+  }
+
+  .card-header-secondary .header-title i {
+    color: var(--text-muted);
+  }
+
+  .card-header-secondary .header-title h3 {
+    color: var(--text-secondary);
+  }
+
+  .card-header-success {
+    background: var(--secondary-green-light);
+    border-bottom: 2px solid var(--secondary-green);
+  }
+
+  .card-header-success .header-title i {
+    color: var(--secondary-green);
+  }
+
+  .card-header-success .header-title h3 {
+    color: var(--secondary-green);
+  }
+
+  .card-header-dark {
+    background: #f1f5f9;
+    border-bottom: 2px solid #334155;
+  }
+
+  .card-header-dark .header-title i {
+    color: #334155;
+  }
+
+  .card-header-dark .header-title h3 {
+    color: #334155;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+
+  .dash-badge-lg {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
+
+  /* Status Badges */
+  .badge-status-reported { background: var(--primary-teal); color: white; }
+  .badge-status-pending { background: #64748b; color: white; }
+  .badge-status-approved { background: var(--secondary-green); color: white; }
+  .badge-status-action-assigned { background: var(--secondary-gold); color: white; }
+  .badge-status-in-progress { background: #0d9488; color: white; }
+  .badge-status-closed { background: var(--secondary-green); color: white; }
+  .badge-status-late-closed { background: var(--secondary-red); color: white; }
+  .badge-status-rejected { background: var(--secondary-red); color: white; }
+
+  /* Severity Badges */
+  .badge-severity-critical { background: var(--secondary-red); color: white; }
+  .badge-severity-high { background: var(--secondary-gold); color: white; }
+  .badge-severity-medium { background: #f59e0b; color: #0f172a; }
+  .badge-severity-low { background: var(--secondary-green); color: white; }
+
+  /* General Badges */
+  .badge-teal { background: var(--primary-teal); color: white; }
+  .badge-red { background: var(--secondary-red); color: white; }
+  .badge-gold { background: var(--secondary-gold); color: white; }
+  .badge-green { background: var(--secondary-green); color: white; }
+  .badge-gray { background: #64748b; color: white; }
+
+  /* ========================================================== */
+  /* INFO BOX (On Behalf Of)                                    */
+  /* ========================================================== */
+  .info-box {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    margin-top: 16px;
+  }
+
+  .info-box .info-box-title {
+    font-weight: 700;
+    color: var(--primary-teal);
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  /* ========================================================== */
+  /* PHOTOS & VIDEOS                                            */
+  /* ========================================================== */
+  .hazard-photo {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .hazard-photo:hover {
+    border-color: var(--primary-teal);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .hazard-video {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+  }
+
+  .media-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* ACTION ITEMS                                               */
+  /* ========================================================== */
+  .action-item-card {
+    border-left: 4px solid var(--secondary-gold);
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .action-item-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .action-item-card.completed {
+    border-left-color: var(--secondary-green);
+  }
+
+  .action-item-card.overdue {
+    border-left-color: var(--secondary-red);
+    background: var(--secondary-red-light);
+  }
+
+  .action-item-card .card-body {
+    padding: 16px 20px;
+  }
+
+  .action-item-card .action-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .action-item-card .action-title i {
+    color: var(--secondary-gold);
+  }
+
+  .action-item-card.completed .action-title i {
+    color: var(--secondary-green);
+  }
+
+  .action-item-card.overdue .action-title i {
+    color: var(--secondary-red);
+  }
+
+  .assigned-user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 500;
+    margin: 2px;
+  }
+
+  .assigned-user-badge.completed {
+    background: var(--secondary-green-light);
+    color: var(--secondary-green);
+  }
+
+  .assigned-user-badge.pending {
+    background: var(--secondary-gold-light);
+    color: var(--secondary-gold);
+  }
+
+  /* ========================================================== */
+  /* TIMELINE                                                   */
+  /* ========================================================== */
+  .status-timeline {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .status-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+    padding-left: 4px;
+  }
+
+  .timeline-item:last-child {
+    padding-bottom: 0;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 5px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-teal);
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--primary-teal);
+  }
+
+  .timeline-item .timeline-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .timeline-item .timeline-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 2px 0;
+  }
+
+  .timeline-item .timeline-meta i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* ALERT MESSAGES                                             */
+  /* ========================================================== */
+  .alert {
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .alert-success {
+    background: var(--secondary-green-light);
+    border-color: #86efac;
+    color: #166534;
+  }
+
+  .alert-danger {
+    background: var(--secondary-red-light);
+    border-color: #fca5a5;
+    color: var(--secondary-red);
+  }
+
+  .alert-warning {
+    background: var(--secondary-gold-light);
+    border-color: #fcd34d;
+    color: var(--secondary-gold);
+  }
+
+  .alert-info {
+    background: var(--primary-teal-light);
+    border-color: #99f6e4;
+    color: var(--primary-teal);
+  }
+
+  .alert .close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0 4px;
+  }
+
+  .alert .close:hover {
+    opacity: 1;
+  }
+
+  /* ========================================================== */
+  /* DETAILS LIST                                               */
+  /* ========================================================== */
+  .detail-item {
+    margin-bottom: 12px;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-item .detail-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .detail-item .detail-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .detail-item .detail-value p {
+    margin: 0;
+  }
+
+  hr.divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 16px 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .detail-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
     }
-    .info-box {
-        border-left: 4px solid #007bff;
-        padding: 15px;
-        background-color: #f8f9fa;
-        margin-bottom: 20px;
+
+    .detail-page-header .header-left h1 {
+      font-size: 18px;
     }
-    .severity-badge {
-        font-size: 14px;
-        padding: 8px 15px;
+
+    .detail-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
     }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .header-actions .btn-action {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 16px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
     .hazard-photo {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
-        margin: 5px;
-        border-radius: 5px;
-        border: 2px solid #ddd;
-        cursor: pointer;
+      width: 100%;
+      height: 200px;
     }
-    .hazard-photo:hover {
-        border-color: #007bff;
-        transform: scale(1.05);
-        transition: all 0.3s;
-    }
-    .status-timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-    .status-timeline::before {
-        content: '';
-        position: absolute;
-        left: 10px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background-color: #dee2e6;
-    }
+
     .timeline-item {
-        position: relative;
-        padding-bottom: 20px;
+      padding-bottom: 16px;
     }
-    .timeline-item::before {
-        content: '';
-        position: absolute;
-        left: -24px;
-        top: 5px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background-color: #007bff;
-        border: 2px solid #fff;
+
+    .action-item-card .card-body {
+      padding: 12px 16px;
     }
-    .action-item-card {
-        border-left: 4px solid #ffc107;
-        margin-bottom: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .detail-page-header .header-left h1 {
+      font-size: 16px;
     }
-    .action-item-card.completed {
-        border-left-color: #28a745;
+
+    .dash-card .card-body-custom {
+      padding: 12px;
     }
-    .action-item-card.overdue {
-        border-left-color: #dc3545;
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 4px 12px;
     }
-    
-    /* Status badge classes */
-    .status-reported { background-color: #007bff; color: white; }
-    .status-pending { background-color: #6c757d; color: white; }
-    .status-approved { background-color: #28a745; color: white; }
-    .status-action-assigned { background-color: #fd7e14; color: white; }
-    .status-in-progress { background-color: #17a2b8; color: white; }
-    .status-closed { background-color: #28a745; color: white; }
-    .status-late-closed { background-color: #dc3545; color: white; }
-    .status-rejected { background-color: #dc3545; color: white; }
-    
-    /* Severity badge classes */
-    .severity-critical { background-color: #dc3545; color: white; }
-    .severity-high { background-color: #fd7e14; color: white; }
-    .severity-medium { background-color: #ffc107; color: #000; }
-    .severity-low { background-color: #28a745; color: white; }
+
+    .dash-badge-lg {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+
+    .action-item-card .action-title {
+      font-size: 13px;
+    }
+
+    .timeline-item .timeline-title {
+      font-size: 13px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Content Header -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><i class="fas fa-exclamation-triangle text-warning"></i> Hazard Details</h1>
-            </div>
-            <div class="col-sm-6">
-                <div class="float-sm-right">
-                    <a href="{{ cancel_url }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to List
-                    </a>
-                    {% if user|has_perm:'EDIT_HAZARD' %}
-                    <a href="{% url 'hazards:hazard_update' hazard.pk %}" class="btn btn-primary">
-                        <i class="fas fa-edit"></i> Edit Hazard
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="detail-page-header">
+    <div class="header-left">
+        <div class="header-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div>
+            <h1>Hazard Details</h1>
+            <p class="subtitle">{{ hazard.report_number }} — {{ hazard.hazard_title|truncatewords:8 }}</p>
         </div>
     </div>
-</section>
+    <div class="header-actions">
+        <a href="{{ cancel_url }}" class="btn-action btn-action-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        {% if user|has_perm:'EDIT_HAZARD' %}
+        <a href="{% url 'hazards:hazard_update' hazard.pk %}" class="btn-action btn-action-primary">
+            <i class="fas fa-edit"></i> Edit Hazard
+        </a>
+        {% endif %}
+        {% if user|has_perm:'ADD_HAZARD_ACTION' %}
+        <a href="{% url 'hazards:action_item_create' hazard.pk %}" class="btn-action btn-action-success">
+            <i class="fas fa-plus"></i> Add Action
+        </a>
+        {% endif %}
+    </div>
+</div>
 
-<!-- Main content -->
-<section class="content">
-    <!-- Messages -->
-    {% if messages %}
-            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                {{ message|safe }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+<!-- ========================================================== -->
+<!-- MESSAGES                                                   -->
+<!-- ========================================================== -->
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message|safe }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ========================================================== -->
+<!-- MAIN CONTENT                                               -->
+<!-- ========================================================== -->
+<div class="row">
+    <!-- ========================================================== -->
+    <!-- LEFT COLUMN                                                 -->
+    <!-- ========================================================== -->
+    <div class="col-lg-8">
+        <!-- Hazard Information -->
+        <div class="dash-card">
+            <div class="card-header-custom card-header-teal">
+                <div class="header-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Hazard Information</h3>
+                </div>
+                <div>
+                    <span class="dash-badge dash-badge-lg badge-status-{{ hazard.status_css_class }}">
+                        {{ hazard.effective_status_display }}
+                    </span>
+                    <span class="dash-badge dash-badge-lg badge-severity-{{ hazard.severity }} ml-2">
+                        {{ hazard.get_severity_display }}
+                    </span>
+                </div>
             </div>
-    {% endif %}
-
-    <div class="row">
-        <!-- Left Column -->
-        <div class="col-md-8">
-            <!-- Hazard Information Card -->
-            <div class="card">
-                <div class="card-header bg-primary">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-exclamation-triangle"></i> Hazard Information
-                    </h3>
-               
-                <div class="card-tools">
-                        {% if user|has_perm:'ADD_HAZARD_ACTION' %}
-                        <a href="{% url 'hazards:action_item_create' hazard.pk %}" class="btn btn-sm btn-success">
-                            <i class="fas fa-plus"></i> Add Action Item
-                        </a>
-                        {% endif %}
-                    </div>
-                     </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h5 class="text-primary">{{ hazard.report_number }}</h5>
-                            <p class="text-muted mb-0">Report Number</p>
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <span class="badge status-{{ hazard.status_css_class }} badge-lg">{{ hazard.effective_status_display }}</span>
-                            <span class="badge severity-{{ hazard.severity }} badge-lg ml-2">{{ hazard.get_severity_display }}</span>
+            <div class="card-body-custom">
+                <!-- Report Number & Status -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Report Number</span>
+                            <p class="detail-value"><strong>{{ hazard.report_number }}</strong></p>
                         </div>
                     </div>
-
-                    <hr>
-
-                    <h5 class="text-primary mb-3">Hazard Details</h5>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <strong>Hazard Type:</strong>
-                            <p>{{ hazard.get_hazard_type_display }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <strong>Category:</strong>
-                            <p><i class="fas fa-exclamation-triangle"></i> {{ hazard.get_hazard_category_display }}</p>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <strong>Title:</strong>
-                            <p>{{ hazard.hazard_title }}</p>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <strong>Description:</strong>
-                            <p>{{ hazard.hazard_description|linebreaks }}</p>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <strong>Immediate Actions:</strong>
-                            <p>{% if hazard.immediate_action %}{{ hazard.immediate_action|linebreaks }}{% else %}N/A{% endif %}</p>
-                        </div>
-                        <div class="col-md-6 mb-2">
-                            <strong>Identified Date & Time:</strong>
-                            <p>{{ hazard.incident_datetime|date:"d M Y, h:i A" }}</p>
-                        </div>
-                        <div class="col-md-6 mb-2">
-                            <strong>Severity Level:</strong>
-                            <p><span class="badge severity-{{ hazard.severity }}">{{ hazard.get_severity_display }}</span></p>
+                    <div class="col-md-6 text-md-right">
+                        <div class="detail-item">
+                            <span class="detail-label">Reported Date</span>
+                            <p class="detail-value">{{ hazard.report_timestamp|date:"d M Y, h:i A" }}</p>
                         </div>
                     </div>
+                </div>
 
-                    <hr>
+                <hr class="divider">
 
-                    <h5 class="text-primary mb-3">Location Information</h5>
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <strong>Plant:</strong>
-                            <p>{% if hazard.plant %}{{ hazard.plant.name }}{% if hazard.plant.code %} ({{ hazard.plant.code }}){% endif %}{% else %}N/A{% endif %}</p>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <strong>Zone:</strong>
-                            <p>{% if hazard.zone %}{{ hazard.zone.name }}{% if hazard.zone.code %} ({{ hazard.zone.code }}){% endif %}{% else %}N/A{% endif %}</p>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <strong>Location:</strong>
-                            <p>{% if hazard.location %}{{ hazard.location.name }}{% if hazard.location.code %} ({{ hazard.location.code }}){% endif %}{% else %}N/A{% endif %}</p>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <strong>Sub-Location:</strong>
-                            <p>{% if hazard.sublocation %}{{ hazard.sublocation.name }}{% if hazard.sublocation.code %} ({{ hazard.sublocation.code }}){% endif %}{% else %}N/A{% endif %}</p>
+                <!-- Hazard Details -->
+                <h5 class="text-primary mb-3" style="color: var(--primary-teal) !important; font-weight: 700;">
+                    <i class="fas fa-clipboard-list"></i> Hazard Details
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Hazard Type</span>
+                            <p class="detail-value">{{ hazard.get_hazard_type_display }}</p>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Category</span>
+                            <p class="detail-value"><i class="fas fa-tag text-teal"></i> {{ hazard.get_hazard_category_display }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="detail-item">
+                            <span class="detail-label">Title</span>
+                            <p class="detail-value"><strong>{{ hazard.hazard_title }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="detail-item">
+                            <span class="detail-label">Description</span>
+                            <p class="detail-value">{{ hazard.hazard_description|linebreaks }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="detail-item">
+                            <span class="detail-label">Immediate Actions</span>
+                            <p class="detail-value">{% if hazard.immediate_action %}{{ hazard.immediate_action|linebreaks }}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Identified Date & Time</span>
+                            <p class="detail-value">{{ hazard.incident_datetime|date:"d M Y, h:i A" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Severity Level</span>
+                            <p class="detail-value">
+                                <span class="dash-badge badge-severity-{{ hazard.severity }}">
+                                    {{ hazard.get_severity_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                    <hr>
+                <hr class="divider">
 
-                    <h5 class="text-primary mb-3">Reporter Information</h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-2">
-                            <strong>Name:</strong>
-                            <p>{{ hazard.reporter_name|default:"N/A" }}</p>
+                <!-- Location Information -->
+                <h5 class="text-primary mb-3" style="color: var(--primary-teal) !important; font-weight: 700;">
+                    <i class="fas fa-map-marker-alt"></i> Location Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <span class="detail-label">Plant</span>
+                            <p class="detail-value">{% if hazard.plant %}{{ hazard.plant.name }}{% if hazard.plant.code %} ({{ hazard.plant.code }}){% endif %}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
                         </div>
-                        <div class="col-md-4 mb-2">
-                            <strong>Email:</strong>
-                            <p>{{ hazard.reporter_email|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <span class="detail-label">Zone</span>
+                            <p class="detail-value">{% if hazard.zone %}{{ hazard.zone.name }}{% if hazard.zone.code %} ({{ hazard.zone.code }}){% endif %}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
                         </div>
-                        <div class="col-md-4 mb-2">
-                            <strong>Phone:</strong>
-                            <p>{% if hazard.reporter_phone %}{{ hazard.reporter_phone }}{% else %}N/A{% endif %}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <span class="detail-label">Location</span>
+                            <p class="detail-value">{% if hazard.location %}{{ hazard.location.name }}{% if hazard.location.code %} ({{ hazard.location.code }}){% endif %}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <strong>Reported By:</strong>
-                            <p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <span class="detail-label">Sub-Location</span>
+                            <p class="detail-value">{% if hazard.sublocation %}{{ hazard.sublocation.name }}{% if hazard.sublocation.code %} ({{ hazard.sublocation.code }}){% endif %}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Reporter Information -->
+                <h5 class="text-primary mb-3" style="color: var(--primary-teal) !important; font-weight: 700;">
+                    <i class="fas fa-user"></i> Reporter Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="detail-item">
+                            <span class="detail-label">Name</span>
+                            <p class="detail-value">{{ hazard.reporter_name|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="detail-item">
+                            <span class="detail-label">Email</span>
+                            <p class="detail-value">{{ hazard.reporter_email|default:"N/A" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="detail-item">
+                            <span class="detail-label">Phone</span>
+                            <p class="detail-value">{% if hazard.reporter_phone %}{{ hazard.reporter_phone }}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Reported By</span>
+                            <p class="detail-value">
                                 {{ hazard.reported_by.get_full_name|default:hazard.reported_by.username }}
                                 {% if hazard.reported_by.role.name %}
-                                    <span class="badge badge-secondary">{{ hazard.reported_by.role.name }}</span>
+                                    <span class="dash-badge badge-gray ml-1">{{ hazard.reported_by.role.name }}</span>
                                 {% endif %}
                             </p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <strong>Reported Date:</strong>
-                            <p>{{ hazard.report_timestamp|date:"d M Y, h:i A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Reported Date</span>
+                            <p class="detail-value">{{ hazard.report_timestamp|date:"d M Y, h:i A" }}</p>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Behalf Information Section -->
-                    {% if hazard.behalf_person_name %}
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="alert alert-info">
-                                <h6 class="alert-heading">
-                                    <i class="fas fa-user-friends"></i> Reported On Behalf Of
-                                </h6>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <strong>Employee Name:</strong><br>
-                                        <span class="text-dark">{{ hazard.behalf_person_name }}</span>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Department:</strong><br>
-                                        <span class="text-dark">
-                                            {% if hazard.behalf_person_dept %}
-                                                {{ hazard.behalf_person_dept.name }}
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Behalf Information -->
+                {% if hazard.behalf_person_name %}
+                <div class="info-box mt-3">
+                    <div class="info-box-title">
+                        <i class="fas fa-user-friends"></i> Reported On Behalf Of
                     </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Photos Card -->
-            {% if photos %}
-            <div class="card">
-                <div class="card-header bg-info">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-camera"></i> Hazard Photos ({{ photos.count }})
-                    </h3>
-                </div>
-                <div class="card-body">
                     <div class="row">
-                        {% for photo in photos %}
-                        <div class="col-md-3 text-center mb-3">
-                            <a href="{{ photo.photo.url }}" target="_blank">
-                                <img src="{{ photo.photo.url }}" alt="Hazard Photo" class="hazard-photo">
-                            </a>
-                            {% if photo.description %}
-                            <p class="text-muted small mt-1">{{ photo.description }}</p>
-                            {% endif %}
-                            <p class="text-muted small">
-                                <i class="fas fa-calendar"></i> {{ photo.uploaded_at|date:"d M Y" }}
+                        <div class="col-md-6">
+                            <span class="detail-label">Employee Name</span>
+                            <p class="detail-value"><strong>{{ hazard.behalf_person_name }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="detail-label">Department</span>
+                            <p class="detail-value">
+                                {% if hazard.behalf_person_dept %}
+                                    {{ hazard.behalf_person_dept.name }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
                             </p>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-            </div>
-            {% endif %}
-
-            {% if videos %}
-            <div class="card mt-4">
-                <div class="card-header bg-danger">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-video"></i> Hazard Videos ({{ videos.count }})
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for video in videos %}
-                        <div class="col-md-4 mb-3">
-                            <video controls style="width: 100%; border-radius: 10px;">
-                                <source src="{{ video.video.url }}">
-                            </video>
-                            {% if video.description %}
-                            <p class="text-muted small mt-1">{{ video.description }}</p>
-                            {% endif %}
-                            <p class="text-muted small">
-                                <i class="fas fa-calendar"></i> {{ video.uploaded_at|date:"d M Y" }}
-                            </p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Action Items Card -->
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h3 class="card-title">
-                        <i class="fas fa-tasks"></i> Action Items ({{ action_items.count }})
-                    </h3>
-                    <!-- <div class="card-tools">
-                        {% if user|has_perm:'ADD_HAZARD_ACTION' %} 
-                        <a href="{% url 'hazards:action_item_create' hazard.pk %}" class="btn btn-sm btn-success">
-                            <i class="fas fa-plus"></i> Add Action Item
-                        </a>
-                        {% endif %}
-                    </div> -->
-                </div>
-                <div class="card-body">
-                    {% if action_items %}
-                        {% for action in action_items %}
-                        <div class="card action-item-card {% if action.is_fully_completed %}completed{% elif action.is_overdue %}overdue{% endif %} mb-3">
-    <div class="card-body">
-        <!-- Action Description & Main Status Badge -->
-        <div class="row mb-2">
-            <div class="col-md-8">
-                <h6><i class="fas fa-clipboard-check"></i> {{ action.action_description }}</h6>
-            </div>
-            <div class="col-md-4 text-right">
-                <!-- LOGIC CHANGE: The badge now reflects the overall completion status -->
-                <span class="badge {% if action.is_fully_completed %}badge-success{% elif action.status == 'IN_PROGRESS' %}badge-info{% elif action.status == 'PENDING' %}badge-warning{% else %}badge-secondary{% endif %} badge-lg">
-                    {% if action.is_fully_completed %}
-                        Completed
-                    {% else %}
-                        {{ action.get_status_display }}
-                    {% endif %}
-                </span>
-            </div>
-        </div>
-
-        <hr class="my-2">
-
-        <!-- LOGIC CHANGE: Display per-user completion status -->
-        <div class="row mb-2">
-            <div class="col-md-12">
-                <p class="mb-1">
-                    <i class="fas fa-users"></i> <strong>Assigned To:</strong>
-                    <small class="text-muted ml-2">{{ action.completed_by_users.count }} of {{ action.get_emails_count }} completed</small>
-                </p>
-                {% if action.responsible_emails %}
-                    <div>
-                        <!-- List users who have completed the action -->
-                        {% for user in action.completed_by_users.all %}
-                            <span class="badge badge-success mr-1 mb-1" title="Completed by {{ user.get_full_name }}">
-                                <i class="fas fa-check-circle"></i> {{ user.get_full_name|default:user.email }}
-                            </span>
-                        {% endfor %}
-
-                        <!-- List users whose action is still pending -->
-                        {% for user in action.get_pending_users %}
-                             <span class="badge badge-warning mr-1 mb-1" title="Pending for {{ user.get_full_name }}">
-                                <i class="fas fa-clock"></i> {{ user.get_full_name|default:user.email }}
-                            </span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <span class="text-muted">Not assigned</span>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Target and Completion Date -->
-        <div class="row mb-2">
-            <div class="col-md-6">
-                <p class="mb-0">
-                    <i class="fas fa-calendar"></i> <strong>Target Date:</strong> 
-                    {{ action.target_date|date:"d M Y" }}
-                    {% if action.is_overdue and not action.is_fully_completed %}
-                        <span class="badge badge-danger ml-2">
+        <!-- Photos -->
+        {% if photos %}
+        <div class="dash-card">
+            <div class="card-header-custom card-header-info">
+                <div class="header-title">
+                    <i class="fas fa-camera"></i>
+                    <h3>Hazard Photos ({{ photos.count }})</h3>
+                </div>
+            </div>
+            <div class="card-body-custom">
+                <div class="row">
+                    {% for photo in photos %}
+                    <div class="col-md-3 col-6 text-center mb-3">
+                        <a href="{{ photo.photo.url }}" target="_blank">
+                            <img src="{{ photo.photo.url }}" alt="Hazard Photo" class="hazard-photo img-fluid">
+                        </a>
+                        {% if photo.description %}
+                        <p class="text-muted small mt-1">{{ photo.description }}</p>
+                        {% endif %}
+                        <p class="media-label">
+                            <i class="fas fa-calendar"></i> {{ photo.uploaded_at|date:"d M Y" }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Videos -->
+        {% if videos %}
+        <div class="dash-card">
+            <div class="card-header-custom" style="background: rgba(220, 38, 38, 0.08); border-bottom: 2px solid var(--secondary-red);">
+                <div class="header-title">
+                    <i class="fas fa-video" style="color: var(--secondary-red);"></i>
+                    <h3 style="color: var(--secondary-red);">Hazard Videos ({{ videos.count }})</h3>
+                </div>
+            </div>
+            <div class="card-body-custom">
+                <div class="row">
+                    {% for video in videos %}
+                    <div class="col-md-4 mb-3">
+                        <video controls class="hazard-video">
+                            <source src="{{ video.video.url }}">
+                        </video>
+                        {% if video.description %}
+                        <p class="text-muted small mt-1">{{ video.description }}</p>
+                        {% endif %}
+                        <p class="media-label">
+                            <i class="fas fa-calendar"></i> {{ video.uploaded_at|date:"d M Y" }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Items -->
+        <div class="dash-card">
+            <div class="card-header-custom card-header-warning">
+                <div class="header-title">
+                    <i class="fas fa-tasks"></i>
+                    <h3>Action Items ({{ action_items.count }})</h3>
+                </div>
+            </div>
+            <div class="card-body-custom">
+                {% if action_items %}
+                    {% for action in action_items %}
+                    <div class="action-item-card {% if action.is_fully_completed %}completed{% elif action.is_overdue %}overdue{% endif %}">
+                        <div class="card-body">
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+                                <h6 class="action-title">
+                                    <i class="fas fa-clipboard-check"></i> {{ action.action_description }}
+                                </h6>
+                                <span class="dash-badge 
+                                    {% if action.is_fully_completed %}badge-green
+                                    {% elif action.status == 'IN_PROGRESS' %}badge-teal
+                                    {% elif action.status == 'PENDING' %}badge-gold
+                                    {% else %}badge-gray{% endif %}">
+                                    {% if action.is_fully_completed %}
+                                        <i class="fas fa-check-circle"></i> Completed
+                                    {% else %}
+                                        {{ action.get_status_display }}
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Assigned Users -->
+                            <div class="mb-2">
+                                <span class="text-muted" style="font-size: 13px;">
+                                    <i class="fas fa-users"></i> 
+                                    <strong>Assigned To:</strong>
+                                    <span class="ml-2">{{ action.completed_by_users.count }} of {{ action.get_emails_count }} completed</span>
+                                </span>
+                                <div class="mt-1">
+                                    {% for user in action.completed_by_users.all %}
+                                        <span class="assigned-user-badge completed">
+                                            <i class="fas fa-check-circle"></i> {{ user.get_full_name|default:user.email }}
+                                        </span>
+                                    {% endfor %}
+                                    {% for user in action.get_pending_users %}
+                                        <span class="assigned-user-badge pending">
+                                            <i class="fas fa-clock"></i> {{ user.get_full_name|default:user.email }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <span class="text-muted" style="font-size: 13px;">
+                                        <i class="fas fa-calendar"></i> 
+                                        <strong>Target Date:</strong> 
+                                        {{ action.target_date|date:"d M Y" }}
+                                        {% if action.is_overdue and not action.is_fully_completed %}
+                                            <span class="dash-badge badge-red ml-1" style="font-size: 11px; padding: 2px 10px;">
+                                                <i class="fas fa-exclamation-triangle"></i> OVERDUE
+                                            </span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if action.completion_date and action.is_fully_completed %}
+                                <div class="col-md-6">
+                                    <span class="text-success" style="font-size: 13px;">
+                                        <i class="fas fa-check-circle"></i> 
+                                        <strong>Fully Completed:</strong> 
+                                        {{ action.completion_date|date:"d M Y" }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Attachment -->
+                            {% if action.attachment %}
+                            <div class="mb-2">
+                                <span class="text-muted" style="font-size: 13px;">
+                                    <i class="fas fa-paperclip"></i> 
+                                    <strong>Attachment:</strong>
+                                </span>
+                                <a href="{{ action.attachment.url }}" target="_blank" class="btn-action btn-action-secondary" style="padding: 4px 12px; font-size: 12px;">
+                                    <i class="fas fa-download"></i> {{ action.get_attachment_name }}
+                                </a>
+                            </div>
+                            {% endif %}
+
+                            <!-- Remarks -->
+                            {% if action.completion_remarks %}
+                            <div class="mt-2">
+                                <span class="text-muted" style="font-size: 13px;">
+                                    <i class="fas fa-comment"></i> 
+                                    <strong>Remarks:</strong>
+                                </span>
+                                <p class="mb-0" style="font-size: 14px; color: var(--text-secondary);">
+                                    {{ action.completion_remarks|linebreaks }}
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            <!-- Edit Button -->
+                            <hr class="divider">
+                            <div class="text-right">
+                                {% if user|has_perm:'EDIT_HAZARD_ACTION' %}
+                                <a href="{% url 'hazards:action_item_update' action.pk %}" class="btn-action btn-action-secondary" style="padding: 6px 16px; font-size: 13px;">
+                                    <i class="fas fa-edit"></i> Edit Action
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox" style="font-size: 32px; color: var(--text-muted); opacity: 0.5;"></i>
+                        <p class="text-muted mt-2">No action items created yet.</p>
+                        {% if user|has_perm:'ADD_HAZARD_ACTION' %}
+                        <a href="{% url 'hazards:action_item_create' hazard.pk %}" class="btn-action btn-action-primary mt-2">
+                            <i class="fas fa-plus"></i> Add First Action
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- RIGHT COLUMN                                                -->
+    <!-- ========================================================== -->
+    <div class="col-lg-4">
+        <!-- Status Information -->
+        <div class="dash-card">
+            <div class="card-header-custom card-header-secondary">
+                <div class="header-title">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Status Information</h3>
+                </div>
+            </div>
+            <div class="card-body-custom">
+                <div class="detail-item">
+                    <span class="detail-label">Current Status</span>
+                    <p class="detail-value">
+                        <span class="dash-badge dash-badge-lg badge-status-{{ hazard.status_css_class }}">
+                            {{ hazard.effective_status_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Severity</span>
+                    <p class="detail-value">
+                        <span class="dash-badge dash-badge-lg badge-severity-{{ hazard.severity }}">
+                            {{ hazard.get_severity_display }}
+                        </span>
+                    </p>
+                </div>
+                {% if hazard.assigned_to %}
+                <div class="detail-item">
+                    <span class="detail-label">Assigned To</span>
+                    <p class="detail-value">{{ hazard.assigned_to.get_full_name|default:hazard.assigned_to.username }}</p>
+                </div>
+                {% endif %}
+                <div class="detail-item">
+                    <span class="detail-label">Days Since Reported</span>
+                    <p class="detail-value">
+                        {% with today=current_time %}
+                        <span class="dash-badge badge-teal">
+                            <i class="fas fa-clock"></i> {{ hazard.incident_datetime|timesince:today }}
+                        </span>
+                        {% endwith %}
+                    </p>
+                </div>
+                {% if hazard.action_deadline %}
+                <div class="detail-item">
+                    <span class="detail-label">Action Deadline</span>
+                    <p class="detail-value">
+                        {{ hazard.action_deadline|date:"d M Y" }}
+                        {% if hazard.is_action_overdue %}
+                        <span class="dash-badge badge-red ml-2">
                             <i class="fas fa-exclamation-triangle"></i> OVERDUE
                         </span>
-                    {% endif %}
-                </p>
-            </div>
-            <!-- LOGIC CHANGE: Only show completion date if fully completed -->
-            {% if action.completion_date and action.is_fully_completed %}
-            <div class="col-md-6">
-                <p class="mb-0">
-                    <i class="fas fa-check-circle text-success"></i> <strong>Fully Completed:</strong> 
-                    {{ action.completion_date|date:"d M Y" }}
-                </p>
-            </div>
-            {% endif %}
-        </div>
-
-                                <!-- Attachment -->
-                                {% if action.attachment %}
-                                <div class="row mb-2">
-                                    <div class="col-md-12">
-                                        <p class="mb-1">
-                                            <i class="fas fa-paperclip"></i> <strong>Attachment:</strong>
-                                        </p>
-                                        <a href="{{ action.attachment.url }}" target="_blank" class="btn btn-sm btn-info">
-                                            <i class="fas fa-download"></i> {{ action.get_attachment_name }}
-                                        </a>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Completion Remarks -->
-                                {% if action.completion_remarks %}
-                                <hr class="my-2">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <p class="mb-0">
-                                            <strong><i class="fas fa-comment"></i> Remarks:</strong> 
-                                            {{ action.completion_remarks|linebreaks }}
-                                        </p>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Edit Button -->
-                                <hr class="my-2">
-                                <div class="row">
-                                    <div class="col-md-12 text-right">
-                                        {% if user|has_perm:'EDIT_HAZARD_ACTION' %}
-                                        <a href="{% url 'hazards:action_item_update' action.pk %}" class="btn btn-sm btn-warning">
-                                            <i class="fas fa-edit"></i> Edit Action Item
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle"></i> No action items created yet.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column -->
-        <div class="col-md-4">
-            <!-- Status Card -->
-            <div class="card">
-                <div class="card-header bg-secondary">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-info-circle"></i> Status Information
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Current Status:</strong>
-                        <p><span class="badge status-{{ hazard.status_css_class }} badge-lg">{{ hazard.effective_status_display }}</span></p>
-                    </div>
-                    <!-- <div class="mb-3">
-                        <strong>Approval Status:</strong>
-                        <p>
-                            <span class="badge 
-                                {% if hazard.approval_status == 'APPROVED' %}badge-success
-                                {% elif hazard.approval_status == 'REJECTED' %}badge-danger
-                                {% else %}badge-warning{% endif %} badge-lg">
-                                {{ hazard.get_approval_status_display }}
-                            </span>
-                        </p>
-                    </div> -->
-                    <div class="mb-3">
-                        <strong>Severity:</strong>
-                        <p><span class="badge severity-{{ hazard.severity }} badge-lg">{{ hazard.get_severity_display }}</span></p>
-                    </div>
-                    {% if hazard.assigned_to %}
-                    <div class="mb-3">
-                        <strong>Assigned To:</strong>
-                        <p>{{ hazard.assigned_to.get_full_name|default:hazard.assigned_to.username }}</p>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- FIXED: Days Since Reported -->
-                    <div class="mb-3">
-                        <strong>Days Since Reported:</strong>
-                        <p>
-                            {% with today=current_time %}
-                            <span class="badge badge-info">
-                                {{ hazard.incident_datetime|timesince:today }}
-                            </span>
-                            {% endwith %}
-                        </p>
-                    </div>
-                    
-                    {% if hazard.action_deadline %}
-                    <div class="mb-3">
-                        <strong>Action Deadline:</strong>
-                        <p>{{ hazard.action_deadline|date:"d M Y" }}</p>
-                        {% if hazard.is_action_overdue %}
-                        <span class="badge badge-danger">OVERDUE</span>
                         {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Corrective Action Card -->
-            {% if hazard.corrective_action_plan %}
-            <div class="card">
-                <div class="card-header bg-success">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-check-circle"></i> Corrective Action Plan
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <p>{{ hazard.corrective_action_plan|linebreaks }}</p>
-                    {% if hazard.action_completed_date %}
-                    <hr>
-                    <p class="mb-0">
-                        <strong>Completed Date:</strong> {{ hazard.action_completed_date|date:"d M Y" }}
                     </p>
-                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Corrective Action Plan -->
+        {% if hazard.corrective_action_plan %}
+        <div class="dash-card">
+            <div class="card-header-custom card-header-success">
+                <div class="header-title">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Corrective Action Plan</h3>
                 </div>
             </div>
-            {% endif %}
-
-            <!-- Closure Information -->
-            {% if hazard.closure_date %}
-            <div class="card">
-                <div class="card-header bg-dark">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-lock"></i> Closure Information
-                    </h3>
+            <div class="card-body-custom">
+                <p style="color: var(--text-secondary);">{{ hazard.corrective_action_plan|linebreaks }}</p>
+                {% if hazard.action_completed_date %}
+                <hr class="divider">
+                <div class="detail-item">
+                    <span class="detail-label">Completed Date</span>
+                    <p class="detail-value">{{ hazard.action_completed_date|date:"d M Y" }}</p>
                 </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <strong>Closure Date:</strong>
-                        <p>{{ hazard.closure_date|date:"d M Y" }}</p>
-                    </div>
-                    {% if hazard.closure_remarks %}
-                    <div class="mb-2">
-                        <strong>Remarks:</strong>
-                        <p>{{ hazard.closure_remarks|linebreaks }}</p>
-                    </div>
-                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Closure Information -->
+        {% if hazard.closure_date %}
+        <div class="dash-card">
+            <div class="card-header-custom card-header-dark">
+                <div class="header-title">
+                    <i class="fas fa-lock"></i>
+                    <h3>Closure Information</h3>
                 </div>
             </div>
-            {% endif %}
-
-            <!-- Timeline Card -->
-            <div class="card">
-                <div class="card-header bg-info">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-clock"></i> Timeline
-                    </h3>
+            <div class="card-body-custom">
+                <div class="detail-item">
+                    <span class="detail-label">Closure Date</span>
+                    <p class="detail-value">{{ hazard.closure_date|date:"d M Y" }}</p>
                 </div>
-                <div class="card-body">
-                    <div class="status-timeline">
-                        <div class="timeline-item">
-                            <strong>Reported</strong>
-                            <p class="text-muted small mb-0"><i class="fas fa-calendar"></i> {{ hazard.report_timestamp|date:"d M Y, h:i A" }}</p>
-                            <p class="text-muted small mb-0">By: {{ hazard.reported_by.get_full_name }}</p>
-                        </div>
-                        {% if hazard.behalf_person_name %}
-                        <div class="timeline-item">
-                            <strong>On Behalf Of</strong>
-                            <p class="text-muted small mb-0">{{ hazard.behalf_person_name }}</p>
-                        </div>
-                        {% endif %}
-                        {% if hazard.assigned_to %}
-                        <div class="timeline-item">
-                            <strong>Hazard Assigned</strong>
-                            <p class="text-muted small mb-0">
-                                To {{ hazard.assigned_to.get_full_name|default:hazard.assigned_to.username }}
-                            </p>
-                        </div>
-                        {% endif %}
-                        {% comment %} {% if hazard.approved_by %}
-                        <div class="timeline-item">
-                            <strong>Approved</strong>
-                            <p class="text-muted small mb-0">{{ hazard.approved_date|date:"d M Y, h:i A" }}</p>
-                            <p class="text-muted small mb-0">By: {{ hazard.approved_by.get_full_name }}</p>
-                        </div>
-                        {% endif %} {% endcomment %}
-                        {% for action in action_items %}
-                        <div class="timeline-item">
-                            <strong>
-                                <i class="fas fa-tasks"></i>
-                                Action item assigned
-                            </strong>
+                {% if hazard.closure_remarks %}
+                <div class="detail-item">
+                    <span class="detail-label">Remarks</span>
+                    <p class="detail-value">{{ hazard.closure_remarks|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
-                            <div class="mt-1">
+        <!-- Timeline -->
+        <div class="dash-card">
+            <div class="card-header-custom card-header-info">
+                <div class="header-title">
+                    <i class="fas fa-clock"></i>
+                    <h3>Timeline</h3>
+                </div>
+            </div>
+            <div class="card-body-custom">
+                <div class="status-timeline">
+                    <!-- Reported -->
+                    <div class="timeline-item">
+                        <div class="timeline-title">
+                            <i class="fas fa-flag"></i> Reported
+                        </div>
+                        <div class="timeline-meta">
+                            <i class="fas fa-calendar"></i> {{ hazard.report_timestamp|date:"d M Y, h:i A" }}
+                        </div>
+                        <div class="timeline-meta">
+                            <i class="fas fa-user"></i> By: {{ hazard.reported_by.get_full_name }}
+                        </div>
+                    </div>
+
+                    <!-- On Behalf Of -->
+                    {% if hazard.behalf_person_name %}
+                    <div class="timeline-item">
+                        <div class="timeline-title">
+                            <i class="fas fa-user-friends"></i> On Behalf Of
+                        </div>
+                        <div class="timeline-meta">{{ hazard.behalf_person_name }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Assigned -->
+                    {% if hazard.assigned_to %}
+                    <div class="timeline-item">
+                        <div class="timeline-title">
+                            <i class="fas fa-user-check"></i> Hazard Assigned
+                        </div>
+                        <div class="timeline-meta">
+                            To {{ hazard.assigned_to.get_full_name|default:hazard.assigned_to.username }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Items -->
+                    {% for action in action_items %}
+                    <div class="timeline-item">
+                        <div class="timeline-title">
+                            <i class="fas fa-tasks"></i> Action Item
+                        </div>
+                        <div class="mb-1">
+                            <span class="dash-badge 
+                                {% if action.is_self_assigned %}badge-green
+                                {% else %}badge-gold{% endif %}"
+                                style="font-size: 11px; padding: 2px 10px;">
                                 {% if action.is_self_assigned %}
-                                    <span class="badge badge-success">
-                                        <i class="fas fa-user-check"></i> Self Assigned
-                                    </span>
+                                    <i class="fas fa-user-check"></i> Self Assigned
                                 {% else %}
-                                    <span class="badge badge-warning text-dark">
-                                        <i class="fas fa-share"></i> Forward Assigned
-                                    </span>
+                                    <i class="fas fa-share"></i> Forward Assigned
                                 {% endif %}
-                                <span class="badge 
-                                    {% if action.status == 'COMPLETED' %}badge-success
-                                    {% elif action.status == 'PENDING' %}badge-warning
-                                    {% elif action.status == 'IN_PROGRESS' %}badge-info
-                                    {% else %}badge-secondary{% endif %}">
-                                    {{ action.get_status_display }}
-                                </span>
-                                {% if action.is_overdue %}
-                                    <span class="badge badge-danger">
-                                        <i class="fas fa-exclamation-triangle"></i> Overdue
-                                    </span>
-                                {% endif %}
-
-                            </div>
-                            <p class="text-muted small mb-0 mt-1">
-                                <i class="fas fa-calendar"></i>
-                                Target: {{ action.target_date|date:"d M Y" }}
-                            </p>
-
-                            {% if action.completion_date %}
-                            <p class="text-success small mb-0">
-                                <i class="fas fa-check-circle"></i>
-                                Completed: {{ action.completion_date|date:"d M Y" }}
-                            </p>
+                            </span>
+                            <span class="dash-badge 
+                                {% if action.status == 'COMPLETED' %}badge-green
+                                {% elif action.status == 'PENDING' %}badge-gold
+                                {% elif action.status == 'IN_PROGRESS' %}badge-teal
+                                {% else %}badge-gray{% endif %}"
+                                style="font-size: 11px; padding: 2px 10px;">
+                                {{ action.get_status_display }}
+                            </span>
+                            {% if action.is_overdue %}
+                            <span class="dash-badge badge-red" style="font-size: 11px; padding: 2px 10px;">
+                                <i class="fas fa-exclamation-triangle"></i> Overdue
+                            </span>
                             {% endif %}
-                            {% if action.responsible_emails %}
-                            <p class="text-muted small mb-0">
-                                <i class="fas fa-envelope"></i>
-                                {{ action.get_emails_count }} Assigned
-                            </p>
-                            {% endif %}
-
                         </div>
-                        {% endfor %}
-                        {% if hazard.action_completed_date %}
-                        <div class="timeline-item">
-                            <strong>Hazard Action Completed</strong>
-                            <p class="text-success small mb-0">
-                                {{ hazard.action_completed_date|date:"d M Y" }}
-                            </p>
+                        <div class="timeline-meta">
+                            <i class="fas fa-calendar"></i> Target: {{ action.target_date|date:"d M Y" }}
+                        </div>
+                        {% if action.completion_date %}
+                        <div class="timeline-meta" style="color: var(--secondary-green);">
+                            <i class="fas fa-check-circle"></i> Completed: {{ action.completion_date|date:"d M Y" }}
                         </div>
                         {% endif %}
-                        {% if hazard.closure_date %}
-                        <div class="timeline-item">
-                            <strong>Closed</strong>
-                            <p class="text-muted small mb-0">{{ hazard.closure_date|date:"d M Y" }}</p>
+                        {% if action.responsible_emails %}
+                        <div class="timeline-meta">
+                            <i class="fas fa-envelope"></i> {{ action.get_emails_count }} Assigned
                         </div>
                         {% endif %}
                     </div>
+                    {% endfor %}
+
+                    <!-- Action Completed -->
+                    {% if hazard.action_completed_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-title" style="color: var(--secondary-green);">
+                            <i class="fas fa-check-circle"></i> Hazard Action Completed
+                        </div>
+                        <div class="timeline-meta" style="color: var(--secondary-green);">
+                            <i class="fas fa-calendar"></i> {{ hazard.action_completed_date|date:"d M Y" }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Closed -->
+                    {% if hazard.closure_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-title" style="color: var(--text-muted);">
+                            <i class="fas fa-check-double"></i> Closed
+                        </div>
+                        <div class="timeline-meta">
+                            <i class="fas fa-calendar"></i> {{ hazard.closure_date|date:"d M Y" }}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Hazard detail page loaded');
-    
-    // Add lightbox effect for photos
+    // Lightbox effect for photos
     const photos = document.querySelectorAll('.hazard-photo');
     photos.forEach(photo => {
         photo.addEventListener('click', function(e) {
@@ -700,14 +1373,14 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open(this.src, '_blank');
         });
     });
-    
-    // Debug: Log hazard data
+
+    // Debug logging
+    console.log('Hazard Detail Page Loaded');
     console.log('Hazard Data:', {
         report_number: '{{ hazard.report_number }}',
         status: '{{ hazard.status }}',
         severity: '{{ hazard.severity }}',
         reporter_name: '{{ hazard.reporter_name }}',
-        reporter_email: '{{ hazard.reporter_email }}',
         behalf_person_name: '{{ hazard.behalf_person_name }}'
     });
 });

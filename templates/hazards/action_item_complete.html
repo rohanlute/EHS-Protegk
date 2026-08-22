@@ -1,170 +1,661 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Complete Action Item{% endblock %}
-{% block page_title %}{% endblock %}
+{% block title %}Complete Action Item | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accidents:my_action_items' %}">My Action Items</a></li>
-<li class="breadcrumb-item active">Complete Action Item</li>
+{% block extra_css %}
+<style>
+  /* ===== COMPLETE ACTION ITEM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h5 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h5 i {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+
+  .dash-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  /* ===== CARD HEADER VARIANTS ===== */
+  .card-header-light {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card-header-light h5 { color: var(--text-primary); }
+  .card-header-light i { color: var(--secondary-gold); }
+
+  .card-header-teal {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .card-header-teal h5 { color: white; }
+  .card-header-teal i { color: rgba(255, 255, 255, 0.9); }
+
+  .card-header-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .card-header-success h5 { color: white; }
+  .card-header-success i { color: rgba(255, 255, 255, 0.9); }
+
+  /* ========================================================== */
+  /* BADGES                                                       */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+
+  /* ========================================================== */
+  /* ACTION DESCRIPTION BOX                                      */
+  /* ========================================================== */
+  .action-description-box {
+    padding: 12px 16px;
+    background: #fafbfc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary-teal);
+    margin-top: 6px;
+  }
+
+  .action-description-box p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  /* ========================================================== */
+  /* INFO ROWS                                                   */
+  /* ========================================================== */
+  .info-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .info-value .badge-sm {
+    font-size: 12px;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 20px;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: #fafbfc;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    background: white;
+  }
+
+  .form-group-custom .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-group-custom textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .form-group-custom .form-control-file {
+    padding: 8px 0;
+    font-size: 14px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash:active {
+    transform: translateY(0);
+  }
+
+  .btn-dash-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-dash-success:hover {
+    background: #16a34a;
+    color: white;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-card .card-body-custom {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 10px 14px;
+    }
+
+    .dash-card .card-header-custom h5 {
+      font-size: 14px;
+    }
+
+    .form-group-custom .form-control {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .form-group-custom textarea.form-control {
+      min-height: 80px;
+    }
+
+    .btn-dash {
+      width: 100%;
+      justify-content: center;
+      font-size: 14px;
+      padding: 10px 16px;
+    }
+
+    .btn-dash-secondary {
+      margin-left: 0 !important;
+      margin-top: 8px;
+    }
+
+    .action-description-box p {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-group-custom .form-control {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .btn-dash {
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+
+    .action-description-box {
+      padding: 10px 12px;
+    }
+
+    .action-description-box p {
+      font-size: 12px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3>
-                    <i class="fas fa-check-circle text-success"></i>
-                    Complete Action Item
-                </h3>
-                <a href="{% url 'hazards:my_action_items' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to My Actions
-                </a>
-            </div>
 
-            <!-- Hazard Summary -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-exclamation-triangle text-warning"></i>
-                        Related Hazard
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Report Number:</strong> 
-                                <span class="badge badge-info">{{ hazard.report_number }}</span>
-                            </p>
-                            <p><strong>Type:</strong> {{ hazard.get_hazard_type_display }}</p>
-                            <p><strong>Severity:</strong>
-                                <span class="badge badge-{% if hazard.severity == 'critical' %}dark{% elif hazard.severity == 'high' %}danger{% elif hazard.severity == 'medium' %}warning{% else %}success{% endif %}">
-                                    {{ hazard.get_severity_display }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Location:</strong> {{ hazard.plant.name }}</p>
-                            <p><strong>Reported:</strong> {{ hazard.incident_datetime|date:"d M Y" }}</p>
-                            <p><strong>Description:</strong> {{ hazard.hazard_description|truncatewords:15 }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid" style="padding: 0;">
 
-            <!-- Action Item Details -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-tasks"></i>
-                        Action Item Details
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <strong>Action Description:</strong>
-                            <p class="mt-2 p-3 bg-light border-left border-primary">
-                                {{ action_item.action_description }}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Target Date:</strong> {{ action_item.target_date|date:"d F Y" }}</p>
-                            <p><strong>Status:</strong> 
-                                <span class="badge badge-warning">{{ action_item.get_status_display }}</span>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Created By:</strong> 
-                                {% if action_item.created_by %}
-                                    {{ action_item.created_by.get_full_name }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </p>
-                            {% if action_item.attachment %}
-                            <p><strong>Attachment:</strong> 
-                                <a href="{{ action_item.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-paperclip"></i> View Attachment
-                                </a>
-                            </p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Completion Form -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-clipboard-check"></i>
-                        Mark as Completed
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" id="completionForm">
-                        {% csrf_token %}
-
-                        <div class="form-group">
-                            <label class="font-weight-bold">
-                                <i class="fas fa-calendar"></i> Completion Date
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" name="completion_date" class="form-control" 
-                                   value="{{ today|date:'Y-m-d' }}" required>
-                            <small class="form-text text-muted">
-                                Date when the action was completed
-                            </small>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold">
-                                <i class="fas fa-comment-alt"></i> Completion Remarks
-                                <span class="text-danger">*</span>
-                            </label>
-                            <textarea name="completion_remarks" class="form-control" rows="5" required
-                                      placeholder="Describe what actions were taken, results achieved, and any relevant details..."></textarea>
-                            <small class="form-text text-muted">
-                                Provide detailed information about how the action was completed
-                            </small>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold">
-                                <i class="fas fa-paperclip"></i> Upload Proof/Attachment (Optional)
-                            </label>
-                            <input type="file" name="completion_attachment" class="form-control-file">
-                            <small class="form-text text-muted">
-                                Upload photos, documents, or other proof of completion (if applicable)
-                            </small>
-                        </div>
-
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-success btn-lg px-5" id="submitBtn">
-                                <i class="fas fa-check-circle"></i> Mark as Completed
-                            </button>
-                            <a href="{% url 'hazards:my_action_items' %}" class="btn btn-outline-secondary btn-lg ml-2">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div>
+        <h1>Complete Action Item</h1>
+        <p class="subtitle">Mark your assigned action item as completed</p>
+      </div>
     </div>
+    <a href="{% url 'hazards:my_action_items' %}" class="btn-dash btn-dash-secondary" style="padding: 8px 16px; font-size: 13px;">
+      <i class="fas fa-arrow-left"></i> Back to My Actions
+    </a>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- HAZARD SUMMARY CARD                                         -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-light">
+      <h5>
+        <i class="fas fa-exclamation-triangle"></i>
+        Related Hazard
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        <div class="col-md-6">
+          <p style="margin-bottom: 8px;">
+            <strong>Report Number:</strong>
+            <span class="dash-badge badge-info">{{ hazard.report_number }}</span>
+          </p>
+          <p style="margin-bottom: 8px;">
+            <strong>Type:</strong> {{ hazard.get_hazard_type_display }}
+          </p>
+          <p style="margin-bottom: 8px;">
+            <strong>Severity:</strong>
+            <span class="dash-badge 
+              {% if hazard.severity == 'critical' %}badge-dark
+              {% elif hazard.severity == 'high' %}badge-danger
+              {% elif hazard.severity == 'medium' %}badge-warning
+              {% else %}badge-success{% endif %}">
+              {{ hazard.get_severity_display }}
+            </span>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <p style="margin-bottom: 8px;">
+            <strong>Location:</strong> {{ hazard.plant.name }}
+          </p>
+          <p style="margin-bottom: 8px;">
+            <strong>Reported:</strong> {{ hazard.incident_datetime|date:"d M Y" }}
+          </p>
+          <p style="margin-bottom: 8px;">
+            <strong>Description:</strong> {{ hazard.hazard_description|truncatewords:15 }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION ITEM DETAILS CARD                                    -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-teal">
+      <h5>
+        <i class="fas fa-tasks"></i>
+        Action Item Details
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <span class="info-label">Action Description</span>
+          <div class="action-description-box">
+            <p>{{ action_item.action_description }}</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <span class="info-label">Target Date</span>
+          <p class="info-value">{{ action_item.target_date|date:"d F Y" }}</p>
+          <span class="info-label">Status</span>
+          <p class="info-value">
+            <span class="dash-badge badge-warning">{{ action_item.get_status_display }}</span>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <span class="info-label">Created By</span>
+          <p class="info-value">
+            {% if action_item.created_by %}
+              {{ action_item.created_by.get_full_name }}
+            {% else %}
+              N/A
+            {% endif %}
+          </p>
+          {% if action_item.attachment %}
+          <span class="info-label">Attachment</span>
+          <p class="info-value">
+            <a href="{{ action_item.attachment.url }}" target="_blank" class="btn-dash" style="background: var(--primary-teal-light); color: var(--primary-teal); padding: 4px 14px; font-size: 13px; border: 1px solid rgba(13, 148, 136, 0.15);">
+              <i class="fas fa-paperclip"></i> View Attachment
+            </a>
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- COMPLETION FORM CARD                                        -->
+  <!-- ========================================================== -->
+  <div class="dash-card">
+    <div class="card-header-custom card-header-success">
+      <h5>
+        <i class="fas fa-clipboard-check"></i>
+        Mark as Completed
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <form method="post" enctype="multipart/form-data" id="completionForm">
+        {% csrf_token %}
+
+        <!-- Completion Date -->
+        <div class="form-group-custom">
+          <label>
+            <i class="fas fa-calendar" style="color: var(--primary-teal);"></i>
+            Completion Date <span class="required-star">*</span>
+          </label>
+          <input type="date" name="completion_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Date when the action was completed</span>
+        </div>
+
+        <!-- Completion Remarks -->
+        <div class="form-group-custom">
+          <label>
+            <i class="fas fa-comment-alt" style="color: var(--primary-teal);"></i>
+            Completion Remarks <span class="required-star">*</span>
+          </label>
+          <textarea name="completion_remarks" class="form-control" rows="5" required placeholder="Describe what actions were taken, results achieved, and any relevant details..."></textarea>
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Provide detailed information about how the action was completed</span>
+        </div>
+
+        <!-- Attachment -->
+        <div class="form-group-custom">
+          <label>
+            <i class="fas fa-paperclip" style="color: var(--primary-teal);"></i>
+            Upload Proof/Attachment (Optional)
+          </label>
+          <input type="file" name="completion_attachment" class="form-control-file">
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Upload photos, documents, or other proof of completion (if applicable)</span>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="form-group-custom mt-4">
+          <button type="submit" class="btn-dash btn-dash-success" id="submitBtn">
+            <i class="fas fa-check-circle"></i> Mark as Completed
+          </button>
+          <a href="{% url 'hazards:my_action_items' %}" class="btn-dash btn-dash-secondary" style="margin-left: 8px;">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('completionForm');
     const btn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', function () {
+        // Validate required fields
+        const completionDate = document.querySelector('input[name="completion_date"]');
+        const completionRemarks = document.querySelector('textarea[name="completion_remarks"]');
+
+        if (!completionDate.value) {
+            alert('Please select a Completion Date.');
+            completionDate.focus();
+            return false;
+        }
+
+        if (!completionRemarks.value.trim()) {
+            alert('Please enter Completion Remarks.');
+            completionRemarks.focus();
+            return false;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        return true;
     });
 });
 </script>

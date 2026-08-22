@@ -3,863 +3,1423 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Hazard Management Dashboard{% endblock %}
+{% block title %}Hazard Management Dashboard | EHS-360{% endblock %}
 {% block page_title %}Hazard Management Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
-/* ... (Aapki CSS styles waise hi rahengi) ... */
-.dashboard-card{border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);transition:transform .3s ease,box-shadow .3s ease;margin-bottom:20px}.dashboard-card:hover{transform:translateY(-5px);box-shadow:0 5px 20px rgba(0,0,0,0.15)}.stat-card{padding:20px;border-left:4px solid}.stat-card.danger{border-left-color:#dc3545;background:linear-gradient(135deg,#fff 0%,#ffebee 100%)}.stat-card.warning{border-left-color:#ffc107;background:linear-gradient(135deg,#fff 0%,#fff9e6 100%)}.stat-card.info{border-left-color:#17a2b8;background:linear-gradient(135deg,#fff 0%,#e6f7ff 100%)}.stat-card.success{border-left-color:#28a745;background:linear-gradient(135deg,#fff 0%,#e8f5e9 100%)}.stat-card.primary{border-left-color:#007bff;background:linear-gradient(135deg,#fff 0%,#e3f2fd 100%)}.stat-card .stat-icon{font-size:3rem;opacity:.3;position:absolute;right:20px;top:50%;transform:translateY(-50%)}.stat-card .stat-number{font-size:2.5rem;font-weight:700;margin:0;line-height:1}.stat-card .stat-label{font-size:.9rem;color:#6c757d;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}.filter-section{background:#fff;border-radius:10px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px}.filter-section .form-label{font-weight:600;color:#495057;margin-bottom:5px;font-size:.9rem}.filter-section .form-control,.filter-section .form-select{border-radius:6px;border:1px solid #ced4da;padding:8px 12px;font-size:.9rem}.filter-section .btn{padding:8px 20px;font-size:.9rem;border-radius:6px}.chart-container{position:relative;height:300px;padding:20px}.hazard-table th{background-color:#f8f9fa;font-weight:600;text-transform:uppercase;font-size:.75rem}.section-header{border-bottom:3px solid #007bff;padding-bottom:10px;margin-bottom:20px}h5{margin:0;font-weight:700}.severity-indicator{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px}.severity-critical{background-color:#dc3545}.severity-high{background-color:#ffc107}.severity-medium{background-color:#17a2b8}.severity-low{background-color:#28a745}.active-filter-badge{display:inline-block;background:#007bff;color:#fff;padding:5px 12px;border-radius:15px;font-size:.85rem;margin:5px}.active-filter-badge i{margin-left:5px;cursor:pointer}.clickable-card{cursor:pointer}
+  /* ===== HAZARD MANAGEMENT DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-    .quick-actions-container {
-        display: flex;
-        flex-direction: column; /* Stack items vertically */
-        gap: 10px; /* Space between buttons */
-    }
-    .quick-action-btn {
-        display: flex; /* Use flex for internal alignment */
-        align-items: center; /* Center icon and text vertically */
-        justify-content: center; /* Center content horizontally */
-        padding: 12px;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        text-align: center;
-    }
-    .quick-action-btn:hover {
-        color: white;
-        transform: translateX(5px);
-    }
-    .quick-action-btn i {
-        font-size: 1.2rem;
-        margin-right: 10px; /* Space between icon and text */
-    }
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FILTER SECTION - UPDATED                                   */
+  /* ========================================================== */
+  .filter-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-section:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .filter-section .form-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+  }
+
+  .filter-section .form-control,
+  .filter-section .form-select {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+
+  .filter-section .form-control:focus,
+  .filter-section .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .filter-section .btn-primary {
+    background: var(--primary-teal);
+    border: none;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+  }
+
+  .filter-section .btn-primary:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .active-filter-badge {
+    display: inline-block;
+    background: var(--primary-teal);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.82rem;
+    margin: 4px;
+  }
+
+  .active-filter-badge i {
+    margin-left: 5px;
+    cursor: pointer;
+  }
+
+  .active-filter-badge i:hover {
+    opacity: 0.7;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS - UPDATED                                */
+  /* ========================================================== */
+  .dashboard-card {
+    border: none;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .clickable-card {
+    cursor: pointer;
+  }
+
+  .stat-card {
+    padding: 20px;
+    border-left: 4px solid;
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+
+  .stat-card.danger {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  }
+
+  .stat-card.warning {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+  }
+
+  .stat-card.info {
+    border-left-color: #0d9488;
+    background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+  }
+
+  .stat-card.success {
+    border-left-color: #22c55e;
+    background: linear-gradient(135deg, #ffffff 0%, #dcfce7 100%);
+  }
+
+  .stat-card.primary {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+  }
+
+  .stat-card .stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.15;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .stat-card .stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1;
+    color: var(--text-primary);
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* CARD STYLES                                                */
+  /* ========================================================== */
+  .dashboard-card .card-body {
+    padding: 20px;
+  }
+
+  .section-header {
+    border-bottom: 3px solid var(--primary-teal);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .section-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .section-header h5 i {
+    color: var(--primary-teal);
+  }
+
+  .chart-container {
+    position: relative;
+    height: 300px;
+    padding: 10px;
+  }
+
+  /* ========================================================== */
+  /* QUICK ACTIONS - UPDATED                                   */
+  /* ========================================================== */
+  .quick-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .quick-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+  }
+
+  .quick-action-btn:hover {
+    color: white;
+    transform: translateX(5px);
+    text-decoration: none;
+  }
+
+  .quick-action-btn i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+  }
+
+  .quick-action-btn.bg-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  }
+
+  .quick-action-btn.bg-danger:hover {
+    box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4);
+    transform: translateX(5px) translateY(-2px);
+  }
+
+  .quick-action-btn.bg-primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .quick-action-btn.bg-primary:hover {
+    box-shadow: 0 6px 24px rgba(13, 148, 136, 0.4);
+    transform: translateX(5px) translateY(-2px);
+  }
+
+  .quick-action-btn.bg-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+
+  .quick-action-btn.bg-success:hover {
+    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.4);
+    transform: translateX(5px) translateY(-2px);
+  }
+
+  /* ========================================================== */
+  /* SEVERITY INDICATOR                                         */
+  /* ========================================================== */
+  .severity-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+
+  .severity-critical { background-color: #dc3545; }
+  .severity-high { background-color: #f59e0b; }
+  .severity-medium { background-color: #0d9488; }
+  .severity-low { background-color: #22c55e; }
+
+  /* ========================================================== */
+  /* TABLE STYLES - UPDATED                                    */
+  /* ========================================================== */
+  .hazard-table th {
+    background: var(--primary-teal-light);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px 12px;
+  }
+
+  .hazard-table td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .hazard-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .hazard-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .hazard-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .reported-meta strong {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .reported-meta small {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  /* ===== BADGE CUSTOM ===== */
+  .badge-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-custom.badge-danger { background: #fef2f2; color: #dc2626; }
+  .badge-custom.badge-warning { background: #fffbeb; color: #d97706; }
+  .badge-custom.badge-info { background: #ecfdf5; color: #0d9488; }
+  .badge-custom.badge-success { background: #dcfce7; color: #16a34a; }
+  .badge-custom.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .badge-custom.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* DEPARTMENT SUMMARY GRID - UPDATED                         */
+  /* ========================================================== */
+  .dept-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .dept-summary-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--primary-teal-light) 100%);
+    transition: all 0.3s ease;
+  }
+
+  .dept-summary-card:hover {
+    border-color: var(--primary-teal);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dept-summary-card .label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .dept-summary-card .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .dept-summary-card .meta {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* ========================================================== */
+  /* METRIC PILLS - UPDATED                                    */
+  /* ========================================================== */
+  .metric-pill {
+    display: inline-block;
+    min-width: 34px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .metric-total { background: #e8f1ff; color: #0d6efd; }
+  .metric-open { background: #fffbeb; color: #d97706; }
+  .metric-closed { background: #dcfce7; color: #22c55e; }
+  .metric-overdue { background: #fef2f2; color: #dc2626; }
+
+  /* ========================================================== */
+  /* TRACKER PANELS - UPDATED                                  */
+  /* ========================================================== */
+  .dept-tracker-panel,
+  .tracker-panel {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    background: linear-gradient(180deg, #ffffff 0%, var(--primary-teal-light) 100%);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dept-tracker-panel:hover,
+  .tracker-panel:hover {
+    border-color: rgba(13, 148, 136, 0.2);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dept-tracker-panel-header,
+  .tracker-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .dept-tracker-panel-header .eyebrow {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .tracker-panel-header h5 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .dept-tracker-scroll,
+  .tracker-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 18px 18px 8px;
+  }
+
+  .dept-tracker-scroll::-webkit-scrollbar,
+  .tracker-scroll::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .dept-tracker-scroll::-webkit-scrollbar-thumb,
+  .tracker-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  .dept-chart-stage {
+    min-width: 100%;
+    height: 420px;
+  }
+
+  .dept-chart-stage canvas {
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .chart-wrap {
+    min-width: 100%;
+    height: 420px;
+  }
+
+  .chart-wrap canvas {
+    height: 100% !important;
+  }
+
+  .chart-mode-toggle {
+    display: inline-flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .chart-mode-toggle .mode-btn {
+    min-width: 120px;
+    padding: 9px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .chart-mode-toggle .mode-btn.active {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: #fff;
+    box-shadow: 0 8px 16px rgba(13, 148, 136, 0.25);
+  }
+
+  .chart-mode-toggle .mode-btn:hover:not(.active) {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* STATUS TABLE - UPDATED                                    */
+  /* ========================================================== */
+  .tracker-status-table {
+    width: 100%;
+    margin: 18px;
+    width: calc(100% - 36px);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-secondary);
+  }
+
+  .tracker-status-table th,
+  .tracker-status-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .tracker-status-table th {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
+
+  .tracker-status-table td:first-child,
+  .tracker-status-table th:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .tracker-status-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .tracker-status-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .status-closed { color: #22c55e; font-weight: 600; }
+  .status-pending { color: #d97706; font-weight: 600; }
+  .status-progress { color: #0d9488; font-weight: 600; }
+  .status-cancelled { color: #64748b; font-weight: 600; }
+  .status-overdue { color: #dc2626; font-weight: 600; }
+  .status-late { color: #7c3aed; font-weight: 600; }
+  .status-total { color: var(--text-primary); font-weight: 800; }
+  .status-percent { color: #22c55e; font-weight: 600; }
+
+  /* ========================================================== */
+  /* PAGINATION - UPDATED                                      */
+  /* ========================================================== */
+  .pagination .page-link {
+    color: var(--primary-teal);
+    border: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* OVERDUE DEPARTMENT CHART - UPDATED                        */
+  /* ========================================================== */
+  .overdue-department-chart {
+    height: 360px;
+    padding: 22px 18px 18px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE - UPDATED                                      */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
     .dept-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 20px;
+      grid-template-columns: repeat(2, 1fr);
     }
-    .dept-summary-card {
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 14px 16px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  @media (max-width: 991.98px) {
+    .dept-summary-grid {
+      grid-template-columns: 1fr;
     }
-    .dept-summary-card .label {
-        display: block;
-        color: #6c757d;
-        font-size: .8rem;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        margin-bottom: 6px;
-    }
-    .dept-summary-card .value {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1f2937;
-        line-height: 1.1;
-    }
-    .dept-summary-card .meta {
-        display: block;
-        margin-top: 6px;
-        color: #6c757d;
-        font-size: .85rem;
-    }
-    .metric-pill {
-        display: inline-block;
-        min-width: 34px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        text-align: center;
-        font-size: .8rem;
-        font-weight: 700;
-    }
-    .metric-total { background: #e8f1ff; color: #0d6efd; }
-    .metric-open { background: #fff4db; color: #b7791f; }
-    .metric-closed { background: #e8f5e9; color: #28a745; }
-    .metric-overdue { background: #fde8e8; color: #dc3545; }
-    .reported-meta strong {
-        display: block;
-        color: #1f2937;
-    }
-    .reported-meta small {
-        color: #6c757d;
-    }
-    .dept-tracker-panel {
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        overflow: hidden;
-    }
-    .dept-tracker-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 14px 18px;
-        border-bottom: 1px solid #e5e7eb;
-        background: rgba(255,255,255,.92);
-    }
-    .dept-tracker-panel-header .eyebrow {
-        display: block;
-        font-size: .78rem;
-        font-weight: 700;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-    }
-    .dept-tracker-panel-header .subcopy {
-        display: block;
-        margin-top: 2px;
-        font-size: .9rem;
-        color: #6c757d;
-    }
-    .dept-tracker-scroll {
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding: 20px 24px 12px;
-    }
-    .dept-tracker-scroll::-webkit-scrollbar {
-        height: 10px;
-    }
-    .dept-tracker-scroll::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 999px;
-    }
-    .dept-chart-stage {
-        min-width: 100%;
-        height: 420px;
-    }
-    .dept-chart-stage canvas {
-        height: 100% !important;
-        width: 100% !important;
-    }
-    .dept-chart-legend-note {
-        padding: 0 18px 16px;
-        font-size: .82rem;
-        color: #6b7280;
-    }
-    .overdue-department-chart {
-        height: 360px;
-        padding: 22px 18px 18px;
-    }
-    .tracker-panel {
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        overflow: hidden;
-    }
+
+    .dept-tracker-panel-header,
     .tracker-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 14px 18px;
-        border-bottom: 1px solid #e5e7eb;
-        background: rgba(255,255,255,.92);
+      flex-direction: column;
+      align-items: flex-start;
     }
-    .tracker-panel-header .tracker-filter-note {
-        display: block;
-        margin-top: 4px;
-        font-size: .9rem;
-        color: #4b5563;
-    }
-    .tracker-panel-header h5 {
-        margin: 0;
-        color: #1f2937;
-        font-size: 1.25rem;
-        font-weight: 700;
-    }
+
     .chart-mode-toggle {
-        display: inline-flex;
-        gap: 10px;
-        flex-shrink: 0;
+      width: 100%;
     }
+
     .chart-mode-toggle .mode-btn {
-        min-width: 120px;
-        padding: 9px 18px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        background: #fff;
-        color: #374151;
-        font-size: .95rem;
-        font-weight: 700;
-        cursor: pointer;
+      flex: 1;
+      min-width: 0;
     }
-    .chart-mode-toggle .mode-btn.active {
-        background: #4e73df;
-        border-color: #4e73df;
-        color: #fff;
-        box-shadow: 0 8px 16px rgba(78, 115, 223, 0.18);
-    }
-    .tracker-scroll {
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding: 18px 18px 8px;
-    }
-    .tracker-scroll::-webkit-scrollbar {
-        height: 10px;
-    }
-    .tracker-scroll::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 999px;
-    }
-    .chart-wrap {
-        min-width: 100%;
-        height: 420px;
-    }
-    .chart-wrap canvas {
-        height: 100% !important;
-    }
-    .tracker-status-table {
-        width: 100%;
-        margin: 18px;
-        width: calc(100% - 36px);
-        border-collapse: separate;
-        border-spacing: 0;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        background: #fff;
-        color: #343a40;
-    }
+
     .tracker-status-table th,
     .tracker-status-table td {
-        padding: 14px 18px;
-        border-bottom: 1px solid #edf2f7;
-        text-align: center;
-        font-size: 1rem;
+      padding: 10px 12px;
+      font-size: 0.85rem;
     }
-    .tracker-status-table th {
-        background: #f8fafc;
-        color: #495057;
-        font-weight: 800;
-    }
-    .tracker-status-table td:first-child,
-    .tracker-status-table th:first-child {
-        text-align: left;
-        font-weight: 800;
-    }
-    .tracker-status-table tbody tr:last-child td {
-        border-bottom: 0;
-    }
-    .status-closed { color: #13855c; }
-    .status-pending { color: #dda20a; }
-    .status-progress { color: #117a8b; }
-    .status-cancelled { color: #6c757d; }
-    .status-overdue { color: #bd2130; }
-    .status-late { color: #6f42c1; }
-    .status-total { color: #343a40; font-weight: 800; }
-    .status-percent { color: #13855c; }
-    @media (max-width: 991.98px) {
-        .dept-summary-grid {
-            grid-template-columns: 1fr;
-        }
-        .dept-tracker-panel-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .tracker-panel-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .chart-mode-toggle {
-            width: 100%;
-        }
-        .chart-mode-toggle .mode-btn {
-            flex: 1;
-            min-width: 0;
-        }
-        .tracker-status-table th,
-        .tracker-status-table td {
-            padding: 10px 12px;
-            font-size: .9rem;
-        }
-    }
-</style>
-{% endblock %}
+  }
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Hazard Management</li>
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.8rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 2rem;
+    }
+
+    .filter-section {
+      padding: 16px;
+    }
+
+    .quick-action-btn {
+      font-size: 0.85rem;
+      padding: 12px;
+    }
+
+    .dept-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+      height: 250px;
+    }
+
+    .dept-chart-stage,
+    .chart-wrap {
+      height: 350px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 16px;
+    }
+
+    .stat-card {
+      padding: 14px 16px;
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.5rem;
+    }
+
+    .filter-section .row .col-md-3 {
+      margin-bottom: 12px;
+    }
+
+    .chart-container {
+      height: 200px;
+    }
+
+    .dept-chart-stage,
+    .chart-wrap {
+      height: 280px;
+    }
+
+    .tracker-status-table th,
+    .tracker-status-table td {
+      padding: 8px 10px;
+      font-size: 0.75rem;
+    }
+
+    .hazard-table th,
+    .hazard-table td {
+      padding: 8px 10px;
+      font-size: 0.8rem;
+    }
+
+    .quick-action-btn {
+      font-size: 0.8rem;
+      padding: 10px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 
+<div class="container-fluid" style="padding: 0;">
 
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div>
+        <h1>Hazard Management Dashboard</h1>
+        <p class="subtitle">Monitor and track workplace hazards and risk assessments</p>
+      </div>
+    </div>
+  </div>
 
-
-<!-- Filter Section -->
-<div class="filter-section">
+  <!-- ========================================================== -->
+  <!-- FILTER SECTION                                              -->
+  <!-- ========================================================== -->
+  <div class="filter-section">
     <form method="GET" action="{% url 'hazards:hazard_dashboard' %}" id="filterForm">
-        <div class="row align-items-end">
-            <!-- Row 1 -->
-            <div class="col-md-3 mb-3">
-                <label for="plant_filter" class="form-label small font-weight-bold"><i class="fas fa-industry mr-1"></i> Plant</label>
-                <select name="plant" id="plant_filter" class="form-control">
-                    <option value="">All Plants</option>
-                    {% for plant in plants %}
-                    <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="zone_filter" class="form-label small font-weight-bold"><i class="fas fa-map-marker-alt mr-1"></i> Zone</label>
-                <select name="zone" id="zone_filter" class="form-control">
-                    <option value="">All Zones</option>
-                    {% for zone in zones %}
-                    <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>{{ zone.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="location_filter" class="form-label small font-weight-bold"><i class="fas fa-location-arrow mr-1"></i> Location</label>
-                <select name="location" id="location_filter" class="form-control">
-                    <option value="">All Locations</option>
-                    {% for location in locations %}
-                    <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>{{ location.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="sublocation_filter" class="form-label small font-weight-bold"><i class="fas fa-map-pin mr-1"></i> Sub-Location</label>
-                <select name="sublocation" id="sublocation_filter" class="form-control">
-                    <option value="">All Sub-Locations</option>
-                    {% for sublocation in sublocations %}
-                    <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>{{ sublocation.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <!-- Row 2 -->
-            <div class="col-md-3 mb-3">
-                <label for="department_filter" class="form-label small font-weight-bold"><i class="fas fa-building mr-1"></i> Assigned Department</label>
-                <select name="department" id="department_filter" class="form-control">
-                    <option value="">All Assigned Departments</option>
-                    {% for dept in all_departments %}
-                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="hazard_type_filter" class="form-label small font-weight-bold">
-                    <i class="fas fa-exclamation-triangle mr-1"></i> Hazard Type
-                </label>
-                <select name="hazard_type" id="hazard_type_filter" class="form-control">
-                    <option value="">All Types</option>
-
-                    {% for type_key, type_name in hazard_types %}
-                    <option value="{{ type_key }}"
-                        {% if selected_hazard_type == type_key %}selected{% endif %}>
-                        {{ type_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="category_filter" class="form-label small font-weight-bold"><i class="fas fa-tags mr-1"></i> Category</label>
-                <select name="category" id="category_filter" class="form-control">
-                    <option value="">All Categories</option>
-                    {% for cat_val, cat_name in all_categories %}
-                    <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="month_filter" class="form-label small font-weight-bold"><i class="fas fa-calendar mr-1"></i> Month</label>
-                <select name="month" id="month_filter" class="form-control">
-                    <option value="">All Time</option>
-                    {% for month in month_options %}
-                    <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>{{ month.label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="status_filter" class="form-label small font-weight-bold"><i class="fas fa-tasks mr-1"></i> Status</label>
-                <select name="status" id="status_filter" class="form-control">
-                    <option value="">All Status</option>
-                    {% for status_value, status_label in status_choices %}
-                    <option value="{{ status_value }}" {% if selected_status == status_value %}selected{% endif %}>{{ status_label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter mr-1"></i> Apply Filters</button>
-            </div>
+      <div class="row align-items-end">
+        <!-- Row 1 -->
+        <div class="col-md-3 mb-3">
+          <label for="plant_filter" class="form-label"><i class="fas fa-industry mr-1"></i> Plant</label>
+          <select name="plant" id="plant_filter" class="form-control">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
+          </select>
         </div>
-
-        {% if has_active_filters %}
-        <div class="row mt-2">
-            <div class="col-md-12">
-                <strong>Active Filters:</strong>
-                {% if selected_plant_name %}<span class="active-filter-badge">Plant: {{ selected_plant_name }}<i class="fas fa-times" onclick="removeFilter('plant')"></i></span>{% endif %}
-                {% if selected_zone_name %}<span class="active-filter-badge">Zone: {{ selected_zone_name }}<i class="fas fa-times" onclick="removeFilter('zone')"></i></span>{% endif %}
-                {% if selected_location_name %}<span class="active-filter-badge">Location: {{ selected_location_name }}<i class="fas fa-times" onclick="removeFilter('location')"></i></span>{% endif %}
-                {% if selected_sublocation_name %}<span class="active-filter-badge">Sub-Location: {{ selected_sublocation_name }}<i class="fas fa-times" onclick="removeFilter('sublocation')"></i></span>{% endif %}
-                {% if selected_department_name %}<span class="active-filter-badge">Assigned Dept: {{ selected_department_name }}<i class="fas fa-times" onclick="removeFilter('department')"></i></span>{% endif %}
-                {% if selected_hazard_type_name %}<span class="active-filter-badge">Hazard Type: {{ selected_hazard_type_name }}<i class="fas fa-times" onclick="removeFilter('hazard_type')"></i></span>{% endif %}
-                {% if selected_category_name %}<span class="active-filter-badge">Category: {{ selected_category_name }}<i class="fas fa-times" onclick="removeFilter('category')"></i></span>{% endif %}
-                {% if selected_month_label %}<span class="active-filter-badge">Month: {{ selected_month_label }}<i class="fas fa-times" onclick="removeFilter('month')"></i></span>{% endif %}
-                {% if selected_severity %}<span class="active-filter-badge">Risk: {{ selected_severity|capfirst }}<i class="fas fa-times" onclick="removeFilter('severity')"></i></span>{% endif %}
-                {% if selected_status %}<span class="active-filter-badge">Status: {{ selected_status_label|default:selected_status }}<i class="fas fa-times" onclick="removeFilter('status')"></i></span>{% endif %}
-                {% if selected_overdue == 'true' %}<span class="active-filter-badge">Overdue<i class="fas fa-times" onclick="removeFilter('overdue')"></i></span>{% endif %}
-                {% if selected_closed == 'true' %}<span class="active-filter-badge">Closed Hazards<i class="fas fa-times" onclick="removeFilter('closed')"></i></span>{% endif %}
-                <a href="{% url 'hazards:hazard_dashboard' %}" class="btn btn-sm btn-outline-danger ml-2"><i class="fas fa-times-circle"></i> Clear All</a>
-            </div>
+        <div class="col-md-3 mb-3">
+          <label for="zone_filter" class="form-label"><i class="fas fa-map-marker-alt mr-1"></i> Zone</label>
+          <select name="zone" id="zone_filter" class="form-control">
+            <option value="">All Zones</option>
+            {% for zone in zones %}
+            <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>{{ zone.name }}</option>
+            {% endfor %}
+          </select>
         </div>
-        {% endif %}
+        <div class="col-md-3 mb-3">
+          <label for="location_filter" class="form-label"><i class="fas fa-location-arrow mr-1"></i> Location</label>
+          <select name="location" id="location_filter" class="form-control">
+            <option value="">All Locations</option>
+            {% for location in locations %}
+            <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>{{ location.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="sublocation_filter" class="form-label"><i class="fas fa-map-pin mr-1"></i> Sub-Location</label>
+          <select name="sublocation" id="sublocation_filter" class="form-control">
+            <option value="">All Sub-Locations</option>
+            {% for sublocation in sublocations %}
+            <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>{{ sublocation.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <!-- Row 2 -->
+        <div class="col-md-3 mb-3">
+          <label for="department_filter" class="form-label"><i class="fas fa-building mr-1"></i> Assigned Department</label>
+          <select name="department" id="department_filter" class="form-control">
+            <option value="">All Assigned Departments</option>
+            {% for dept in all_departments %}
+            <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="hazard_type_filter" class="form-label">
+            <i class="fas fa-exclamation-triangle mr-1"></i> Hazard Type
+          </label>
+          <select name="hazard_type" id="hazard_type_filter" class="form-control">
+            <option value="">All Types</option>
+            {% for type_key, type_name in hazard_types %}
+            <option value="{{ type_key }}" {% if selected_hazard_type == type_key %}selected{% endif %}>
+              {{ type_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="category_filter" class="form-label"><i class="fas fa-tags mr-1"></i> Category</label>
+          <select name="category" id="category_filter" class="form-control">
+            <option value="">All Categories</option>
+            {% for cat_val, cat_name in all_categories %}
+            <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="month_filter" class="form-label"><i class="fas fa-calendar mr-1"></i> Month</label>
+          <select name="month" id="month_filter" class="form-control">
+            <option value="">All Time</option>
+            {% for month in month_options %}
+            <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>{{ month.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="status_filter" class="form-label"><i class="fas fa-tasks mr-1"></i> Status</label>
+          <select name="status" id="status_filter" class="form-control">
+            <option value="">All Status</option>
+            {% for status_value, status_label in status_choices %}
+            <option value="{{ status_value }}" {% if selected_status == status_value %}selected{% endif %}>{{ status_label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3 mb-3">
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter mr-1"></i> Apply Filters</button>
+        </div>
+      </div>
+
+      {% if has_active_filters %}
+      <div class="row mt-2">
+        <div class="col-md-12">
+          <strong>Active Filters:</strong>
+          {% if selected_plant_name %}<span class="active-filter-badge">Plant: {{ selected_plant_name }}<i class="fas fa-times" onclick="removeFilter('plant')"></i></span>{% endif %}
+          {% if selected_zone_name %}<span class="active-filter-badge">Zone: {{ selected_zone_name }}<i class="fas fa-times" onclick="removeFilter('zone')"></i></span>{% endif %}
+          {% if selected_location_name %}<span class="active-filter-badge">Location: {{ selected_location_name }}<i class="fas fa-times" onclick="removeFilter('location')"></i></span>{% endif %}
+          {% if selected_sublocation_name %}<span class="active-filter-badge">Sub-Location: {{ selected_sublocation_name }}<i class="fas fa-times" onclick="removeFilter('sublocation')"></i></span>{% endif %}
+          {% if selected_department_name %}<span class="active-filter-badge">Assigned Dept: {{ selected_department_name }}<i class="fas fa-times" onclick="removeFilter('department')"></i></span>{% endif %}
+          {% if selected_hazard_type_name %}<span class="active-filter-badge">Hazard Type: {{ selected_hazard_type_name }}<i class="fas fa-times" onclick="removeFilter('hazard_type')"></i></span>{% endif %}
+          {% if selected_category_name %}<span class="active-filter-badge">Category: {{ selected_category_name }}<i class="fas fa-times" onclick="removeFilter('category')"></i></span>{% endif %}
+          {% if selected_month_label %}<span class="active-filter-badge">Month: {{ selected_month_label }}<i class="fas fa-times" onclick="removeFilter('month')"></i></span>{% endif %}
+          {% if selected_severity %}<span class="active-filter-badge">Risk: {{ selected_severity|capfirst }}<i class="fas fa-times" onclick="removeFilter('severity')"></i></span>{% endif %}
+          {% if selected_status %}<span class="active-filter-badge">Status: {{ selected_status_label|default:selected_status }}<i class="fas fa-times" onclick="removeFilter('status')"></i></span>{% endif %}
+          {% if selected_overdue == 'true' %}<span class="active-filter-badge">Overdue<i class="fas fa-times" onclick="removeFilter('overdue')"></i></span>{% endif %}
+          {% if selected_closed == 'true' %}<span class="active-filter-badge">Closed Hazards<i class="fas fa-times" onclick="removeFilter('closed')"></i></span>{% endif %}
+          <a href="{% url 'hazards:hazard_dashboard' %}" class="btn btn-sm btn-outline-danger ml-2"><i class="fas fa-times-circle"></i> Clear All</a>
+        </div>
+      </div>
+      {% endif %}
     </form>
-</div>
+  </div>
 
-<!-- Clickable Summary Statistics -->
-<div class="row mb-4">
-    <!-- Card 1: Total Hazards (links to full list) -->
+  <!-- ========================================================== -->
+  <!-- CLICKABLE SUMMARY STATISTICS                               -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <div class="col-xl-3 col-md-6">
-        <a href="{% url 'hazards:hazard_list' %}" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card primary">
-                    <i class="fas fa-shield-alt stat-icon"></i>
-                    <p class="stat-number">{{ total_hazards }}</p>
-                    <p class="stat-label">Total Hazards</p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Card 2: Closed Hazards (links to filtered list view) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}&closed=true" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card success">
-                    <i class="fas fa-check-circle stat-icon"></i>
-                    <p class="stat-number">{{ closed_hazards_count }}</p>
-                    <p class="stat-label">Closed Hazards</p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Card 3: This Month's Hazards (links to filtered dashboard) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card warning">
-                    <i class="fas fa-calendar-alt stat-icon"></i>
-                    <p class="stat-number">{{ this_month_hazards }}</p>
-                    <p class="stat-label">{% if selected_month_label %}{{ selected_month_label }}{% else %}This Month{% endif %}</p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Card 4: Overdue Hazards (links to filtered dashboard) -->
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}&overdue=true" class="text-decoration-none">
-            <div class="dashboard-card clickable-card">
-                <div class="stat-card danger">
-                    <i class="fas fa-clock stat-icon"></i>
-                    <p class="stat-number">{{ overdue_hazards_count }}</p>
-                    <p class="stat-label">Overdue Hazards</p>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
-
-
-<!-- The rest of the page remains the same: Charts, Quick Actions, Recent Hazards -->
-<div class="row mb-4">
-    <!-- Hazards by Risk Level Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-chart-pie mr-2"></i>Hazards by Risk Level</h5>
-                </div>
-                <div class="chart-container"><canvas id="severityChart"></canvas></div>
-            </div>
+      <a href="{% url 'hazards:hazard_list' %}" class="text-decoration-none">
+        <div class="dashboard-card clickable-card">
+          <div class="stat-card primary">
+            <i class="fas fa-shield-alt stat-icon"></i>
+            <p class="stat-number">{{ total_hazards }}</p>
+            <p class="stat-label">Total Hazards</p>
+          </div>
         </div>
+      </a>
     </div>
- <!-- Status Distribution Chart (Previously Monthly Trend) -->
-    <div class="col-lg-6 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header"> 
-                    <h5><i class="fas fa-tasks mr-2"></i>Status Distribution</h5>
-                </div>
-                <div class="chart-container"><canvas id="statusChart"></canvas></div>
-            </div>
+
+    <div class="col-xl-3 col-md-6">
+      <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}&closed=true" class="text-decoration-none">
+        <div class="dashboard-card clickable-card">
+          <div class="stat-card success">
+            <i class="fas fa-check-circle stat-icon"></i>
+            <p class="stat-number">{{ closed_hazards_count }}</p>
+            <p class="stat-label">Closed Hazards</p>
+          </div>
         </div>
+      </a>
     </div>
-</div>
-<div class="row">
-    <!-- Monthly Trend Chart (Previously Status Distribution) -->
+
+    <div class="col-xl-3 col-md-6">
+      <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}" class="text-decoration-none">
+        <div class="dashboard-card clickable-card">
+          <div class="stat-card warning">
+            <i class="fas fa-calendar-alt stat-icon"></i>
+            <p class="stat-number">{{ this_month_hazards }}</p>
+            <p class="stat-label">{% if selected_month_label %}{{ selected_month_label }}{% else %}This Month{% endif %}</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <a href="{% url 'hazards:hazard_dashboard' %}?{{ current_filters }}&overdue=true" class="text-decoration-none">
+        <div class="dashboard-card clickable-card">
+          <div class="stat-card danger">
+            <i class="fas fa-clock stat-icon"></i>
+            <p class="stat-number">{{ overdue_hazards_count }}</p>
+            <p class="stat-label">Overdue Hazards</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW 1                                               -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-chart-pie mr-2"></i>Hazards by Risk Level</h5>
+          </div>
+          <div class="chart-container"><canvas id="severityChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-tasks mr-2"></i>Status Distribution</h5>
+          </div>
+          <div class="chart-container"><canvas id="statusChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW 2 + QUICK ACTIONS                               -->
+  <!-- ========================================================== -->
+  <div class="row">
     <div class="col-lg-8 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-chart-line mr-2"></i>Monthly Trend</h5>
-                </div>
-                <div class="chart-container"><canvas id="monthlyTrendChart"></canvas></div>
-            </div>
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-chart-line mr-2"></i>Monthly Trend</h5>
+          </div>
+          <div class="chart-container"><canvas id="monthlyTrendChart"></canvas></div>
         </div>
+      </div>
     </div>
-    <!-- Quick Actions -->
+
     <div class="col-lg-4 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-bolt mr-2"></i>Quick Actions</h5>
-                </div>
-                <div class="quick-actions-container">
-                    <a href="{% url 'hazards:hazard_create' %}" class="quick-action-btn bg-danger">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Report New Hazard</span>
-                    </a>
-                    <a href="{% url 'hazards:hazard_list' %}" class="quick-action-btn bg-primary">
-                        <i class="fas fa-list"></i>
-                        <span>View All Hazards</span>
-                    </a>
-                    <a href="#" id="exportReportBtn" class="quick-action-btn bg-success"><i class="fas fa-file-excel"></i><span>Export Report</span></a>
-                </div>
-            </div>
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-bolt mr-2"></i>Quick Actions</h5>
+          </div>
+          <div class="quick-actions-container">
+            <a href="{% url 'hazards:hazard_create' %}" class="quick-action-btn bg-danger">
+              <i class="fas fa-plus-circle"></i>
+              <span>Report New Hazard</span>
+            </a>
+            <a href="{% url 'hazards:hazard_list' %}" class="quick-action-btn bg-primary">
+              <i class="fas fa-list"></i>
+              <span>View All Hazards</span>
+            </a>
+            <a href="#" id="exportReportBtn" class="quick-action-btn bg-success">
+              <i class="fas fa-file-excel"></i>
+              <span>Export Report</span>
+            </a>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-<!-- NEW: Top 3 Hazard Categories -->
-<!-- <div class="row mb-4">
-    <div class="col-12">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header"><h5><i class="fas fa-star mr-2"></i>Top 3 Hazard Categories</h5></div>
-                <div class="row">
-                    {% for category in top_hazard_categories %}
-                    <div class="col-md-4">
-                        <a href="{% url 'hazards:hazard_list' %}?category={{ category.value }}" class="text-decoration-none">
-                            <div class="stat-card info clickable-card">
-                                <i class="fas fa-exclamation-triangle stat-icon"></i>
-                                <p class="stat-number">{{ category.count }}</p>
-                                <p class="stat-label">{{ category.display_name }}</p>
-                            </div>
-                        </a>
-                    </div>
-                    {% empty %}
-                    <div class="col-12 text-center text-muted py-3">
-                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                        No hazard data available to determine top categories.
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
+  </div>
 
-
-<div class="row mb-4">
+  <!-- ========================================================== -->
+  <!-- HAZARD TYPES & OVERDUE BY DEPARTMENT                       -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <div class="col-lg-6">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5>
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        Hazard Types
-                    </h5>
-                </div>
-                <div class="chart-container">
-                    <canvas id="hazardTypeChart"></canvas>
-                </div>
-            </div>
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5>
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              Hazard Types
+            </h5>
+          </div>
+          <div class="chart-container">
+            <canvas id="hazardTypeChart"></canvas>
+          </div>
         </div>
+      </div>
     </div>
     <div class="col-lg-6">
-        <div class="dashboard-card">
-            <div class="card-body">
-
-                <div class="section-header">
-                    <h5>
-                        <i class="fas fa-clock mr-2"></i>
-                        Hazard Overdue by Department
-                    </h5>
-                </div>
-
-                <div class="chart-container overdue-department-chart">
-                    <canvas id="overdueDepartmentChart"></canvas>
-                </div>
-
-            </div>
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5>
+              <i class="fas fa-clock mr-2"></i>
+              Hazard Overdue by Department
+            </h5>
+          </div>
+          <div class="chart-container overdue-department-chart">
+            <canvas id="overdueDepartmentChart"></canvas>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-<div class="row mb-4">
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- TOP 3 HAZARD CATEGORIES                                    -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <div class="col-12">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header"><h5><i class="fas fa-star mr-2"></i>Top 3 Hazard Categories</h5></div>
-                
-                {# The 'if' condition now correctly checks if the top_hazard_categories queryset has any data #}
-                {% if top_hazard_categories %}
-                    <div class="chart-container" style="height: 320px;">
-                        <canvas id="topCategoriesChart"></canvas>
-                    </div>
-                {% else %}
-                    <div class="col-12 text-center text-muted py-5">
-                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                        No hazard data available to determine top categories.
-                    </div>
-                {% endif %}
-            </div>
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-star mr-2"></i>Top 3 Hazard Categories</h5>
+          </div>
+          {% if top_hazard_categories %}
+          <div class="chart-container" style="height: 320px;">
+            <canvas id="topCategoriesChart"></canvas>
+          </div>
+          {% else %}
+          <div class="col-12 text-center text-muted py-5">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+            No hazard data available to determine top categories.
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<div class="row mb-4">
+  <!-- ========================================================== -->
+  <!-- ASSIGNED DEPARTMENT HAZARD TRACKER                         -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <div class="col-12">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header">
-                    <h5><i class="fas fa-user-check mr-2"></i>Assigned Department Hazard Tracker</h5>
-                </div>
-                {% if department_chart_data %}
-                    <div class="dept-summary-grid">
-                        <div class="dept-summary-card">
-                            <span class="label">Departments Covered</span>
-                            <span class="value">{{ department_summary.departments_covered }}</span>
-                            <span class="meta">Across assigned users</span>
-                        </div>
-                        <div class="dept-summary-card">
-                            <span class="label">Highest Assigned Dept</span>
-                            <span class="value">{{ department_summary.top_department_total }}</span>
-                            <span class="meta">{{ department_summary.top_department_name }}</span>
-                        </div>
-                        <div class="dept-summary-card">
-                            <span class="label">Open In Top Dept</span>
-                            <span class="value">{{ department_summary.top_department_open }}</span>
-                            <span class="meta">Still active for {{ department_summary.top_department_name }}</span>
-                        </div>
-                    </div>
-                    <div class="dept-tracker-panel">
-                        <div class="dept-tracker-panel-header">
-                            <div>
-                                <span class="eyebrow">Assigned Department Hazard Tracker</span>
-                            </div>
-                            <div class="d-flex align-items-center flex-wrap">
-                                <span class="metric-pill metric-total mr-2 mb-1">Total</span>
-                                <span class="metric-pill metric-open mr-2 mb-1">Open</span>
-                                <span class="metric-pill metric-closed mb-1">Closed</span>
-                                <span class="metric-pill metric-overdue mb-1">Overdue</span>
-                            </div>
-                        </div>
-                        <div class="dept-tracker-scroll">
-                            <div class="dept-chart-stage">
-                                <canvas id="departmentChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12 text-center text-muted py-5">
-                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                        No department-specific hazard data is available for the selected filters.
-                    </div>
-                {% endif %}
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-user-check mr-2"></i>Assigned Department Hazard Tracker</h5>
+          </div>
+          {% if department_chart_data %}
+          <div class="dept-summary-grid">
+            <div class="dept-summary-card">
+              <span class="label">Departments Covered</span>
+              <span class="value">{{ department_summary.departments_covered }}</span>
+              <span class="meta">Across assigned users</span>
             </div>
+            <div class="dept-summary-card">
+              <span class="label">Highest Assigned Dept</span>
+              <span class="value">{{ department_summary.top_department_total }}</span>
+              <span class="meta">{{ department_summary.top_department_name }}</span>
+            </div>
+            <div class="dept-summary-card">
+              <span class="label">Open In Top Dept</span>
+              <span class="value">{{ department_summary.top_department_open }}</span>
+              <span class="meta">Still active for {{ department_summary.top_department_name }}</span>
+            </div>
+          </div>
+          <div class="dept-tracker-panel">
+            <div class="dept-tracker-panel-header">
+              <div>
+                <span class="eyebrow">Assigned Department Hazard Tracker</span>
+              </div>
+              <div class="d-flex align-items-center flex-wrap">
+                <span class="metric-pill metric-total mr-2 mb-1">Total</span>
+                <span class="metric-pill metric-open mr-2 mb-1">Open</span>
+                <span class="metric-pill metric-closed mb-1">Closed</span>
+                <span class="metric-pill metric-overdue mb-1">Overdue</span>
+              </div>
+            </div>
+            <div class="dept-tracker-scroll">
+              <div class="dept-chart-stage">
+                <canvas id="departmentChart"></canvas>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="col-12 text-center text-muted py-5">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+            No department-specific hazard data is available for the selected filters.
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<div class="row mb-4">
+  <!-- ========================================================== -->
+  <!-- PLANT WISE HAZARD STATUS                                   -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
     <div class="col-12">
-        <div class="dashboard-card">
-            <div class="card-body">
-                {% if plant_chart_data %}
-                    <div class="tracker-panel">
-                        <div class="tracker-panel-header">
-                            <div>
-                                <h5>Plant wise hazard status</h5>
-                            </div>
-                            <div class="chart-mode-toggle" aria-label="Chart display mode">
-                                <button type="button" class="mode-btn active" data-chart-mode="stacked">Stacked</button>
-                                <button type="button" class="mode-btn" data-chart-mode="grouped">Grouped</button>
-                            </div>
-                        </div>
-                        <div class="tracker-scroll">
-                            <div class="chart-wrap" id="plantChartStage">
-                                <canvas id="plantHazardStatusChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="tracker-status-table">
-                                <thead>
-                                    <tr>
-                                        <th>Plant</th>
-                                        <th class="status-closed">Closed</th>
-                                        <th class="status-pending">Pending</th>
-                                        <th class="status-progress">In Progress</th>
-                                        <th class="status-cancelled">Cancelled</th>
-                                        <th class="status-overdue">Overdue</th>
-                                        <th class="status-late">Close Late</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in plant_status_rows %}
-                                    <tr>
-                                        <td>{{ row.plant_name }}</td>
-                                        <td class="status-closed">{{ row.closed_count }}</td>
-                                        <td class="status-pending">{{ row.pending_count }}</td>
-                                        <td class="status-progress">{{ row.in_progress_count }}</td>
-                                        <td class="status-cancelled">{{ row.cancelled_count }}</td>
-                                        <td class="status-overdue">{{ row.overdue_count }}</td>
-                                        <td class="status-late">{{ row.late_close_count }}</td>
-                                        <td class="status-total">{{ row.total }} <span class="status-percent">({{ row.closed_percent }}%)</span></td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                        No plant-wise hazard data is available for the selected filters.
-                    </div>
-                {% endif %}
+      <div class="dashboard-card">
+        <div class="card-body">
+          {% if plant_chart_data %}
+          <div class="tracker-panel">
+            <div class="tracker-panel-header">
+              <div>
+                <h5>Plant wise hazard status</h5>
+              </div>
+              <div class="chart-mode-toggle" aria-label="Chart display mode">
+                <button type="button" class="mode-btn active" data-chart-mode="stacked">Stacked</button>
+                <button type="button" class="mode-btn" data-chart-mode="grouped">Grouped</button>
+              </div>
             </div>
+            <div class="tracker-scroll">
+              <div class="chart-wrap" id="plantChartStage">
+                <canvas id="plantHazardStatusChart"></canvas>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="tracker-status-table">
+                <thead>
+                  <tr>
+                    <th>Plant</th>
+                    <th class="status-closed">Closed</th>
+                    <th class="status-pending">Pending</th>
+                    <th class="status-progress">In Progress</th>
+                    <th class="status-cancelled">Cancelled</th>
+                    <th class="status-overdue">Overdue</th>
+                    <th class="status-late">Close Late</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in plant_status_rows %}
+                  <tr>
+                    <td>{{ row.plant_name }}</td>
+                    <td class="status-closed">{{ row.closed_count }}</td>
+                    <td class="status-pending">{{ row.pending_count }}</td>
+                    <td class="status-progress">{{ row.in_progress_count }}</td>
+                    <td class="status-cancelled">{{ row.cancelled_count }}</td>
+                    <td class="status-overdue">{{ row.overdue_count }}</td>
+                    <td class="status-late">{{ row.late_close_count }}</td>
+                    <td class="status-total">{{ row.total }} <span class="status-percent">({{ row.closed_percent }}%)</span></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+            No plant-wise hazard data is available for the selected filters.
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
-
-<!-- Recent Hazards Table -->
-<div class="row">
+  <!-- ========================================================== -->
+  <!-- RECENT HAZARDS TABLE                                       -->
+  <!-- ========================================================== -->
+  <div class="row">
     <div class="col-lg-12 mb-4">
-        <div class="dashboard-card">
-            <div class="card-body">
-                <div class="section-header"><h5><i class="fas fa-clock mr-2"></i>Recent Hazards</h5></div>
-                <div class="table-responsive">
-                    <table class="table table-hover hazard-table">
-                        <thead>
-                            <tr>
-                                <th>Sr No</th>
-                                <th>Report</th>
-                                <th>Reported By / Department</th>
-                                <th>Assigned To / Department</th>
-                                <th>Title</th>
-                                <th>Type</th>
-                                <th>Risk Level</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for hazard in recent_hazards %}
-                            <tr>
-                                <td>
-                                    {{ page_obj.start_index|add:forloop.counter0 }}
-                                </td>
-                                <td><strong>{{ hazard.report_number }}</strong></td>
-                                <td class="reported-meta">
-                                    <strong>{{ hazard.reported_by.get_full_name|default:hazard.reported_by.username }}</strong>
-                                    <small>{{ hazard.reported_by.department.name|default:"Unassigned" }}</small>
-                                </td>
-                                <td class="reported-meta">
-                                    {% with assigned_users=hazard.get_assigned_users %}
-                                        {% for assigned_user in assigned_users %}
-                                            <strong>{{ assigned_user.get_full_name|default:assigned_user.username }}</strong><br>
-                                            <small>{{ assigned_user.department.name|default:"Unassigned" }}</small><br>
-                                        {% empty %}
-                                            <strong>Unassigned</strong><br>
-                                            <small>Unassigned</small>
-                                        {% endfor %}
-                                    {% endwith %}
-                                </td>
-                                <td>{{ hazard.hazard_title|truncatewords:5 }}</td>
-                                <td>{{ hazard.get_hazard_type_display }}</td>
-                                <td>
-                                    <span class="severity-indicator severity-{{ hazard.severity|lower }}"></span>
-                                    {{ hazard.get_severity_display }}
-                                </td>
-                                <td>{{ hazard.incident_datetime|date:"d/m/Y" }}</td>
-                                <td>
-                                    <span class="badge badge-custom {{ hazard.status_badge_class }}">
-                                        {{ hazard.effective_status_display }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{% url 'hazards:hazard_detail' hazard.pk %}" class="btn btn-sm btn-outline-primary" title="View Details"><i class="fas fa-eye"></i></a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-inbox fa-3x mb-3 d-block"></i>No recent hazards found</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% comment %} {% if recent_hazards %}<div class="text-center mt-3">
-                    <a href="{% url 'hazards:hazard_list' %}" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-right mr-2"></i>View All Hazards</a></div>{% endif %} {% endcomment %}
+      <div class="dashboard-card">
+        <div class="card-body">
+          <div class="section-header">
+            <h5><i class="fas fa-clock mr-2"></i>Recent Hazards</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover hazard-table">
+              <thead>
+                <tr>
+                  <th>Sr No</th>
+                  <th>Report</th>
+                  <th>Reported By / Department</th>
+                  <th>Assigned To / Department</th>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Risk Level</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for hazard in recent_hazards %}
+                <tr>
+                  <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                  <td><strong>{{ hazard.report_number }}</strong></td>
+                  <td class="reported-meta">
+                    <strong>{{ hazard.reported_by.get_full_name|default:hazard.reported_by.username }}</strong>
+                    <small>{{ hazard.reported_by.department.name|default:"Unassigned" }}</small>
+                  </td>
+                  <td class="reported-meta">
+                    {% with assigned_users=hazard.get_assigned_users %}
+                      {% for assigned_user in assigned_users %}
+                        <strong>{{ assigned_user.get_full_name|default:assigned_user.username }}</strong><br>
+                        <small>{{ assigned_user.department.name|default:"Unassigned" }}</small><br>
+                      {% empty %}
+                        <strong>Unassigned</strong><br>
+                        <small>Unassigned</small>
+                      {% endfor %}
+                    {% endwith %}
+                  </td>
+                  <td>{{ hazard.hazard_title|truncatewords:5 }}</td>
+                  <td>{{ hazard.get_hazard_type_display }}</td>
+                  <td>
+                    <span class="severity-indicator severity-{{ hazard.severity|lower }}"></span>
+                    {{ hazard.get_severity_display }}
+                  </td>
+                  <td>{{ hazard.incident_datetime|date:"d/m/Y" }}</td>
+                  <td>
+                    <span class="badge-custom {{ hazard.status_badge_class }}">
+                      {{ hazard.effective_status_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <a href="{% url 'hazards:hazard_detail' hazard.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="10" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>No recent hazards found
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
 
-                <!-- Pagination -->
-                {% if is_paginated %}
-                    <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-
-                        {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                        </li>
-
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                <i class="fas fa-angle-left"></i> Previous
-                            </a>
-                        </li>
-                        {% endif %}
-
-                        <li class="page-item active">
-                            <span class="page-link">
-                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                            </span>
-                        </li>
-
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                Next <i class="fas fa-angle-right"></i>
-                            </a>
-                        </li>
-
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-
-                    </ul>
-                    </nav>
-                {% endif %}
-            </div>
+          <!-- Pagination -->
+          {% if is_paginated %}
+          <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1{% if querystring %}&{{ querystring }}{% endif %}">
+                  <i class="fas fa-angle-double-left"></i>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+                  <i class="fas fa-angle-left"></i> Previous
+                </a>
+              </li>
+              {% endif %}
+              <li class="page-item active">
+                <span class="page-link">
+                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+              </li>
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">
+                  Next <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if querystring %}&{{ querystring }}{% endif %}">
+                  <i class="fas fa-angle-double-right"></i>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
         </div>
+      </div>
     </div>
+  </div>
+
 </div>
 
 {% endblock %}
+
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- CASCADING DROPDOWNS LOGIC ---
-    // ... (This section remains unchanged) ...
     const plantSelect = document.getElementById('plant_filter');
     const zoneSelect = document.getElementById('zone_filter');
     const locationSelect = document.getElementById('location_filter');
@@ -920,13 +1480,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- CHART INITIALIZATION ---
-    const colors = {danger: '#dc3545', warning: '#ffc107', info: '#17a2b8', success: '#28a745', primary: '#007bff'};
+    const colors = {danger: '#dc3545', warning: '#f59e0b', info: '#0d9488', success: '#22c55e', primary: '#3b82f6', orange: '#d97706'};
     
     // Severity Chart (Hazards by Risk Level)
     const severityCtx = document.getElementById('severityChart').getContext('2d');
     const severityChart = new Chart(severityCtx, {
         type: 'doughnut',
-        data: { labels: {{ severity_labels|safe }}, datasets: [{ data: {{ severity_data|safe }}, backgroundColor: [colors.success, colors.warning, colors.danger, colors.orange] }] },
+        data: { 
+            labels: {{ severity_labels|safe }}, 
+            datasets: [{ 
+                data: {{ severity_data|safe }}, 
+                backgroundColor: [colors.success, colors.warning, colors.danger, colors.orange] 
+            }] 
+        },
         options: {
             responsive: true, 
             maintainAspectRatio: false, 
@@ -951,9 +1517,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Monthly Trend Chart
-    new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), { type: 'line', data: { labels: {{ monthly_labels|safe }}, datasets: [{ label: 'Hazards', data: {{ monthly_data|safe }}, borderColor: colors.primary, backgroundColor: 'rgba(0,123,255,0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+    new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), { 
+        type: 'line', 
+        data: { 
+            labels: {{ monthly_labels|safe }}, 
+            datasets: [{ 
+                label: 'Hazards', 
+                data: {{ monthly_data|safe }}, 
+                borderColor: colors.primary, 
+                backgroundColor: 'rgba(59,130,246,0.1)', 
+                tension: 0.4, 
+                fill: true 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { y: { beginAtZero: true } } 
+        } 
+    });
     
-    // Status Chart (Status Distribution) - UPDATED
+    // Status Chart (Status Distribution)
     const statusChartCtx = document.getElementById('statusChart').getContext('2d');
     new Chart(statusChartCtx, { 
         type: 'bar', 
@@ -962,12 +1547,13 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{ 
                 label: 'Hazards', 
                 data: {{ status_data|safe }}, 
-                backgroundColor: '#563d7c',
+                backgroundColor: '#0d9488',
                 barPercentage: 0.4
             }] 
         }, 
         options: { 
-            responsive: true, maintainAspectRatio: false, 
+            responsive: true, 
+            maintainAspectRatio: false, 
             plugins: { 
                 legend: { display: false },
                 datalabels: {
@@ -982,152 +1568,89 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
             onClick: (e, elements) => {
                 if (elements.length > 0) {
-                    // This array holds the actual status keys like 'REPORTED', 'CLOSED', etc.
                     const statusKeys = {{ status_keys|safe }};
-                    // It finds the key corresponding to the bar you clicked.
                     const clickedStatusKey = statusKeys[elements[0].index];
-                    
                     const currentParams = new URLSearchParams(window.location.search);
-                    // It correctly sets the URL parameter to the specific key (e.g., status=CLOSED).
                     currentParams.set('status', clickedStatusKey);
                     window.location.href = window.location.pathname + '?' + currentParams.toString();
                 }
             }
         },
-        plugins: [ChartDataLabels] // Registering the plugin
+        plugins: [ChartDataLabels]
     });
 
+    // Hazard Type Chart
     const hazardTypeCtx = document.getElementById('hazardTypeChart');
     if(hazardTypeCtx){
-
-        const hazardTypeChart =
         new Chart(
             hazardTypeCtx.getContext('2d'),
             {
-
-            type: 'bar',
-
-            data: {
-                labels: {{ hazard_type_labels|safe }},
-
-                datasets: [{
-                    label: 'Hazards',
-
-                    data: {{ hazard_type_counts|safe }},
-
-                    backgroundColor: [
-                        '#dc3545',
-                        '#ffc107',
-                        '#17a2b8',
-                        '#28a745',
-                        '#6f42c1'
-                    ],
-
-                    borderRadius: 10,
-                    barThickness: 35
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-                        display: false
+                type: 'bar',
+                data: {
+                    labels: {{ hazard_type_labels|safe }},
+                    datasets: [{
+                        label: 'Hazards',
+                        data: {{ hazard_type_counts|safe }},
+                        backgroundColor: ['#dc3545', '#f59e0b', '#0d9488', '#22c55e', '#7c3aed'],
+                        borderRadius: 10,
+                        barThickness: 35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: '#fff',
+                            font: { weight: 'bold', size: 14 }
+                        }
                     },
-
-                    datalabels: {
-                        anchor: 'center',
-                        align: 'center',
-                        color: '#fff',
-
-                        font: {
-                            weight: 'bold',
-                            size: 14
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if(elements.length > 0){
+                            const hazardTypeValues = {{ hazard_type_values|safe }};
+                            const hazardType = hazardTypeValues[elements[0].index];
+                            const currentParams = new URLSearchParams(window.location.search);
+                            currentParams.set('hazard_type', hazardType);
+                            window.location.href = window.location.pathname + '?' + currentParams.toString();
                         }
                     }
                 },
-
-                scales: {
-
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                },
-
-                onClick: (e, elements) => {
-
-                    if(elements.length > 0){
-
-                        const hazardTypeValues = {{ hazard_type_values|safe }};
-                        const hazardType =
-                            hazardTypeValues[elements[0].index];
-
-                        const currentParams =
-                            new URLSearchParams(
-                                window.location.search
-                            );
-
-                        currentParams.set(
-                            'hazard_type',
-                            hazardType
-                        );
-
-                        window.location.href =
-                            window.location.pathname +
-                            '?' +
-                            currentParams.toString();
-                    }
-                }
-            },
-
-            plugins: [ChartDataLabels]
-        });
+                plugins: [ChartDataLabels]
+            }
+        );
     }
 
+    // Overdue Department Chart
     const overdueDepartmentCtx = document.getElementById('overdueDepartmentChart');
     if (overdueDepartmentCtx) {
-
         new Chart(
             overdueDepartmentCtx.getContext('2d'),
             {
-
                 type: 'bar',
-
                 data: {
-
-                    labels:
-                        {{ overdue_department_labels|safe }},
-
+                    labels: {{ overdue_department_labels|safe }},
                     datasets: [{
-
                         label: 'Overdue Hazards',
-
-                        data:
-                            {{ overdue_department_counts|safe }},
-
+                        data: {{ overdue_department_counts|safe }},
                         backgroundColor: '#dc3545',
-
                         borderRadius: 10,
-
                         barPercentage: 0.55,
                         categoryPercentage: 0.72,
                         maxBarThickness: 26
                     }]
                 },
-
                 options: {
-
                     responsive: true,
-
                     maintainAspectRatio: false,
-
                     layout: {
                         padding: {
                             top: 12,
@@ -1135,47 +1658,28 @@ document.addEventListener('DOMContentLoaded', function() {
                             left: 8
                         }
                     },
-
                     plugins: {
-
-                        legend: {
-                            display: false
-                        },
-
+                        legend: { display: false },
                         datalabels: {
-
                             anchor: 'center',
-
                             align: 'center',
-
                             color: '#111827',
-
-                            font: {
-                                weight: 'bold',
-                                size: 14
-                            }
+                            font: { weight: 'bold', size: 14 }
                         }
                     },
-
                     scales: {
                         x: {
-                            grid: {
-                                display: false
-                            },
+                            grid: { display: false },
                             ticks: {
                                 color: '#4b5563',
                                 maxRotation: 45,
                                 minRotation: 45,
-                                font: {
-                                    size: 11
-                                }
+                                font: { size: 11 }
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: '#e5e7eb'
-                            },
+                            grid: { color: '#e5e7eb' },
                             ticks: {
                                 precision: 0,
                                 color: '#111827'
@@ -1183,7 +1687,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 },
-
                 plugins: [ChartDataLabels]
             }
         );
@@ -1192,16 +1695,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Top Categories Pie Chart
     const topCategoriesCtx = document.getElementById('topCategoriesChart');
     if (topCategoriesCtx) {
-        const topCategoryLabels = {{ top_category_labels|safe }};
         const topCategoryValues = {{ top_category_values|safe }};
-
         new Chart(topCategoriesCtx.getContext('2d'), {
             type: 'pie',
             data: {
-                labels: topCategoryLabels,
+                labels: {{ top_category_labels|safe }},
                 datasets: [{
                     data: {{ top_category_data|safe }},
-                    backgroundColor: ['#17a2b8', '#563d7c', '#007bff'],
+                    backgroundColor: ['#0d9488', '#7c3aed', '#3b82f6'],
                     hoverOffset: 4
                 }]
             },
@@ -1229,7 +1730,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Department Chart (Hazards by Department) - UPDATED
+    // Department Chart (Hazards by Department)
     const departmentChartCtx = document.getElementById('departmentChart');
     if (departmentChartCtx) {
         const departmentLabels = {{ department_labels|safe }};
@@ -1245,7 +1746,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Total',
                     data: {{ department_total_data|safe }},
-                    backgroundColor: '#0d6efd',
+                    backgroundColor: '#3b82f6',
                     barPercentage: 0.56,
                     categoryPercentage: 0.72,
                     maxBarThickness: 26
@@ -1259,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, {
                     label: 'Closed',
                     data: {{ department_closed_data|safe }},
-                    backgroundColor: '#28a745',
+                    backgroundColor: '#22c55e',
                     barPercentage: 0.56,
                     categoryPercentage: 0.72,
                     maxBarThickness: 26
@@ -1284,38 +1785,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 plugins: {
                     legend: { position: 'bottom' },
-                    // ✅ CHANGED: Data labels configuration for Department chart
                     datalabels: {
                         anchor: 'end',
                         align: 'top',
                         color: '#111827',
                         offset: 6,
-                        font: {
-                            weight: 'bold',
-                            size: 12
-                        },
+                        font: { weight: 'bold', size: 12 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         ticks: {
                             color: '#4b5563',
                             maxRotation: 45,
                             minRotation: 45,
-                            font: {
-                                size: 11
-                            }
+                            font: { size: 11 }
                         }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: '#e5e7eb'
-                        },
+                        grid: { color: '#e5e7eb' },
                         ticks: {
                             precision: 0,
                             color: '#111827'
@@ -1346,12 +1837,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const plantChartStage = document.getElementById('plantChartStage');
         const chartModeButtons = Array.from(document.querySelectorAll('[data-chart-mode]'));
         const chartColors = {
-            closed: '#1cc88a',
-            pending: '#f6c23e',
-            progress: '#36b9cc',
-            cancelled: '#858796',
-            overdue: '#e74a3b',
-            late: '#6f42c1'
+            closed: '#22c55e',
+            pending: '#f59e0b',
+            progress: '#0d9488',
+            cancelled: '#64748b',
+            overdue: '#dc3545',
+            late: '#7c3aed'
         };
         let plantStatusChart;
 
@@ -1447,9 +1938,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             color: '#4b5563',
                             boxWidth: 14,
                             padding: 22,
-                            font: {
-                                size: 14
-                            }
+                            font: { size: 14 }
                         }
                     },
                     tooltip: {
@@ -1476,22 +1965,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             beginAtZero: true,
                             precision: 0,
                             color: '#6b7280',
-                            font: {
-                                weight: 'bold'
-                            }
+                            font: { weight: 'bold' }
                         }
                     },
                     y: {
                         stacked: true,
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         ticks: {
                             color: '#4b5563',
-                            font: {
-                                weight: 'bold',
-                                size: 13
-                            }
+                            font: { weight: 'bold', size: 13 }
                         }
                     }
                 },
@@ -1519,7 +2001,6 @@ document.addEventListener('DOMContentLoaded', function() {
 }); // DOMContentLoaded listener ends here.
 
 // --- REMOVE FILTER FUNCTION ---
-// ... (This section remains unchanged) ...
 function removeFilter(filterName) {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete(filterName);
@@ -1539,6 +2020,5 @@ function removeFilter(filterName) {
     
     window.location.href = window.location.pathname + '?' + urlParams.toString();
 }
-
 </script>
 {% endblock %}
