@@ -2,51 +2,240 @@
 {% load static %}
 {% load permission_tags %}
 
-{% block page_title %}Inspection Dashboard{% endblock %}
-{% block title %}Inspection Dashboard{% endblock %}
+{% block title %}Inspection Dashboard | EHS-360{% endblock %}
 
 {% block extra_css %}
-{# Chart.js ko header me rakhein taki page load hote hi available ho #}
+{# Chart.js for charts #}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-{# Naye card design aur overall look ke liye CSS #}
 <style>
-  .filter-section {
-    background: #fff;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+  /* ===== INSPECTION DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
   }
-  .active-filter-badge {
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FILTER SECTION                                              */
+  /* ========================================================== */
+  .filter-section-custom {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-section-custom:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .filter-section-custom .form-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .filter-section-custom .form-control,
+  .filter-section-custom .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .filter-section-custom .form-control:focus,
+  .filter-section-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .filter-section-custom .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .filter-section-custom .form-select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230d9488' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  }
+
+  .btn-filter-teal {
     display: inline-flex;
     align-items: center;
-    background: #eef2ff;
-    color: #334155;
-    border-radius: 999px;
-    padding: 0.35rem 0.75rem;
-    margin: 0.25rem 0.4rem 0.25rem 0;
-    font-size: 0.85rem;
-  }
-  .active-filter-badge i {
-    margin-left: 0.5rem;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
     cursor: pointer;
+    width: 100%;
+    justify-content: center;
   }
-  .checkbox-dropdown {
+
+  .btn-filter-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  /* ===== CHECKBOX DROPDOWN ===== */
+  .checkbox-dropdown-custom {
     position: relative;
     width: 100%;
   }
-  .checkbox-toggle {
+
+  .checkbox-toggle-custom {
     width: 100%;
-    min-height: calc(1.5em + 0.75rem + 2px);
-    padding: 0.375rem 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    background: #fff;
-    color: #495057;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--text-primary);
     text-align: left;
-    font-size: 1rem;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
-  .checkbox-menu {
+
+  .checkbox-toggle-custom:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .checkbox-toggle-custom .toggle-arrow {
+    transition: transform 0.3s ease;
+  }
+
+  .checkbox-toggle-custom.active .toggle-arrow {
+    transform: rotate(180deg);
+  }
+
+  .checkbox-menu-custom {
     display: none;
     position: absolute;
     top: calc(100% + 6px);
@@ -54,880 +243,1243 @@
     right: 0;
     max-height: 280px;
     overflow-y: auto;
-    padding: 0.75rem;
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem;
-    background: #fff;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: white;
+    box-shadow: var(--shadow-lg);
     z-index: 25;
   }
-  .checkbox-menu.show {
+
+  .checkbox-menu-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .checkbox-menu-custom::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .checkbox-menu-custom::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 3px;
+  }
+
+  .checkbox-menu-custom.show {
     display: block;
   }
-  .checkbox-item {
+
+  .checkbox-item-custom {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-    margin-bottom: 0;
-    font-size: 0.95rem;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 14px;
     cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
   }
-  .checkbox-item input {
-    margin: 0;
+
+  .checkbox-item-custom:hover {
+    color: var(--text-primary);
   }
-  .stat-card-v2 {
-    display: flex;
-    align-items: center;
-    background-color: #fff;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    padding: 1.5rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .stat-card-v2:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.07);
-  }
-  .stat-card-v2 .icon-circle {
-    width: 60px; height: 60px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+
+  .checkbox-item-custom input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
     flex-shrink: 0;
   }
-  .stat-card-v2 .icon-circle i { color: #fff; font-size: 1.75rem; }
-  .stat-card-v2 .info { margin-left: 1.25rem; }
-.stat-card-v2 .info .title {
-  display: block;
-  font-size: 0.9rem;
-  color: #6c757d;
-  margin-bottom: 2px;
-  line-height: 1.2;
-}
 
-.stat-card-v2 .info .value {
-  display: block;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #343a40;
-  line-height: 1.2;
-}
-  .stat-card-v2 .info .subtitle { font-size: 0.8rem; color: #adb5bd; }
-  .icon-circle.bg-blue { background: linear-gradient(135deg, #4e73df, #224abe); }
-  .icon-circle.bg-orange { background: linear-gradient(135deg, #f6c23e, #dda20a); }
-  .icon-circle.bg-green { background: linear-gradient(135deg, #1cc88a, #13855c); }
-  .icon-circle.bg-purple { background: linear-gradient(135deg, #6f42c1, #5a32a3); }
+  /* ===== ACTIVE FILTER BADGES ===== */
+  .active-filter-badge-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin: 4px 6px 4px 0;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid rgba(13, 148, 136, 0.12);
+  }
 
-  .ehs-card {
-      background-color: #fff; border: 1px solid #e3e6f0;
-      border-radius: 0.35rem;
-      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  .active-filter-badge-custom i {
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
   }
-  .border-left-danger {
-    border-left: 5px solid #e74a3b;
+
+  .active-filter-badge-custom i:hover {
+    opacity: 1;
   }
-  .chart-panel {
-    background: #fff;
-    border: 1px solid #e3e6f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.12);
-    color: #343a40;
+
+  .btn-clear-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-clear-all:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS                                            */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .dash-stat-card .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-card .stat-icon.blue { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card .stat-icon.orange { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card .stat-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .dash-stat-card .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+  .dash-stat-card .stat-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-stat-card .stat-info .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .dash-stat-card .stat-info .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* CHART PANEL                                                 */
+  /* ========================================================== */
+  .dash-chart-panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-chart-panel:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-chart-panel .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  /* ===== TRACKER PANEL ===== */
+  .tracker-panel-custom {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fafbfc;
     overflow: hidden;
   }
-  .metric-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: .8rem;
-    font-weight: 700;
-  }
-  .metric-closed { background: #e8f5e9; color: #1e7e34; }
-  .metric-pending { background: #fff3cd; color: #b8860b; }
-  .metric-progress { background: #d1ecf1; color: #117a8b; }
-  .metric-cancelled { background: #e2e3e5; color: #495057; }
-  .metric-overdue { background: #f8d7da; color: #bd2130; }
-  .metric-late-close { background: #e9d8fd; color: #6f42c1; }
-  .tracker-panel {
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    overflow: hidden;
-  }
-  .tracker-panel-header {
+
+  .tracker-panel-custom .tracker-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 14px 18px;
-    border-bottom: 1px solid #e5e7eb;
-    background: rgba(255,255,255,.92);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    flex-wrap: wrap;
   }
-  .tracker-panel-header .eyebrow {
-    display: block;
-    font-size: .78rem;
+
+  .tracker-panel-custom .tracker-header .header-title h5 {
+    font-size: 16px;
     font-weight: 700;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: .08em;
+    color: var(--text-primary);
+    margin: 0;
   }
-  .tracker-panel-header .tracker-filter-note {
-    display: block;
-    margin-top: 4px;
-    font-size: .9rem;
-    color: #4b5563;
+
+  .tracker-panel-custom .tracker-header .header-title .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
   }
-  .tracker-panel-header h5 {
-    margin: 6px 0 0;
-    color: #1f2937;
-    font-size: 1.25rem;
-    font-weight: 700;
-  }
-  .chart-mode-toggle {
+
+  .chart-mode-toggle-custom {
     display: inline-flex;
-    gap: 10px;
+    gap: 6px;
     flex-shrink: 0;
   }
-  .chart-mode-toggle .mode-btn {
-    min-width: 120px;
-    padding: 9px 18px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-    color: #374151;
-    font-size: .95rem;
-    font-weight: 700;
+
+  .chart-mode-toggle-custom .mode-btn {
+    padding: 6px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
+    transition: all 0.25s ease;
   }
-  .chart-mode-toggle .mode-btn.active {
-    background: #4e73df;
-    border-color: #4e73df;
-    color: #fff;
-    box-shadow: 0 8px 16px rgba(78, 115, 223, 0.18);
+
+  .chart-mode-toggle-custom .mode-btn:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
   }
-  .tracker-scroll {
+
+  .chart-mode-toggle-custom .mode-btn.active {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  .tracker-scroll-custom {
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 18px 18px 8px;
+    padding: 16px 18px 8px;
   }
-  .tracker-scroll::-webkit-scrollbar {
-    height: 10px;
+
+  .tracker-scroll-custom::-webkit-scrollbar {
+    height: 8px;
   }
-  .tracker-scroll::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 999px;
+
+  .tracker-scroll-custom::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
   }
-  .chart-wrap {
+
+  .tracker-scroll-custom::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 4px;
+  }
+
+  .chart-wrap-custom {
     min-width: 100%;
-    height: 560px;
+    height: 480px;
   }
-  .chart-wrap canvas {
+
+  .chart-wrap-custom canvas {
     height: 100% !important;
   }
-  .tracker-status-table {
-    width: 100%;
-    margin: 18px;
+
+  /* ========================================================== */
+  /* STATUS TABLE                                                */
+  /* ========================================================== */
+  .tracker-status-table-custom {
     width: calc(100% - 36px);
-    border-collapse: separate;
-    border-spacing: 0;
+    margin: 0 18px 18px 18px;
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #fff;
-    color: #343a40;
+    background: white;
+    font-size: 13px;
   }
-  .tracker-status-table th,
-  .tracker-status-table td {
-    padding: 14px 18px;
-    border-bottom: 1px solid #edf2f7;
+
+  .tracker-status-table-custom thead th {
+    padding: 10px 14px;
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.3px;
     text-align: center;
-    font-size: 1rem;
+    border-bottom: 2px solid var(--border-color);
   }
-  .tracker-status-table th {
-    background: #f8fafc;
-    color: #495057;
-    font-weight: 800;
+
+  .tracker-status-table-custom tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    color: var(--text-secondary);
   }
-  .tracker-status-table td:first-child,
-  .tracker-status-table th:first-child {
+
+  .tracker-status-table-custom tbody td:first-child {
     text-align: left;
-    font-weight: 800;
+    font-weight: 600;
+    color: var(--text-primary);
   }
-  .tracker-status-table tbody tr:last-child td {
-    border-bottom: 0;
+
+  .tracker-status-table-custom tbody tr:hover {
+    background: var(--primary-teal-light);
   }
-  .status-closed { color: #13855c; }
-  .status-pending { color: #dda20a; }
-  .status-progress { color: #117a8b; }
-  .status-cancelled { color: #6c757d; }
-  .status-overdue { color: #bd2130; }
-  .status-late { color: #6f42c1; }
-  .status-total { color: #343a40; font-weight: 800; }
-  .status-percent { color: #13855c; }
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+
+  .tracker-status-table-custom tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .status-closed { color: var(--secondary-green); font-weight: 600; }
+  .status-pending { color: var(--secondary-gold); font-weight: 600; }
+  .status-progress { color: #0d9488; font-weight: 600; }
+  .status-cancelled { color: var(--text-muted); font-weight: 600; }
+  .status-overdue { color: var(--secondary-red); font-weight: 600; }
+  .status-late { color: #7c3aed; font-weight: 600; }
+  .status-total { font-weight: 700; color: var(--text-primary); }
+  .status-percent { color: var(--secondary-green); font-weight: 600; }
+
+  /* ========================================================== */
+  /* OVERDUE CARD                                                */
+  /* ========================================================== */
+  .dash-overdue-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    border-left: 5px solid var(--secondary-red);
+    overflow: hidden;
+    transition: all 0.3s ease;
     margin-bottom: 20px;
   }
-  .summary-card {
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+
+  .dash-overdue-card:hover {
+    box-shadow: var(--shadow-hover);
   }
-  .summary-card .label {
-    display: block;
-    color: #6c757d;
-    font-size: .8rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    margin-bottom: 6px;
+
+  .dash-overdue-card .card-header-custom {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--secondary-red-light);
   }
-  .summary-card .value {
-    display: block;
-    font-size: 1.5rem;
+
+  .dash-overdue-card .card-header-custom h5 {
+    font-size: 15px;
     font-weight: 700;
-    color: #1f2937;
-    line-height: 1.1;
+    color: var(--secondary-red);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .summary-card .meta {
+
+  .dash-overdue-card .card-body-custom {
+    padding: 16px 18px;
+  }
+
+  .overdue-item-custom {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    background: white;
+    transition: all 0.3s ease;
+    border-left: 3px solid var(--secondary-red);
+  }
+
+  .overdue-item-custom:hover {
+    border-color: var(--secondary-red);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .overdue-item-custom .item-title {
+    font-weight: 700;
+    color: var(--secondary-red);
+    font-size: 14px;
+  }
+
+  .overdue-item-custom .item-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* COMPLETED INSPECTIONS TABLE                                 */
+  /* ========================================================== */
+  .dash-table-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-table-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-table-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table-card .card-header-custom h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-table-card .card-header-custom h3 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-table-card .card-body-custom {
+    padding: 0;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                                */
+  /* ========================================================== */
+  .dash-table {
+    font-size: 13px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ===== BADGES ===== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-warning { background: #fef3c7; color: #d97706; }
+  .dash-badge.badge-danger { background: #fee2e2; color: #dc2626; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+
+  /* ========================================================== */
+  /* PAGINATION                                                  */
+  /* ========================================================== */
+  .dash-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+
+  .dash-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .dash-pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .dash-pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .dash-pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 40px;
+    color: var(--primary-teal-light);
     display: block;
-    margin-top: 6px;
-    color: #6c757d;
-    font-size: .85rem;
+    margin-bottom: 12px;
   }
-  .list-group-item:hover {
-        background-color: #f8f9fc;
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
   }
-  @media (max-width: 991.98px) {
-    .summary-grid {
-      grid-template-columns: 1fr;
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
-    .tracker-panel-header {
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
       flex-direction: column;
       align-items: flex-start;
     }
-    .chart-mode-toggle {
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-stat-card {
+      padding: 14px 16px;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 22px;
+    }
+
+    .dash-stat-card .stat-icon {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
+
+    .filter-section-custom {
+      padding: 14px 16px;
+    }
+
+    .filter-section-custom .btn-filter-teal {
       width: 100%;
     }
-    .chart-mode-toggle .mode-btn {
-      flex: 1;
-      min-width: 0;
+
+    .tracker-panel-custom .tracker-header {
+      flex-direction: column;
+      align-items: flex-start;
     }
-    .tracker-status-table th,
-    .tracker-status-table td {
+
+    .chart-mode-toggle-custom {
+      width: 100%;
+    }
+
+    .chart-mode-toggle-custom .mode-btn {
+      flex: 1;
+      text-align: center;
+    }
+
+    .chart-wrap-custom {
+      height: 360px;
+    }
+
+    .tracker-status-table-custom {
+      font-size: 12px;
+      width: 100%;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .tracker-status-table-custom thead th,
+    .tracker-status-table-custom tbody td {
+      padding: 8px 10px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .dash-pagination {
+      justify-content: center;
+    }
+
+    .dash-pagination .page-link {
+      min-width: 32px;
+      height: 32px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-card .stat-info .stat-value {
+      font-size: 20px;
+    }
+
+    .filter-section-custom {
       padding: 10px 12px;
-      font-size: .9rem;
+    }
+
+    .filter-section-custom .form-control,
+    .filter-section-custom .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .chart-wrap-custom {
+      height: 280px;
+    }
+
+    .tracker-status-table-custom thead th,
+    .tracker-status-table-custom tbody td {
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+
+    .dash-table tbody td {
+      padding: 6px 10px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 10px;
+    }
+
+    .dash-badge {
+      font-size: 10px;
+      padding: 3px 10px;
     }
   }
 </style>
 {% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Inspection Management</li>
-{% endblock %}
-
 {% block content %}
-<div class="filter-section">
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div>
+        <h1>Inspection Dashboard</h1>
+        <p class="subtitle">Monitor and manage inspection activities</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER SECTION                                              -->
+  <!-- ========================================================== -->
+  <div class="filter-section-custom">
     <form method="GET" action="{% url 'inspections:inspection_dashboard' %}" id="filterForm">
-        <div class="row align-items-end">
-            <div class="col-md-3 mb-3">
-                <label for="plant_filter" class="small font-weight-bold"><i class="fas fa-industry mr-1"></i> Plant</label>
-                <select name="plant" id="plant_filter" class="form-control">
-                    <option value="">All Plants</option>
-                    {% for plant in plants %}
-                    <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="zone_filter" class="small font-weight-bold"><i class="fas fa-map-marker-alt mr-1"></i> Zone</label>
-                <select name="zone" id="zone_filter" class="form-control">
-                    <option value="">All Zones</option>
-                    {% for zone in zones %}
-                    <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>{{ zone.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="location_filter" class="small font-weight-bold"><i class="fas fa-location-arrow mr-1"></i> Location</label>
-                <select name="location" id="location_filter" class="form-control">
-                    <option value="">All Locations</option>
-                    {% for location in locations %}
-                    <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>{{ location.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="sublocation_filter" class="small font-weight-bold"><i class="fas fa-map-pin mr-1"></i> Sub-Location</label>
-                <select name="sublocation" id="sublocation_filter" class="form-control">
-                    <option value="">All Sub-Locations</option>
-                    {% for sublocation in sublocations %}
-                    <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>{{ sublocation.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="department_filter" class="small font-weight-bold"><i class="fas fa-building mr-1"></i> Department</label>
-                <select name="department" id="department_filter" class="form-control">
-                    <option value="">All Departments</option>
-                    {% for dept in all_departments %}
-                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label class="small font-weight-bold d-block"><i class="fas fa-clipboard-list mr-1"></i> Template</label>
-                <div class="checkbox-dropdown">
-                    <button type="button" class="checkbox-toggle" id="templateToggle">All Templates</button>
-                    <div class="checkbox-menu" id="templateMenu">
-                        {% for template in all_templates %}
-                        <label class="checkbox-item">
-                            <input type="checkbox" name="template" value="{{ template.id }}" {% if template.id|stringformat:"s" in selected_templates %}checked{% endif %}>
-                            <span>{{ template.template_name }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label for="month_filter" class="small font-weight-bold"><i class="fas fa-calendar mr-1"></i> Month</label>
-                <select name="month" id="month_filter" class="form-control">
-                    <option value="">All Time</option>
-                    {% for month in month_options %}
-                    <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>{{ month.label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-filter mr-1"></i> Apply Filters
-                </button>
-            </div>
+      <div class="row align-items-end">
+        <div class="col-md-3 mb-3">
+          <label for="plant_filter" class="form-label"><i class="fas fa-industry mr-1"></i> Plant</label>
+          <select name="plant" id="plant_filter" class="form-select">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
+          </select>
         </div>
 
-        {% if has_active_filters %}
-        <div class="row mt-2">
-            <div class="col-12">
-                <strong>Active Filters:</strong>
-                {% if selected_plant_name %}<span class="active-filter-badge">Plant: {{ selected_plant_name }}<i class="fas fa-times" onclick="removeFilter(event, 'plant')"></i></span>{% endif %}
-                {% if selected_zone_name %}<span class="active-filter-badge">Zone: {{ selected_zone_name }}<i class="fas fa-times" onclick="removeFilter(event, 'zone')"></i></span>{% endif %}
-                {% if selected_location_name %}<span class="active-filter-badge">Location: {{ selected_location_name }}<i class="fas fa-times" onclick="removeFilter(event, 'location')"></i></span>{% endif %}
-                {% if selected_sublocation_name %}<span class="active-filter-badge">Sub-Location: {{ selected_sublocation_name }}<i class="fas fa-times" onclick="removeFilter(event, 'sublocation')"></i></span>{% endif %}
-                {% if selected_department_name %}<span class="active-filter-badge">Dept: {{ selected_department_name }}<i class="fas fa-times" onclick="removeFilter(event, 'department')"></i></span>{% endif %}
-                {% if selected_template_name %}<span class="active-filter-badge">Template: {{ selected_template_name }}<i class="fas fa-times" onclick="removeFilter(event, 'template')"></i></span>{% endif %}
-                {% if selected_month_label %}<span class="active-filter-badge">Month: {{ selected_month_label }}<i class="fas fa-times" onclick="removeFilter(event, 'month')"></i></span>{% endif %}
-                <a href="{% url 'inspections:inspection_dashboard' %}" class="btn btn-sm btn-outline-danger ml-2">
-                    <i class="fas fa-times-circle"></i> Clear All
-                </a>
-            </div>
+        <div class="col-md-3 mb-3">
+          <label for="zone_filter" class="form-label"><i class="fas fa-map-marker-alt mr-1"></i> Zone</label>
+          <select name="zone" id="zone_filter" class="form-select">
+            <option value="">All Zones</option>
+            {% for zone in zones %}
+            <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>{{ zone.name }}</option>
+            {% endfor %}
+          </select>
         </div>
-        {% endif %}
+
+        <div class="col-md-3 mb-3">
+          <label for="location_filter" class="form-label"><i class="fas fa-location-arrow mr-1"></i> Location</label>
+          <select name="location" id="location_filter" class="form-select">
+            <option value="">All Locations</option>
+            {% for location in locations %}
+            <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>{{ location.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+          <label for="sublocation_filter" class="form-label"><i class="fas fa-map-pin mr-1"></i> Sub-Location</label>
+          <select name="sublocation" id="sublocation_filter" class="form-select">
+            <option value="">All Sub-Locations</option>
+            {% for sublocation in sublocations %}
+            <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>{{ sublocation.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+          <label for="department_filter" class="form-label"><i class="fas fa-building mr-1"></i> Department</label>
+          <select name="department" id="department_filter" class="form-select">
+            <option value="">All Departments</option>
+            {% for dept in all_departments %}
+            <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+          <label class="form-label"><i class="fas fa-clipboard-list mr-1"></i> Template</label>
+          <div class="checkbox-dropdown-custom">
+            <button type="button" class="checkbox-toggle-custom" id="templateToggle">
+              <span id="templateLabel">All Templates</span>
+              <span class="toggle-arrow"><i class="fas fa-chevron-down"></i></span>
+            </button>
+            <div class="checkbox-menu-custom" id="templateMenu">
+              {% for template in all_templates %}
+              <label class="checkbox-item-custom">
+                <input type="checkbox" name="template" value="{{ template.id }}" {% if template.id|stringformat:"s" in selected_templates %}checked{% endif %}>
+                <span>{{ template.template_name }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+          <label for="month_filter" class="form-label"><i class="fas fa-calendar mr-1"></i> Month</label>
+          <select name="month" id="month_filter" class="form-select">
+            <option value="">All Time</option>
+            {% for month in month_options %}
+            <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>{{ month.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+          <button type="submit" class="btn-filter-teal">
+            <i class="fas fa-filter mr-1"></i> Apply Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Filters -->
+      {% if has_active_filters %}
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-bold" style="font-size: 13px; color: var(--text-secondary);">Active Filters:</span>
+            {% if selected_plant_name %}<span class="active-filter-badge-custom">Plant: {{ selected_plant_name }}<i class="fas fa-times" onclick="removeFilter(event, 'plant')"></i></span>{% endif %}
+            {% if selected_zone_name %}<span class="active-filter-badge-custom">Zone: {{ selected_zone_name }}<i class="fas fa-times" onclick="removeFilter(event, 'zone')"></i></span>{% endif %}
+            {% if selected_location_name %}<span class="active-filter-badge-custom">Location: {{ selected_location_name }}<i class="fas fa-times" onclick="removeFilter(event, 'location')"></i></span>{% endif %}
+            {% if selected_sublocation_name %}<span class="active-filter-badge-custom">Sub-Location: {{ selected_sublocation_name }}<i class="fas fa-times" onclick="removeFilter(event, 'sublocation')"></i></span>{% endif %}
+            {% if selected_department_name %}<span class="active-filter-badge-custom">Dept: {{ selected_department_name }}<i class="fas fa-times" onclick="removeFilter(event, 'department')"></i></span>{% endif %}
+            {% if selected_template_name %}<span class="active-filter-badge-custom">Template: {{ selected_template_name }}<i class="fas fa-times" onclick="removeFilter(event, 'template')"></i></span>{% endif %}
+            {% if selected_month_label %}<span class="active-filter-badge-custom">Month: {{ selected_month_label }}<i class="fas fa-times" onclick="removeFilter(event, 'month')"></i></span>{% endif %}
+            <a href="{% url 'inspections:inspection_dashboard' %}" class="btn-clear-all">
+              <i class="fas fa-times-circle"></i> Clear All
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </form>
-</div>
+  </div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="stat-card-v2">
-            <div class="icon-circle bg-blue"><i class="fas fa-clipboard-check"></i></div>
-            <div class="info">
-                <span class="title">Total Completed</span>
-                <span class="value">{{ total_inspections }}</span>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <div class="dash-stat-card">
+      <div class="stat-icon blue"><i class="fas fa-clipboard-check"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total_inspections }}</div>
+        <div class="stat-label">Total Completed</div>
+      </div>
     </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="stat-card-v2">
-            <div class="icon-circle bg-orange"><i class="fas fa-folder-open"></i></div>
-            <div class="info">
-                <span class="title">Open Schedules</span>
-                <span class="value">{{ open_schedules }}</span>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="stat-card-v2">
-            <div class="icon-circle bg-green"><i class="fas fa-calendar-day"></i></div>
-            <div class="info">
-                <span class="title">{{ this_month_label }}</span>
-                <span class="value">{{ this_month_inspections }}</span>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="stat-card-v2">
-            <div class="icon-circle bg-purple"><i class="fas fa-percentage"></i></div>
-            <div class="info">
-                <span class="title">Avg. Compliance</span>
-                <span class="value">{{ average_compliance_score }}%</span>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="chart-panel">
-            <div class="card-body p-4">
-                {% if plant_chart_data %}
-                <div class="tracker-panel">
-                    <div class="tracker-panel-header">
-                        <div>
-                            <h5>Plant wise inspection status</h5>
-                            <span class="tracker-filter-note">
-                                Templates: {{ selected_template_display|default:"All Templates" }}
-                            </span>
-                        </div>
-                        <div class="chart-mode-toggle" aria-label="Chart display mode">
-                            <button type="button" class="mode-btn active" data-chart-mode="stacked">Stacked</button>
-                            <button type="button" class="mode-btn" data-chart-mode="grouped">Grouped</button>
-                        </div>
-                    </div>
-                    <div class="tracker-scroll">
-                        <div class="chart-wrap" id="plantChartStage">
-                            <canvas id="inspectionStatusChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="tracker-status-table">
-                            <thead>
-                                <tr>
-                                    <th>Plant</th>
-                                    <th class="status-closed">Closed</th>
-                                    <th class="status-pending">Pending</th>
-                                    <th class="status-progress">In Progress</th>
-                                    <th class="status-cancelled">Cancelled</th>
-                                    <th class="status-overdue">Overdue</th>
-                                    <th class="status-late">Close Late</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in plant_status_rows %}
-                                <tr>
-                                    <td>{{ row.plant_name }}</td>
-                                    <td class="status-closed">{{ row.closed_count }}</td>
-                                    <td class="status-pending">{{ row.pending_count }}</td>
-                                    <td class="status-progress">{{ row.in_progress_count }}</td>
-                                    <td class="status-cancelled">{{ row.cancelled_count }}</td>
-                                    <td class="status-overdue">{{ row.overdue_count }}</td>
-                                    <td class="status-late">{{ row.late_close_count }}</td>
-                                    <td class="status-total">{{ row.total }} <span class="status-percent">({{ row.closed_percent }}%)</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                    No plant-wise inspection data is available for the selected filters.
-                </div>
-                {% endif %}
-            </div>
-        </div>
+    <div class="dash-stat-card">
+      <div class="stat-icon orange"><i class="fas fa-folder-open"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ open_schedules }}</div>
+        <div class="stat-label">Open Schedules</div>
+      </div>
     </div>
-</div>
 
-<!-- Overdue Inspections & Top Non-Compliances -->
-<div class="row mb-4">
-    {% if overdue_inspections %}
-    <div class="col-12">
-        <div class="ehs-card border-left-danger">
-            <div class="card-header bg-white">
-                <h5 class="mb-0 text-danger">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    Overdue Inspections
-                </h5>
+    <div class="dash-stat-card">
+      <div class="stat-icon green"><i class="fas fa-calendar-day"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ this_month_inspections }}</div>
+        <div class="stat-label">{{ this_month_label }}</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="stat-icon purple"><i class="fas fa-percentage"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ average_compliance_score }}%</div>
+        <div class="stat-label">Avg. Compliance</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHART PANEL                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-chart-panel">
+    <div class="card-body-custom">
+      {% if plant_chart_data %}
+      <div class="tracker-panel-custom">
+        <div class="tracker-header">
+          <div class="header-title">
+            <h5>Plant wise inspection status</h5>
+            <span class="subtitle">Templates: {{ selected_template_display|default:"All Templates" }}</span>
+          </div>
+          <div class="chart-mode-toggle-custom">
+            <button type="button" class="mode-btn active" data-chart-mode="stacked">Stacked</button>
+            <button type="button" class="mode-btn" data-chart-mode="grouped">Grouped</button>
+          </div>
+        </div>
+
+        <div class="tracker-scroll-custom">
+          <div class="chart-wrap-custom" id="plantChartStage">
+            <canvas id="inspectionStatusChart"></canvas>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="tracker-status-table-custom">
+            <thead>
+              <tr>
+                <th>Plant</th>
+                <th class="status-closed">Closed</th>
+                <th class="status-pending">Pending</th>
+                <th class="status-progress">In Progress</th>
+                <th class="status-cancelled">Cancelled</th>
+                <th class="status-overdue">Overdue</th>
+                <th class="status-late">Close Late</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in plant_status_rows %}
+              <tr>
+                <td>{{ row.plant_name }}</td>
+                <td class="status-closed">{{ row.closed_count }}</td>
+                <td class="status-pending">{{ row.pending_count }}</td>
+                <td class="status-progress">{{ row.in_progress_count }}</td>
+                <td class="status-cancelled">{{ row.cancelled_count }}</td>
+                <td class="status-overdue">{{ row.overdue_count }}</td>
+                <td class="status-late">{{ row.late_close_count }}</td>
+                <td class="status-total">{{ row.total }} <span class="status-percent">({{ row.closed_percent }}%)</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="dash-empty-state">
+        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+        <p>No plant-wise inspection data is available for the selected filters.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- OVERDUE INSPECTIONS                                         -->
+  <!-- ========================================================== -->
+  {% if overdue_inspections %}
+  <div class="dash-overdue-card">
+    <div class="card-header-custom">
+      <h5>
+        <i class="fas fa-exclamation-circle"></i>
+        Overdue Inspections
+      </h5>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        {% for schedule in overdue_inspections %}
+        <div class="col-md-4 mb-3">
+          <div class="overdue-item-custom">
+            <div class="item-title">{{ schedule.schedule_code }}</div>
+            <div class="item-meta">Assigned to {{ schedule.assigned_to.get_full_name }}</div>
+            <div class="item-meta">
+              <span class="dash-badge badge-danger">Due {{ schedule.due_date|date:"d M Y" }}</span>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for schedule in overdue_inspections %}    
-                    <div class="col-md-4 mb-3">
-                        <div class="card border-danger shadow-sm h-100">
-                            <div class="card-body">
-                                <h6 class="font-weight-bold text-danger">
-                                    {{ schedule.schedule_code }}
-                                </h6>
-                                <p class="mb-1 small text-muted">
-                                    Assigned to {{ schedule.assigned_to.get_full_name }}
-                                </p>
-                                <span class="badge badge-danger">
-                                    Due {{ schedule.due_date|date:"d M Y" }}
-                                </span>
-                                {% if user|has_perm:'VIEW_INSPECTION' %}
-                                <div class="mt-2">
-                                    <a href="{% url 'inspections:schedule_detail' schedule.pk %}" 
-                                    class="btn btn-sm btn-outline-primary">
-                                    View Details
-                                    </a>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+            {% if user|has_perm:'VIEW_INSPECTION' %}
+            <div class="mt-2">
+              <a href="{% url 'inspections:schedule_detail' schedule.pk %}" class="btn" style="border: 1px solid var(--primary-teal); color: var(--primary-teal); border-radius: var(--radius-sm); padding: 4px 12px; font-size: 12px; font-weight: 500; transition: all 0.25s ease; text-decoration: none;">
+                <i class="fas fa-eye"></i> View Details
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- COMPLETED INSPECTIONS TABLE                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-table-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-history"></i>
+        Completed Inspections
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Schedule Code</th>
+              <th>Template</th>
+              <th>Plant</th>
+              <th>Submitted By</th>
+              <th>Completed At</th>
+              <th>Score</th>
+              {% if user|has_perm:'VIEW_INSPECTION' %}
+              <th>Actions</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for submission in page_obj.object_list %}
+            <tr>
+              <td data-label="Schedule Code"><strong>{{ submission.schedule.schedule_code }}</strong></td>
+              <td data-label="Template">{{ submission.schedule.template.template_name|truncatewords:5 }}</td>
+              <td data-label="Plant">
+                {% for plant in submission.schedule.plants.all %}
+                  {{ plant.name }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
+              </td>
+              <td data-label="Submitted By">{{ submission.submitted_by.get_full_name }}</td>
+              <td data-label="Completed At">{{ submission.submitted_at|date:"d M Y" }}</td>
+              <td data-label="Score">
+                <span class="dash-badge 
+                  {% if submission.compliance_score >= 80 %}badge-success
+                  {% elif submission.compliance_score >= 60 %}badge-warning
+                  {% else %}badge-danger{% endif %}">
+                  {{ submission.compliance_score }}%
+                </span>
+              </td>
+              {% if user|has_perm:'VIEW_INSPECTION' %}
+              <td data-label="Actions">
+                <a href="{% url 'inspections:inspection_review' submission.id %}" class="btn" style="border: 1px solid var(--primary-teal); color: var(--primary-teal); border-radius: var(--radius-sm); padding: 4px 10px; font-size: 12px; transition: all 0.25s ease; text-decoration: none;">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">
+                <div class="dash-empty-state">
+                  <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                  <p>No completed inspections found.</p>
                 </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-    <!-- <div class="{% if overdue_inspections %}col-lg-7{% else %}col-12{% endif %}">
-        <div class="ehs-card">
-            <div class="card-header"><h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Top 5 Non-Compliant Questions</h3></div>
-            <div class="card-body">
-                <canvas id="nonComplianceChart" style="min-height: 250px;"></canvas>
-            </div>
-        </div>
-    </div> -->
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav class="dash-pagination">
+        {% if page_obj.has_previous %}
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">&laquo;</a>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+          {% if page_obj.number == i %}
+            <span class="page-link active">{{ i }}</span>
+          {% else %}
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&{{ querystring }}{% endif %}">{{ i }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">&raquo;</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
 
-<!-- Action Cards -->
-<div class="row mb-4">
-    
-    </div>
-</div>
-
-<!-- Completed Inspections Table with Pagination -->
-<div class="row">
-    <div class="col-12">
-        <div class="ehs-card">
-            <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-history mr-2"></i>Completed Inspections</h3></div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Schedule Code</th><th>Template</th><th>Plant</th>
-                                <th>Submitted By</th><th>Completed At</th><th>Score</th>
-                                {% if user|has_perm:'VIEW_INSPECTION' %}
-                                <th>Actions</th>
-                                {% endif %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for submission in page_obj.object_list %}
-                            <tr>
-                                <td><strong>{{ submission.schedule.schedule_code }}</strong></td>
-                                <td>{{ submission.schedule.template.template_name|truncatewords:5 }}</td>
-                                <td>
-                                    {% for plant in submission.schedule.plants.all %}
-                                        {{ plant.name }}{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
-                                </td>
-                                <td>{{ submission.submitted_by.get_full_name }}</td>
-                                <td>{{ submission.submitted_at|date:"d M Y" }}</td>
-                                <td>
-                                    <span class="badge badge-{% if submission.compliance_score >= 80 %}success{% elif submission.compliance_score >= 60 %}warning{% else %}danger{% endif %}">{{ submission.compliance_score }}%</span>
-                                </td>
-                                {% if user|has_perm:'VIEW_INSPECTION' %}
-                                <td><a href="{% url 'inspections:inspection_review' submission.id %}" class="btn btn-sm btn-info" title="View Details"><i class="fas fa-eye"></i></a></td>
-                                {% endif %}
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="7" class="text-center"><div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-2"></i>No completed inspections found.</div></td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                {# PAGINATION CONTROLS #}
-                {# PAGINATION CONTROLS (SAFER VERSION) #}
-                {% if page_obj.has_other_pages %}
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-end">
-
-                        {# Previous Button #}
-                        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                            <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}{% else %}#{% endif %}">&laquo;</a>
-                        </li>
-
-                        {# Page Numbers #}
-                        {% for i in page_obj.paginator.page_range %}
-                            {% if page_obj.number == i %}
-                                <li class="page-item active" aria-current="page">
-                                    <span class="page-link">{{ i }}</span>
-                                </li>
-                            {% else %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ i }}{% if querystring %}&{{ querystring }}{% endif %}">{{ i }}</a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-
-                        {# Next Button #}
-                        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}{% else %}#{% endif %}">&raquo;</a>
-                        </li>
-
-                    </ul>
-                </nav>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- ========================================================== -->
+<!-- JAVASCRIPT                                                  -->
+<!-- ========================================================== -->
 <script>
 function removeFilter(evt, filterName) {
-    evt.preventDefault();
-    const url = new URL(window.location.href);
-    url.searchParams.delete(filterName);
-    url.searchParams.delete('page');
-    window.location.href = url.toString();
+  evt.preventDefault();
+  const url = new URL(window.location.href);
+  url.searchParams.delete(filterName);
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    var templateToggle = document.getElementById('templateToggle');
-    var templateMenu = document.getElementById('templateMenu');
-    var templateCheckboxes = templateMenu ? Array.from(templateMenu.querySelectorAll('input[name="template"]')) : [];
+  // Template dropdown toggle
+  var templateToggle = document.getElementById('templateToggle');
+  var templateMenu = document.getElementById('templateMenu');
+  var templateCheckboxes = templateMenu ? Array.from(templateMenu.querySelectorAll('input[name="template"]')) : [];
+  var templateLabel = document.getElementById('templateLabel');
 
-    function updateTemplateLabel() {
-        if (!templateToggle || !templateCheckboxes.length) {
-            return;
-        }
-
-        var selected = templateCheckboxes.filter(function(checkbox) {
-            return checkbox.checked;
-        });
-
-        if (selected.length === 0 || selected.length === templateCheckboxes.length) {
-            templateToggle.textContent = 'All Templates';
-        } else if (selected.length === 1) {
-            templateToggle.textContent = selected[0].parentElement.querySelector('span').textContent;
-        } else {
-            templateToggle.textContent = selected.length + ' templates selected';
-        }
-    }
-
-    if (templateToggle && templateMenu) {
-        templateToggle.addEventListener('click', function() {
-            templateMenu.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!templateMenu.contains(event.target) && !templateToggle.contains(event.target)) {
-                templateMenu.classList.remove('show');
-            }
-        });
-
-        templateCheckboxes.forEach(function(checkbox) {
-            checkbox.addEventListener('change', updateTemplateLabel);
-        });
-
-        updateTemplateLabel();
-    }
-
-    var statusCanvas = document.getElementById('inspectionStatusChart');
-    if (statusCanvas) {
-        var plantLabels = {{ plant_chart_labels|safe }};
-        var plantChartStage = document.getElementById('plantChartStage');
-        var chartModeButtons = Array.from(document.querySelectorAll('[data-chart-mode]'));
-        var chartColors = {
-            closed: '#1cc88a',
-            pending: '#f6c23e',
-            progress: '#36b9cc',
-            cancelled: '#858796',
-            overdue: '#e74a3b',
-            late: '#6f42c1'
-        };
-        var statusChart;
-
-        function resizePlantChart(mode) {
-            if (!plantChartStage) {
-                return;
-            }
-            var rowHeight = mode === 'grouped' ? 86 : 58;
-            plantChartStage.style.width = '100%';
-            plantChartStage.style.height = Math.max(460, plantLabels.length * rowHeight + 120) + 'px';
-        }
-
-        function setChartMode(mode) {
-            var isStacked = mode === 'stacked';
-            statusChart.options.scales.xAxes[0].stacked = isStacked;
-            statusChart.options.scales.yAxes[0].stacked = isStacked;
-            statusChart.data.datasets.forEach(function(dataset) {
-                dataset.barPercentage = isStacked ? 0.72 : 0.95;
-                dataset.categoryPercentage = isStacked ? 0.58 : 0.82;
-            });
-            chartModeButtons.forEach(function(button) {
-                button.classList.toggle('active', button.dataset.chartMode === mode);
-            });
-            resizePlantChart(mode);
-            statusChart.update();
-        }
-
-        resizePlantChart('stacked');
-        statusChart = new Chart(statusCanvas.getContext('2d'), {
-            type: 'horizontalBar',
-            data: {
-                labels: plantLabels,
-                datasets: [
-                    {
-                        label: 'Closed',
-                        data: {{ plant_closed_data|safe }},
-                        backgroundColor: chartColors.closed,
-                        borderColor: chartColors.closed,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    },
-                    {
-                        label: 'Pending',
-                        data: {{ plant_pending_data|safe }},
-                        backgroundColor: chartColors.pending,
-                        borderColor: chartColors.pending,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    },
-                    {
-                        label: 'In progress',
-                        data: {{ plant_in_progress_data|safe }},
-                        backgroundColor: chartColors.progress,
-                        borderColor: chartColors.progress,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    },
-                    {
-                        label: 'Cancelled',
-                        data: {{ plant_cancelled_data|safe }},
-                        backgroundColor: chartColors.cancelled,
-                        borderColor: chartColors.cancelled,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    },
-                    {
-                        label: 'Overdue',
-                        data: {{ plant_overdue_data|safe }},
-                        backgroundColor: chartColors.overdue,
-                        borderColor: chartColors.overdue,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    },
-                    {
-                        label: 'Close late',
-                        data: {{ plant_late_close_data|safe }},
-                        backgroundColor: chartColors.late,
-                        borderColor: chartColors.late,
-                        borderWidth: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.58
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'start',
-                    labels: {
-                        fontColor: '#4b5563',
-                        fontSize: 14,
-                        boxWidth: 14,
-                        padding: 22
-                    }
-                },
-                tooltips: {
-                    mode: 'nearest',
-                    intersect: true,
-                    backgroundColor: '#1f2937',
-                    titleFontColor: '#fff',
-                    bodyFontColor: '#f5f5f5',
-                    borderColor: '#e5e7eb',
-                    borderWidth: 1
-                },
-                scales: {
-                    xAxes: [{
-                        stacked: true,
-                        gridLines: {
-                            color: 'rgba(148, 163, 184, 0.22)',
-                            zeroLineColor: 'rgba(75, 85, 99, 0.28)'
-                        },
-                        ticks: {
-                            beginAtZero: true,
-                            precision: 0,
-                            fontColor: '#6b7280',
-                            fontStyle: 'bold'
-                        }
-                    }],
-                    yAxes: [{
-                        stacked: true,
-                        gridLines: {
-                            display: false
-                        },
-                        ticks: {
-                            fontColor: '#4b5563',
-                            fontStyle: 'bold',
-                            fontSize: 13
-                        }
-                    }]
-                }
-            }
-        });
-
-        chartModeButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                setChartMode(button.dataset.chartMode);
-            });
-        });
-    }
-
-    var nonComplianceCanvas = document.getElementById('nonComplianceChart');
-    if (!nonComplianceCanvas) {
-        return;
-    }
-
-    new Chart(nonComplianceCanvas.getContext('2d'), {
-        type: 'horizontalBar',
-        data: {
-            labels: {{ non_compliant_labels|safe }},
-            datasets: [{
-                label: 'No. of Non-Compliances',
-                data: {{ non_compliant_data|safe }},
-                backgroundColor: 'rgba(231, 74, 59, 0.7)',
-                borderColor: 'rgba(231, 74, 59, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            legend: { display: false },
-            scales: {
-                xAxes: [{
-                    ticks: { beginAtZero: true, stepSize: 1 }
-                }],
-                yAxes: [{
-                    ticks: {
-                        // Callback to truncate long labels
-                        callback: function(value) {
-                            if (value.length > 40) {
-                                return value.substring(0, 40) + '...';
-                            }
-                            return value;
-                        }
-                    }
-                }]
-            },
-            tooltips: {
-                // Custom tooltip to show full label
-                callbacks: {
-                    title: function(tooltipItem, data) {
-                        return data.labels[tooltipItem[0].index];
-                    }
-                }
-            }
-        }
+  function updateTemplateLabel() {
+    if (!templateToggle || !templateCheckboxes.length) return;
+    var selected = templateCheckboxes.filter(function(checkbox) {
+      return checkbox.checked;
     });
+    if (selected.length === 0 || selected.length === templateCheckboxes.length) {
+      templateLabel.textContent = 'All Templates';
+    } else if (selected.length === 1) {
+      templateLabel.textContent = selected[0].parentElement.querySelector('span').textContent;
+    } else {
+      templateLabel.textContent = selected.length + ' templates selected';
+    }
+  }
+
+  if (templateToggle && templateMenu) {
+    templateToggle.addEventListener('click', function() {
+      templateMenu.classList.toggle('show');
+      templateToggle.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(event) {
+      if (!templateMenu.contains(event.target) && !templateToggle.contains(event.target)) {
+        templateMenu.classList.remove('show');
+        templateToggle.classList.remove('active');
+      }
+    });
+
+    templateCheckboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', updateTemplateLabel);
+    });
+
+    updateTemplateLabel();
+  }
+
+  // Chart
+  var statusCanvas = document.getElementById('inspectionStatusChart');
+  if (statusCanvas) {
+    var plantLabels = {{ plant_chart_labels|safe }};
+    var plantChartStage = document.getElementById('plantChartStage');
+    var chartModeButtons = Array.from(document.querySelectorAll('[data-chart-mode]'));
+    var chartColors = {
+      closed: '#22c55e',
+      pending: '#d97706',
+      progress: '#0d9488',
+      cancelled: '#94a3b8',
+      overdue: '#dc2626',
+      late: '#8b5cf6'
+    };
+    var statusChart;
+
+    function resizePlantChart(mode) {
+      if (!plantChartStage) return;
+      var rowHeight = mode === 'grouped' ? 86 : 58;
+      plantChartStage.style.width = '100%';
+      plantChartStage.style.height = Math.max(400, plantLabels.length * rowHeight + 100) + 'px';
+    }
+
+    function setChartMode(mode) {
+      var isStacked = mode === 'stacked';
+      statusChart.options.scales.xAxes[0].stacked = isStacked;
+      statusChart.options.scales.yAxes[0].stacked = isStacked;
+      statusChart.data.datasets.forEach(function(dataset) {
+        dataset.barPercentage = isStacked ? 0.72 : 0.95;
+        dataset.categoryPercentage = isStacked ? 0.58 : 0.82;
+      });
+      chartModeButtons.forEach(function(button) {
+        button.classList.toggle('active', button.dataset.chartMode === mode);
+      });
+      resizePlantChart(mode);
+      statusChart.update();
+    }
+
+    resizePlantChart('stacked');
+    statusChart = new Chart(statusCanvas.getContext('2d'), {
+      type: 'horizontalBar',
+      data: {
+        labels: plantLabels,
+        datasets: [
+          { label: 'Closed', data: {{ plant_closed_data|safe }}, backgroundColor: chartColors.closed, borderColor: chartColors.closed, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 },
+          { label: 'Pending', data: {{ plant_pending_data|safe }}, backgroundColor: chartColors.pending, borderColor: chartColors.pending, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 },
+          { label: 'In progress', data: {{ plant_in_progress_data|safe }}, backgroundColor: chartColors.progress, borderColor: chartColors.progress, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 },
+          { label: 'Cancelled', data: {{ plant_cancelled_data|safe }}, backgroundColor: chartColors.cancelled, borderColor: chartColors.cancelled, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 },
+          { label: 'Overdue', data: {{ plant_overdue_data|safe }}, backgroundColor: chartColors.overdue, borderColor: chartColors.overdue, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 },
+          { label: 'Close late', data: {{ plant_late_close_data|safe }}, backgroundColor: chartColors.late, borderColor: chartColors.late, borderWidth: 0, barPercentage: 0.72, categoryPercentage: 0.58 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'start',
+          labels: { fontColor: '#4b5563', fontSize: 13, boxWidth: 14, padding: 18, fontFamily: 'Inter' }
+        },
+        tooltips: {
+          mode: 'nearest',
+          intersect: true,
+          backgroundColor: '#1f2937',
+          titleFontColor: '#fff',
+          bodyFontColor: '#f5f5f5',
+          borderColor: '#e5e7eb',
+          borderWidth: 1
+        },
+        scales: {
+          xAxes: [{
+            stacked: true,
+            gridLines: { color: 'rgba(148, 163, 184, 0.22)', zeroLineColor: 'rgba(75, 85, 99, 0.28)' },
+            ticks: { beginAtZero: true, precision: 0, fontColor: '#6b7280', fontStyle: 'bold', fontFamily: 'Inter' }
+          }],
+          yAxes: [{
+            stacked: true,
+            gridLines: { display: false },
+            ticks: { fontColor: '#4b5563', fontStyle: 'bold', fontSize: 12, fontFamily: 'Inter' }
+          }]
+        }
+      }
+    });
+
+    chartModeButtons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        setChartMode(button.dataset.chartMode);
+      });
+    });
+  }
 });
 </script>
 

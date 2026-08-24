@@ -1,196 +1,618 @@
 <!-- templates/inspections/schedule_form.html -->
 
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:schedule_list' %}">Schedules</a></li>
-<li class="breadcrumb-item active">{{ action }}</li>
+{% block extra_css %}
+<style>
+  /* ===== INSPECTION SCHEDULE FORM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 16px 24px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 24px 28px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTION HEADERS                                        */
+  /* ========================================================== */
+  .form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    margin: 24px 0 18px 0;
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .form-section-header i {
+    color: var(--primary-teal);
+    font-size: 16px;
+  }
+
+  .form-section-header h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .form-section-divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 24px 0;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 20px;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control,
+  .form-group-custom .form-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus,
+  .form-group-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .form-group-custom .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-group-custom textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  .text-danger {
+    color: var(--secondary-red) !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-teal:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-teal.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-teal.primary:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-teal.secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-teal.secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 20px 22px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 16px 18px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 16px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 14px 18px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .form-group-custom textarea.form-control {
+      min-height: 60px;
+    }
+
+    .form-section-header {
+      padding: 8px 12px;
+    }
+
+    .form-section-header h5 {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 12px 14px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .btn-teal {
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-10 mx-auto">
-        <div class="ehs-card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-calendar-plus"></i> {{ title }}
-                </h3>
-            </div>
-            <div class="card-body">
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    
-                    <!-- Template Selection -->
-                    <div class="form-group">
-                        <label for="{{ form.template.id_for_label }}">
-                            Inspection Template <span class="text-danger">*</span>
-                        </label>
-                        {{ form.template }}
-                        {% if form.template.errors %}
-                        <div class="text-danger small">{{ form.template.errors }}</div>
-                        {% endif %}
-                        <small class="form-text text-muted">
-                            Select the inspection template to be used
-                        </small>
-                    </div>
-                    
-                    <!-- HOD Assignment -->
-                    <div class="form-group">
-                        <label for="{{ form.assigned_to.id_for_label }}">
-                            Assign to (HOD) <span class="text-danger">*</span>
-                        </label>
-                        {{ form.assigned_to }}
-                        {% if form.assigned_to.errors %}
-                        <div class="text-danger small">{{ form.assigned_to.errors }}</div>
-                        {% endif %}
-                        <small class="form-text text-muted">
-                            Select the HOD who will conduct this inspection
-                        </small>
-                    </div>
-                    
-                    <hr>
-                    
-                    <!-- Location Details -->
-                    <h5 class="mb-3"><i class="fas fa-map-marker-alt"></i> Location Details</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.plant.id_for_label }}">
-                                    Plant <span class="text-danger">*</span>
-                                </label>
-                                {{ form.plant }}
-                                {% if form.plant.errors %}
-                                <div class="text-danger small">{{ form.plant.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.zone.id_for_label }}">Zone</label>
-                                {{ form.zone }}
-                                {% if form.zone.errors %}
-                                <div class="text-danger small">{{ form.zone.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.location.id_for_label }}">Location</label>
-                                {{ form.location }}
-                                {% if form.location.errors %}
-                                <div class="text-danger small">{{ form.location.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.sublocation.id_for_label }}">Sub-Location</label>
-                                {{ form.sublocation }}
-                                {% if form.sublocation.errors %}
-                                <div class="text-danger small">{{ form.sublocation.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.department.id_for_label }}">Department</label>
-                        {{ form.department }}
-                        {% if form.department.errors %}
-                        <div class="text-danger small">{{ form.department.errors }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <hr>
-                    
-                    <!-- Schedule Timing -->
-                    <h5 class="mb-3"><i class="fas fa-clock"></i> Schedule Timing</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.scheduled_date.id_for_label }}">
-                                    Scheduled Date <span class="text-danger">*</span>
-                                </label>
-                                {{ form.scheduled_date }}
-                                {% if form.scheduled_date.errors %}
-                                <div class="text-danger small">{{ form.scheduled_date.errors }}</div>
-                                {% endif %}
-                                <small class="form-text text-muted">When should the inspection start?</small>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.due_date.id_for_label }}">
-                                    Due Date <span class="text-danger">*</span>
-                                </label>
-                                {{ form.due_date }}
-                                {% if form.due_date.errors %}
-                                <div class="text-danger small">{{ form.due_date.errors }}</div>
-                                {% endif %}
-                                <small class="form-text text-muted">Deadline for completion</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Assignment Notes -->
-                    <div class="form-group">
-                        <label for="{{ form.assignment_notes.id_for_label }}">
-                            Assignment Notes
-                        </label>
-                        {{ form.assignment_notes }}
-                        {% if form.assignment_notes.errors %}
-                        <div class="text-danger small">{{ form.assignment_notes.errors }}</div>
-                        {% endif %}
-                        <small class="form-text text-muted">
-                            Any special instructions for the inspector
-                        </small>
-                    </div>
-                    
-                    <hr>
-                    
-                    <!-- Action Buttons -->
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'inspections:schedule_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-calendar-check"></i> {{ action }} Schedule
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-calendar-plus"></i>
+      </div>
+      <div>
+        <h1>{{ title }}</h1>
+        <p class="subtitle">
+          {% if action == 'Create' %}
+            Schedule a new inspection
+          {% else %}
+            Update existing inspection schedule
+          {% endif %}
+        </p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-{% if action == 'Create' %}plus-circle{% else %}edit{% endif %}"></i>
+        {{ title }}
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Template Selection -->
+        <div class="form-group-custom">
+          <label for="{{ form.template.id_for_label }}">
+            Inspection Template <span class="required-star">*</span>
+          </label>
+          {{ form.template }}
+          {% if form.template.errors %}
+            <span class="text-danger">{{ form.template.errors }}</span>
+          {% endif %}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Select the inspection template to be used</span>
+        </div>
+
+        <!-- HOD Assignment -->
+        <div class="form-group-custom">
+          <label for="{{ form.assigned_to.id_for_label }}">
+            Assign to (HOD) <span class="required-star">*</span>
+          </label>
+          {{ form.assigned_to }}
+          {% if form.assigned_to.errors %}
+            <span class="text-danger">{{ form.assigned_to.errors }}</span>
+          {% endif %}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Select the HOD who will conduct this inspection</span>
+        </div>
+
+        <hr class="form-section-divider">
+
+        <!-- Location Details -->
+        <div class="form-section-header">
+          <i class="fas fa-map-marker-alt"></i>
+          <h5>Location Details</h5>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.plant.id_for_label }}">
+                Plant <span class="required-star">*</span>
+              </label>
+              {{ form.plant }}
+              {% if form.plant.errors %}
+                <span class="text-danger">{{ form.plant.errors }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.zone.id_for_label }}">Zone</label>
+              {{ form.zone }}
+              {% if form.zone.errors %}
+                <span class="text-danger">{{ form.zone.errors }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.location.id_for_label }}">Location</label>
+              {{ form.location }}
+              {% if form.location.errors %}
+                <span class="text-danger">{{ form.location.errors }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.sublocation.id_for_label }}">Sub-Location</label>
+              {{ form.sublocation }}
+              {% if form.sublocation.errors %}
+                <span class="text-danger">{{ form.sublocation.errors }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group-custom">
+          <label for="{{ form.department.id_for_label }}">Department</label>
+          {{ form.department }}
+          {% if form.department.errors %}
+            <span class="text-danger">{{ form.department.errors }}</span>
+          {% endif %}
+        </div>
+
+        <hr class="form-section-divider">
+
+        <!-- Schedule Timing -->
+        <div class="form-section-header">
+          <i class="fas fa-clock"></i>
+          <h5>Schedule Timing</h5>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.scheduled_date.id_for_label }}">
+                Scheduled Date <span class="required-star">*</span>
+              </label>
+              {{ form.scheduled_date }}
+              {% if form.scheduled_date.errors %}
+                <span class="text-danger">{{ form.scheduled_date.errors }}</span>
+              {% endif %}
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> When should the inspection start?</span>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group-custom">
+              <label for="{{ form.due_date.id_for_label }}">
+                Due Date <span class="required-star">*</span>
+              </label>
+              {{ form.due_date }}
+              {% if form.due_date.errors %}
+                <span class="text-danger">{{ form.due_date.errors }}</span>
+              {% endif %}
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> Deadline for completion</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assignment Notes -->
+        <div class="form-group-custom">
+          <label for="{{ form.assignment_notes.id_for_label }}">Assignment Notes</label>
+          {{ form.assignment_notes }}
+          {% if form.assignment_notes.errors %}
+            <span class="text-danger">{{ form.assignment_notes.errors }}</span>
+          {% endif %}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Any special instructions for the inspector</span>
+        </div>
+
+        <hr class="form-section-divider">
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 12px;">
+          <a href="{% url 'inspections:schedule_list' %}" class="btn-teal secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+          <button type="submit" class="btn-teal primary">
+            <i class="fas fa-calendar-check"></i> {{ action }} Schedule
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
     // Use AJAX endpoints from accidents app for cascading dropdowns
-    
+
     // Plant change - load zones
     $('#id_plant').change(function() {
         var plantId = $(this).val();
-        
+
         // Clear dependent dropdowns
         $('#id_zone').html('<option value="">---------</option>');
         $('#id_location').html('<option value="">---------</option>');
         $('#id_sublocation').html('<option value="">---------</option>');
-        
+
         if (plantId) {
             // Use accidents app AJAX endpoint
             $.ajax({
@@ -211,15 +633,15 @@ $(document).ready(function() {
             });
         }
     });
-    
+
     // Zone change - load locations
     $('#id_zone').change(function() {
         var zoneId = $(this).val();
-        
+
         // Clear dependent dropdowns
         $('#id_location').html('<option value="">---------</option>');
         $('#id_sublocation').html('<option value="">---------</option>');
-        
+
         if (zoneId) {
             // Use accidents app AJAX endpoint
             $.ajax({
@@ -240,14 +662,14 @@ $(document).ready(function() {
             });
         }
     });
-    
+
     // Location change - load sublocations
     $('#id_location').change(function() {
         var locationId = $(this).val();
-        
+
         // Clear dependent dropdown
         $('#id_sublocation').html('<option value="">---------</option>');
-        
+
         if (locationId) {
             // Use accidents app AJAX endpoint
             $.ajax({
@@ -268,24 +690,24 @@ $(document).ready(function() {
             });
         }
     });
-    
+
     // Set min date for scheduled_date to today
     var today = new Date().toISOString().split('T')[0];
     $('#id_scheduled_date').attr('min', today);
-    
+
     // Update due_date min when scheduled_date changes
     $('#id_scheduled_date').change(function() {
         var scheduledDate = $(this).val();
         $('#id_due_date').attr('min', scheduledDate);
     });
-    
+
     // If editing existing schedule, trigger plant change to load zones
     {% if schedule %}
     var initialPlantId = $('#id_plant').val();
     var initialZoneId = {{ schedule.zone.id|default:"null" }};
     var initialLocationId = {{ schedule.location.id|default:"null" }};
     var initialSublocationId = {{ schedule.sublocation.id|default:"null" }};
-    
+
     if (initialPlantId) {
         // Load zones for selected plant
         $.ajax({
@@ -299,7 +721,7 @@ $(document).ready(function() {
                     }
                     $('#id_zone').append(option);
                 });
-                
+
                 // If zone was selected, load locations
                 if (initialZoneId) {
                     $.ajax({
@@ -313,7 +735,7 @@ $(document).ready(function() {
                                 }
                                 $('#id_location').append(option);
                             });
-                            
+
                             // If location was selected, load sublocations
                             if (initialLocationId) {
                                 $.ajax({

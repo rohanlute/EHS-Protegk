@@ -1,435 +1,1077 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:schedule_list' %}">Schedules</a></li>
-<li class="breadcrumb-item active">{{ action }}</li>
-{% endblock %}
+{% block title %}{{ title }} | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-  .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
-    max-height: 350px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
-    padding: 15px;
-    border-radius: 5px;
-    background: #f8f9fa;
+  /* ===== INSPECTION SCHEDULE FORM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
   }
 
-  .checkbox-item {
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
-    padding: 8px 10px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 16px 24px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 24px 28px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTION HEADERS                                        */
+  /* ========================================================== */
+  .form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    margin: 24px 0 18px 0;
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .form-section-header i {
+    color: var(--primary-teal);
+    font-size: 16px;
+  }
+
+  .form-section-header h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .form-section-divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 24px 0;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GRID                                               */
+  /* ========================================================== */
+  .checkbox-grid-custom {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    max-height: 350px;
+    overflow-y: auto;
+    border: 2px solid var(--border-color);
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    background: #fafbfc;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 3px;
+  }
+
+  .checkbox-item-custom {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
     background: white;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.2s ease;
   }
 
-  .checkbox-item:hover {
-    background: #e7f3ff;
-    border-color: #b8d4f0;
+  .checkbox-item-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
   }
 
-  .checkbox-item input[type="checkbox"] {
+  .checkbox-item-custom input[type="checkbox"] {
     margin-right: 10px;
     width: 16px;
     height: 16px;
+    accent-color: var(--primary-teal);
     cursor: pointer;
+    flex-shrink: 0;
   }
 
-  .checkbox-item label {
+  .checkbox-item-custom label {
     margin: 0;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 14px;
+    color: var(--text-secondary);
   }
 
-  .select-all-bar {
+  .checkbox-item-custom label strong {
+    color: var(--text-primary);
+  }
+
+  .checkbox-item-custom label .text-muted {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* SELECT ALL BAR                                              */
+  /* ========================================================== */
+  .select-all-bar-custom {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #e9ecef;
-    border-radius: 5px;
+    padding: 8px 14px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
   }
 
-  .group-header {
+  .btn-sm-outline-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-sm-outline-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm-outline-custom.primary {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm-outline-custom.primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* GROUP HEADER                                                */
+  /* ========================================================== */
+  .group-header-custom {
     grid-column: 1 / -1;
-    background: #d1ecf1;
-    padding: 7px 12px;
+    background: var(--primary-teal-light);
+    padding: 6px 12px;
     font-weight: 600;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: #0c5460;
-    border-left: 3px solid #17a2b8;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--primary-teal);
+    border-left: 3px solid var(--primary-teal);
   }
 
-  .section-label {
+  /* ========================================================== */
+  /* SECTION LABEL                                               */
+  /* ========================================================== */
+  .section-label-custom {
     font-weight: 600;
     margin-bottom: 5px;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
   }
 
-  .badge-count {
-    background: #007bff;
+  .badge-count-custom {
+    background: var(--primary-teal);
     color: white;
     border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    padding: 2px 10px;
+    font-size: 11px;
     font-weight: 600;
   }
 
-  .loading-text {
-    color: #6c757d;
+  .loading-text-custom {
+    color: var(--text-muted);
     font-style: italic;
     padding: 10px;
     grid-column: 1 / -1;
+    text-align: center;
   }
 
-  .auto-schedule-section {
-    background: #f0f7ff;
-    border: 1px solid #b8d4f0;
-    border-radius: 8px;
-    padding: 20px;
+  .loading-text-custom i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  /* ========================================================== */
+  /* AUTO SCHEDULE SECTION                                       */
+  /* ========================================================== */
+  .auto-schedule-section-custom {
+    background: var(--primary-teal-light);
+    border: 2px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
     margin-top: 10px;
   }
 
-  .offset-section {
+  .offset-section-custom {
     display: none;
     margin-top: 15px;
   }
 
-  .note_text {
-    color: #a91422;
+  .note-text-custom {
+    color: var(--secondary-red);
+    font-size: 12px;
+    font-weight: 500;
   }
+
+  /* ========================================================== */
+  /* ROLE CHECKBOXES                                             */
+  /* ========================================================== */
   #roleCheckboxesContainer {
     display: flex;
-    flex-wrap: wrap; /* remove if you want strictly one line */
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
     align-items: center;
-}
+    padding: 8px 0;
+  }
 
-#roleCheckboxesContainer .form-check {
+  #roleCheckboxesContainer .form-check {
     margin-bottom: 0;
-}
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #roleCheckboxesContainer .form-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+  }
+
+  #roleCheckboxesContainer .form-check label {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* ROLE USER BADGE                                             */
+  /* ========================================================== */
+  .role-user-badge-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    margin: 2px 4px 2px 0;
+  }
+
+  .role-user-badge-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .role-user-badge-custom.active {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+  }
+
+  .role-user-badge-custom.active:hover {
+    background: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group-custom {
+    margin-bottom: 20px;
+  }
+
+  .form-group-custom label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .form-group-custom label .required-star {
+    color: var(--secondary-red);
+    margin-left: 2px;
+  }
+
+  .form-group-custom .form-control,
+  .form-group-custom .form-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .form-group-custom .form-control:focus,
+  .form-group-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .form-group-custom .form-control[readonly] {
+    background: #f1f5f9;
+    cursor: not-allowed;
+  }
+
+  .form-group-custom textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  .text-danger {
+    color: var(--secondary-red) !important;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* ALERT                                                       */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-info {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .alert-custom.alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-teal:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-teal.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-teal.primary:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-teal.secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-teal.secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 20px 22px;
+    }
+    .checkbox-grid-custom {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 16px 18px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 16px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 14px 18px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .checkbox-grid-custom {
+      grid-template-columns: 1fr;
+      max-height: 250px;
+      padding: 10px;
+    }
+
+    .select-all-bar-custom {
+      flex-wrap: wrap;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .form-section-header {
+      padding: 8px 12px;
+    }
+
+    .form-section-header h5 {
+      font-size: 14px;
+    }
+
+    .auto-schedule-section-custom {
+      padding: 14px 16px;
+    }
+
+    #roleCheckboxesContainer {
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 12px 14px;
+    }
+
+    .form-group-custom label {
+      font-size: 12px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .btn-teal {
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+
+    .checkbox-item-custom {
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .checkbox-item-custom label {
+      font-size: 13px;
+    }
+
+    .role-user-badge-custom {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .badge-count-custom {
+      font-size: 10px;
+      padding: 1px 8px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-11 mx-auto">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-calendar-plus"></i> {{ title }}
-        </h3>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-calendar-plus"></i>
       </div>
-      <div class="card-body">
-        <form method="POST" id="scheduleForm">
-          {% csrf_token %}
+      <div>
+        <h1>{{ title }}</h1>
+        <p class="subtitle">
+          {% if action == 'Create' %}
+            Schedule a new inspection
+          {% else %}
+            Update existing inspection schedule
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
 
-          <!-- Template Selection -->
-          <div class="form-group">
-            <label for="{{ form.template.id_for_label }}">
-              Inspection Template <span class="text-danger">*</span>
-            </label>
-            {{ form.template }}
-            {% if form.template.errors %}
-              <div class="text-danger small">{{ form.template.errors }}</div>
-            {% endif %}
-            <small class="form-text text-muted">Select the inspection template to be used</small>
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-{% if action == 'Create' %}plus-circle{% else %}edit{% endif %}"></i>
+        {{ title }}
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+      <form method="POST" id="scheduleForm">
+        {% csrf_token %}
+
+        <!-- Template Selection -->
+        <div class="form-group-custom">
+          <label for="{{ form.template.id_for_label }}">
+            Inspection Template <span class="required-star">*</span>
+          </label>
+          {{ form.template }}
+          {% if form.template.errors %}
+            <span class="text-danger">{{ form.template.errors }}</span>
+          {% endif %}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Select the inspection template to be used</span>
+        </div>
+
+        <hr class="form-section-divider">
+
+        <!-- Location Assignment -->
+        <div class="form-section-header">
+          <i class="fas fa-industry"></i>
+          <h5>Location Assignment</h5>
+        </div>
+
+        <!-- Plants -->
+        <div class="form-group-custom">
+          <div class="section-label-custom">
+            <span>Plants <span class="required-star">*</span></span>
+            <span class="badge-count-custom" id="plantCount">0</span>
+          </div>
+          <span class="form-helper-text" style="margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Select one or more plants</span>
+
+          <div class="select-all-bar-custom">
+            <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
+              <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('plant-checkbox', updatePlantCount)">
+              <i class="fas fa-square"></i> Deselect All
+            </button>
           </div>
 
-          <hr>
+          <div class="checkbox-grid-custom" id="plantsGrid">
+            <div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading plants...</div>
+          </div>
+        </div>
 
-          <!-- PLANTS -->
-          <h5 class="mb-3"><i class="fas fa-industry"></i> Location Assignment</h5>
+        <!-- Zones -->
+        <div class="form-group-custom">
+          <div class="section-label-custom">
+            <span>Zones</span>
+            <span class="badge-count-custom" id="zoneCount">0</span>
+          </div>
+          <span class="form-helper-text" style="margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Select plants first, then select zones</span>
 
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Plants <span class="text-danger">*</span></span>
-              <span class="badge-count" id="plantCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
-
-            <div class="select-all-bar">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-
-            <div class="checkbox-grid" id="plantsGrid">
-              <div class="loading-text">Loading plants...</div>
-            </div>
+          <div class="select-all-bar-custom" id="zoneSelectBar" style="display:none;">
+            <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
+              <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('zone-checkbox', updateZoneCount)">
+              <i class="fas fa-square"></i> Deselect All
+            </button>
           </div>
 
-          <!-- ZONES -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Zones</span>
-              <span class="badge-count" id="zoneCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
+          <div class="checkbox-grid-custom" id="zonesGrid">
+            <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select plants first</div>
+          </div>
+        </div>
 
-            <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('zone-checkbox', updateZoneCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
+        <!-- Locations -->
+        <div class="form-group-custom">
+          <div class="section-label-custom">
+            <span>Locations</span>
+            <span class="badge-count-custom" id="locationCount">0</span>
+          </div>
+          <span class="form-helper-text" style="margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Select zones first, then select locations</span>
 
-            <div class="checkbox-grid" id="zonesGrid">
-              <div class="loading-text">Please select plants first</div>
-            </div>
+          <div class="select-all-bar-custom" id="locationSelectBar" style="display:none;">
+            <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('location-checkbox', updateLocationCount)">
+              <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('location-checkbox', updateLocationCount)">
+              <i class="fas fa-square"></i> Deselect All
+            </button>
           </div>
 
-          <!-- LOCATIONS -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Locations</span>
-              <span class="badge-count" id="locationCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
+          <div class="checkbox-grid-custom" id="locationsGrid">
+            <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select zones first</div>
+          </div>
+        </div>
 
-            <div class="select-all-bar" id="locationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('location-checkbox', updateLocationCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('location-checkbox', updateLocationCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
+        <!-- Sub-Locations -->
+        <div class="form-group-custom">
+          <div class="section-label-custom">
+            <span>Sub-Locations</span>
+            <span class="badge-count-custom" id="sublocationCount">0</span>
+          </div>
+          <span class="form-helper-text" style="margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Select locations first, then select sub-locations</span>
 
-            <div class="checkbox-grid" id="locationsGrid">
-              <div class="loading-text">Please select zones first</div>
-            </div>
+          <div class="select-all-bar-custom" id="sublocationSelectBar" style="display:none;">
+            <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
+              <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
+              <i class="fas fa-square"></i> Deselect All
+            </button>
           </div>
 
-          <!-- SUBLOCATIONS -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Sub-Locations</span>
-              <span class="badge-count" id="sublocationCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
-
-            <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-
-            <div class="checkbox-grid" id="sublocationsGrid">
-              <div class="loading-text">Please select locations first</div>
-            </div>
+          <div class="checkbox-grid-custom" id="sublocationsGrid">
+            <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select locations first</div>
           </div>
+        </div>
 
-          <hr>
+        <hr class="form-section-divider">
 
-          <!-- ASSIGNED USERS -->
-          <h5 class="mb-3"><i class="fas fa-users"></i> Assign To</h5>
+        <!-- Assign To -->
+        <div class="form-section-header">
+          <i class="fas fa-users"></i>
+          <h5>Assign To</h5>
+        </div>
 
-          <div class="mb-4">
-            <div class="section-label">
-              <span>HOD / Safety Manager <span class="text-danger">*</span></span>
-              <span class="badge-count" id="userCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">
-              Select plants first — shows HODs and Safety Managers from selected plants
-            </small>
-            <div class="mb-3">
-              <label>Assign To Roles</label>
-              <div id="roleCheckboxesContainer" class="mb-2">
-                <div class="form-check">
-                  <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="ADMIN" id="role_ADMIN">
-                  <label class="form-check-label" for="role_ADMIN">Admin</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="HOD" id="role_HOD">
-                  <label class="form-check-label" for="role_HOD">Hod</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="SAFETY MANAGER" id="role_SAFETY_MANAGER">
-                  <label class="form-check-label" for="role_SAFETY_MANAGER">Safety Manager</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="PLANT HEAD" id="role_PLANT_HEAD">
-                  <label class="form-check-label" for="role_PLANT_HEAD">Plant Head</label>
-                </div>
+        <div class="form-group-custom">
+          <div class="section-label-custom">
+            <span>HOD / Safety Manager <span class="required-star">*</span></span>
+            <span class="badge-count-custom" id="userCount">0</span>
+          </div>
+          <span class="form-helper-text" style="margin-bottom: 8px;">
+            <i class="fas fa-info-circle"></i> Select plants first — shows HODs and Safety Managers from selected plants
+          </span>
+
+          <div class="mb-3">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-primary);">Assign To Roles</label>
+            <div id="roleCheckboxesContainer">
+              <div class="form-check">
+                <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="ADMIN" id="role_ADMIN">
+                <label class="form-check-label" for="role_ADMIN">Admin</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="HOD" id="role_HOD">
+                <label class="form-check-label" for="role_HOD">HOD</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="SAFETY MANAGER" id="role_SAFETY_MANAGER">
+                <label class="form-check-label" for="role_SAFETY_MANAGER">Safety Manager</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input role-checkbox" type="checkbox" name="selected_roles" value="PLANT HEAD" id="role_PLANT_HEAD">
+                <label class="form-check-label" for="role_PLANT_HEAD">Plant Head</label>
               </div>
             </div>
-            <div id="roleUsersListForm" class="mb-3" style="display:none;">
-              <div class="text-muted small">Select roles to load users.</div>
-            </div>
-
-            <div class="select-all-bar" id="userSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('user-checkbox', updateUserCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('user-checkbox', updateUserCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-
-            <div class="checkbox-grid" id="usersGrid">
-              <div class="loading-text">Please select plants first</div>
-            </div>
-            <!-- container for hidden inputs created when user badges are selected but checkbox not present -->
-            <div id="generatedHiddenUsers" style="display:none;"></div>
           </div>
 
-          <hr>
-
-          <!-- SCHEDULE TIMING -->
-          <h5 class="mb-3"><i class="fas fa-clock"></i> Schedule Timing</h5>
-
-          <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="{{ form.scheduled_date.id_for_label }}">
-                  Scheduled Date <span class="text-danger" id="scheduledDateRequired">*</span>
-                </label>
-                {{ form.scheduled_date }}
-                {% if form.scheduled_date.errors %}
-                  <div class="text-danger small">{{ form.scheduled_date.errors }}</div>
-                {% endif %}
-                <small class="form-text text-muted">When should the inspection start?</small>
-              </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="{{ form.due_date.id_for_label }}">First Inspection Due Date<span class="text-danger" id="dueDateRequired">*</span></label>
-                    {{ form.due_date }}
-                    {% if form.due_date.errors %}
-                        <div class="text-danger small">{{ form.due_date.errors }}</div>
-                    {% endif %}
-                    <small class="form-text text-muted">Due date for the first inspection only</small>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="{{ form.scheduled_end_date.id_for_label }}">Scheduled End Date<span class="text-danger" id="scheduledEndRequired">*</span></label>
-                    {{ form.scheduled_end_date }}
-                    {% if form.scheduled_end_date.errors %}
-                        <div class="text-danger small">{{ form.scheduled_end_date.errors }}</div>
-                    {% endif %}
-                    <small class="form-text text-muted">Stop auto-generating inspections after this date</small>
-                </div>
-            </div>
+          <div id="roleUsersListForm" class="mb-3" style="display:none;">
+            <div class="text-muted small">Select roles to load users.</div>
           </div>
 
-          <!-- DEPARTMENT -->
-          <div class="form-group">
-            <label for="{{ form.department.id_for_label }}">Department</label>
-            {{ form.department }}
-            {% if form.department.errors %}
-              <div class="text-danger small">{{ form.department.errors }}</div>
-            {% endif %}
+          <div class="select-all-bar-custom" id="userSelectBar" style="display:none;">
+            <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('user-checkbox', updateUserCount)">
+              <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('user-checkbox', updateUserCount)">
+              <i class="fas fa-square"></i> Deselect All
+            </button>
           </div>
 
-          <!-- ASSIGNMENT NOTES -->
-          <div class="form-group">
-            <label for="{{ form.assignment_notes.id_for_label }}">Assignment Notes</label>
-            {{ form.assignment_notes }}
-            {% if form.assignment_notes.errors %}
-              <div class="text-danger small">{{ form.assignment_notes.errors }}</div>
-            {% endif %}
-            <small class="form-text text-muted">Any special instructions for the inspector</small>
+          <div class="checkbox-grid-custom" id="usersGrid">
+            <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select plants first</div>
           </div>
 
-          <hr>
+          <div id="generatedHiddenUsers" style="display:none;"></div>
+        </div>
 
-          <!-- AUTO MONTHLY SCHEDULE -->
-          <div class="auto-schedule-section">
-            <div class="form-check mb-2">
+        <hr class="form-section-divider">
+
+        <!-- Schedule Timing -->
+        <div class="form-section-header">
+          <i class="fas fa-clock"></i>
+          <h5>Schedule Timing</h5>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group-custom">
+              <label for="{{ form.scheduled_date.id_for_label }}">
+                Scheduled Date <span class="required-star" id="scheduledDateRequired">*</span>
+              </label>
+              {{ form.scheduled_date }}
+              {% if form.scheduled_date.errors %}
+                <span class="text-danger">{{ form.scheduled_date.errors }}</span>
+              {% endif %}
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> When should the inspection start?</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group-custom">
+              <label for="{{ form.due_date.id_for_label }}">
+                First Inspection Due Date <span class="required-star" id="dueDateRequired">*</span>
+              </label>
+              {{ form.due_date }}
+              {% if form.due_date.errors %}
+                <span class="text-danger">{{ form.due_date.errors }}</span>
+              {% endif %}
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> Due date for the first inspection only</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group-custom">
+              <label for="{{ form.scheduled_end_date.id_for_label }}">
+                Scheduled End Date <span class="required-star" id="scheduledEndRequired">*</span>
+              </label>
+              {{ form.scheduled_end_date }}
+              {% if form.scheduled_end_date.errors %}
+                <span class="text-danger">{{ form.scheduled_end_date.errors }}</span>
+              {% endif %}
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> Stop auto-generating inspections after this date</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Department -->
+        <div class="form-group-custom">
+          <label for="{{ form.department.id_for_label }}">Department</label>
+          {{ form.department }}
+          {% if form.department.errors %}
+            <span class="text-danger">{{ form.department.errors }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Assignment Notes -->
+        <div class="form-group-custom">
+          <label for="{{ form.assignment_notes.id_for_label }}">Assignment Notes</label>
+          {{ form.assignment_notes }}
+          {% if form.assignment_notes.errors %}
+            <span class="text-danger">{{ form.assignment_notes.errors }}</span>
+          {% endif %}
+          <span class="form-helper-text"><i class="fas fa-info-circle"></i> Any special instructions for the inspector</span>
+        </div>
+
+        <hr class="form-section-divider">
+
+        <!-- Auto Monthly Schedule -->
+        <div class="form-section-header">
+          <i class="fas fa-sync-alt"></i>
+          <h5>Auto Schedule</h5>
+        </div>
+
+        <div class="auto-schedule-section-custom">
+          <div class="form-group-custom" style="margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
               {{ form.enable_auto_schedule }}
-              <label class="form-check-label font-weight-bold" for="{{ form.enable_auto_schedule.id_for_label }}">
-                <i class="fas fa-sync-alt mr-1 text-primary"></i>
+              <label class="font-weight-bold" for="{{ form.enable_auto_schedule.id_for_label }}" style="margin: 0; cursor: pointer; color: var(--text-primary); font-size: 14px;">
+                <i class="fas fa-sync-alt" style="color: var(--primary-teal);"></i>
                 Enable Auto Schedule
               </label>
             </div>
-            <small class="text-muted d-block mb-2">
-              When enabled, inspections are automatically created for all selected plants and users. Scheduled date and due date are not required.
-            </small>
+            <span class="form-helper-text">When enabled, inspections are automatically created for all selected plants and users. Scheduled date and due date are not required.</span>
+          </div>
 
-            <div class="offset-section" id="offsetSection">
-              <div class="col-md-4 pl-0">
+          <div class="offset-section-custom" id="offsetSection">
+            <div class="col-md-4 pl-0" style="padding-left: 0;">
+              <div class="form-group-custom" style="margin-bottom: 0;">
                 <label for="{{ form.due_date_offset_days.id_for_label }}">
                   Due Date Offset (days)
                 </label>
                 {{ form.due_date_offset_days }}
                 <div id="offsetError" class="text-danger small mt-1" style="display:none;"></div>
                 {% if form.due_date_offset_days.errors %}
-                  <div class="text-danger small">{{ form.due_date_offset_days.errors }}</div>
+                  <span class="text-danger">{{ form.due_date_offset_days.errors }}</span>
                 {% endif %}
-                <!-- <small class="form-text text-muted">
-                  Due date = 1st of month + this many days
-                </small> -->
-                <small class="form-text text-muted">
-                    Enter how many days users will have to complete the inspection after it is automatically scheduled.
-                </small>
+                <span class="form-helper-text">Enter how many days users will have to complete the inspection after it is automatically scheduled.</span>
               </div>
             </div>
+          </div>
 
-            <div id="nextSchedulePreview" class="alert alert-info mt-3" style="display:none;">
-
-                <strong><i class="fas fa-calendar-alt mr-1"></i>Next Inspection Preview</strong>
-
-                <div class="mt-2">
-                    <div>
-                        <strong>Start Date:</strong>
-                        <span id="previewStartDate">-</span>
-                    </div>
-                    <div>
-                        <strong>Due Date:</strong>
-                        <span id="previewDueDate">-</span>
-                    </div>
-                    <div class="mt-2 note_text font-weight-bold small"
-                        id="inspectionPreviewNote">
-                    </div>
-                </div>
+          <div id="nextSchedulePreview" class="alert-custom alert-info mt-3" style="display:none;">
+            <i class="fas fa-calendar-alt"></i>
+            <div class="alert-content">
+              <strong>Next Inspection Preview</strong>
+              <div class="mt-2">
+                <div><strong>Start Date:</strong> <span id="previewStartDate">-</span></div>
+                <div><strong>Due Date:</strong> <span id="previewDueDate">-</span></div>
+                <div class="mt-2 note-text-custom" id="inspectionPreviewNote"></div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <hr>
+        <hr class="form-section-divider">
 
-          <!-- ACTIONS -->
-          <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'inspections:schedule_list' %}" class="btn btn-secondary">
-              <i class="fas fa-times"></i> Cancel
-            </a>
-            <button type="submit" class="btn btn-primary" id="submitBtn">
-              <i class="fas fa-calendar-check"></i> {{ action }} Schedule
-            </button>
-          </div>
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 12px;">
+          <a href="{% url 'inspections:schedule_list' %}" class="btn-teal secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+          <button type="submit" class="btn-teal primary" id="submitBtn">
+            <i class="fas fa-calendar-check"></i> {{ action }} Schedule
+          </button>
+        </div>
 
-        </form>
-      </div>
+      </form>
     </div>
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -451,66 +1093,46 @@ document.addEventListener('DOMContentLoaded', function () {
   var dueDateField = document.getElementById('id_due_date');
   var scheduledRequired = document.getElementById('scheduledDateRequired');
   var dueDateRequired = document.getElementById('dueDateRequired');
-    var scheduledEndRequired = document.getElementById('scheduledEndRequired');
+  var scheduledEndRequired = document.getElementById('scheduledEndRequired');
 
-    function toggleAutoSchedule() {
-        var scheduledEndField =
-            document.getElementById('id_scheduled_end_date');
+  function toggleAutoSchedule() {
+    var scheduledEndField = document.getElementById('id_scheduled_end_date');
 
-        if (autoCheckbox.checked) {
-
-            offsetSection.style.display = 'block';
-
-            scheduledDateField.removeAttribute('required');
-            dueDateField.removeAttribute('required');
-
-            scheduledRequired.style.display = 'none';
-            dueDateRequired.style.display = 'none';
-
-            if (scheduledEndRequired) {
-                scheduledEndRequired.style.display = 'none';
-            }
-
-            scheduledDateField.closest('.form-group').style.opacity = '0.5';
-
-            dueDateField.closest('.form-group').style.opacity = '0.5';
-
-            if (scheduledEndField) {
-                scheduledEndField.closest('.form-group').style.opacity = '0.5';
-            }
-
-        } else {
-
-            offsetSection.style.display = 'none';
-
-            scheduledRequired.style.display = 'inline';
-
-            dueDateRequired.style.display = 'inline';
-
-            if (scheduledEndRequired) {
-                scheduledEndRequired.style.display = 'inline';
-            }
-
-            scheduledDateField.closest('.form-group').style.opacity = '1';
-
-            dueDateField.closest('.form-group').style.opacity = '1';
-
-            if (scheduledEndField) {
-                scheduledEndField.closest('.form-group').style.opacity = '1';
-            }
-        }
-
-        updateNextSchedulePreview();
+    if (autoCheckbox.checked) {
+      offsetSection.style.display = 'block';
+      scheduledDateField.removeAttribute('required');
+      dueDateField.removeAttribute('required');
+      scheduledRequired.style.display = 'none';
+      dueDateRequired.style.display = 'none';
+      if (scheduledEndRequired) {
+        scheduledEndRequired.style.display = 'none';
+      }
+      scheduledDateField.closest('.form-group-custom').style.opacity = '0.5';
+      dueDateField.closest('.form-group-custom').style.opacity = '0.5';
+      if (scheduledEndField) {
+        scheduledEndField.closest('.form-group-custom').style.opacity = '0.5';
+      }
+    } else {
+      offsetSection.style.display = 'none';
+      scheduledRequired.style.display = 'inline';
+      dueDateRequired.style.display = 'inline';
+      if (scheduledEndRequired) {
+        scheduledEndRequired.style.display = 'inline';
+      }
+      scheduledDateField.closest('.form-group-custom').style.opacity = '1';
+      dueDateField.closest('.form-group-custom').style.opacity = '1';
+      if (scheduledEndField) {
+        scheduledEndField.closest('.form-group-custom').style.opacity = '1';
+      }
     }
+    updateNextSchedulePreview();
+  }
 
-    autoCheckbox.addEventListener('change', toggleAutoSchedule);
-    document.getElementById('id_due_date_offset_days')
-        .addEventListener('input', updateNextSchedulePreview);
-    document.getElementById('id_template')
-        .addEventListener('change', updateNextSchedulePreview);
+  autoCheckbox.addEventListener('change', toggleAutoSchedule);
+  document.getElementById('id_due_date_offset_days').addEventListener('input', updateNextSchedulePreview);
+  document.getElementById('id_template').addEventListener('change', updateNextSchedulePreview);
 
-    // IMPORTANT → for edit page pre-selected checkbox
-    toggleAutoSchedule();
+  toggleAutoSchedule();
 
   // ─── Load plants on page load ───────────────────────────────
   loadPlants();
@@ -525,370 +1147,163 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
   });
 
-    function updateNextSchedulePreview() {
-
-        var offset = parseInt(
-            document.getElementById('id_due_date_offset_days').value || 7
-        );
-
-        var previewBox = document.getElementById('nextSchedulePreview');
-
-        if (!autoCheckbox.checked) {
-            previewBox.style.display = 'none';
-            return;
-        }
-
-        var templateField = document.getElementById('id_template');
-
-        if (!templateField || !templateField.value) {
-            previewBox.style.display = 'none';
-            return;
-        }
-
-        var templateId = templateField.value;
-
-        fetch(
-            '/inspections/ajax/get-template-inspection-type/?template_id='
-            + templateId
-        )
-
-        .then(response => response.json())
-
-        .then(data => {
-
-            if (!data.success) {
-                previewBox.style.display = 'none';
-                return;
-            }
-
-            var inspectionType = data.inspection_type;
-            var inspectionTypeText = inspectionType.charAt(0) + inspectionType.slice(1).toLowerCase();
-
-            var errorBox = document.getElementById('offsetError');
-
-            errorBox.style.display = 'none';
-            errorBox.innerText = '';
-
-            // REAL DATE
-            var now = new Date();
-
-            // TESTING DATE
-            //var now = new Date('2026-06-03');
-
-            var startDate = new Date(now);
-
-            var maxOffset = null;
-
-            // DAILY
-            if (inspectionType === 'DAILY') {
-
-                maxOffset = 1;
-
-                // Tomorrow
-                startDate.setDate(now.getDate() + 1);
-
-                // If Sunday → move to Monday
-                if (startDate.getDay() === 0) {
-
-                    startDate.setDate(
-                        startDate.getDate() + 1
-                    );
-                }
-            }
-
-            // WEEKLY
-            else if (inspectionType === 'WEEKLY') {
-
-                maxOffset = 5;
-
-                // Find next Monday
-                var day = now.getDay();
-
-                // Sunday=0 Monday=1
-                var daysUntilMonday = (8 - day) % 7;
-
-                // If already Monday → next Monday
-                if (daysUntilMonday === 0) {
-                    daysUntilMonday = 7;
-                }
-
-                startDate.setDate(
-                    now.getDate() + daysUntilMonday
-                );
-            }
-
-            // MONTHLY
-            // MONTHLY
-            else if (inspectionType === 'MONTHLY') {
-
-                // 1st day of next month
-                startDate = new Date(
-                    now.getFullYear(),
-                    now.getMonth() + 1,
-                    1
-                );
-
-                // Last day of next month
-                var nextMonthLastDay = new Date(
-                    startDate.getFullYear(),
-                    startDate.getMonth() + 1,
-                    0
-                );
-
-                maxOffset = nextMonthLastDay.getDate();
-            }
-
-            // QUARTERLY
-            else if (inspectionType === 'QUARTERLY') {
-
-                var month = now.getMonth() + 1; // JS month 0-11
-
-                var year = now.getFullYear();
-
-                var nextQuarterMonth;
-
-                // FY Quarters
-                // Q1 = Apr-Jun
-                // Q2 = Jul-Sep
-                // Q3 = Oct-Dec
-                // Q4 = Jan-Mar
-
-                if (month >= 4 && month <= 6) {
-
-                    // Next = Jul
-                    nextQuarterMonth = 6;
-
-                } else if (month >= 7 && month <= 9) {
-
-                    // Next = Oct
-                    nextQuarterMonth = 9;
-
-                } else if (month >= 10 && month <= 12) {
-
-                    // Next = Jan next year
-                    nextQuarterMonth = 0;
-                    year += 1;
-
-                } else {
-
-                    // Jan-Mar → Next = Apr
-                    nextQuarterMonth = 3;
-                }
-
-                startDate = new Date(
-                    year,
-                    nextQuarterMonth,
-                    1
-                );
-
-                // Quarter end date
-                var quarterEnd = new Date(
-                    year,
-                    nextQuarterMonth + 3,
-                    0
-                );
-
-                // Exact days in quarter
-                maxOffset = Math.floor(
-                    (quarterEnd - startDate) / (1000 * 60 * 60 * 24)
-                ) + 1;
-                
-            }
-
-            // ANNUAL
-            else if (inspectionType === 'ANNUAL') {
-
-                var year = now.getFullYear();
-
-                // FY start = April 1
-
-                if ((now.getMonth() + 1) >= 4) {
-
-                    // Next FY
-                    year += 1;
-                }
-
-                startDate = new Date(
-                    year,
-                    3,
-                    1
-                );
-
-                // FY end = March 31
-                var yearEnd = new Date(
-                    year + 1,
-                    3,
-                    0
-                );
-
-                maxOffset = Math.floor(
-                    (yearEnd - startDate) / (1000 * 60 * 60 * 24)
-                ) + 1;
-            }
-
-            // Validation
-            if (offset > maxOffset) {
-
-                errorBox.innerText =
-                    inspectionType +
-                    ' inspection allows maximum ' +
-                    maxOffset +
-                    ' days only.';
-
-                errorBox.style.display = 'block';
-
-                previewBox.style.display = 'none';
-
-                return;
-            }
-
-            // Due date
-            var dueDate = new Date(startDate);
-
-            dueDate.setDate(
-                dueDate.getDate() + (offset - 1)
-            );
-
-            // Format
-            var options = {
-                weekday: 'long',
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-            };
-
-            document.getElementById('previewStartDate').innerText =
-                startDate.toLocaleDateString('en-GB', options);
-
-            document.getElementById('previewDueDate').innerText =
-                dueDate.toLocaleDateString('en-GB', options);
-
-            previewBox.style.display = 'block';
-
-            var previewMessage = '';
-
-            // DAILY
-            if (inspectionType === 'DAILY') {
-
-                previewMessage =
-                    '* This Daily inspection will automatically start on '
-                    + startDate.toLocaleDateString('en-GB', options)
-                    + ' and must be completed by '
-                    + dueDate.toLocaleDateString('en-GB', options)
-                    + ' end of the day.';
-            }
-
-            // WEEKLY
-            else if (inspectionType === 'WEEKLY') {
-
-                previewMessage =
-                    '* This Weekly inspection will automatically start on '
-                    + startDate.toLocaleDateString('en-GB', options)
-                    + ' and must be completed by '
-                    + dueDate.toLocaleDateString('en-GB', options)
-                    + ' within the same week.';
-            }
-
-            // MONTHLY
-            else if (inspectionType === 'MONTHLY') {
-
-                previewMessage =
-                    '* This Monthly inspection will automatically start on '
-                    + startDate.toLocaleDateString('en-GB', options)
-                    + ' and must be completed by '
-                    + dueDate.toLocaleDateString('en-GB', options)
-                    + ' within the same month.';
-            }
-
-            // QUARTERLY
-            else if (inspectionType === 'QUARTERLY') {
-
-                previewMessage =
-                    '* This Quarterly inspection will automatically start on '
-                    + startDate.toLocaleDateString('en-GB', options)
-                    + ' and must be completed by '
-                    + dueDate.toLocaleDateString('en-GB', options)
-                    + ' within the same quarter.';
-            }
-
-            // ANNUAL
-            else if (inspectionType === 'ANNUAL') {
-
-                previewMessage =
-                    '* This Annual inspection will automatically start on '
-                    + startDate.toLocaleDateString('en-GB', options)
-                    + ' and must be completed by '
-                    + dueDate.toLocaleDateString('en-GB', options)
-                    + ' within the same year.';
-            }
-
-            document.getElementById('inspectionPreviewNote').innerText =
-                previewMessage;
-
-        })
-
-        .catch(error => {
-
-            console.log('Preview error:', error);
-
-            previewBox.style.display = 'none';
-
-        });
+  function updateNextSchedulePreview() {
+    var offset = parseInt(document.getElementById('id_due_date_offset_days').value || 7);
+    var previewBox = document.getElementById('nextSchedulePreview');
+
+    if (!autoCheckbox.checked) {
+      previewBox.style.display = 'none';
+      return;
     }
+
+    var templateField = document.getElementById('id_template');
+    if (!templateField || !templateField.value) {
+      previewBox.style.display = 'none';
+      return;
+    }
+
+    var templateId = templateField.value;
+
+    fetch('/inspections/ajax/get-template-inspection-type/?template_id=' + templateId)
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          previewBox.style.display = 'none';
+          return;
+        }
+
+        var inspectionType = data.inspection_type;
+        var inspectionTypeText = inspectionType.charAt(0) + inspectionType.slice(1).toLowerCase();
+        var errorBox = document.getElementById('offsetError');
+        errorBox.style.display = 'none';
+        errorBox.innerText = '';
+
+        var now = new Date();
+        var startDate = new Date(now);
+        var maxOffset = null;
+
+        if (inspectionType === 'DAILY') {
+          maxOffset = 1;
+          startDate.setDate(now.getDate() + 1);
+          if (startDate.getDay() === 0) {
+            startDate.setDate(startDate.getDate() + 1);
+          }
+        } else if (inspectionType === 'WEEKLY') {
+          maxOffset = 5;
+          var day = now.getDay();
+          var daysUntilMonday = (8 - day) % 7;
+          if (daysUntilMonday === 0) {
+            daysUntilMonday = 7;
+          }
+          startDate.setDate(now.getDate() + daysUntilMonday);
+        } else if (inspectionType === 'MONTHLY') {
+          startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+          var nextMonthLastDay = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+          maxOffset = nextMonthLastDay.getDate();
+        } else if (inspectionType === 'QUARTERLY') {
+          var month = now.getMonth() + 1;
+          var year = now.getFullYear();
+          var nextQuarterMonth;
+          if (month >= 4 && month <= 6) {
+            nextQuarterMonth = 6;
+          } else if (month >= 7 && month <= 9) {
+            nextQuarterMonth = 9;
+          } else if (month >= 10 && month <= 12) {
+            nextQuarterMonth = 0;
+            year += 1;
+          } else {
+            nextQuarterMonth = 3;
+          }
+          startDate = new Date(year, nextQuarterMonth, 1);
+          var quarterEnd = new Date(year, nextQuarterMonth + 3, 0);
+          maxOffset = Math.floor((quarterEnd - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        } else if (inspectionType === 'ANNUAL') {
+          var year = now.getFullYear();
+          if ((now.getMonth() + 1) >= 4) {
+            year += 1;
+          }
+          startDate = new Date(year, 3, 1);
+          var yearEnd = new Date(year + 1, 3, 0);
+          maxOffset = Math.floor((yearEnd - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        if (offset > maxOffset) {
+          errorBox.innerText = inspectionType + ' inspection allows maximum ' + maxOffset + ' days only.';
+          errorBox.style.display = 'block';
+          previewBox.style.display = 'none';
+          return;
+        }
+
+        var dueDate = new Date(startDate);
+        dueDate.setDate(dueDate.getDate() + (offset - 1));
+
+        var options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+        document.getElementById('previewStartDate').innerText = startDate.toLocaleDateString('en-GB', options);
+        document.getElementById('previewDueDate').innerText = dueDate.toLocaleDateString('en-GB', options);
+        previewBox.style.display = 'block';
+
+        var previewMessage = '';
+        if (inspectionType === 'DAILY') {
+          previewMessage = '* This Daily inspection will automatically start on ' + startDate.toLocaleDateString('en-GB', options) + ' and must be completed by ' + dueDate.toLocaleDateString('en-GB', options) + ' end of the day.';
+        } else if (inspectionType === 'WEEKLY') {
+          previewMessage = '* This Weekly inspection will automatically start on ' + startDate.toLocaleDateString('en-GB', options) + ' and must be completed by ' + dueDate.toLocaleDateString('en-GB', options) + ' within the same week.';
+        } else if (inspectionType === 'MONTHLY') {
+          previewMessage = '* This Monthly inspection will automatically start on ' + startDate.toLocaleDateString('en-GB', options) + ' and must be completed by ' + dueDate.toLocaleDateString('en-GB', options) + ' within the same month.';
+        } else if (inspectionType === 'QUARTERLY') {
+          previewMessage = '* This Quarterly inspection will automatically start on ' + startDate.toLocaleDateString('en-GB', options) + ' and must be completed by ' + dueDate.toLocaleDateString('en-GB', options) + ' within the same quarter.';
+        } else if (inspectionType === 'ANNUAL') {
+          previewMessage = '* This Annual inspection will automatically start on ' + startDate.toLocaleDateString('en-GB', options) + ' and must be completed by ' + dueDate.toLocaleDateString('en-GB', options) + ' within the same year.';
+        }
+        document.getElementById('inspectionPreviewNote').innerText = previewMessage;
+      })
+      .catch(error => {
+        console.log('Preview error:', error);
+        previewBox.style.display = 'none';
+      });
+  }
 
 });
 
 // ─── Generic helpers ──────────────────────────────────────────
 function selectAll(cls, countFn) {
-    document.querySelectorAll('.' + cls).forEach(function (cb) {
-        cb.checked = true;
-        // Trigger change event
-        cb.dispatchEvent(new Event('change'));
-    });
-    if (countFn) {
-        countFn();
-    }
+  document.querySelectorAll('.' + cls).forEach(function (cb) {
+    cb.checked = true;
+    cb.dispatchEvent(new Event('change'));
+  });
+  if (countFn) countFn();
 }
 
 function deselectAll(cls, countFn) {
-    document.querySelectorAll('.' + cls).forEach(function (cb) {
-        cb.checked = false;
-        // Trigger change event
-        cb.dispatchEvent(new Event('change'));
-    });
-    if (countFn) {
-        countFn();
-    }
+  document.querySelectorAll('.' + cls).forEach(function (cb) {
+    cb.checked = false;
+    cb.dispatchEvent(new Event('change'));
+  });
+  if (countFn) countFn();
 }
 
 function updatePlantCount() {
-  document.getElementById('plantCount').textContent =
-    document.querySelectorAll('.plant-checkbox:checked').length;
+  document.getElementById('plantCount').textContent = document.querySelectorAll('.plant-checkbox:checked').length;
 }
 
 function updateZoneCount() {
-  document.getElementById('zoneCount').textContent =
-    document.querySelectorAll('.zone-checkbox:checked').length;
+  document.getElementById('zoneCount').textContent = document.querySelectorAll('.zone-checkbox:checked').length;
 }
 
 function updateLocationCount() {
-  document.getElementById('locationCount').textContent =
-    document.querySelectorAll('.location-checkbox:checked').length;
+  document.getElementById('locationCount').textContent = document.querySelectorAll('.location-checkbox:checked').length;
 }
 
 function updateSublocationCount() {
-  document.getElementById('sublocationCount').textContent =
-    document.querySelectorAll('.sublocation-checkbox:checked').length;
+  document.getElementById('sublocationCount').textContent = document.querySelectorAll('.sublocation-checkbox:checked').length;
 }
 
 function updateUserCount() {
-  document.getElementById('userCount').textContent =
-    document.querySelectorAll('.user-checkbox:checked').length;
+  document.getElementById('userCount').textContent = document.querySelectorAll('.user-checkbox:checked').length;
 }
 
 function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
   var div = document.createElement('div');
-  div.className = 'checkbox-item';
+  div.className = 'checkbox-item-custom';
   div.innerHTML =
     '<input type="checkbox" name="' + name + '" value="' + value + '" ' +
     'id="' + id + '" class="' + cssClass + '">' +
@@ -899,41 +1314,40 @@ function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
 
 function buildGroupHeader(text, icon) {
   var div = document.createElement('div');
-  div.className = 'group-header';
-  div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + text;
+  div.className = 'group-header-custom';
+  div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i> ' + text;
   return div;
 }
 
 // ─── Load Plants ──────────────────────────────────────────────
 function loadPlants() {
   var grid = document.getElementById('plantsGrid');
-  grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading plants...</div>';
 
   fetch('/organizations/ajax/get-all-plants/')
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
       if (!data.length) {
-        grid.innerHTML = '<div class="loading-text">No plants available</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-building"></i> No plants available</div>';
         return;
       }
       data.forEach(function (plant) {
         var item = buildCheckboxItem(
-            'selected_plants',
-            plant.id,
-            'plant_' + plant.id,
-            '<strong>' + plant.name + '</strong>' +
-            (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
-            'plant-checkbox',
-            function () {
-              updatePlantCount();
-              loadZonesForPlants();
-              handleRoleOrDefaultLoadUsers();
-            }
+          'selected_plants',
+          plant.id,
+          'plant_' + plant.id,
+          '<strong>' + plant.name + '</strong>' +
+          (plant.code ? ' <span class="text-muted">(' + plant.code + ')</span>' : ''),
+          'plant-checkbox',
+          function () {
+            updatePlantCount();
+            loadZonesForPlants();
+            handleRoleOrDefaultLoadUsers();
+          }
         );
-
         if (selectedPlants.includes(plant.id)) {
-            item.querySelector('input').checked = true;
+          item.querySelector('input').checked = true;
         }
         grid.appendChild(item);
       });
@@ -942,7 +1356,7 @@ function loadPlants() {
       handleRoleOrDefaultLoadUsers();
     })
     .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading plants</div>';
     });
 }
 
@@ -952,7 +1366,6 @@ function loadZonesForPlants() {
   var grid = document.getElementById('zonesGrid');
   var bar = document.getElementById('zoneSelectBar');
 
-  // Reset downstream
   resetGrid('locationsGrid', 'Please select zones first');
   resetGrid('sublocationsGrid', 'Please select locations first');
   document.getElementById('locationSelectBar').style.display = 'none';
@@ -967,19 +1380,18 @@ function loadZonesForPlants() {
     return;
   }
 
-  grid.innerHTML = '<div class="loading-text">Loading zones...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading zones...</div>';
 
   fetch('/organizations/ajax/get-zones-by-plants/?plant_ids=' + plantIds.join(','))
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
       if (!data.length) {
-        grid.innerHTML = '<div class="loading-text">No zones in selected plants</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-map-pin"></i> No zones in selected plants</div>';
         bar.style.display = 'none';
         return;
       }
 
-      // Group by plant
       var grouped = {};
       data.forEach(function (z) {
         if (!grouped[z.plant_name]) grouped[z.plant_name] = [];
@@ -989,22 +1401,20 @@ function loadZonesForPlants() {
       Object.keys(grouped).forEach(function (plantName) {
         grid.appendChild(buildGroupHeader(plantName, 'industry'));
         grouped[plantName].forEach(function (zone) {
-            var item = buildCheckboxItem(
-                'selected_zones', zone.id, 'zone_' + zone.id,
-                '<strong>' + zone.name + '</strong>' +
-                (zone.code ? ' <small class="text-muted">(' + zone.code + ')</small>' : ''),
-                'zone-checkbox',
-                function () {
-                    updateZoneCount();
-                    loadLocationsForZones();
-                }
-            );
-
-            if (selectedZones.includes(zone.id)) {
-                item.querySelector('input').checked = true;
+          var item = buildCheckboxItem(
+            'selected_zones', zone.id, 'zone_' + zone.id,
+            '<strong>' + zone.name + '</strong>' +
+            (zone.code ? ' <span class="text-muted">(' + zone.code + ')</span>' : ''),
+            'zone-checkbox',
+            function () {
+              updateZoneCount();
+              loadLocationsForZones();
             }
-
-            grid.appendChild(item);
+          );
+          if (selectedZones.includes(zone.id)) {
+            item.querySelector('input').checked = true;
+          }
+          grid.appendChild(item);
         });
       });
 
@@ -1013,7 +1423,7 @@ function loadZonesForPlants() {
       loadLocationsForZones();
     })
     .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading zones</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading zones</div>';
     });
 }
 
@@ -1023,7 +1433,6 @@ function loadLocationsForZones() {
   var grid = document.getElementById('locationsGrid');
   var bar = document.getElementById('locationSelectBar');
 
-  // Reset downstream
   resetGrid('sublocationsGrid', 'Please select locations first');
   document.getElementById('sublocationSelectBar').style.display = 'none';
   updateSublocationCount();
@@ -1035,19 +1444,18 @@ function loadLocationsForZones() {
     return;
   }
 
-  grid.innerHTML = '<div class="loading-text">Loading locations...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading locations...</div>';
 
   fetch('/organizations/ajax/get-locations-by-zones/?zone_ids=' + zoneIds.join(','))
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
       if (!data.length) {
-        grid.innerHTML = '<div class="loading-text">No locations in selected zones</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-map-marker-alt"></i> No locations in selected zones</div>';
         bar.style.display = 'none';
         return;
       }
 
-      // Group by zone
       var grouped = {};
       data.forEach(function (l) {
         if (!grouped[l.zone_name]) grouped[l.zone_name] = [];
@@ -1057,22 +1465,20 @@ function loadLocationsForZones() {
       Object.keys(grouped).forEach(function (zoneName) {
         grid.appendChild(buildGroupHeader(zoneName, 'map-pin'));
         grouped[zoneName].forEach(function (loc) {
-            var item = buildCheckboxItem(
-                'selected_locations', loc.id, 'loc_' + loc.id,
-                '<strong>' + loc.name + '</strong>' +
-                (loc.code ? ' <small class="text-muted">(' + loc.code + ')</small>' : ''),
-                'location-checkbox',
-                function () {
-                    updateLocationCount();
-                    loadSublocationsForLocations();
-                }
-            );
-
-            if (selectedLocations.includes(loc.id)) {
-                item.querySelector('input').checked = true;
+          var item = buildCheckboxItem(
+            'selected_locations', loc.id, 'loc_' + loc.id,
+            '<strong>' + loc.name + '</strong>' +
+            (loc.code ? ' <span class="text-muted">(' + loc.code + ')</span>' : ''),
+            'location-checkbox',
+            function () {
+              updateLocationCount();
+              loadSublocationsForLocations();
             }
-
-            grid.appendChild(item);
+          );
+          if (selectedLocations.includes(loc.id)) {
+            item.querySelector('input').checked = true;
+          }
+          grid.appendChild(item);
         });
       });
 
@@ -1081,7 +1487,7 @@ function loadLocationsForZones() {
       loadSublocationsForLocations();
     })
     .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading locations</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading locations</div>';
     });
 }
 
@@ -1098,19 +1504,18 @@ function loadSublocationsForLocations() {
     return;
   }
 
-  grid.innerHTML = '<div class="loading-text">Loading sub-locations...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading sub-locations...</div>';
 
   fetch('/organizations/ajax/get-sublocations-by-locations/?location_ids=' + locationIds.join(','))
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
       if (!data.length) {
-        grid.innerHTML = '<div class="loading-text">No sub-locations in selected locations</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-flag"></i> No sub-locations in selected locations</div>';
         bar.style.display = 'none';
         return;
       }
 
-      // Group by location
       var grouped = {};
       data.forEach(function (s) {
         if (!grouped[s.location_name]) grouped[s.location_name] = [];
@@ -1120,18 +1525,16 @@ function loadSublocationsForLocations() {
       Object.keys(grouped).forEach(function (locName) {
         grid.appendChild(buildGroupHeader(locName, 'map-marker-alt'));
         grouped[locName].forEach(function (sub) {
-            var item = buildCheckboxItem(
-                'selected_sublocations', sub.id, 'sub_' + sub.id,
-                sub.name + (sub.code ? ' <small class="text-muted">(' + sub.code + ')</small>' : ''),
-                'sublocation-checkbox',
-                function () { updateSublocationCount(); }
-            );
-
-            if (selectedSublocations.includes(sub.id)) {
-                item.querySelector('input').checked = true;
-            }
-
-            grid.appendChild(item);
+          var item = buildCheckboxItem(
+            'selected_sublocations', sub.id, 'sub_' + sub.id,
+            sub.name + (sub.code ? ' <span class="text-muted">(' + sub.code + ')</span>' : ''),
+            'sublocation-checkbox',
+            function () { updateSublocationCount(); }
+          );
+          if (selectedSublocations.includes(sub.id)) {
+            item.querySelector('input').checked = true;
+          }
+          grid.appendChild(item);
         });
       });
 
@@ -1139,7 +1542,7 @@ function loadSublocationsForLocations() {
       updateSublocationCount();
     })
     .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading sub-locations</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading sub-locations</div>';
     });
 }
 
@@ -1156,19 +1559,18 @@ function loadUsersForPlants() {
     return;
   }
 
-  grid.innerHTML = '<div class="loading-text">Loading users...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading users...</div>';
 
   fetch('/inspections/ajax/get-users-by-plants/?plant_ids=' + plantIds.join(','))
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
       if (!data.users || !data.users.length) {
-        grid.innerHTML = '<div class="loading-text">No HODs or Safety Managers in selected plants</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-users"></i> No HODs or Safety Managers in selected plants</div>';
         bar.style.display = 'none';
         return;
       }
 
-      // Group by plant
       var grouped = {};
       data.users.forEach(function (u) {
         if (!grouped[u.plant_name]) grouped[u.plant_name] = [];
@@ -1178,20 +1580,18 @@ function loadUsersForPlants() {
       Object.keys(grouped).forEach(function (plantName) {
         grid.appendChild(buildGroupHeader(plantName, 'building'));
         grouped[plantName].forEach(function (user) {
-            var item = buildCheckboxItem(
-                'selected_users', user.id, 'user_' + user.id,
-                '<strong>' + user.full_name + '</strong>' +
-                ' <small class="text-muted">— ' + user.role +
-                (user.department ? ' | ' + user.department : '') + '</small>',
-                'user-checkbox',
-                function () { updateUserCount(); }
-            );
-
-            if (selectedUsers.includes(user.id)) {
-                item.querySelector('input').checked = true;
-            }
-
-            grid.appendChild(item);
+          var item = buildCheckboxItem(
+            'selected_users', user.id, 'user_' + user.id,
+            '<strong>' + user.full_name + '</strong>' +
+            ' <span class="text-muted">— ' + user.role +
+            (user.department ? ' | ' + user.department : '') + '</span>',
+            'user-checkbox',
+            function () { updateUserCount(); }
+          );
+          if (selectedUsers.includes(user.id)) {
+            item.querySelector('input').checked = true;
+          }
+          grid.appendChild(item);
         });
       });
 
@@ -1199,7 +1599,7 @@ function loadUsersForPlants() {
       updateUserCount();
     })
     .catch(function () {
-      grid.innerHTML = '<div class="loading-text text-danger">Error loading users</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading users</div>';
     });
 }
 
@@ -1213,8 +1613,7 @@ function getCheckedValues(selector) {
 }
 
 function resetGrid(gridId, message) {
-  document.getElementById(gridId).innerHTML =
-    '<div class="loading-text">' + message + '</div>';
+  document.getElementById(gridId).innerHTML = '<div class="loading-text-custom"><i class="fas fa-arrow-left"></i> ' + message + '</div>';
 }
 
 function handleRoleOrDefaultLoadUsers() {
@@ -1228,12 +1627,13 @@ function handleRoleOrDefaultLoadUsers() {
 </script>
 
 <script>
-    const selectedPlants = {{ selected_plants|default:"[]"|safe }};
-    const selectedZones = {{ selected_zones|default:"[]"|safe }};
-    const selectedLocations = {{ selected_locations|default:"[]"|safe }};
-    const selectedSublocations = {{ selected_sublocations|default:"[]"|safe }};
-    const selectedUsers = {{ selected_users|default:"[]"|safe }};
+  const selectedPlants = {{ selected_plants|default:"[]"|safe }};
+  const selectedZones = {{ selected_zones|default:"[]"|safe }};
+  const selectedLocations = {{ selected_locations|default:"[]"|safe }};
+  const selectedSublocations = {{ selected_sublocations|default:"[]"|safe }};
+  const selectedUsers = {{ selected_users|default:"[]"|safe }};
 </script>
+
 <script>
 // Role -> Users preview utilities for Schedule Form
 document.addEventListener('DOMContentLoaded', function () {
@@ -1277,7 +1677,7 @@ function loadUsersBySelectedRoles() {
   }
 
   container.innerHTML = '<div class="text-muted small">Loading users...</div>';
-  grid.innerHTML = '<div class="loading-text">Loading users...</div>';
+  grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading users...</div>';
 
   fetch('/inspections/ajax/get-users-by-roles/?roles=' + selectedRoles.join(',') + '&plant_ids=' + plantIds.join(','))
     .then(function (r) { return r.json(); })
@@ -1285,10 +1685,9 @@ function loadUsersBySelectedRoles() {
       var users = data.users || [];
       renderRoleUsersForm(users);
 
-      // populate the main users grid with returned users grouped by plant
       grid.innerHTML = '';
       if (!users.length) {
-        grid.innerHTML = '<div class="loading-text">No users for selected roles in chosen plants</div>';
+        grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-users"></i> No users for selected roles in chosen plants</div>';
         if (bar) bar.style.display = 'none';
         updateUserCount();
         return;
@@ -1307,17 +1706,14 @@ function loadUsersBySelectedRoles() {
           var item = buildCheckboxItem(
             'selected_users', user.id, 'user_' + user.id,
             '<strong>' + user.full_name + '</strong>' +
-            ' <small class="text-muted">— ' + user.role +
-            (user.department ? ' | ' + user.department : '') + '</small>',
+            ' <span class="text-muted">— ' + user.role +
+            (user.department ? ' | ' + user.department : '') + '</span>',
             'user-checkbox',
             function () { updateUserCount(); }
           );
-
-          // pre-check if present in selectedUsers
           if (selectedUsers.includes(user.id)) {
             item.querySelector('input').checked = true;
           }
-
           grid.appendChild(item);
         });
       });
@@ -1327,7 +1723,7 @@ function loadUsersBySelectedRoles() {
     })
     .catch(function () {
       container.innerHTML = '<div class="text-danger small">Error loading users</div>';
-      grid.innerHTML = '<div class="text-danger small">Error loading users</div>';
+      grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading users</div>';
       if (bar) bar.style.display = 'none';
     });
 }
@@ -1344,9 +1740,9 @@ function renderRoleUsersForm(users) {
   users.forEach(function (u) {
     var badge = document.createElement('button');
     badge.type = 'button';
-    badge.className = 'btn btn-sm btn-outline-secondary mr-1 mb-1 role-user-badge';
+    badge.className = 'role-user-badge-custom';
     badge.innerHTML = '<strong>' + escapeHtml(u.full_name) + '</strong>' +
-                      ' <small class="text-muted">— ' + escapeHtml(u.role) + '</small>';
+                      ' <span class="text-muted">— ' + escapeHtml(u.role) + '</span>';
     badge.dataset.userId = u.id;
 
     badge.addEventListener('click', function () {
@@ -1363,27 +1759,20 @@ function toggleUserSelectionFromBadge(userId, badgeEl) {
 
   if (checkbox) {
     checkbox.checked = !checkbox.checked;
-    // Visual feedback
     if (checkbox.checked) {
-      badgeEl.classList.remove('btn-outline-secondary');
-      badgeEl.classList.add('btn-primary');
+      badgeEl.classList.add('active');
     } else {
-      badgeEl.classList.remove('btn-primary');
-      badgeEl.classList.add('btn-outline-secondary');
+      badgeEl.classList.remove('active');
     }
-    // ensure counts update
     updateUserCount();
-    // scroll into view
     checkbox.scrollIntoView({behavior: 'smooth', block: 'center'});
     return;
   }
 
-  // If checkbox not present (user not in usersGrid), toggle a hidden input so it is submitted
   var existing = document.getElementById(generatedId);
   if (existing) {
     existing.parentNode.removeChild(existing);
-    badgeEl.classList.remove('btn-primary');
-    badgeEl.classList.add('btn-outline-secondary');
+    badgeEl.classList.remove('active');
   } else {
     var hidden = document.createElement('input');
     hidden.type = 'hidden';
@@ -1392,10 +1781,8 @@ function toggleUserSelectionFromBadge(userId, badgeEl) {
     hidden.value = userId;
     hidden.className = 'user-checkbox';
     document.getElementById('generatedHiddenUsers').appendChild(hidden);
-    badgeEl.classList.remove('btn-outline-secondary');
-    badgeEl.classList.add('btn-primary');
+    badgeEl.classList.add('active');
   }
-
   updateUserCount();
 }
 

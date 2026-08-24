@@ -2,363 +2,1047 @@
 {% load static %}
 {% load inspection_filters %}
 
-{% block title %}Inspection Dashboard{% endblock %}
-{% block page_title %}Inspection Management Dashboard{% endblock %}
+{% block title %}Inspection Dashboard | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-.stat-card {
-    transition: all 0.3s;
-    cursor: pointer;
-}
+  /* ===== INSPECTION MANAGEMENT DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-.stat-icon {
-    font-size: 3rem;
-    opacity: 0.3;
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* STATISTICS CARDS - Small Box Style                         */
+  /* ========================================================== */
+  .dash-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-stat-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-stat-box:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .dash-stat-box .inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dash-stat-box .inner h3 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .dash-stat-box .inner p {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin: 4px 0 0 0;
+  }
+
+  .dash-stat-box .stat-icon {
     position: absolute;
-    right: 20px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
-}
+    font-size: 40px;
+    opacity: 0.12;
+    z-index: 0;
+  }
 
-.chart-container {
+  .dash-stat-box .stat-footer {
+    display: block;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .dash-stat-box .stat-footer:hover {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .dash-stat-box .stat-footer i {
+    transition: transform 0.2s ease;
+  }
+
+  .dash-stat-box .stat-footer:hover i {
+    transform: translateX(4px);
+  }
+
+  .dash-stat-box.border-teal { border-top: 4px solid var(--primary-teal); }
+  .dash-stat-box.border-gold { border-top: 4px solid var(--secondary-gold); }
+  .dash-stat-box.border-green { border-top: 4px solid var(--secondary-green); }
+  .dash-stat-box.border-red { border-top: 4px solid var(--secondary-red); }
+
+  /* ========================================================== */
+  /* INFO BOXES - Findings Statistics                           */
+  /* ========================================================== */
+  .dash-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-info-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s ease;
+  }
+
+  .dash-info-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-info-box .info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .dash-info-box .info-icon.red { background: var(--secondary-red); }
+  .dash-info-box .info-icon.gold { background: var(--secondary-gold); }
+  .dash-info-box .info-icon.green { background: var(--secondary-green); }
+  .dash-info-box .info-icon.teal { background: var(--primary-teal); }
+
+  .dash-info-box .info-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dash-info-box .info-content .info-number {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .dash-info-box .info-content .info-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* CHART CARDS                                                 */
+  /* ========================================================== */
+  .dash-chart-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    margin-bottom: 20px;
+  }
+
+  .dash-chart-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-chart-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-chart-card .card-header-custom h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-chart-card .card-header-custom h3 i {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+
+  .dash-chart-card .card-header-custom.header-teal { background: var(--primary-teal); }
+  .dash-chart-card .card-header-custom.header-green { background: var(--secondary-green); }
+
+  .dash-chart-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  .chart-container {
     position: relative;
-    height: 300px;
-}
+    height: 280px;
+  }
 
-.recent-inspections-table {
-    font-size: 0.9rem;
-}
+  /* ========================================================== */
+  /* TABLE STYLES                                                */
+  /* ========================================================== */
+  .dash-table-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
 
-.recent-inspections-table th {
-    background-color: #f8f9fa;
+  .dash-table-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-table-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-table-card .card-header-custom h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-table-card .card-header-custom h3 i {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+
+  .dash-table-card .card-header-custom.header-primary { background: var(--primary-teal); }
+  .dash-table-card .card-header-custom.header-warning { background: var(--secondary-gold); }
+
+  .dash-table-card .card-body-custom {
+    padding: 0;
+  }
+
+  .dash-table-card .card-body-custom .btn-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .dash-table-card .card-body-custom .btn-view-all:hover {
+    background: rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+  }
+
+  /* ===== TABLE ===== */
+  .dash-table {
+    font-size: 13px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
     font-weight: 600;
-}
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
 
-.inspection-status-badge {
-    padding: 0.4em 0.8em;
-    font-size: 0.85em;
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dash-table tbody tr.table-danger {
+    background: var(--secondary-red-light);
+  }
+
+  .dash-table tbody tr.table-danger:hover {
+    background: #fee2e2;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS - UPDATED WITH TEAL THEME                          */
+  /* ========================================================== */
+  .btn-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    border-radius: 4px;
-}
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-teal:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  /* Primary - Teal */
+  .btn-teal.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-teal.primary:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  /* Success - Green */
+  .btn-teal.success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-teal.success:hover {
+    background: #16a34a;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+
+  /* Warning - Gold */
+  .btn-teal.warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+  .btn-teal.warning:hover {
+    background: #b45309;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  }
+
+  /* Danger - Red */
+  .btn-teal.danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .btn-teal.danger:hover {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  /* Info - Blue */
+  .btn-teal.info {
+    background: var(--secondary-blue);
+    color: white;
+  }
+  .btn-teal.info:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Outline variants */
+  .btn-teal.outline-primary {
+    background: transparent;
+    color: var(--primary-teal);
+    border: 2px solid var(--primary-teal);
+  }
+  .btn-teal.outline-primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-teal.outline-success {
+    background: transparent;
+    color: var(--secondary-green);
+    border: 2px solid var(--secondary-green);
+  }
+  .btn-teal.outline-success:hover {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-teal.outline-danger {
+    background: transparent;
+    color: var(--secondary-red);
+    border: 2px solid var(--secondary-red);
+  }
+  .btn-teal.outline-danger:hover {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-teal.small {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.badge-danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 40px;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dash-info-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-stat-box .inner h3 {
+      font-size: 22px;
+    }
+
+    .dash-stat-box .stat-icon {
+      font-size: 32px;
+    }
+
+    .dash-info-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dash-info-box {
+      padding: 12px 14px;
+    }
+
+    .dash-info-box .info-content .info-number {
+      font-size: 18px;
+    }
+
+    .dash-chart-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .chart-container {
+      height: 220px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .dash-table tbody tr.table-danger {
+      border-color: var(--secondary-red);
+    }
+
+    .dash-badge {
+      font-size: 10px;
+      padding: 3px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-stat-box .inner h3 {
+      font-size: 20px;
+    }
+
+    .dash-info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dash-info-box .info-content .info-number {
+      font-size: 16px;
+    }
+
+    .dash-chart-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .chart-container {
+      height: 200px;
+    }
+
+    .dash-table tbody td {
+      padding: 6px 10px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 10px;
+    }
+  }
 </style>
-{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item active">Inspection Dashboard</li>
 {% endblock %}
 
 {% block content %}
 
-<!-- Statistics Cards -->
-<div class="row">
-    <!-- Scheduled Inspections -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box stat-card bg-info ehs-card">
-            <div class="inner">
-                <h3>{{ stats.scheduled_count }}</h3>
-                <p>Scheduled Inspections</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-calendar-alt stat-icon"></i>
-            </div>
-            <a href="{% url 'inspections:schedule_list' %}?status=SCHEDULED" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div>
+        <h1>Inspection Management Dashboard</h1>
+        <p class="subtitle">Monitor and manage all inspection activities</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- STATISTICS CARDS                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-stats-grid">
+    <!-- Scheduled -->
+    <div class="dash-stat-box border-teal">
+      <div class="inner">
+        <h3>{{ stats.scheduled_count }}</h3>
+        <p>Scheduled Inspections</p>
+      </div>
+      <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+      <a href="{% url 'inspections:schedule_list' %}?status=SCHEDULED" class="stat-footer">
+        View Details <i class="fas fa-arrow-circle-right"></i>
+      </a>
     </div>
 
-    <!-- Pending Inspections -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box stat-card bg-warning ehs-card">
-            <div class="inner">
-                <h3>{{ stats.pending_count }}</h3>
-                <p>Pending Inspections</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-clock stat-icon"></i>
-            </div>
-            <a href="{% url 'inspections:schedule_list' %}?status=IN_PROGRESS" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
+    <!-- Pending -->
+    <div class="dash-stat-box border-gold">
+      <div class="inner">
+        <h3>{{ stats.pending_count }}</h3>
+        <p>Pending Inspections</p>
+      </div>
+      <div class="stat-icon"><i class="fas fa-clock"></i></div>
+      <a href="{% url 'inspections:schedule_list' %}?status=IN_PROGRESS" class="stat-footer">
+        View Details <i class="fas fa-arrow-circle-right"></i>
+      </a>
     </div>
 
-    <!-- Completed Inspections -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box stat-card bg-success ehs-card">
-            <div class="inner">
-                <h3>{{ stats.completed_count }}</h3>
-                <p>Completed (This Month)</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-check-circle stat-icon"></i>
-            </div>
-            <a href="{% url 'inspections:inspection_list' %}?status=COMPLETED" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
+    <!-- Completed -->
+    <div class="dash-stat-box border-green">
+      <div class="inner">
+        <h3>{{ stats.completed_count }}</h3>
+        <p>Completed (This Month)</p>
+      </div>
+      <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+      <a href="{% url 'inspections:inspection_list' %}?status=COMPLETED" class="stat-footer">
+        View Details <i class="fas fa-arrow-circle-right"></i>
+      </a>
     </div>
 
-    <!-- Overdue Inspections -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box stat-card bg-danger ehs-card">
-            <div class="inner">
-                <h3>{{ stats.overdue_count }}</h3>
-                <p>Overdue Inspections</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-exclamation-triangle stat-icon"></i>
-            </div>
-            <a href="{% url 'inspections:schedule_list' %}?status=OVERDUE" class="small-box-footer">
-                View Details <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
+    <!-- Overdue -->
+    <div class="dash-stat-box border-red">
+      <div class="inner">
+        <h3>{{ stats.overdue_count }}</h3>
+        <p>Overdue Inspections</p>
+      </div>
+      <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <a href="{% url 'inspections:schedule_list' %}?status=OVERDUE" class="stat-footer">
+        View Details <i class="fas fa-arrow-circle-right"></i>
+      </a>
     </div>
-</div>
+  </div>
 
-<!-- Findings Statistics -->
-<div class="row">
-    <div class="col-lg-3 col-6">
-        <div class="info-box ehs-card">
-            <span class="info-box-icon bg-danger"><i class="fas fa-flag"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Open Findings</span>
-                <span class="info-box-number">{{ findings_stats.open_count }}</span>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- FINDINGS STATISTICS                                         -->
+  <!-- ========================================================== -->
+  <div class="dash-info-grid">
+    <div class="dash-info-box">
+      <div class="info-icon red"><i class="fas fa-flag"></i></div>
+      <div class="info-content">
+        <div class="info-number">{{ findings_stats.open_count }}</div>
+        <div class="info-text">Open Findings</div>
+      </div>
     </div>
 
-    <div class="col-lg-3 col-6">
-        <div class="info-box ehs-card">
-            <span class="info-box-icon bg-warning"><i class="fas fa-tasks"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">In Progress</span>
-                <span class="info-box-number">{{ findings_stats.in_progress_count }}</span>
-            </div>
-        </div>
+    <div class="dash-info-box">
+      <div class="info-icon gold"><i class="fas fa-tasks"></i></div>
+      <div class="info-content">
+        <div class="info-number">{{ findings_stats.in_progress_count }}</div>
+        <div class="info-text">In Progress</div>
+      </div>
     </div>
 
-    <div class="col-lg-3 col-6">
-        <div class="info-box ehs-card">
-            <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Closed Findings</span>
-                <span class="info-box-number">{{ findings_stats.closed_count }}</span>
-            </div>
-        </div>
+    <div class="dash-info-box">
+      <div class="info-icon green"><i class="fas fa-check"></i></div>
+      <div class="info-content">
+        <div class="info-number">{{ findings_stats.closed_count }}</div>
+        <div class="info-text">Closed Findings</div>
+      </div>
     </div>
 
-    <div class="col-lg-3 col-6">
-        <div class="info-box ehs-card">
-            <span class="info-box-icon bg-info"><i class="fas fa-percent"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Avg. Compliance</span>
-                <span class="info-box-number">{{ stats.avg_compliance_score|floatformat:1 }}%</span>
-            </div>
-        </div>
+    <div class="dash-info-box">
+      <div class="info-icon teal"><i class="fas fa-percent"></i></div>
+      <div class="info-content">
+        <div class="info-number">{{ stats.avg_compliance_score|floatformat:1 }}%</div>
+        <div class="info-text">Avg. Compliance</div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Charts Row -->
-<div class="row">
-    <!-- Monthly Inspections Trend -->
+  <!-- ========================================================== -->
+  <!-- CHARTS ROW                                                 -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <!-- Monthly Trend -->
     <div class="col-lg-6">
-        <div class="card ehs-card">
-            <div class="card-header bg-info text-white">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-line mr-2"></i>Monthly Inspections Trend
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="monthlyTrendChart"></canvas>
-                </div>
-            </div>
+      <div class="dash-chart-card">
+        <div class="card-header-custom header-teal">
+          <h3>
+            <i class="fas fa-chart-line"></i>
+            Monthly Inspections Trend
+          </h3>
         </div>
+        <div class="card-body-custom">
+          <div class="chart-container">
+            <canvas id="monthlyTrendChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Inspection Status Distribution -->
+    <!-- Status Distribution -->
     <div class="col-lg-6">
-        <div class="card ehs-card">
-            <div class="card-header bg-success text-white">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-pie mr-2"></i>Inspection Status Distribution
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="statusDistributionChart"></canvas>
-                </div>
-            </div>
+      <div class="dash-chart-card">
+        <div class="card-header-custom header-green">
+          <h3>
+            <i class="fas fa-chart-pie"></i>
+            Inspection Status Distribution
+          </h3>
         </div>
+        <div class="card-body-custom">
+          <div class="chart-container">
+            <canvas id="statusDistributionChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Recent Inspections Table -->
-<div class="row">
-    <div class="col-12">
-        <div class="card ehs-card">
-            <div class="card-header bg-primary text-white">
-                <h3 class="card-title">
-                    <i class="fas fa-list mr-2"></i>Recent Inspections
-                </h3>
-                <div class="card-tools">
-                    <a href="{% url 'inspections:inspection_list' %}" class="btn btn-sm btn-light">
-                        <i class="fas fa-eye mr-1"></i>View All
-                    </a>
+  <!-- ========================================================== -->
+  <!-- RECENT INSPECTIONS TABLE                                    -->
+  <!-- ========================================================== -->
+  <div class="dash-table-card">
+    <div class="card-header-custom header-primary">
+      <h3>
+        <i class="fas fa-list"></i>
+        Recent Inspections
+      </h3>
+      <a href="{% url 'inspections:inspection_list' %}" class="btn-view-all">
+        <i class="fas fa-eye"></i> View All
+      </a>
+    </div>
+    <div class="card-body-custom">
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Inspection No.</th>
+              <th>Template</th>
+              <th>Location</th>
+              <th>Conducted By</th>
+              <th>Date</th>
+              <th>Compliance</th>
+              <th>Findings</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inspection in recent_inspections %}
+            <tr>
+              <td data-label="Inspection No."><strong>{{ inspection.inspection_number }}</strong></td>
+              <td data-label="Template">{{ inspection.template.template_name }}</td>
+              <td data-label="Location">{{ inspection.location.name }}</td>
+              <td data-label="Conducted By">{{ inspection.conducted_by.get_full_name }}</td>
+              <td data-label="Date">{{ inspection.inspection_date|date:"d M Y" }}</td>
+              <td data-label="Compliance">
+                <span class="dash-badge 
+                  {% if inspection.overall_score >= 90 %}badge-success
+                  {% elif inspection.overall_score >= 70 %}badge-warning
+                  {% else %}badge-danger{% endif %}">
+                  {{ inspection.overall_score|floatformat:1 }}%
+                </span>
+              </td>
+              <td data-label="Findings">
+                {% if inspection.total_findings > 0 %}
+                <span class="dash-badge badge-danger">{{ inspection.total_findings }}</span>
+                {% else %}
+                <span class="dash-badge badge-success">0</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if inspection.status == 'COMPLETED' %}
+                <span class="dash-badge badge-success">Completed</span>
+                {% elif inspection.status == 'SUBMITTED' %}
+                <span class="dash-badge badge-info">Submitted</span>
+                {% elif inspection.status == 'DRAFT' %}
+                <span class="dash-badge badge-secondary">Draft</span>
+                {% endif %}
+              </td>
+              <td data-label="Actions">
+                <div class="d-flex gap-1" style="gap: 4px;">
+                  <a href="{% url 'inspections:inspection_detail' inspection.id %}" class="btn-teal outline-primary small" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% if inspection.pdf_report %}
+                  <a href="{{ inspection.pdf_report.url }}" class="btn-teal outline-danger small" title="Download PDF" target="_blank">
+                    <i class="fas fa-file-pdf"></i>
+                  </a>
+                  {% endif %}
                 </div>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-striped recent-inspections-table">
-                    <thead>
-                        <tr>
-                            <th>Inspection No.</th>
-                            <th>Template</th>
-                            <th>Location</th>
-                            <th>Conducted By</th>
-                            <th>Date</th>
-                            <th>Compliance Score</th>
-                            <th>Findings</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for inspection in recent_inspections %}
-                        <tr>
-                            <td><strong>{{ inspection.inspection_number }}</strong></td>
-                            <td>{{ inspection.template.template_name }}</td>
-                            <td>{{ inspection.location.name }}</td>
-                            <td>{{ inspection.conducted_by.get_full_name }}</td>
-                            <td>{{ inspection.inspection_date|date:"d M Y" }}</td>
-                            <td>
-                                <span class="badge {% if inspection.overall_score >= 90 %}badge-success{% elif inspection.overall_score >= 70 %}badge-warning{% else %}badge-danger{% endif %}">
-                                    {{ inspection.overall_score|floatformat:1 }}%
-                                </span>
-                            </td>
-                            <td>
-                                {% if inspection.total_findings > 0 %}
-                                <span class="badge badge-danger">{{ inspection.total_findings }}</span>
-                                {% else %}
-                                <span class="badge badge-success">0</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if inspection.status == 'COMPLETED' %}
-                                <span class="badge badge-success">Completed</span>
-                                {% elif inspection.status == 'SUBMITTED' %}
-                                <span class="badge badge-info">Submitted</span>
-                                {% elif inspection.status == 'DRAFT' %}
-                                <span class="badge badge-secondary">Draft</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'inspections:inspection_detail' inspection.id %}" class="btn btn-sm btn-info" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if inspection.pdf_report %}
-                                <a href="{{ inspection.pdf_report.url }}" class="btn btn-sm btn-danger" title="Download PDF" target="_blank">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                <i class="fas fa-inbox fa-3x mb-3"></i>
-                                <p>No inspections found</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="dash-empty-state">
+                  <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                  <p>No inspections found</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- My Assigned Inspections -->
-{% if user|has_perm:'CREATE_INSPECTION' %}
-<div class="row">
-    <div class="col-12">
-        <div class="card ehs-card">
-            <div class="card-header bg-warning">
-                <h3 class="card-title">
-                    <i class="fas fa-user-check mr-2"></i>My Assigned Inspections
-                </h3>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Template</th>
-                            <th>Scheduled Date</th>
-                            <th>Due Date</th>
-                            <th>Days Until Due</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for schedule in my_assigned_inspections %}
-                        <tr {% if schedule.is_overdue %}class="table-danger"{% endif %}>
-                            <td><strong>{{ schedule.template.template_name }}</strong></td>
-                            <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
-                            <td>{{ schedule.due_date|date:"d M Y" }}</td>
-                            <td>
-                                {% if schedule.days_until_due < 0 %}
-                                <span class="badge badge-danger">Overdue by {{ schedule.days_until_due|abs_value }} days</span>
-                                {% elif schedule.days_until_due == 0 %}
-                                <span class="badge badge-warning">Due Today</span>
-                                {% else %}
-                                <span class="badge badge-info">{{ schedule.days_until_due }} days</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if schedule.status == 'SCHEDULED' %}
-                                <span class="badge badge-secondary">Scheduled</span>
-                                {% elif schedule.status == 'IN_PROGRESS' %}
-                                <span class="badge badge-warning">In Progress</span>
-                                {% elif schedule.status == 'COMPLETED' %}
-                                <span class="badge badge-success">Completed</span>
-                                {% elif schedule.status == 'OVERDUE' %}
-                                <span class="badge badge-danger">Overdue</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if schedule.status != 'COMPLETED' %}
-                                <a href="{% url 'inspections:conduct_inspection' schedule.id %}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-play-circle mr-1"></i>Start/Continue
-                                </a>
-                                {% else %}
-                                <a href="{% url 'inspections:inspection_detail' schedule.inspection.id %}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye mr-1"></i>View
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                No inspections assigned to you
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- MY ASSIGNED INSPECTIONS                                     -->
+  <!-- ========================================================== -->
+  {% if user|has_perm:'CREATE_INSPECTION' %}
+  <div class="dash-table-card">
+    <div class="card-header-custom header-warning">
+      <h3>
+        <i class="fas fa-user-check"></i>
+        My Assigned Inspections
+      </h3>
     </div>
+    <div class="card-body-custom">
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Template</th>
+              <th>Scheduled Date</th>
+              <th>Due Date</th>
+              <th>Days Until Due</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for schedule in my_assigned_inspections %}
+            <tr {% if schedule.is_overdue %}class="table-danger"{% endif %}>
+              <td data-label="Template"><strong>{{ schedule.template.template_name }}</strong></td>
+              <td data-label="Scheduled Date">{{ schedule.scheduled_date|date:"d M Y" }}</td>
+              <td data-label="Due Date">{{ schedule.due_date|date:"d M Y" }}</td>
+              <td data-label="Days Until Due">
+                {% if schedule.days_until_due < 0 %}
+                <span class="dash-badge badge-danger">Overdue by {{ schedule.days_until_due|abs_value }} days</span>
+                {% elif schedule.days_until_due == 0 %}
+                <span class="dash-badge badge-warning">Due Today</span>
+                {% else %}
+                <span class="dash-badge badge-info">{{ schedule.days_until_due }} days</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if schedule.status == 'SCHEDULED' %}
+                <span class="dash-badge badge-secondary">Scheduled</span>
+                {% elif schedule.status == 'IN_PROGRESS' %}
+                <span class="dash-badge badge-warning">In Progress</span>
+                {% elif schedule.status == 'COMPLETED' %}
+                <span class="dash-badge badge-success">Completed</span>
+                {% elif schedule.status == 'OVERDUE' %}
+                <span class="dash-badge badge-danger">Overdue</span>
+                {% endif %}
+              </td>
+              <td data-label="Action">
+                {% if schedule.status != 'COMPLETED' %}
+                <a href="{% url 'inspections:conduct_inspection' schedule.id %}" class="btn-teal success small">
+                  <i class="fas fa-play-circle"></i> Start/Continue
+                </a>
+                {% else %}
+                <a href="{% url 'inspections:inspection_detail' schedule.inspection.id %}" class="btn-teal primary small">
+                  <i class="fas fa-eye"></i> View
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6">
+                <div class="dash-empty-state">
+                  <span class="empty-icon"><i class="fas fa-user-check"></i></span>
+                  <p>No inspections assigned to you</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
-{% endif %}
 
 {% endblock %}
 
@@ -376,11 +1060,15 @@ const monthlyTrendChart = new Chart(monthlyCtx, {
         datasets: [{
             label: 'Inspections Completed',
             data: {{ monthly_data|safe }},
-            backgroundColor: 'rgba(23, 162, 184, 0.2)',
-            borderColor: 'rgba(23, 162, 184, 1)',
+            backgroundColor: 'rgba(13, 148, 136, 0.15)',
+            borderColor: '#0d9488',
             borderWidth: 2,
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            pointBackgroundColor: '#0d9488',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4
         }]
     },
     options: {
@@ -389,14 +1077,23 @@ const monthlyTrendChart = new Chart(monthlyCtx, {
         plugins: {
             legend: {
                 display: true,
-                position: 'top'
+                position: 'top',
+                labels: {
+                    font: { family: 'Inter' }
+                }
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
                 ticks: {
-                    stepSize: 1
+                    stepSize: 1,
+                    font: { family: 'Inter' }
+                }
+            },
+            x: {
+                ticks: {
+                    font: { family: 'Inter' }
                 }
             }
         }
@@ -417,18 +1114,18 @@ const statusDistributionChart = new Chart(statusCtx, {
                 {{ stats.overdue_count }}
             ],
             backgroundColor: [
-                'rgba(23, 162, 184, 0.8)',
-                'rgba(255, 193, 7, 0.8)',
-                'rgba(40, 167, 69, 0.8)',
-                'rgba(220, 53, 69, 0.8)'
+                '#0d9488',
+                '#d97706',
+                '#22c55e',
+                '#dc2626'
             ],
             borderColor: [
-                'rgba(23, 162, 184, 1)',
-                'rgba(255, 193, 7, 1)',
-                'rgba(40, 167, 69, 1)',
-                'rgba(220, 53, 69, 1)'
+                '#0f766e',
+                '#b45309',
+                '#16a34a',
+                '#b91c1c'
             ],
-            borderWidth: 1
+            borderWidth: 2
         }]
     },
     options: {
@@ -437,7 +1134,10 @@ const statusDistributionChart = new Chart(statusCtx, {
         plugins: {
             legend: {
                 display: true,
-                position: 'bottom'
+                position: 'bottom',
+                labels: {
+                    font: { family: 'Inter' }
+                }
             }
         }
     }
