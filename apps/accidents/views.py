@@ -396,9 +396,10 @@ class IncidentCreateView(LoginRequiredMixin, CreateView):
 
         try:
             # ✅ NEW: Use NotificationService instead of old notification_utils
-            from apps.notifications.services import NotificationService
-            
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+
+            CoreNotificationService.notify(
                 content_object=self.object,
                 notification_type='INCIDENT_REPORTED',
                 module='INCIDENT'
@@ -755,7 +756,8 @@ class InvestigationReportCreateView(LoginRequiredMixin, CreateView):
             form_to_delete.delete()
             
         try:
-            from apps.notifications.services import NotificationService
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
 
             all_action_items = self.incident.action_items.all()  # ✅ FIXED
 
@@ -763,7 +765,7 @@ class InvestigationReportCreateView(LoginRequiredMixin, CreateView):
                 if item.assignment_type != 'SELF' and item.status == 'PENDING':
                     print("DEBUG: Sending notification for:", item.id)
 
-                    NotificationService.notify(
+                    CoreNotificationService.notify(
                         content_object=item,
                         notification_type='INCIDENT_ACTION_ASSIGNED',
                         module='INCIDENT_ACTION'
@@ -783,8 +785,9 @@ class InvestigationReportCreateView(LoginRequiredMixin, CreateView):
 
         # 4. Notifications
         try:
-            from apps.notifications.services import NotificationService
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+            CoreNotificationService.notify(
                 content_object=investigation,
                 notification_type='INCIDENT_INVESTIGATION_COMPLETED',
                 module='INCIDENT_INVESTIGATION_REPORTED'
@@ -841,14 +844,15 @@ class ActionItemCreateView(LoginRequiredMixin, CreateView):
 
         # ===== ADD NOTIFICATION: Action Item Assigned =====
         try:
-            from apps.notifications.services import NotificationService
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
 
             # Notify responsible persons + assigned_to
             extra_recipients = []
             if hasattr(action_item, 'assigned_to') and action_item.assigned_to:
                 extra_recipients.append(action_item.assigned_to)
 
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=action_item,
                 notification_type='INCIDENT_ACTION_ASSIGNED',
                 module='INCIDENT_ACTION',
@@ -1332,8 +1336,9 @@ class IncidentClosureView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         # For sending notifications
         try:
-            from apps.notifications.services import NotificationService
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+            CoreNotificationService.notify(
                 content_object=incident,
                 notification_type='INCIDENT_CLOSED',
                 module='INCIDENT_CLOSED'

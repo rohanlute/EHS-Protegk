@@ -27,7 +27,8 @@ from django.db.models import Count
 from django.db.models.functions import Coalesce
 from django.db.models.functions import TruncMonth
 from .forms import HazardForm
-from apps.notifications.services import NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import NotificationService as AlertNotificationService
 
 # Make sure all models are imported
 from apps.organizations.models import Plant, Zone, Location, SubLocation
@@ -457,8 +458,7 @@ class HazardCreateView(LoginRequiredMixin, CreateView):
             
             # Send notifications
             try:
-                from apps.notifications.services import NotificationService
-                NotificationService.notify(
+                CoreNotificationService.notify(
                     content_object=hazard,
                     notification_type='HAZARD_REPORTED',
                     module='HAZARD'
@@ -872,7 +872,7 @@ class HazardActionItemCreateView(LoginRequiredMixin, CreateView):
                         is_active=True
                     )
 
-                    NotificationService.notify(
+                    CoreNotificationService.notify(
                         content_object=action_item, # Use the single created item for notification
                         notification_type='HAZARD_ACTION_ASSIGNED',
                         module='HAZARD_ACTION',
@@ -2142,8 +2142,7 @@ class ActionItemCompleteView(LoginRequiredMixin, UpdateView):
             # --- END OF MODIFIED LOGIC ---
 
             try:
-                from apps.notifications.services import NotificationService
-                NotificationService.notify(
+                CoreNotificationService.notify(
                     content_object=action_item,
                     notification_type='HAZARD_ACTION_COMPLETED',
                     module='HAZARD_ACTION'
