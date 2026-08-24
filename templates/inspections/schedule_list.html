@@ -2,438 +2,1113 @@
 
 {% extends 'base/base.html' %}
 {% load permission_tags %}
+{% load static %}
 
-{% block title %}Inspection Schedules{% endblock %}
-{% block page_title %}Inspection Schedules{% endblock %}
-
+{% block title %}Inspection Schedules | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
+  /* ===== INSPECTION SCHEDULES - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.action-buttons-container {
-    display: flex;        /* Aligns children (buttons) in a row */
-    align-items: center;  /* Vertically centers the buttons */
-    gap: 6px;             /* Creates a nice space between each button */
-    justify-content: flex-start; /* Aligns the group of buttons to the left */
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-/* 
-  This optional block makes the buttons perfectly square 
-  and centers the icons inside, just like in your screenshot.
-*/
-.action-buttons-container .btn {
-    width: 34px;
-    height: 34px;
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-primary-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-filter-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-filter-teal:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  .btn-reset-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-reset-teal:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD                                                 */
+  /* ========================================================== */
+  .filter-card-custom {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-card-custom:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .filter-card-custom .form-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .filter-card-custom .form-control,
+  .filter-card-custom .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+  }
+
+  .filter-card-custom .form-control:focus,
+  .filter-card-custom .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .filter-card-custom .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .filter-card-custom .form-select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230d9488' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  }
+
+  /* ========================================================== */
+  /* SUMMARY CARD                                                */
+  /* ========================================================== */
+  .dash-summary-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-summary-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-summary-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+  }
+
+  .dash-summary-card .card-header-custom h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-summary-card .card-header-custom h3 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-summary-card .card-body-custom {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-main-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-main-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-main-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-main-card .card-header-custom h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-main-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-main-card .card-body-custom {
+    padding: 0;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                                */
+  /* ========================================================== */
+  .dash-table {
+    font-size: 13px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dash-table thead th {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .dash-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .dash-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .dash-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-warning { background: #fef3c7; color: #d97706; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-danger { background: #fee2e2; color: #dc2626; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                              */
+  /* ========================================================== */
+  .action-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .action-buttons-container .btn {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-}
-.action-buttons-container {
-    display: flex;        /* Aligns children (buttons) in a row */
-    align-items: center;  /* Vertically centers the buttons */
-    gap: 6px;             /* Creates a nice space between each button */
-    justify-content: flex-start; /* Aligns the group of buttons to the left */
-}
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
 
-/* 
-  This optional block makes the buttons perfectly square 
-  and centers the icons inside, just like in your screenshot.
-*/
-.action-buttons-container .btn {
-    width: 34px;
-    height: 34px;
+  .action-buttons-container .btn:hover {
+    text-decoration: none;
+  }
+
+  .action-buttons-container .btn.btn-info:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .action-buttons-container .btn.btn-danger:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  .action-buttons-container .btn.btn-warning:hover {
+    background: #fef3c7;
+    border-color: #d97706;
+    color: #d97706;
+  }
+
+  .action-buttons-container .btn.btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                  */
+  /* ========================================================== */
+  .dash-pagination {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-}
-.clear-filter-btn {
-    border: 1px solid #ced4da;
-    background: #fff;
-    color: #6c757d;
+    gap: 4px;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+
+  .dash-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 13px;
     font-weight: 500;
     transition: all 0.2s ease;
-}
+    text-decoration: none;
+  }
 
-.clear-filter-btn:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
-}
+  .dash-pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
 
-.clear-filter-btn i {
-    margin-right: 4px;
-}
+  .dash-pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .dash-pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ========================================================== */
+  /* MODAL                                                       */
+  /* ========================================================== */
+  .dash-modal .modal-content {
+    border-radius: var(--radius-card);
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dash-modal .modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--secondary-red);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+
+  .dash-modal .modal-header .modal-title {
+    font-weight: 700;
+    color: white;
+  }
+
+  .dash-modal .modal-header .close {
+    color: white;
+    opacity: 0.85;
+  }
+
+  .dash-modal .modal-header .close:hover {
+    opacity: 1;
+  }
+
+  .dash-modal .modal-footer {
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 56px;
+    color: var(--primary-teal-light);
+    margin-bottom: 16px;
+  }
+
+  .dash-empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .dash-empty-state .empty-link {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .dash-empty-state .empty-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .filter-card-custom {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .dash-page-header .header-right .btn-primary-teal {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .filter-card-custom {
+      padding: 14px 16px;
+    }
+
+    .filter-card-custom .btn-filter-teal,
+    .filter-card-custom .btn-reset-teal {
+      width: 100%;
+    }
+
+    .dash-summary-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-main-card .card-header-custom {
+      padding: 12px 16px;
+    }
+
+    .dash-table thead {
+      display: none;
+    }
+
+    .dash-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+    }
+
+    .dash-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .dash-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .dash-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .action-buttons-container {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .action-buttons-container .btn {
+      width: 28px;
+      height: 28px;
+      font-size: 11px;
+    }
+
+    .dash-badge {
+      font-size: 10px;
+      padding: 3px 10px;
+    }
+
+    .dash-pagination {
+      gap: 2px;
+    }
+
+    .dash-pagination .page-link {
+      min-width: 32px;
+      height: 32px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+
+    .dash-modal .modal-dialog {
+      margin: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .filter-card-custom {
+      padding: 10px 12px;
+    }
+
+    .filter-card-custom .form-control,
+    .filter-card-custom .form-select {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    .dash-summary-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-table tbody td {
+      padding: 6px 10px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dash-table tbody td::before {
+      font-size: 10px;
+    }
+
+    .action-buttons-container .btn {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;
+    }
+  }
 </style>
 {% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item active">Schedules</li>
-{% endblock %}
-
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <!-- Header with Create Button -->
-        <div class="mb-3">
-            {% if user.is_admin_user or user.is_superuser or user|has_perm:'CREATE_INSPECTION' %}
-            <a href="{% url 'inspections:schedule_create' %}" class="btn btn-primary">
-                <i class="fas fa-calendar-plus"></i> Schedule Inspection
-            </a>
-            {% endif %}
-        </div>
-        
-        <!-- Filters -->
-        <div class="card mb-3" style="background: var(--light-blue);">
-            <div class="card-body">
-                <form method="get">
-                    <div class="row align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">Template</label>
-                            <select name="template" class="form-control">
-                                <option value="">All Templates</option>
-                                {% for template in templates %}
-                                <option value="{{ template.id }}"
-                                    {% if selected_template == template.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ template.template_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Plant</label>
-                            <select name="plant" class="form-control">
-                                <option value="">All Plants</option>
-                                {% for plant in plants %}
-                                <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ plant.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Assigned To</label>
-                            <select name="assigned_to" class="form-control">
-                                <option value="">All HODs / Safety Managers</option>
-                                {% for hod in hods %}
-                                <option value="{{ hod.id }}" {% if selected_hod == hod.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ hod.get_full_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-control">
-                                <option value="">All Status</option>
-                                {% for value, label in status_choices %}
-                                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4 mt-2">
-                            <label class="form-label">Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Search..." {% if search %}value="{{ search }}"{% else %}value=""{% endif %}>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">From Date</label>
-                            <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">To Date</label>
-                            <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                        </div>
-                        <div class="col-md-1">
-                            <a href="{% url 'inspections:schedule_list' %}" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
 
-        <div class="ehs-card mb-3">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-list"></i>
-                    Inspection Summary
-                </h3>
-            </div>
+<div class="container-fluid" style="padding: 0;">
 
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Sr. No.</th>
-                                <th>Template</th>
-                                <th>Assigned To</th>
-                                <th>Plant</th>
-                                <th>Scheduled Date</th>
-                                <th>End Date</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {% for item in summary_page_obj %}
-                            <tr>
-                                <td>{{ summary_page_obj.start_index|add:forloop.counter0 }}</td>
-                                <td>{{ item.template }}</td>
-                                <td>{{ item.assigned_to }}</td>
-                                <td>{{ item.plants }}</td>
-                                <td>{{ item.scheduled_date|date:"d M Y" }}</td>
-                                <td>
-                                    {% if item.end_date %}
-                                        {{ item.end_date|date:"d M Y" }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">
-                                    No Inspection Summary Found
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-
-                    </table>
-                </div>
-                {% if summary_page_obj.has_other_pages %}
-                <nav aria-label="Summary pagination" class="mt-3">
-                    <ul class="pagination justify-content-center">
-
-                        {% if summary_page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link"
-                            href="?summary_page={{ summary_page_obj.previous_page_number }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                Previous
-                            </a>
-                        </li>
-                        {% endif %}
-
-                        {% for num in summary_page_obj.paginator.page_range %}
-                        <li class="page-item {% if summary_page_obj.number == num %}active{% endif %}">
-                            <a class="page-link"
-                            href="?summary_page={{ num }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                {{ num }}
-                            </a>
-                        </li>
-                        {% endfor %}
-
-                        {% if summary_page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link"
-                            href="?summary_page={{ summary_page_obj.next_page_number }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                Next
-                            </a>
-                        </li>
-                        {% endif %}
-
-                    </ul>
-                </nav>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Schedules Table -->
-        <div class="ehs-card">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-calendar-check"></i> Inspection Schedules</h3>
-            </div>
-            <div class="card-body">
-                {% if page_obj %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Sr. No.</th>
-                                <th>Schedule Code</th>
-                                <th>Template</th>
-                                <th>Assigned To</th>
-                                <th>Plant</th>
-                                <th>Scheduled Date</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for schedule in page_obj %}
-                            <tr>
-                                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                                <td><strong>{{ schedule.schedule_code }}</strong></td>
-                                <td>{{ schedule.template.template_name }}</td>
-                                <td>{{ schedule.assigned_to.get_full_name }}</td>
-                                <td>
-                                    {% for plant in schedule.plants.all %}
-                                        <span class="badge badge-info">{{ plant.name }}</span>
-                                    {% empty %}
-                                        -
-                                    {% endfor %}
-                                </td>
-                                <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
-                                <td>
-                                    {{ schedule.due_date|date:"d M Y" }}
-                                    {% if schedule.is_overdue %}
-                                    <span class="badge badge-danger ml-1">Overdue</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge 
-                                        {% if schedule.status == 'SCHEDULED' %}badge-primary
-                                        {% elif schedule.status == 'IN_PROGRESS' %}badge-warning
-                                        {% elif schedule.status == 'CLOSED' %}badge-success
-                                        {% elif schedule.status == 'OVERDUE' %}badge-danger
-                                        {% elif schedule.status == 'LATE_CLOSE' %}badge-danger
-                                        {% elif schedule.status == 'CANCELLED' %}badge-secondary
-                                        {% else %}badge-secondary{% endif %}">
-                                        {{ schedule.get_status_display }}
-                                    </span>
-                                </td>
-                                <td class="table-actions">
-                                    <!-- Add this wrapper div -->
-                                    <div class="action-buttons-container">
-                                        {% if user|has_perm:'VIEW_INSPECTION' %}
-                                        <a href="{% url 'inspections:schedule_detail' schedule.pk %}" 
-                                        class="btn btn-sm btn-info" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if user|has_perm:'EXPORT_INSPECTION_PDF' or user|has_perm:'VIEW_INSPECTION' %}
-                                        <a href="{% url 'inspections:schedule_pdf' schedule.pk %}" 
-                                        class="btn btn-sm btn-danger" title="Download PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if user|has_perm:'EDIT_INSPECTION' %}
-                                        {% if schedule.status != 'CLOSED' and schedule.status != 'LATE_CLOSE' and schedule.status != 'CANCELLED' %}
-                                        <a href="{% url 'inspections:schedule_edit' schedule.pk %}" 
-                                        class="btn btn-sm btn-warning" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% endif %}
-
-                                        {% if request.user.is_admin_user %}
-                                        <a href="{% url 'inspections:schedule_clone' schedule.pk %}" class="btn btn-sm btn-secondary" title="Clone">
-                                            <i class="fas fa-clone"></i>
-                                        {% endif %}
-                                        
-                                        </a>
-                                        {% if schedule.status == 'OVERDUE' %}
-                                        <a href="{% url 'inspections:schedule_restart' schedule.pk %}" class="btn btn-sm btn-danger" title="Restart">
-                                            <i class="fas fa-redo"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
-                                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ schedule.id }}" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
-                            <div class="modal fade" id="deleteModal{{ schedule.id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">
-                                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                Confirm Delete
-                                            </h5>
-                                            <button type="button" class="close text-white" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-
-                                        <div class="modal-body text-center">
-                                            <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-                                            <h5>Are you sure?</h5>
-                                            <p class="mb-1">
-                                                Inspection <strong>{{ schedule.schedule_code }}</strong> will be <strong>permanently deleted</strong>.
-                                            </p>
-                                            <p class="text-danger mb-0">
-                                                This action cannot be undone.
-                                            </p>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                Cancel
-                                            </button>
-                                            <form method="POST" action="{% url 'inspections:schedule_delete' schedule.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger">
-                                                    Yes, Delete
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                {% if page_obj.has_other_pages %}
-                <nav aria-label="Page navigation" class="mt-3">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?schedule_page={{ page_obj.previous_page_number }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        
-                        {% for num in page_obj.paginator.page_range %}
-                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                            <a class="page-link" href="?schedule_page={{ num }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
-                        </li>
-                        {% endfor %}
-                        
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?schedule_page={{ page_obj.next_page_number }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-                
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                    <p class="text-muted">No schedules found.</p>
-                    {% if user.is_admin_user or user.is_superuser or user|has_perm:'CREATE_INSPECTION' %}
-                    <a href="{% url 'inspections:schedule_create' %}" class="btn btn-primary">
-                        <i class="fas fa-calendar-plus"></i> Schedule First Inspection
-                    </a>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div>
+        <h1>Inspection Schedules</h1>
+        <p class="subtitle">Manage and monitor all inspection schedules</p>
+      </div>
     </div>
+    <div class="header-right">
+      {% if user.is_admin_user or user.is_superuser or user|has_perm:'CREATE_INSPECTION' %}
+      <a href="{% url 'inspections:schedule_create' %}" class="btn-primary-teal">
+        <i class="fas fa-calendar-plus"></i> Schedule Inspection
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER CARD                                                 -->
+  <!-- ========================================================== -->
+  <div class="filter-card-custom">
+    <form method="get">
+      <div class="row align-items-end">
+        <div class="col-md-3 mb-2">
+          <label class="form-label">Template</label>
+          <select name="template" class="form-select">
+            <option value="">All Templates</option>
+            {% for template in templates %}
+            <option value="{{ template.id }}"
+              {% if selected_template == template.id|stringformat:"s" %}selected{% endif %}>
+              {{ template.template_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-2">
+          <label class="form-label">Plant</label>
+          <select name="plant" class="form-select">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
+              {{ plant.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-2">
+          <label class="form-label">Assigned To</label>
+          <select name="assigned_to" class="form-select">
+            <option value="">All HODs / Safety Managers</option>
+            {% for hod in hods %}
+            <option value="{{ hod.id }}" {% if selected_hod == hod.id|stringformat:"s" %}selected{% endif %}>
+              {{ hod.get_full_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 mb-2">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="">All Status</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4 mb-2">
+          <label class="form-label">Search</label>
+          <input type="text" name="search" class="form-control" placeholder="Search..." {% if search %}value="{{ search }}"{% endif %}>
+        </div>
+
+        <div class="col-md-3 mb-2">
+          <label class="form-label">From Date</label>
+          <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+        </div>
+
+        <div class="col-md-3 mb-2">
+          <label class="form-label">To Date</label>
+          <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+        </div>
+
+        <div class="col-md-1 mb-2">
+          <button type="submit" class="btn-filter-teal">
+            <i class="fas fa-filter"></i>
+          </button>
+        </div>
+
+        <div class="col-md-1 mb-2">
+          <a href="{% url 'inspections:schedule_list' %}" class="btn-reset-teal">
+            <i class="fas fa-times"></i>
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SUMMARY CARD                                                -->
+  <!-- ========================================================== -->
+  <div class="dash-summary-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-list"></i>
+        Inspection Summary
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Template</th>
+              <th>Assigned To</th>
+              <th>Plant</th>
+              <th>Scheduled Date</th>
+              <th>End Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in summary_page_obj %}
+            <tr>
+              <td data-label="#">{{ summary_page_obj.start_index|add:forloop.counter0 }}</td>
+              <td data-label="Template">{{ item.template }}</td>
+              <td data-label="Assigned To">{{ item.assigned_to }}</td>
+              <td data-label="Plant">{{ item.plants }}</td>
+              <td data-label="Scheduled Date">{{ item.scheduled_date|date:"d M Y" }}</td>
+              <td data-label="End Date">
+                {% if item.end_date %}
+                  {{ item.end_date|date:"d M Y" }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6">
+                <div class="dash-empty-state" style="padding: 30px 20px;">
+                  <i class="fas fa-inbox empty-icon" style="font-size: 32px;"></i>
+                  <p style="margin: 0;">No Inspection Summary Found</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary Pagination -->
+      {% if summary_page_obj.has_other_pages %}
+      <nav class="dash-pagination">
+        {% if summary_page_obj.has_previous %}
+        <a class="page-link" href="?summary_page={{ summary_page_obj.previous_page_number }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in summary_page_obj.paginator.page_range %}
+        <a class="page-link {% if summary_page_obj.number == num %}active{% endif %}"
+           href="?summary_page={{ num }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
+        {% endfor %}
+
+        {% if summary_page_obj.has_next %}
+        <a class="page-link" href="?summary_page={{ summary_page_obj.next_page_number }}&schedule_page={{ page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-main-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-calendar-check"></i>
+        Inspection Schedules
+      </h3>
+    </div>
+
+    <div class="card-body-custom">
+      {% if page_obj %}
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Schedule Code</th>
+              <th>Template</th>
+              <th>Assigned To</th>
+              <th>Plant</th>
+              <th>Scheduled Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for schedule in page_obj %}
+            <tr>
+              <td data-label="#">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+              <td data-label="Schedule Code">
+                <strong style="color: var(--text-primary);">{{ schedule.schedule_code }}</strong>
+              </td>
+              <td data-label="Template">{{ schedule.template.template_name }}</td>
+              <td data-label="Assigned To">{{ schedule.assigned_to.get_full_name }}</td>
+              <td data-label="Plant">
+                {% for plant in schedule.plants.all %}
+                  <span class="dash-badge badge-info">{{ plant.name }}</span>
+                {% empty %}
+                  -
+                {% endfor %}
+              </td>
+              <td data-label="Scheduled Date">{{ schedule.scheduled_date|date:"d M Y" }}</td>
+              <td data-label="Due Date">
+                {{ schedule.due_date|date:"d M Y" }}
+                {% if schedule.is_overdue %}
+                  <span class="dash-badge badge-danger ml-1">Overdue</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                <span class="dash-badge
+                  {% if schedule.status == 'SCHEDULED' %}badge-primary
+                  {% elif schedule.status == 'IN_PROGRESS' %}badge-warning
+                  {% elif schedule.status == 'CLOSED' %}badge-success
+                  {% elif schedule.status == 'OVERDUE' %}badge-danger
+                  {% elif schedule.status == 'LATE_CLOSE' %}badge-danger
+                  {% elif schedule.status == 'CANCELLED' %}badge-secondary
+                  {% else %}badge-secondary{% endif %}">
+                  {{ schedule.get_status_display }}
+                </span>
+              </td>
+              <td data-label="Actions" style="text-align: center;">
+                <div class="action-buttons-container" style="justify-content: center;">
+                  {% if user|has_perm:'VIEW_INSPECTION' %}
+                  <a href="{% url 'inspections:schedule_detail' schedule.pk %}" 
+                     class="btn btn-info" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if user|has_perm:'EXPORT_INSPECTION_PDF' or user|has_perm:'VIEW_INSPECTION' %}
+                  <a href="{% url 'inspections:schedule_pdf' schedule.pk %}" 
+                     class="btn btn-danger" title="Download PDF">
+                    <i class="fas fa-file-pdf"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if user|has_perm:'EDIT_INSPECTION' %}
+                  {% if schedule.status != 'CLOSED' and schedule.status != 'LATE_CLOSE' and schedule.status != 'CANCELLED' %}
+                  <a href="{% url 'inspections:schedule_edit' schedule.pk %}" 
+                     class="btn btn-warning" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% endif %}
+                  {% endif %}
+
+                  {% if request.user.is_admin_user %}
+                  <a href="{% url 'inspections:schedule_clone' schedule.pk %}" 
+                     class="btn btn-secondary" title="Clone">
+                    <i class="fas fa-clone"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if schedule.status == 'OVERDUE' %}
+                  <a href="{% url 'inspections:schedule_restart' schedule.pk %}" 
+                     class="btn btn-danger" title="Restart">
+                    <i class="fas fa-redo"></i>
+                  </a>
+                  {% endif %}
+
+                  {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
+                  <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal{{ schedule.id }}" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+
+            <!-- Delete Modal -->
+            {% if request.user.is_admin_user or request.user.is_superuser or user|has_perm:'DELETE_INSPECTION' %}
+            <div class="modal fade dash-modal" id="deleteModal{{ schedule.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">
+                      <i class="fas fa-exclamation-triangle mr-2"></i>
+                      Confirm Delete
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body text-center" style="padding: 24px;">
+                    <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                    <h5 style="color: var(--text-primary);">Are you sure?</h5>
+                    <p style="color: var(--text-secondary);">
+                      Inspection <strong>{{ schedule.schedule_code }}</strong> will be <strong style="color: var(--secondary-red);">permanently deleted</strong>.
+                    </p>
+                    <p style="color: var(--secondary-red); font-size: 14px;">
+                      <i class="fas fa-exclamation-circle"></i> This action cannot be undone.
+                    </p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn" style="background: #f1f5f9; color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 20px; font-weight: 500;" data-dismiss="modal">
+                      Cancel
+                    </button>
+                    <form method="POST" action="{% url 'inspections:schedule_delete' schedule.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn" style="background: var(--secondary-red); color: white; border: none; border-radius: var(--radius-sm); padding: 8px 20px; font-weight: 500;">
+                        Yes, Delete
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav class="dash-pagination">
+        {% if page_obj.has_previous %}
+        <a class="page-link" href="?schedule_page={{ page_obj.previous_page_number }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        <a class="page-link {% if page_obj.number == num %}active{% endif %}"
+           href="?schedule_page={{ num }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="page-link" href="?schedule_page={{ page_obj.next_page_number }}&summary_page={{ summary_page_obj.number }}{% if querystring %}&{{ querystring }}{% endif %}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty State -->
+      <div class="dash-empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-calendar-times"></i>
+        </div>
+        <h4>No Schedules Found</h4>
+        <p>No inspection schedules match your current filters.</p>
+        {% if user.is_admin_user or user.is_superuser or user|has_perm:'CREATE_INSPECTION' %}
+        <a href="{% url 'inspections:schedule_create' %}" class="empty-link">
+          <i class="fas fa-calendar-plus"></i> Schedule First Inspection
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}

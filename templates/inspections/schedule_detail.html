@@ -1,312 +1,847 @@
 <!-- templates/inspections/schedule_detail.html -->
 
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Schedule Details{% endblock %}
-{% block page_title %}Schedule: {{ schedule.schedule_code }}{% endblock %}
+{% block title %}Schedule Details | EHS-360{% endblock %}
 
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:schedule_list' %}">Schedules</a></li>
-<li class="breadcrumb-item active">{{ schedule.schedule_code }}</li>
+{% block extra_css %}
+<style>
+  /* ===== SCHEDULE DETAILS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                              */
+  /* ========================================================== */
+  .dash-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash.secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash.secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-dash.warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+  .btn-dash.warning:hover {
+    background: #b45309;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  }
+
+  .btn-dash.danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .btn-dash.danger:hover {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-dash.info {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash.info:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h3 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-warning { background: #fef3c7; color: #d97706; }
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-danger { background: #fee2e2; color: #dc2626; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-dark { background: #f1f5f9; color: #334155; }
+
+  /* ========================================================== */
+  /* TABLE                                                       */
+  /* ========================================================== */
+  .dash-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .dash-detail-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-detail-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .dash-detail-table tbody td {
+    padding: 10px 14px;
+    vertical-align: top;
+    color: var(--text-secondary);
+  }
+
+  .dash-detail-table tbody td:first-child {
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 200px;
+  }
+
+  .dash-detail-table tbody td:last-child {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .dash-detail-table .plant-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.1);
+    margin: 2px 4px 2px 0;
+  }
+
+  .dash-detail-table .zone-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #dbeafe;
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    margin: 2px 4px 2px 0;
+  }
+
+  .dash-detail-table .location-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid var(--border-color);
+    margin: 2px 4px 2px 0;
+  }
+
+  .dash-detail-table .sublocation-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.1);
+    margin: 2px 4px 2px 0;
+  }
+
+  /* ========================================================== */
+  /* TIMELINE                                                   */
+  /* ========================================================== */
+  .timeline-custom {
+    padding: 0;
+    list-style: none;
+    position: relative;
+  }
+
+  .timeline-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 18px;
+    width: 2px;
+    background: var(--border-color);
+  }
+
+  .timeline-custom .timeline-item {
+    padding-left: 48px;
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .timeline-custom .timeline-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .timeline-custom .timeline-item .timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    z-index: 1;
+  }
+
+  .timeline-custom .timeline-item .timeline-icon.primary { background: var(--primary-teal); }
+  .timeline-custom .timeline-item .timeline-icon.info { background: var(--secondary-blue); }
+  .timeline-custom .timeline-item .timeline-icon.warning { background: var(--secondary-gold); }
+  .timeline-custom .timeline-item .timeline-icon.success { background: var(--secondary-green); }
+
+  .timeline-custom .timeline-item .timeline-content {
+    background: #fafbfc;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+  }
+
+  .timeline-custom .timeline-item .timeline-content .timeline-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin: 0 0 2px 0;
+  }
+
+  .timeline-custom .timeline-item .timeline-content .timeline-body {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* ALERT                                                       */
+  /* ========================================================== */
+  .alert-custom {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .alert-custom i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .alert-custom.alert-info {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .alert-custom.alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-custom .alert-content {
+    flex: 1;
+  }
+
+  .alert-custom .alert-content strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-card .card-body-custom {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-actions {
+      width: 100%;
+    }
+
+    .dash-actions .btn-dash {
+      flex: 1;
+      justify-content: center;
+      font-size: 11px;
+      padding: 5px 10px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 10px 14px;
+    }
+
+    .dash-card .card-header-custom h3 {
+      font-size: 14px;
+    }
+
+    .dash-detail-table tbody td {
+      padding: 8px 10px;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dash-detail-table tbody td:first-child {
+      width: 100%;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .dash-detail-table tbody td:last-child {
+      font-size: 13px;
+    }
+
+    .timeline-custom .timeline-item {
+      padding-left: 40px;
+    }
+
+    .timeline-custom .timeline-item .timeline-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .timeline-custom .timeline-item .timeline-content {
+      padding: 10px 12px;
+    }
+
+    .timeline-custom .timeline-item .timeline-content .timeline-title {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .dash-detail-table tbody td {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .alert-custom {
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .btn-dash {
+      font-size: 10px;
+      padding: 4px 8px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <!-- Action Buttons -->
-        <div class="mb-3">
-            <a href="{% url 'inspections:schedule_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-            
-            {% if can_edit %}
-            <a href="{% url 'inspections:schedule_edit' schedule.pk %}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit
-            </a>
-            {% endif %}
-            
-            {% if can_cancel %}
-            <a href="{% url 'inspections:schedule_cancel' schedule.pk %}" class="btn btn-danger">
-                <i class="fas fa-ban"></i> Cancel Schedule
-            </a>
-            {% endif %}
 
-            {% if can_restart %}
-            <a href="{% url 'inspections:schedule_restart' schedule.pk %}" class="btn btn-danger">
-                <i class="fas fa-redo"></i> Restart Inspection
-            </a>
-            {% endif %}
-            
-            {% if schedule.status != 'COMPLETED' and schedule.status != 'LATE_CLOSE' and schedule.status != 'CANCELLED' %}
-            <a href="{% url 'inspections:schedule_send_reminder' schedule.pk %}" class="btn btn-info" id="sendReminderBtn">
-                <i class="fas fa-bell"></i> Send Reminder
-            </a>
-            {% endif %}
-        </div>
+<div class="container-fluid" style="padding: 0;">
 
-        <div class="row">
-            <!-- Schedule Details -->
-            <div class="col-md-8">
-                <div class="ehs-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-info-circle"></i> Schedule Details
-                        </h3>
-                        <div class="card-tools">
-                            <span class="badge 
-                                {% if schedule.status == 'SCHEDULED' %}badge-primary
-                                {% elif schedule.status == 'IN_PROGRESS' %}badge-warning
-                                {% elif schedule.status == 'COMPLETED' or schedule.status == 'LATE_CLOSE' %}badge-success
-                                {% elif schedule.status == 'OVERDUE' %}badge-danger
-                                {% else %}badge-secondary{% endif %}">
-                                {{ schedule.get_status_display }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <th width="200">Schedule Code</th>
-                                    <td><strong>{{ schedule.schedule_code }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <th>Template</th>
-                                    <td>
-                                        <a href="{% url 'inspections:template_detail' schedule.template.pk %}">
-                                            {{ schedule.template.template_name }}
-                                        </a>
-                                        <span class="badge badge-info ml-2">
-                                            {{ schedule.template.get_total_questions }} questions
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Assigned To</th>
-                                    <td>
-                                        {{ schedule.assigned_to.get_full_name }}
-                                        <small class="text-muted">({{ schedule.assigned_to.employee_id }})</small>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Assigned By</th>
-                                    <td>
-                                        {% if schedule.assigned_by %}
-                                            {% firstof schedule.assigned_by.get_full_name schedule.assigned_by.username %}
-                                        {% else %}
-                                            <span class="text-muted">
-                                                System Auto Scheduled
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Plants</th>
-                                    <td>
-                                        {% for plant in schedule.plants.all %}
-                                            <span class="badge badge-primary mr-1">
-                                                {{ plant.name }}
-                                            </span>
-                                        {% empty %}
-                                            <span class="text-muted">No plants assigned</span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Zones</th>
-                                    <td>
-                                        {% for zone in schedule.zones.all %}
-                                            <span class="badge badge-info mr-1">
-                                                {{ zone.name }}
-                                            </span>
-                                        {% empty %}
-                                            <span class="text-muted">No zones assigned</span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Locations</th>
-                                    <td>
-                                        {% for location in schedule.locations.all %}
-                                            <span class="badge badge-secondary mr-1">
-                                                {{ location.name }}
-                                            </span>
-                                        {% empty %}
-                                            <span class="text-muted">No locations assigned</span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Sub-Locations</th>
-                                    <td>
-                                        {% for sublocation in schedule.sublocations.all %}
-                                            <span class="badge badge-dark mr-1">
-                                                {{ sublocation.name }}
-                                            </span>
-                                        {% empty %}
-                                            <span class="text-muted">No sub-locations assigned</span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                {% if schedule.department %}
-                                <tr>
-                                    <th>Department</th>
-                                    <td>{{ schedule.department.name }}</td>
-                                </tr>
-                                {% endif %}
-                                <tr>
-                                    <th>Scheduled Date</th>
-                                    <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Due Date</th>
-                                    <td>
-                                        {{ schedule.due_date|date:"d M Y" }}
-                                        {% if schedule.is_overdue %}
-                                            <span class="badge badge-danger ml-2">Overdue</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% if schedule.assignment_notes %}
-                                <tr>
-                                    <th>Assignment Notes</th>
-                                    <td>{{ schedule.assignment_notes }}</td>
-                                </tr>
-                                {% endif %}
-                                <tr>
-                                    <th>Created</th>
-                                    <td>{{ schedule.created_at|date:"d M Y H:i" }}</td>
-                                </tr>
-                                <tr>
-                                    <th>End Date</th>
-                                    <td>
-                                        {{ schedule.scheduled_end_date|date:"d M Y" }}
-                                    </td>
-                                </tr>
-                                {% if schedule.started_at %}
-                                <tr>
-                                    <th>Started At</th>
-                                    <td>{{ schedule.started_at|date:"d M Y H:i" }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if schedule.completed_at %}
-                                <tr>
-                                    <th>Completed At</th>
-                                    <td>{{ schedule.completed_at|date:"d M Y H:i" }}</td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Timeline -->
-            <div class="col-md-4">
-                <div class="ehs-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-history"></i> Timeline
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- <ul class="timeline"> -->
-                            <li>
-                                <i class="fas fa-plus bg-primary"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Schedule Created</h3>
-                                    <div class="timeline-body">
-                                        {{ schedule.created_at|date:"d M Y H:i" }}
-                                    </div>
-                                </div>
-                            </li>
-                            
-                            {% if schedule.reminder_sent %}
-                            <li>
-                                <i class="fas fa-bell bg-info"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Reminder Sent</h3>
-                                    <div class="timeline-body">
-                                        {{ schedule.reminder_sent_at|date:"d M Y H:i" }}
-                                    </div>
-                                </div>
-                            </li>
-                            {% endif %}
-                            
-                            {% if schedule.started_at %}
-                            <li>
-                                <i class="fas fa-play bg-warning"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Inspection Started</h3>
-                                    <div class="timeline-body">
-                                        {{ schedule.started_at|date:"d M Y H:i" }}
-                                    </div>
-                                </div>
-                            </li>
-                            {% endif %}
-                            
-                            {% if schedule.completed_at %}
-                            <li>
-                                <i class="fas fa-check bg-success"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Inspection Completed</h3>
-                                    <div class="timeline-body">
-                                        {{ schedule.completed_at|date:"d M Y H:i" }}
-                                    </div>
-                                </div>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Next Inspection Preview  -->
-                {% if schedule.auto_schedule_config %}
-                    <div class="ehs-card mt-3">
-
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-calendar-alt text-primary"></i>
-                                Next Inspection Preview
-                            </h3>
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="alert alert-info mb-2">
-
-                                <div class="mb-2">
-                                    <strong>Inspection Type:</strong>
-                                    {{ schedule.template.get_inspection_type_display }}
-                                </div>
-
-                                <div class="mb-2">
-                                    <strong>Next Start Date:</strong>
-                                    <span id="detailPreviewStartDate">-</span>
-                                </div>
-
-                                <div>
-                                    <strong>Next Due Date:</strong>
-                                    <span id="detailPreviewDueDate">-</span>
-                                </div>
-
-                            </div>
-
-                            <div class="text-danger small font-weight-bold"
-                                id="detailInspectionPreviewNote">
-                            </div>
-
-                        </div>
-
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div>
+        <h1>Schedule Details</h1>
+        <p class="subtitle">{{ schedule.schedule_code }}</p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION BUTTONS                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-actions">
+    <a href="{% url 'inspections:schedule_list' %}" class="btn-dash secondary">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+
+    {% if can_edit %}
+    <a href="{% url 'inspections:schedule_edit' schedule.pk %}" class="btn-dash warning">
+      <i class="fas fa-edit"></i> Edit
+    </a>
+    {% endif %}
+
+    {% if can_cancel %}
+    <a href="{% url 'inspections:schedule_cancel' schedule.pk %}" class="btn-dash danger">
+      <i class="fas fa-ban"></i> Cancel
+    </a>
+    {% endif %}
+
+    {% if can_restart %}
+    <a href="{% url 'inspections:schedule_restart' schedule.pk %}" class="btn-dash danger">
+      <i class="fas fa-redo"></i> Restart
+    </a>
+    {% endif %}
+
+    {% if schedule.status != 'COMPLETED' and schedule.status != 'LATE_CLOSE' and schedule.status != 'CANCELLED' %}
+    <a href="{% url 'inspections:schedule_send_reminder' schedule.pk %}" class="btn-dash info" id="sendReminderBtn">
+      <i class="fas fa-bell"></i> Send Reminder
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ========================================================== -->
+  <div class="row">
+
+    <!-- LEFT COLUMN - Schedule Details -->
+    <div class="col-md-8">
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-info-circle"></i>
+            Schedule Details
+          </h3>
+          <span class="dash-badge
+            {% if schedule.status == 'SCHEDULED' %}badge-primary
+            {% elif schedule.status == 'IN_PROGRESS' %}badge-warning
+            {% elif schedule.status == 'COMPLETED' or schedule.status == 'LATE_CLOSE' %}badge-success
+            {% elif schedule.status == 'OVERDUE' %}badge-danger
+            {% else %}badge-secondary{% endif %}">
+            {{ schedule.get_status_display }}
+          </span>
+        </div>
+        <div class="card-body-custom">
+          <table class="dash-detail-table">
+            <tbody>
+              <tr>
+                <td>Schedule Code</td>
+                <td><strong>{{ schedule.schedule_code }}</strong></td>
+              </tr>
+              <tr>
+                <td>Template</td>
+                <td>
+                  <a href="{% url 'inspections:template_detail' schedule.template.pk %}" style="color: var(--primary-teal); text-decoration: none; font-weight: 500;">
+                    {{ schedule.template.template_name }}
+                  </a>
+                  <span class="dash-badge badge-info ml-2">{{ schedule.template.get_total_questions }} questions</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Assigned To</td>
+                <td>
+                  {{ schedule.assigned_to.get_full_name }}
+                  <small class="text-muted">({{ schedule.assigned_to.employee_id }})</small>
+                </td>
+              </tr>
+              <tr>
+                <td>Assigned By</td>
+                <td>
+                  {% if schedule.assigned_by %}
+                    {% firstof schedule.assigned_by.get_full_name schedule.assigned_by.username %}
+                  {% else %}
+                    <span class="text-muted">System Auto Scheduled</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>Plants</td>
+                <td>
+                  {% for plant in schedule.plants.all %}
+                    <span class="plant-badge">{{ plant.name }}</span>
+                  {% empty %}
+                    <span class="text-muted">No plants assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Zones</td>
+                <td>
+                  {% for zone in schedule.zones.all %}
+                    <span class="zone-badge">{{ zone.name }}</span>
+                  {% empty %}
+                    <span class="text-muted">No zones assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Locations</td>
+                <td>
+                  {% for location in schedule.locations.all %}
+                    <span class="location-badge">{{ location.name }}</span>
+                  {% empty %}
+                    <span class="text-muted">No locations assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Sub-Locations</td>
+                <td>
+                  {% for sublocation in schedule.sublocations.all %}
+                    <span class="sublocation-badge">{{ sublocation.name }}</span>
+                  {% empty %}
+                    <span class="text-muted">No sub-locations assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              {% if schedule.department %}
+              <tr>
+                <td>Department</td>
+                <td>{{ schedule.department.name }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td>Scheduled Date</td>
+                <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
+              </tr>
+              <tr>
+                <td>Due Date</td>
+                <td>
+                  {{ schedule.due_date|date:"d M Y" }}
+                  {% if schedule.is_overdue %}
+                    <span class="dash-badge badge-danger ml-2">Overdue</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% if schedule.assignment_notes %}
+              <tr>
+                <td>Assignment Notes</td>
+                <td>{{ schedule.assignment_notes }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td>Created</td>
+                <td>{{ schedule.created_at|date:"d M Y H:i" }}</td>
+              </tr>
+              <tr>
+                <td>End Date</td>
+                <td>{{ schedule.scheduled_end_date|date:"d M Y" }}</td>
+              </tr>
+              {% if schedule.started_at %}
+              <tr>
+                <td>Started At</td>
+                <td>{{ schedule.started_at|date:"d M Y H:i" }}</td>
+              </tr>
+              {% endif %}
+              {% if schedule.completed_at %}
+              <tr>
+                <td>Completed At</td>
+                <td>{{ schedule.completed_at|date:"d M Y H:i" }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN - Timeline & Next Preview -->
+    <div class="col-md-4">
+
+      <!-- Timeline -->
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-history"></i>
+            Timeline
+          </h3>
+        </div>
+        <div class="card-body-custom">
+          <ul class="timeline-custom">
+            <li class="timeline-item">
+              <div class="timeline-icon primary"><i class="fas fa-plus"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Schedule Created</div>
+                <div class="timeline-body">{{ schedule.created_at|date:"d M Y H:i" }}</div>
+              </div>
+            </li>
+
+            {% if schedule.reminder_sent %}
+            <li class="timeline-item">
+              <div class="timeline-icon info"><i class="fas fa-bell"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Reminder Sent</div>
+                <div class="timeline-body">{{ schedule.reminder_sent_at|date:"d M Y H:i" }}</div>
+              </div>
+            </li>
+            {% endif %}
+
+            {% if schedule.started_at %}
+            <li class="timeline-item">
+              <div class="timeline-icon warning"><i class="fas fa-play"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Inspection Started</div>
+                <div class="timeline-body">{{ schedule.started_at|date:"d M Y H:i" }}</div>
+              </div>
+            </li>
+            {% endif %}
+
+            {% if schedule.completed_at %}
+            <li class="timeline-item">
+              <div class="timeline-icon success"><i class="fas fa-check"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Inspection Completed</div>
+                <div class="timeline-body">{{ schedule.completed_at|date:"d M Y H:i" }}</div>
+              </div>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Next Inspection Preview -->
+      {% if schedule.auto_schedule_config %}
+      <div class="dash-card">
+        <div class="card-header-custom" style="background: var(--primary-teal-light);">
+          <h3>
+            <i class="fas fa-calendar-alt" style="color: var(--primary-teal);"></i>
+            Next Inspection Preview
+          </h3>
+        </div>
+        <div class="card-body-custom">
+          <div class="alert-custom alert-info">
+            <i class="fas fa-calendar-day"></i>
+            <div class="alert-content">
+              <div style="margin-bottom: 8px;">
+                <strong>Inspection Type:</strong>
+                {{ schedule.template.get_inspection_type_display }}
+              </div>
+              <div style="margin-bottom: 8px;">
+                <strong>Next Start Date:</strong>
+                <span id="detailPreviewStartDate">-</span>
+              </div>
+              <div>
+                <strong>Next Due Date:</strong>
+                <span id="detailPreviewDueDate">-</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-danger small font-weight-bold" id="detailInspectionPreviewNote"></div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
 
@@ -315,82 +850,43 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if schedule.auto_schedule_config %}
 
     var inspectionType = "{{ schedule.template.inspection_type }}";
-
-    var offset =
-        {{ schedule.auto_schedule_config.due_date_offset_days|default:1 }};
-
-    var now = new Date(
-        "{{ schedule.scheduled_date|date:'Y-m-d' }}"
-    );
-
+    var offset = {{ schedule.auto_schedule_config.due_date_offset_days|default:1 }};
+    var now = new Date("{{ schedule.scheduled_date|date:'Y-m-d' }}");
     var startDate = new Date(now);
 
     // DAILY
     if (inspectionType === 'DAILY') {
-
         startDate.setDate(now.getDate() + 1);
-
-        // Skip Sunday
         if (startDate.getDay() === 0) {
             startDate.setDate(startDate.getDate() + 1);
         }
     }
-
     // WEEKLY
     else if (inspectionType === 'WEEKLY') {
-
         var day = now.getDay();
-
         var daysUntilMonday = (8 - day) % 7;
-
         if (daysUntilMonday === 0) {
             daysUntilMonday = 7;
         }
-
-        startDate.setDate(
-            now.getDate() + daysUntilMonday
-        );
+        startDate.setDate(now.getDate() + daysUntilMonday);
     }
-
     // MONTHLY
     else if (inspectionType === 'MONTHLY') {
-
-        startDate = new Date(
-            now.getFullYear(),
-            now.getMonth() + 1,
-            1
-        );
+        startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     }
-
     // QUARTERLY
     else if (inspectionType === 'QUARTERLY') {
-
-        var nextQuarterMonth =
-            Math.floor(now.getMonth() / 3) * 3 + 3;
-
-        startDate = new Date(
-            now.getFullYear(),
-            nextQuarterMonth,
-            1
-        );
+        var nextQuarterMonth = Math.floor(now.getMonth() / 3) * 3 + 3;
+        startDate = new Date(now.getFullYear(), nextQuarterMonth, 1);
     }
-
     // ANNUAL
     else if (inspectionType === 'ANNUAL') {
-
-        startDate = new Date(
-            now.getFullYear() + 1,
-            0,
-            1
-        );
+        startDate = new Date(now.getFullYear() + 1, 0, 1);
     }
 
     // Due date
     var dueDate = new Date(startDate);
-
-    dueDate.setDate(
-        dueDate.getDate() + (offset - 1)
-    );
+    dueDate.setDate(dueDate.getDate() + (offset - 1));
 
     // Format
     var options = {
@@ -423,17 +919,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
-</script>
-<script>
-    document.getElementById('sendReminderBtn')?.addEventListener('click',function(e){
-        if(this.dataset.clicked){
-            e.preventDefault();
-            return;
-        }
-
-        this.dataset.clicked = true;
-        this.classList.add('disabled');
-        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
-    });
+document.getElementById('sendReminderBtn')?.addEventListener('click', function(e) {
+    if (this.dataset.clicked) {
+        e.preventDefault();
+        return;
+    }
+    this.dataset.clicked = true;
+    this.classList.add('disabled');
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
+});
 </script>
 {% endblock %}

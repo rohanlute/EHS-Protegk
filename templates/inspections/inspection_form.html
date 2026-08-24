@@ -1,556 +1,1355 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Fill Inspection{% endblock %}
-{% block page_title %}Inspection: {{ schedule.schedule_code }}{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:my_inspections' %}">My Inspections</a></li>
-<li class="breadcrumb-item active">{{ schedule.schedule_code }}</li>
-{% endblock %}
+{% block title %}Fill Inspection | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-  .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
-    max-height: 350px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
-    padding: 15px;
-    border-radius: 5px;
-    background: #f8f9fa;
+  /* ===== FILL INSPECTION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
   }
 
-  .checkbox-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 10px;
-    background: white;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-    cursor: pointer;
-    transition: background 0.15s;
+  .content-wrapper {
+    background: var(--bg-page) !important;
   }
 
-  .checkbox-item:hover {
-    background: #e7f3ff;
-    border-color: #b8d4f0;
-  }
-
-  .checkbox-item input[type="checkbox"] {
-    margin-right: 10px;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-
-  .checkbox-item label {
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
     margin: 0;
-    cursor: pointer;
-    font-size: 0.9rem;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
   }
 
-  .select-all-bar {
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* INSPECTION HEADER CARD                                      */
+  /* ========================================================== */
+  .dash-header-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-header-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-header-card .card-header-custom {
+    padding: 16px 22px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-header-card .card-header-custom h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #e9ecef;
-    border-radius: 5px;
   }
 
-  .group-header {
-    grid-column: 1 / -1;
-    background: #d1ecf1;
-    padding: 7px 12px;
-    font-weight: 600;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: #0c5460;
-    border-left: 3px solid #17a2b8;
+  .dash-header-card .card-header-custom h4 i {
+    color: rgba(255, 255, 255, 0.9);
   }
 
-  .section-label {
+  .dash-header-card .card-header-custom .badge-light {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 5px;
+  }
+
+  .dash-header-card .card-body-custom {
+    padding: 20px 22px;
+  }
+
+  .dash-header-card .card-body-custom .info-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .dash-header-card .card-body-custom .info-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .dash-header-card .card-body-custom .badge-teal {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.1);
+    margin: 2px 4px 2px 0;
+  }
+
+  .dash-header-card .card-body-custom .badge-secondary {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid var(--border-color);
+    margin: 2px 4px 2px 0;
+  }
+
+  .dash-header-card .card-body-custom .badge-gold {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.1);
+    margin: 2px 4px 2px 0;
+  }
+
+  .alert-info-custom {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    margin-top: 12px;
+  }
+
+  .alert-info-custom i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  /* ========================================================== */
+  /* SCOPE CARD                                                  */
+  /* ========================================================== */
+  .dash-scope-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-scope-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-scope-card .card-header-custom {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--primary-teal-dark), var(--primary-teal));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dash-scope-card .card-header-custom h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .badge-count {
-    background: #007bff;
+  .dash-scope-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GRID                                               */
+  /* ========================================================== */
+  .checkbox-grid-custom {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    max-height: 350px;
+    overflow-y: auto;
+    border: 2px solid var(--border-color);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: #fafbfc;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .checkbox-grid-custom::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 3px;
+  }
+
+  .checkbox-item-custom {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .checkbox-item-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .checkbox-item-custom input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .checkbox-item-custom label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .checkbox-item-custom label strong {
+    color: var(--text-primary);
+  }
+
+  .checkbox-item-custom label .text-muted {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* SELECT ALL BAR                                              */
+  /* ========================================================== */
+  .select-all-bar-custom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-sm-outline-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-sm-outline-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm-outline-custom.primary {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm-outline-custom.primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* GROUP HEADER                                                */
+  /* ========================================================== */
+  .group-header-custom {
+    grid-column: 1 / -1;
+    background: var(--primary-teal-light);
+    padding: 6px 12px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--primary-teal);
+    border-left: 3px solid var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* SECTION LABEL                                               */
+  /* ========================================================== */
+  .section-label-custom {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .badge-count-custom {
+    background: var(--primary-teal);
     color: white;
     border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    padding: 2px 10px;
+    font-size: 11px;
     font-weight: 600;
   }
 
-  .loading-text {
-    color: #6c757d;
+  .loading-text-custom {
+    color: var(--text-muted);
     font-style: italic;
     padding: 10px;
     grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .loading-text-custom i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  /* ========================================================== */
+  /* QUESTION BLOCK                                              */
+  /* ========================================================== */
+  .question-block-custom {
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fafbfc;
+    transition: all 0.3s ease;
+  }
+
+  .question-block-custom:hover {
+    border-color: var(--primary-teal);
+  }
+
+  .question-block-custom.mandatory {
+    border-left: 4px solid var(--secondary-gold);
+  }
+
+  .question-block-custom .question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .question-block-custom .question-header .question-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  .question-block-custom .question-header .question-text .badge-code {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .question-block-custom .question-header .question-text .required-star {
+    color: var(--secondary-red);
+  }
+
+  .question-block-custom .question-header .badge-critical {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .question-block-custom .guidance-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .question-block-custom .guidance-text i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* BUTTON GROUPS                                               */
+  /* ========================================================== */
+  .btn-group-custom {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .btn-option-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-option-custom:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-option-custom.active {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-option-custom.active-success {
+    border-color: var(--secondary-green);
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-option-custom.active-danger {
+    border-color: var(--secondary-red);
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-option-custom.active-secondary {
+    border-color: var(--text-muted);
+    background: var(--text-muted);
+    color: white;
+  }
+
+  .btn-option-custom i {
+    font-size: 14px;
+  }
+
+  .btn-option-custom input[type="radio"] {
+    display: none;
+  }
+
+  /* ========================================================== */
+  /* PHOTO UPLOAD                                                */
+  /* ========================================================== */
+  .add-photo-btn-custom {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .add-photo-btn-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .add-photo-btn-custom i {
+    color: var(--primary-teal);
+    font-size: 28px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .add-photo-btn-custom p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .photo-preview-custom {
+    margin-top: 10px;
+  }
+
+  .photo-preview-custom img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+  }
+
+  .photo-preview-custom .photo-meta {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* FORM FOOTER                                                 */
+  /* ========================================================== */
+  .dash-footer-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+  }
+
+  .dash-footer-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-footer-card .card-body-custom {
+    padding: 20px 24px;
+    text-align: center;
+  }
+
+  .dash-footer-card .card-body-custom .footer-text {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .footer-btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-footer {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-footer:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-footer.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-footer.primary:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-footer.success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-footer.success:hover {
+    background: #16a34a;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-footer.secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-footer.secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-footer.outline-primary {
+    background: transparent;
+    color: var(--primary-teal);
+    border: 2px solid var(--primary-teal);
+  }
+  .btn-footer.outline-primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* MODAL                                                       */
+  /* ========================================================== */
+  .photo-modal-custom {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    z-index: 9999;
+  }
+
+  .photo-modal-custom .modal-title {
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+  }
+
+  .photo-modal-custom .modal-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    margin-bottom: 10px;
+  }
+
+  .photo-modal-custom .modal-btn.camera {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .photo-modal-custom .modal-btn.camera:hover {
+    background: var(--primary-teal-dark);
+  }
+
+  .photo-modal-custom .modal-btn.gallery {
+    background: transparent;
+    color: var(--primary-teal);
+    border: 2px solid var(--primary-teal);
+  }
+  .photo-modal-custom .modal-btn.gallery:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .photo-modal-custom .modal-btn.cancel {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+  }
+  .photo-modal-custom .modal-btn.cancel:hover {
+    background: #e2e8f0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-header-card .card-body-custom {
+      padding: 16px 18px;
+    }
+    .checkbox-grid-custom {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-header-card .card-header-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-header-card .card-header-custom h4 {
+      font-size: 16px;
+    }
+
+    .dash-header-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-scope-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .checkbox-grid-custom {
+      grid-template-columns: 1fr;
+      max-height: 250px;
+      padding: 10px;
+    }
+
+    .select-all-bar-custom {
+      flex-wrap: wrap;
+    }
+
+    .question-block-custom {
+      padding: 12px 14px;
+    }
+
+    .question-block-custom .question-header .question-text {
+      font-size: 14px;
+    }
+
+    .btn-group-custom {
+      gap: 6px;
+    }
+
+    .btn-option-custom {
+      font-size: 13px;
+      padding: 5px 12px;
+    }
+
+    .dash-footer-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .footer-btn-group {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-footer {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .photo-preview-custom img {
+      width: 90px;
+      height: 90px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-header-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .question-block-custom {
+      padding: 10px 12px;
+    }
+
+    .question-block-custom .question-header .question-text {
+      font-size: 13px;
+    }
+
+    .btn-option-custom {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+
+    .btn-footer {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+
+    .photo-modal-custom {
+      padding: 14px 16px;
+    }
+
+    .photo-modal-custom .modal-btn {
+      font-size: 14px;
+      padding: 8px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<form method="post" action="{% url 'inspections:inspection_submit' schedule.id %}" enctype="multipart/form-data" novalidate>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div>
+        <h1>Fill Inspection</h1>
+        <p class="subtitle">{{ schedule.schedule_code }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INSPECTION HEADER CARD                                      -->
+  <!-- ========================================================== -->
+  <div class="dash-header-card">
+    <div class="card-header-custom">
+      <h4>
+        <i class="fas fa-clipboard-check"></i>
+        {{ schedule.template.template_name }}
+      </h4>
+      <span class="badge-light">
+        <i class="fas fa-list"></i> {{ total_questions }} Questions
+      </span>
+    </div>
+    <div class="card-body-custom">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Plants</span>
+          <div class="mt-1">
+            {% for plant in header_plants %}
+              <span class="badge-teal">{{ plant.name }}{% if plant.code %} ({{ plant.code }}){% endif %}</span>
+            {% empty %}
+              <span class="text-muted">No plants available</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Zones</span>
+          <div class="mt-1">
+            {% for zone in header_zones %}
+              <span class="badge-secondary">{{ zone.name }}{% if zone.code %} ({{ zone.code }}){% endif %}</span>
+            {% empty %}
+              <span class="text-muted">No zones available</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Locations</span>
+          <div class="mt-1">
+            {% for location in header_locations %}
+              <span class="badge-secondary">{{ location.name }}{% if location.code %} ({{ location.code }}){% endif %}</span>
+            {% empty %}
+              <span class="text-muted">No locations available</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <span class="info-label">Sub-Locations</span>
+          <div class="mt-1">
+            {% for sublocation in header_sublocations %}
+              <span class="badge-gold">{{ sublocation.name }}{% if sublocation.code %} ({{ sublocation.code }}){% endif %}</span>
+            {% empty %}
+              <span class="text-muted">No sub-locations available</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <span class="info-label">Assigned To</span>
+          <span class="info-value">{{ schedule.assigned_to.get_full_name }}</span>
+        </div>
+        <div class="col-md-3 mb-3">
+          <span class="info-label">Scheduled</span>
+          <span class="info-value">{{ schedule.scheduled_date|date:"d M Y" }}</span>
+        </div>
+        <div class="col-md-3 mb-3">
+          <span class="info-label">Due Date</span>
+          <span class="info-value" style="color: var(--secondary-red);">{{ schedule.due_date|date:"d M Y" }}</span>
+        </div>
+        <div class="col-md-3 mb-3">
+          <span class="info-label">Conducted By</span>
+          <span class="info-value">{{ user.get_full_name }}</span>
+        </div>
+      </div>
+      {% if schedule.assignment_notes %}
+      <div class="alert-info-custom">
+        <i class="fas fa-info-circle"></i>
+        <strong>Instructions:</strong> {{ schedule.assignment_notes }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INSPECTION SCOPE CARD                                       -->
+  <!-- ========================================================== -->
+  {% if schedule.is_dynamic_area_assignment %}
+  <div class="dash-scope-card">
+    <div class="card-header-custom">
+      <h5>
+        <i class="fas fa-map-marker-alt"></i>
+        Inspection Scope
+      </h5>
+    </div>
+    <div class="card-body-custom">
+
+      <!-- Plants -->
+      <div class="mb-4">
+        <div class="section-label-custom">
+          <span>Plants <span class="required-star" style="color: var(--secondary-red);">*</span></span>
+          <span class="badge-count-custom" id="plantCount">0</span>
+        </div>
+        <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
+        <div class="select-all-bar-custom">
+          <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
+            <i class="fas fa-check-square"></i> Select All
+          </button>
+          <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('plant-checkbox', updatePlantCount)">
+            <i class="fas fa-square"></i> Deselect All
+          </button>
+        </div>
+        <div class="checkbox-grid-custom" id="plantsGrid">
+          <div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading plants...</div>
+        </div>
+        <div id="plantsError" class="text-danger small mt-2">{% if scope_errors.selected_plants %}{{ scope_errors.selected_plants }}{% endif %}</div>
+      </div>
+
+      <!-- Zones -->
+      <div class="mb-4">
+        <div class="section-label-custom">
+          <span>Zones</span>
+          <span class="badge-count-custom" id="zoneCount">0</span>
+        </div>
+        <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
+        <div class="select-all-bar-custom" id="zoneSelectBar" style="display:none;">
+          <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
+            <i class="fas fa-check-square"></i> Select All
+          </button>
+          <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('zone-checkbox', updateZoneCount)">
+            <i class="fas fa-square"></i> Deselect All
+          </button>
+        </div>
+        <div class="checkbox-grid-custom" id="zonesGrid">
+          <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select plants first</div>
+        </div>
+        <div id="zonesError" class="text-danger small mt-2">{% if scope_errors.selected_zones %}{{ scope_errors.selected_zones }}{% endif %}</div>
+      </div>
+
+      <!-- Locations -->
+      <div class="mb-4">
+        <div class="section-label-custom">
+          <span>Locations</span>
+          <span class="badge-count-custom" id="locationCount">0</span>
+        </div>
+        <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
+        <div class="select-all-bar-custom" id="locationSelectBar" style="display:none;">
+          <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('location-checkbox', updateLocationCount)">
+            <i class="fas fa-check-square"></i> Select All
+          </button>
+          <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('location-checkbox', updateLocationCount)">
+            <i class="fas fa-square"></i> Deselect All
+          </button>
+        </div>
+        <div class="checkbox-grid-custom" id="locationsGrid">
+          <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select zones first</div>
+        </div>
+        <div id="locationsError" class="text-danger small mt-2">{% if scope_errors.selected_locations %}{{ scope_errors.selected_locations }}{% endif %}</div>
+      </div>
+
+      <!-- Sub-Locations -->
+      <div class="mb-0">
+        <div class="section-label-custom">
+          <span>Sub-Locations</span>
+          <span class="badge-count-custom" id="sublocationCount">0</span>
+        </div>
+        <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
+        <div class="select-all-bar-custom" id="sublocationSelectBar" style="display:none;">
+          <button type="button" class="btn-sm-outline-custom primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
+            <i class="fas fa-check-square"></i> Select All
+          </button>
+          <button type="button" class="btn-sm-outline-custom" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
+            <i class="fas fa-square"></i> Deselect All
+          </button>
+        </div>
+        <div class="checkbox-grid-custom" id="sublocationsGrid">
+          <div class="loading-text-custom"><i class="fas fa-arrow-left"></i> Please select locations first</div>
+        </div>
+        <div id="sublocationsError" class="text-danger small mt-2">{% if scope_errors.selected_sublocations %}{{ scope_errors.selected_sublocations }}{% endif %}</div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Hidden inputs for static scope -->
+  {% if not schedule.is_dynamic_area_assignment %}
+    {% for plant_id in selected_plant_ids %}
+      <input type="hidden" name="selected_plants" value="{{ plant_id }}">
+    {% endfor %}
+    {% for zone_id in selected_zone_ids %}
+      <input type="hidden" name="selected_zones" value="{{ zone_id }}">
+    {% endfor %}
+    {% for location_id in selected_location_ids %}
+      <input type="hidden" name="selected_locations" value="{{ location_id }}">
+    {% endfor %}
+    {% for sublocation_id in selected_sublocation_ids %}
+      <input type="hidden" name="selected_sublocations" value="{{ sublocation_id }}">
+    {% endfor %}
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- QUESTIONS BY CATEGORY                                       -->
+  <!-- ========================================================== -->
+  <form method="post" action="{% url 'inspections:inspection_submit' schedule.id %}" enctype="multipart/form-data" novalidate id="inspectionForm">
     {% csrf_token %}
+
     {% if non_field_errors %}
     <div class="alert alert-danger">
-        {% for error in non_field_errors %}
+      {% for error in non_field_errors %}
         <div>{{ error }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <!-- Inspection Header -->
-    <div class="card mb-3">
-        <div class="card-header" style="background: linear-gradient(135deg, #1E90FF, #7CB342); color: white;">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h4 class="mb-0">
-                        <i class="fas fa-clipboard-check"></i> {{ schedule.template.template_name }}
-                    </h4>
-                </div>
-                <div class="col-md-4 text-right">
-                    <span class="badge badge-light" style="font-size: 1em;">
-                        {{ total_questions }} Questions
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <strong><i class="fas fa-industry"></i> Plants:</strong><br>
-                    <div class="mt-1">
-                        {% for plant in header_plants %}
-                            <span class="badge badge-info mr-1 mb-1">{{ plant.name }}{% if plant.code %} ({{ plant.code }}){% endif %}</span>
-                        {% empty %}
-                            <span class="text-muted">No plants available</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong><i class="fas fa-map-marker-alt"></i> Zones:</strong><br>
-                    <div class="mt-1">
-                        {% for zone in header_zones %}
-                            <span class="badge badge-secondary mr-1 mb-1">{{ zone.name }}{% if zone.code %} ({{ zone.code }}){% endif %}</span>
-                        {% empty %}
-                            <span class="text-muted">No zones available</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong><i class="fas fa-location-arrow"></i> Locations:</strong><br>
-                    <div class="mt-1">
-                        {% for location in header_locations %}
-                            <span class="badge badge-light mr-1 mb-1">{{ location.name }}{% if location.code %} ({{ location.code }}){% endif %}</span>
-                        {% empty %}
-                            <span class="text-muted">No locations available</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <strong><i class="fas fa-map-pin"></i> Sub-Locations:</strong><br>
-                    <div class="mt-1">
-                        {% for sublocation in header_sublocations %}
-                            <span class="badge badge-warning mr-1 mb-1">{{ sublocation.name }}{% if sublocation.code %} ({{ sublocation.code }}){% endif %}</span>
-                        {% empty %}
-                            <span class="text-muted">No sub-locations available</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <strong><i class="fas fa-user"></i> Assigned To:</strong><br>
-                    {{ schedule.assigned_to.get_full_name }}
-                </div>
-                <div class="col-md-3 mb-3">
-                    <strong><i class="fas fa-calendar-alt"></i> Scheduled:</strong><br>
-                    {{ schedule.scheduled_date|date:"d M Y" }}
-                </div>
-                <div class="col-md-3 mb-3">
-                    <strong><i class="fas fa-clock"></i> Due Date:</strong><br>
-                    <span class="text-danger">{{ schedule.due_date|date:"d M Y" }}</span>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <strong><i class="fas fa-user-check"></i> Conducted By:</strong><br>
-                    {{ user.get_full_name }}
-                </div>
-            </div>
-            {% if schedule.assignment_notes %}
-            <div class="alert alert-info mt-3 mb-0">
-                <strong><i class="fas fa-info-circle"></i> Instructions:</strong><br>
-                {{ schedule.assignment_notes }}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    {% if schedule.is_dynamic_area_assignment %}
-    <div class="card mb-3">
-        <div class="card-header" style="background: linear-gradient(135deg, #0f766e, #0ea5e9); color: white;">
-            <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Inspection Scope</h5>
-        </div>
-        <div class="card-body">
-            <div class="mb-4">
-                <div class="section-label">
-                    <span>Plants <span class="text-danger">*</span></span>
-                    <span class="badge-count" id="plantCount">0</span>
-                </div>
-                <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
-                <div class="select-all-bar">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
-                        <i class="fas fa-check-square mr-1"></i> Select All
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount)">
-                        <i class="fas fa-square mr-1"></i> Deselect All
-                    </button>
-                </div>
-                <div class="checkbox-grid" id="plantsGrid">
-                    <div class="loading-text">Loading plants...</div>
-                </div>
-                <div id="plantsError" class="text-danger small mt-2">{% if scope_errors.selected_plants %}{{ scope_errors.selected_plants }}{% endif %}</div>
-            </div>
-
-            <div class="mb-4">
-                <div class="section-label">
-                    <span>Zones</span>
-                    <span class="badge-count" id="zoneCount">0</span>
-                </div>
-                <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
-                <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('zone-checkbox', updateZoneCount)">
-                        <i class="fas fa-check-square mr-1"></i> Select All
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('zone-checkbox', updateZoneCount)">
-                        <i class="fas fa-square mr-1"></i> Deselect All
-                    </button>
-                </div>
-                <div class="checkbox-grid" id="zonesGrid">
-                    <div class="loading-text">Please select plants first</div>
-                </div>
-                <div id="zonesError" class="text-danger small mt-2">{% if scope_errors.selected_zones %}{{ scope_errors.selected_zones }}{% endif %}</div>
-            </div>
-
-            <div class="mb-4">
-                <div class="section-label">
-                    <span>Locations</span>
-                    <span class="badge-count" id="locationCount">0</span>
-                </div>
-                <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
-                <div class="select-all-bar" id="locationSelectBar" style="display:none;">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('location-checkbox', updateLocationCount)">
-                        <i class="fas fa-check-square mr-1"></i> Select All
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('location-checkbox', updateLocationCount)">
-                        <i class="fas fa-square mr-1"></i> Deselect All
-                    </button>
-                </div>
-                <div class="checkbox-grid" id="locationsGrid">
-                    <div class="loading-text">Please select zones first</div>
-                </div>
-                <div id="locationsError" class="text-danger small mt-2">{% if scope_errors.selected_locations %}{{ scope_errors.selected_locations }}{% endif %}</div>
-            </div>
-
-            <div class="mb-0">
-                <div class="section-label">
-                    <span>Sub-Locations</span>
-                    <span class="badge-count" id="sublocationCount">0</span>
-                </div>
-                <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
-                <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
-                        <i class="fas fa-check-square mr-1"></i> Select All
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
-                        <i class="fas fa-square mr-1"></i> Deselect All
-                    </button>
-                </div>
-                <div class="checkbox-grid" id="sublocationsGrid">
-                    <div class="loading-text">Please select locations first</div>
-                </div>
-                <div id="sublocationsError" class="text-danger small mt-2">{% if scope_errors.selected_sublocations %}{{ scope_errors.selected_sublocations }}{% endif %}</div>
-            </div>
-        </div>
+      {% endfor %}
     </div>
     {% endif %}
 
-    {% if not schedule.is_dynamic_area_assignment %}
-        {% for plant_id in selected_plant_ids %}
-            <input type="hidden" name="selected_plants" value="{{ plant_id }}">
-        {% endfor %}
-        {% for zone_id in selected_zone_ids %}
-            <input type="hidden" name="selected_zones" value="{{ zone_id }}">
-        {% endfor %}
-        {% for location_id in selected_location_ids %}
-            <input type="hidden" name="selected_locations" value="{{ location_id }}">
-        {% endfor %}
-        {% for sublocation_id in selected_sublocation_ids %}
-            <input type="hidden" name="selected_sublocations" value="{{ sublocation_id }}">
-        {% endfor %}
-    {% endif %}
-    
-    <!-- Questions by Category -->
     {% for category, questions in questions_by_category.items %}
-    <div class="card mb-3">
-        <div class="card-header" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-green)); color: white;">
-            <h5 class="mb-0" style="color: #1a1a1a; margin-bottom: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.5px;">
-                {{ category.category_name }}
-                <span class="badge badge-light ml-2">{{ questions|length }} questions</span>
-            </h5>
-        </div>
-        <div class="card-body">
-            {% for tq in questions %}
-            <div class="question-block p-3 mb-3 border rounded {% if tq.is_mandatory %}border-warning{% endif %}" 
-                 style="background: #f8f9fa;">
-                
-                <!-- Question Header -->
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-0">
-                        <span class="badge badge-info mr-2">{{ tq.question.question_code }}</span>
-                        {{ tq.question.question_text }}
-                        {% if tq.is_mandatory %}
-                        <span class="text-danger">*</span>
-                        {% endif %}
-                    </h6>
-                    <div>
-                        {% if tq.question.is_critical %}
-                        <span class="badge badge-danger">Critical</span>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <!-- Guidance Notes -->
-                {% if tq.question.guidance_notes %}
-                <p class="text-muted small mb-2">
-                    <i class="fas fa-lightbulb"></i> <strong>Guidance:</strong> {{ tq.question.guidance_notes }}
-                </p>
-                {% endif %}
-                
-                {% if tq.question.reference_standard %}
-                <p class="text-muted small mb-2">
-                    <i class="fas fa-book"></i> <strong>Reference:</strong> {{ tq.question.reference_standard }}
-                </p>
-                {% endif %}
-                
-                <!-- Answer Input Based on Question Type -->
-                {% if tq.question.question_type == 'YES_NO' %}
-                <div class="form-group mb-2">
-                    <label class="font-weight-bold">Answer:</label>
-                    <div class="btn-group btn-group-toggle d-block {% if tq.answer_error %}border border-danger rounded p-2{% endif %}" data-toggle="buttons" data-question-group="{{ tq.question.id }}">
-                        <label class="btn btn-outline-success {% if tq.prefill_answer == 'Yes' %}active{% endif %}">
-                            <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="Yes" {% if tq.prefill_answer == 'Yes' %}checked{% endif %}>
-                            <i class="fas fa-check-circle"></i> Yes
-                        </label>
-                        <label class="btn btn-outline-danger ml-2 {% if tq.prefill_answer == 'No' %}active{% endif %}">
-                            <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="No" {% if tq.prefill_answer == 'No' %}checked{% endif %}>
-                            <i class="fas fa-times-circle"></i> No
-                        </label>
-                        <label class="btn btn-outline-secondary ml-2 {% if tq.prefill_answer == 'N/A' %}active{% endif %}">
-                            <input type="radio" name="question_{{ tq.question.id }}" 
-                                   value="N/A" {% if tq.prefill_answer == 'N/A' %}checked{% endif %}>
-                            <i class="fas fa-minus-circle"></i> N/A
-                        </label>
-                    </div>
-                    <div class="text-danger small mt-1" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
-                </div>
-                
-                {% elif tq.question.question_type == 'TEXT' %}
-                <div class="form-group mb-2">
-                    <label class="font-weight-bold">Answer:</label>
-                    <input type="text" name="question_{{ tq.question.id }}" 
-                           class="form-control {% if tq.answer_error %}is-invalid{% endif %}" 
-                           value="{{ tq.prefill_answer }}">
-                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
-                </div>
-                
-                {% elif tq.question.question_type == 'NUMBER' %}
-                <div class="form-group mb-2">
-                    <label class="font-weight-bold">Answer:</label>
-                    <input type="number" name="question_{{ tq.question.id }}" 
-                           class="form-control {% if tq.answer_error %}is-invalid{% endif %}" step="any"
-                           value="{{ tq.prefill_answer }}">
-                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
-                </div>
-                
-                {% elif tq.question.question_type == 'RATING' %}
-                <div class="form-group mb-2">
-                    <label class="font-weight-bold">Rating (1-5):</label>
-                    <select name="question_{{ tq.question.id }}" 
-                            class="form-control {% if tq.answer_error %}is-invalid{% endif %}" style="width: 150px;">
-                        <option value="">Select...</option>
-                        <option value="1" {% if tq.prefill_answer == '1' %}selected{% endif %}>1 - Poor</option>
-                        <option value="2" {% if tq.prefill_answer == '2' %}selected{% endif %}>2 - Fair</option>
-                        <option value="3" {% if tq.prefill_answer == '3' %}selected{% endif %}>3 - Good</option>
-                        <option value="4" {% if tq.prefill_answer == '4' %}selected{% endif %}>4 - Very Good</option>
-                        <option value="5" {% if tq.prefill_answer == '5' %}selected{% endif %}>5 - Excellent</option>
-                    </select>
-                    <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
-                </div>
-                {% endif %}
-                
-                <!-- Remarks -->
-                <div class="form-group mb-2">
-                    <label class="font-weight-bold">
-                        Remarks 
-                        {% if tq.question.is_remarks_mandatory %}<span class="text-danger">*</span>{% endif %}
-                    </label>
-                    <textarea name="remarks_{{ tq.question.id }}" 
-                              class="form-control {% if tq.remarks_error %}is-invalid{% endif %}" 
-                              rows="2"
-                              placeholder="Add your observations or comments...">{{ tq.prefill_remarks }}</textarea>
-                    <div class="invalid-feedback" style="{% if tq.remarks_error %}display:block;{% endif %}" id="error_remarks_{{ tq.question.id }}">{% if tq.remarks_error %}{{ tq.remarks_error }}{% endif %}</div>
-                </div>
-                
-                <!-- Photo Upload -->
-                {% if tq.question.is_photo_required %}
-                    <div class="form-group mb-0">
-                        <label class="font-weight-bold">
-                            <i class="fas fa-camera"></i> Photo Evidence <span class="text-danger">*</span>
-                        </label>
+    <div class="dash-scope-card">
+      <div class="card-header-custom" style="background: var(--primary-teal);">
+        <h5 style="color: white; display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-folder-open"></i>
+          {{ category.category_name }}
+          <span style="background: rgba(255,255,255,0.2); padding: 2px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">
+            {{ questions|length }} questions
+          </span>
+        </h5>
+      </div>
+      <div class="card-body-custom">
 
-                        <!-- Click Area -->
-                        <div class="add-photo-btn {% if tq.photo_error %}border border-danger{% endif %}" onclick="handleInspectionPhotoClick({{ tq.question.id }})">
-                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
-                            <p class="mb-0">Click to add photo</p>
-                        </div>
+        {% for tq in questions %}
+        <div class="question-block-custom {% if tq.is_mandatory %}mandatory{% endif %}">
 
-                        <!-- Main (Gallery Input - submitted to backend) -->
-                        <input type="file"
-                            name="photo_{{ tq.question.id }}"
-                            id="photo_{{ tq.question.id }}"
-                            class="d-none inspection-photo-input"
-                            accept="image/*"
-                            required>
-
-                        <!-- Camera Input -->
-                        <input type="file"
-                            id="photo_{{ tq.question.id }}_camera"
-                            class="d-none"
-                            accept="image/*"
-                            capture="environment">
-
-                        <!-- Preview -->
-                        <div id="preview_{{ tq.question.id }}" class="mt-2" data-has-draft-photo="{% if tq.draft_photo %}1{% else %}0{% endif %}">
-                            {% if tq.draft_photo %}
-                            <div class="mb-2">
-                                <img src="{{ tq.draft_photo.photo.url }}"
-                                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;"
-                                     alt="Saved draft photo">
-                                <small class="d-block text-muted mt-1">Saved in draft. You can keep it or upload a new one.</small>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <small class="form-text text-muted">
-                            Photo is mandatory for this question
-                        </small>
-                        <div class="text-danger small mt-1" id="error_photo_{{ tq.question.id }}">{% if tq.photo_error %}{{ tq.photo_error }}{% endif %}</div>
-                    </div>
-                {% else %}
-                    <div class="form-group mb-0">
-                        <label class="font-weight-bold">
-                            <i class="fas fa-camera"></i> Photo (Optional)
-                        </label>
-
-                        <!-- Click Area -->
-                        <div class="add-photo-btn" onclick="handleInspectionPhotoClick({{ tq.question.id }})">
-                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
-                            <p class="mb-0">Click to add photo</p>
-                        </div>
-
-                        <!-- Main (Gallery Input - submitted to backend) -->
-                        <input type="file"
-                            name="photo_{{ tq.question.id }}"
-                            id="photo_{{ tq.question.id }}"
-                            class="d-none inspection-photo-input"
-                            accept="image/*">
-
-                        <!-- Camera Input -->
-                        <input type="file"
-                            id="photo_{{ tq.question.id }}_camera"
-                            class="d-none"
-                            accept="image/*"
-                            capture="environment">
-
-                        <!-- Preview -->
-                        <div id="preview_{{ tq.question.id }}" class="mt-2" data-has-draft-photo="{% if tq.draft_photo %}1{% else %}0{% endif %}">
-                            {% if tq.draft_photo %}
-                            <div class="mb-2">
-                                <img src="{{ tq.draft_photo.photo.url }}"
-                                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;"
-                                     alt="Saved draft photo">
-                                <small class="d-block text-muted mt-1">Saved in draft. You can keep it or upload a new one.</small>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="text-danger small mt-1" id="error_photo_{{ tq.question.id }}">{% if tq.photo_error %}{{ tq.photo_error }}{% endif %}</div>
-                    </div>
-                {% endif %}
+          <!-- Question Header -->
+          <div class="question-header">
+            <div class="question-text">
+              <span class="badge-code">{{ tq.question.question_code }}</span>
+              {{ tq.question.question_text }}
+              {% if tq.is_mandatory %}
+                <span class="required-star">*</span>
+              {% endif %}
             </div>
-            {% endfor %}
+            <div>
+              {% if tq.question.is_critical %}
+                <span class="badge-critical">Critical</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Guidance Notes -->
+          {% if tq.question.guidance_notes %}
+          <div class="guidance-text">
+            <i class="fas fa-lightbulb" style="color: var(--secondary-gold);"></i>
+            <strong>Guidance:</strong> {{ tq.question.guidance_notes }}
+          </div>
+          {% endif %}
+
+          {% if tq.question.reference_standard %}
+          <div class="guidance-text">
+            <i class="fas fa-book" style="color: var(--primary-teal);"></i>
+            <strong>Reference:</strong> {{ tq.question.reference_standard }}
+          </div>
+          {% endif %}
+
+          <!-- Answer Input Based on Question Type -->
+          {% if tq.question.question_type == 'YES_NO' %}
+          <div class="form-group mb-2">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">Answer:</label>
+            <div class="btn-group-custom" data-question-group="{{ tq.question.id }}">
+              <label class="btn-option-custom {% if tq.prefill_answer == 'Yes' %}active-success{% endif %}">
+                <input type="radio" name="question_{{ tq.question.id }}" value="Yes" {% if tq.prefill_answer == 'Yes' %}checked{% endif %}>
+                <i class="fas fa-check-circle"></i> Yes
+              </label>
+              <label class="btn-option-custom {% if tq.prefill_answer == 'No' %}active-danger{% endif %}">
+                <input type="radio" name="question_{{ tq.question.id }}" value="No" {% if tq.prefill_answer == 'No' %}checked{% endif %}>
+                <i class="fas fa-times-circle"></i> No
+              </label>
+              <label class="btn-option-custom {% if tq.prefill_answer == 'N/A' %}active-secondary{% endif %}">
+                <input type="radio" name="question_{{ tq.question.id }}" value="N/A" {% if tq.prefill_answer == 'N/A' %}checked{% endif %}>
+                <i class="fas fa-minus-circle"></i> N/A
+              </label>
+            </div>
+            <div class="text-danger small mt-1" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
+          </div>
+
+          {% elif tq.question.question_type == 'TEXT' %}
+          <div class="form-group mb-2">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">Answer:</label>
+            <input type="text" name="question_{{ tq.question.id }}" 
+                   class="form-control {% if tq.answer_error %}is-invalid{% endif %}" 
+                   value="{{ tq.prefill_answer }}"
+                   style="border: 2px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Inter', sans-serif; width: 100%;">
+            <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
+          </div>
+
+          {% elif tq.question.question_type == 'NUMBER' %}
+          <div class="form-group mb-2">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">Answer:</label>
+            <input type="number" name="question_{{ tq.question.id }}" 
+                   class="form-control {% if tq.answer_error %}is-invalid{% endif %}" step="any"
+                   value="{{ tq.prefill_answer }}"
+                   style="border: 2px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Inter', sans-serif; width: 100%;">
+            <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
+          </div>
+
+          {% elif tq.question.question_type == 'RATING' %}
+          <div class="form-group mb-2">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">Rating (1-5):</label>
+            <select name="question_{{ tq.question.id }}" 
+                    class="form-control {% if tq.answer_error %}is-invalid{% endif %}"
+                    style="border: 2px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Inter', sans-serif; width: 150px;">
+              <option value="">Select...</option>
+              <option value="1" {% if tq.prefill_answer == '1' %}selected{% endif %}>1 - Poor</option>
+              <option value="2" {% if tq.prefill_answer == '2' %}selected{% endif %}>2 - Fair</option>
+              <option value="3" {% if tq.prefill_answer == '3' %}selected{% endif %}>3 - Good</option>
+              <option value="4" {% if tq.prefill_answer == '4' %}selected{% endif %}>4 - Very Good</option>
+              <option value="5" {% if tq.prefill_answer == '5' %}selected{% endif %}>5 - Excellent</option>
+            </select>
+            <div class="invalid-feedback" style="{% if tq.answer_error %}display:block;{% endif %}" id="error_question_{{ tq.question.id }}">{% if tq.answer_error %}{{ tq.answer_error }}{% endif %}</div>
+          </div>
+          {% endif %}
+
+          <!-- Remarks -->
+          <div class="form-group mb-2">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">
+              Remarks
+              {% if tq.question.is_remarks_mandatory %}<span class="required-star" style="color: var(--secondary-red);">*</span>{% endif %}
+            </label>
+            <textarea name="remarks_{{ tq.question.id }}" 
+                      class="form-control {% if tq.remarks_error %}is-invalid{% endif %}" 
+                      rows="2"
+                      placeholder="Add your observations or comments..."
+                      style="border: 2px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Inter', sans-serif; width: 100%; min-height: 60px;">{{ tq.prefill_remarks }}</textarea>
+            <div class="invalid-feedback" style="{% if tq.remarks_error %}display:block;{% endif %}" id="error_remarks_{{ tq.question.id }}">{% if tq.remarks_error %}{{ tq.remarks_error }}{% endif %}</div>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="form-group mb-0">
+            <label class="font-weight-bold" style="font-size: 13px; color: var(--text-primary);">
+              <i class="fas fa-camera" style="color: var(--primary-teal);"></i> Photo
+              {% if tq.question.is_photo_required %}<span class="required-star" style="color: var(--secondary-red);">*</span>{% endif %}
+            </label>
+
+            <div class="add-photo-btn-custom {% if tq.photo_error %}border border-danger{% endif %}" onclick="handleInspectionPhotoClick({{ tq.question.id }})">
+              <i class="fas fa-plus-circle"></i>
+              <p>Click to add photo</p>
+            </div>
+
+            <input type="file"
+                   name="photo_{{ tq.question.id }}"
+                   id="photo_{{ tq.question.id }}"
+                   class="d-none inspection-photo-input"
+                   accept="image/*"
+                   {% if tq.question.is_photo_required %}required{% endif %}>
+
+            <input type="file"
+                   id="photo_{{ tq.question.id }}_camera"
+                   class="d-none"
+                   accept="image/*"
+                   capture="environment">
+
+            <div id="preview_{{ tq.question.id }}" class="photo-preview-custom" data-has-draft-photo="{% if tq.draft_photo %}1{% else %}0{% endif %}">
+              {% if tq.draft_photo %}
+              <div class="mb-2">
+                <img src="{{ tq.draft_photo.photo.url }}" alt="Saved draft photo">
+                <span class="photo-meta"><i class="fas fa-check-circle" style="color: var(--secondary-green);"></i> Saved in draft</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="text-danger small mt-1" id="error_photo_{{ tq.question.id }}">{% if tq.photo_error %}{{ tq.photo_error }}{% endif %}</div>
+          </div>
+
         </div>
+        {% endfor %}
+
+      </div>
     </div>
     {% endfor %}
-    
-    <!-- Submit Section -->
-    <div class="card">
-        <div class="card-body text-center">
-            <p class="text-muted mb-3">
-                Please ensure all mandatory questions are answered before submitting.
-            </p>
-            {% if draft_exists %}
-            <p class="text-info small mb-3">A saved draft is loaded in this form.</p>
-            {% endif %}
-            <!-- <button type="button" class="btn btn-info me-2" onclick="previewNoAnswers()">
-                    <i class="fas fa-eye"></i> Preview Non-Compliant Items
-            </button> -->
-            <button type="submit" name="form_action" value="draft" class="btn btn-outline-primary btn-lg mr-2">
-                <i class="fas fa-save"></i> Save Draft
-            </button>
-            <button type="submit" name="form_action" value="submit" class="btn btn-success btn-lg mr-2" onclick="return confirm('Submit this inspection? This action cannot be changed later.')">
-                <i class="fas fa-check"></i> Submit Inspection
-            </button>
-            <a href="{% url 'inspections:my_inspections' %}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> Cancel
-            </a>
+
+    <!-- ========================================================== -->
+    <!-- FORM FOOTER                                                 -->
+    <!-- ========================================================== -->
+    <div class="dash-footer-card">
+      <div class="card-body-custom">
+        <p class="footer-text">
+          <i class="fas fa-info-circle" style="color: var(--primary-teal);"></i>
+          Please ensure all mandatory questions are answered before submitting.
+        </p>
+        {% if draft_exists %}
+        <p class="footer-text" style="color: var(--primary-teal);">
+          <i class="fas fa-save"></i> A saved draft is loaded in this form.
+        </p>
+        {% endif %}
+        <div class="footer-btn-group">
+          <button type="submit" name="form_action" value="draft" class="btn-footer outline-primary">
+            <i class="fas fa-save"></i> Save Draft
+          </button>
+          <button type="submit" name="form_action" value="submit" class="btn-footer success" onclick="return confirm('Submit this inspection? This action cannot be changed later.')">
+            <i class="fas fa-check"></i> Submit Inspection
+          </button>
+          <a href="{% url 'inspections:my_inspections' %}" class="btn-footer secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
         </div>
-    </div>
-</form>
-
-<div id="photoOptionModal" 
-     style="display:none; position:fixed; bottom:0; left:0; right:0; 
-            background:#fff; border-radius:16px 16px 0 0; 
-            box-shadow:0 -5px 20px rgba(0,0,0,0.2); 
-            padding:20px; z-index:9999;">
-
-    <div style="text-align:center; margin-bottom:15px; font-weight:600;">
-        Upload Photo
+      </div>
     </div>
 
-    <button id="openCameraBtn" class="btn btn-primary w-100 mb-2">
-        📷 Take Photo
-    </button>
+  </form>
 
-    <button id="openGalleryBtn" class="btn btn-outline-primary w-100 mb-2">
-        🖼️ Choose from Gallery
-    </button>
-
-    <button onclick="closePhotoModal()" class="btn btn-light w-100">
-        Cancel
-    </button>
 </div>
+
+<!-- ========================================================== -->
+<!-- PHOTO MODAL                                                 -->
+<!-- ========================================================== -->
+<div class="photo-modal-custom" id="photoOptionModal">
+  <div class="modal-title">Upload Photo</div>
+  <button class="modal-btn camera" id="openCameraBtn">
+    <i class="fas fa-camera"></i> Take Photo
+  </button>
+  <button class="modal-btn gallery" id="openGalleryBtn">
+    <i class="fas fa-images"></i> Choose from Gallery
+  </button>
+  <button class="modal-btn cancel" onclick="closePhotoModal()">
+    Cancel
+  </button>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -615,12 +1414,12 @@ function getCheckedValues(selector) {
 
 function resetGrid(gridId, message) {
     document.getElementById(gridId).innerHTML =
-        '<div class="loading-text">' + message + '</div>';
+        '<div class="loading-text-custom"><i class="fas fa-arrow-left"></i> ' + message + '</div>';
 }
 
 function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
     const div = document.createElement('div');
-    div.className = 'checkbox-item';
+    div.className = 'checkbox-item-custom';
     div.innerHTML =
         '<input type="checkbox" name="' + name + '" value="' + value + '" id="' + id + '" class="' + cssClass + '">' +
         '<label for="' + id + '">' + labelHtml + '</label>';
@@ -630,14 +1429,14 @@ function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
 
 function buildGroupHeader(text, icon) {
     const div = document.createElement('div');
-    div.className = 'group-header';
-    div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + text;
+    div.className = 'group-header-custom';
+    div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i> ' + text;
     return div;
 }
 
 function loadPlants() {
     const grid = document.getElementById('plantsGrid');
-    grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
+    grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading plants...</div>';
 
     fetch('/organizations/ajax/get-all-plants/')
         .then(function (r) { return r.json(); })
@@ -648,7 +1447,7 @@ function loadPlants() {
 
             grid.innerHTML = '';
             if (!plants.length) {
-                grid.innerHTML = '<div class="loading-text">No plants available</div>';
+                grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-building"></i> No plants available</div>';
                 updatePlantCount();
                 return;
             }
@@ -659,7 +1458,7 @@ function loadPlants() {
                     plant.id,
                     'plant_' + plant.id,
                     '<strong>' + plant.name + '</strong>' +
-                    (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
+                    (plant.code ? ' <span class="text-muted">(' + plant.code + ')</span>' : ''),
                     'plant-checkbox',
                     function () {
                         updatePlantCount();
@@ -678,7 +1477,7 @@ function loadPlants() {
             loadZonesForPlants();
         })
         .catch(function () {
-            grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
+            grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading plants</div>';
         });
 }
 
@@ -701,7 +1500,7 @@ function loadZonesForPlants() {
         return;
     }
 
-    grid.innerHTML = '<div class="loading-text">Loading zones...</div>';
+    grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading zones...</div>';
 
     fetch('/organizations/ajax/get-zones-by-plants/?plant_ids=' + plantIds.join(','))
         .then(function (r) { return r.json(); })
@@ -712,7 +1511,7 @@ function loadZonesForPlants() {
 
             grid.innerHTML = '';
             if (!zones.length) {
-                grid.innerHTML = '<div class="loading-text">No zones in selected plants</div>';
+                grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-map-pin"></i> No zones in selected plants</div>';
                 bar.style.display = 'none';
                 updateZoneCount();
                 return;
@@ -734,7 +1533,7 @@ function loadZonesForPlants() {
                         zone.id,
                         'zone_' + zone.id,
                         '<strong>' + zone.name + '</strong>' +
-                        (zone.code ? ' <small class="text-muted">(' + zone.code + ')</small>' : ''),
+                        (zone.code ? ' <span class="text-muted">(' + zone.code + ')</span>' : ''),
                         'zone-checkbox',
                         function () {
                             updateZoneCount();
@@ -755,7 +1554,7 @@ function loadZonesForPlants() {
             loadLocationsForZones();
         })
         .catch(function () {
-            grid.innerHTML = '<div class="loading-text text-danger">Error loading zones</div>';
+            grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading zones</div>';
         });
 }
 
@@ -775,7 +1574,7 @@ function loadLocationsForZones() {
         return;
     }
 
-    grid.innerHTML = '<div class="loading-text">Loading locations...</div>';
+    grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading locations...</div>';
 
     fetch('/organizations/ajax/get-locations-by-zones/?zone_ids=' + zoneIds.join(','))
         .then(function (r) { return r.json(); })
@@ -786,7 +1585,7 @@ function loadLocationsForZones() {
 
             grid.innerHTML = '';
             if (!locations.length) {
-                grid.innerHTML = '<div class="loading-text">No locations in selected zones</div>';
+                grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-map-marker-alt"></i> No locations in selected zones</div>';
                 bar.style.display = 'none';
                 updateLocationCount();
                 return;
@@ -808,7 +1607,7 @@ function loadLocationsForZones() {
                         location.id,
                         'location_' + location.id,
                         '<strong>' + location.name + '</strong>' +
-                        (location.code ? ' <small class="text-muted">(' + location.code + ')</small>' : ''),
+                        (location.code ? ' <span class="text-muted">(' + location.code + ')</span>' : ''),
                         'location-checkbox',
                         function () {
                             updateLocationCount();
@@ -829,7 +1628,7 @@ function loadLocationsForZones() {
             loadSublocationsForLocations();
         })
         .catch(function () {
-            grid.innerHTML = '<div class="loading-text text-danger">Error loading locations</div>';
+            grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading locations</div>';
         });
 }
 
@@ -845,7 +1644,7 @@ function loadSublocationsForLocations() {
         return;
     }
 
-    grid.innerHTML = '<div class="loading-text">Loading sub-locations...</div>';
+    grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-spinner fa-spin"></i> Loading sub-locations...</div>';
 
     fetch('/organizations/ajax/get-sublocations-by-locations/?location_ids=' + locationIds.join(','))
         .then(function (r) { return r.json(); })
@@ -856,7 +1655,7 @@ function loadSublocationsForLocations() {
 
             grid.innerHTML = '';
             if (!sublocations.length) {
-                grid.innerHTML = '<div class="loading-text">No sub-locations in selected locations</div>';
+                grid.innerHTML = '<div class="loading-text-custom"><i class="fas fa-flag"></i> No sub-locations in selected locations</div>';
                 bar.style.display = 'none';
                 updateSublocationCount();
                 return;
@@ -877,7 +1676,7 @@ function loadSublocationsForLocations() {
                         'selected_sublocations',
                         sublocation.id,
                         'sublocation_' + sublocation.id,
-                        sublocation.name + (sublocation.code ? ' <small class="text-muted">(' + sublocation.code + ')</small>' : ''),
+                        sublocation.name + (sublocation.code ? ' <span class="text-muted">(' + sublocation.code + ')</span>' : ''),
                         'sublocation-checkbox',
                         function () {
                             updateSublocationCount();
@@ -896,7 +1695,7 @@ function loadSublocationsForLocations() {
             updateSublocationCount();
         })
         .catch(function () {
-            grid.innerHTML = '<div class="loading-text text-danger">Error loading sub-locations</div>';
+            grid.innerHTML = '<div class="loading-text-custom" style="color: var(--secondary-red);"><i class="fas fa-exclamation-triangle"></i> Error loading sub-locations</div>';
         });
 }
 
@@ -913,7 +1712,7 @@ $(document).ready(function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
     });
-    
+
     var submitAction = 'submit';
     $('button[name="form_action"]').on('click', function() {
         submitAction = $(this).val();
@@ -943,7 +1742,6 @@ $(document).ready(function() {
 
     function setScopeError(key, message) {
         $('#' + key + 'Error').text(message);
-        // Add visual highlight to the grid
         var gridId = key + 'Grid';
         var gridEl = document.getElementById(gridId);
         if (gridEl) {
@@ -953,7 +1751,6 @@ $(document).ready(function() {
 
     function clearScopeError(key) {
         $('#' + key + 'Error').text('');
-        // Remove visual highlight from the grid
         var gridId = key + 'Grid';
         var gridEl = document.getElementById(gridId);
         if (gridEl) {
@@ -1081,7 +1878,6 @@ function isMobileOrTablet() {
 $('#openCameraBtn').click(openCamera);
 $('#openGalleryBtn').click(openGallery);
 
-
 $(document).on('change', '[id$="_camera"]', function() {
     const file = this.files[0];
     if (!file) return;
@@ -1096,7 +1892,6 @@ $(document).on('change', '[id$="_camera"]', function() {
     $(galleryInput).trigger('change');
 });
 
-
 $(document).on('change', '.inspection-photo-input', function() {
     const input = this;
     const id = input.id.replace('photo_', '');
@@ -1107,9 +1902,10 @@ $(document).on('change', '.inspection-photo-input', function() {
         const reader = new FileReader();
         reader.onload = function(e) {
             $(`#${previewId}`).html(`
-                <img src="${e.target.result}" 
-                     style="width:120px;height:120px;object-fit:cover;border-radius:6px;">
-                <small class="d-block text-muted mt-1">Ready to save with this draft.</small>
+                <div class="mb-2">
+                    <img src="${e.target.result}" alt="Uploaded photo">
+                    <span class="photo-meta"><i class="fas fa-check-circle" style="color: var(--secondary-green);"></i> Ready to save</span>
+                </div>
             `);
             document.getElementById(previewId).dataset.hasDraftPhoto = '1';
         };

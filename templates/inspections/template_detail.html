@@ -1,469 +1,1079 @@
 <!-- templates/inspections/template_detail.html -->
 
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}{{ template.template_name }}{% endblock %}
-{% block page_title %}{{ template.template_name }}{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:inspection_dashboard' %}">Inspections</a></li>
-<li class="breadcrumb-item"><a href="{% url 'inspections:template_list' %}">Templates</a></li>
-<li class="breadcrumb-item active">{{ template.template_code }}</li>
-{% endblock %}
+{% block title %}{{ template.template_name }} | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-  .config-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
+  /* ===== TEMPLATE DETAIL - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                              */
+  /* ========================================================== */
+  .dash-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-dash.secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash.secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-dash.warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+  .btn-dash.warning:hover {
+    background: #b45309;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  }
+
+  .btn-dash.danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .btn-dash.danger:hover {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-dash.success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-dash.success:hover {
+    background: #16a34a;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-dash.info {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash.info:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-dash.primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+  .btn-dash.primary:hover {
+    background: var(--primary-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .dash-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  .dash-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-card .card-header-custom {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-card .card-header-custom h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-card .card-header-custom h3 i {
+    color: var(--primary-teal);
+  }
+
+  .dash-card .card-body-custom {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dash-badge.badge-success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.badge-secondary { background: #f1f5f9; color: #64748b; }
+  .dash-badge.badge-info { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .dash-badge.badge-warning { background: #fef3c7; color: #d97706; }
+  .dash-badge.badge-danger { background: #fee2e2; color: #dc2626; }
+  .dash-badge.badge-primary { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+  /* ========================================================== */
+  /* CONFIG CARDS                                                */
+  /* ========================================================== */
+  .config-card-custom {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
     margin-bottom: 12px;
-    background: #fff;
+    background: white;
+    transition: all 0.3s ease;
   }
-  .config-card.active-config {
-    border-left: 4px solid #28a745;
+
+  .config-card-custom:hover {
+    border-color: var(--primary-teal);
+    box-shadow: var(--shadow-hover);
   }
-  .config-card.paused-config {
-    border-left: 4px solid #ffc107;
+
+  .config-card-custom.active-config {
+    border-left: 4px solid var(--secondary-green);
   }
-  .config-card.stopped-config {
-    border-left: 4px solid #dc3545;
+
+  .config-card-custom.paused-config {
+    border-left: 4px solid var(--secondary-gold);
+  }
+
+  .config-card-custom.stopped-config {
+    border-left: 4px solid var(--secondary-red);
     opacity: 0.8;
   }
+
   .status-badge-active {
-    background: #28a745;
-    color: white;
-    padding: 3px 10px;
+    display: inline-block;
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 3px 12px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 11px;
     font-weight: 600;
   }
+
   .status-badge-paused {
-    background: #ffc107;
-    color: #212529;
-    padding: 3px 10px;
+    display: inline-block;
+    background: #fef3c7;
+    color: #d97706;
+    padding: 3px 12px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 11px;
     font-weight: 600;
   }
+
   .status-badge-stopped {
-    background: #dc3545;
-    color: white;
-    padding: 3px 10px;
+    display: inline-block;
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 3px 12px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 11px;
     font-weight: 600;
   }
-  .config-meta {
-    font-size: 0.82rem;
-    color: #6c757d;
+
+  .config-meta-custom {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0;
   }
-  .config-meta span {
-    margin-right: 15px;
+
+  .config-meta-custom span {
+    margin-right: 14px;
   }
-  .tag-list {
+
+  .config-meta-custom i {
+    margin-right: 4px;
+  }
+
+  .tag-list-custom {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 6px;
+    gap: 4px;
+    margin: 6px 0 10px 0;
   }
-  .tag-pill {
-    background: #e9ecef;
+
+  .tag-pill-custom {
+    display: inline-block;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
     border-radius: 12px;
     padding: 2px 10px;
-    font-size: 0.75rem;
-    color: #495057;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid rgba(13, 148, 136, 0.1);
+  }
+
+  .tag-pill-custom i {
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  .config-actions-custom {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .btn-sm-config {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn-sm-config:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-sm-config.warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+  .btn-sm-config.warning:hover {
+    background: #b45309;
+  }
+
+  .btn-sm-config.danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+  .btn-sm-config.danger:hover {
+    background: #b91c1c;
+  }
+
+  .btn-sm-config.success {
+    background: var(--secondary-green);
+    color: white;
+  }
+  .btn-sm-config.success:hover {
+    background: #16a34a;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                       */
+  /* ========================================================== */
+  .dash-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .dash-info-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dash-info-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .dash-info-table tbody td {
+    padding: 6px 0;
+    vertical-align: top;
+    color: var(--text-secondary);
+  }
+
+  .dash-info-table tbody td:first-child {
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 120px;
+  }
+
+  .dash-info-table tbody td:last-child {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* QUESTION LIST                                               */
+  /* ========================================================== */
+  .question-group-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .question-group-title .category-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .question-group-title .question-count {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .question-item-custom {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+  }
+
+  .question-item-custom:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .question-item-custom .question-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .question-item-custom .question-top .question-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .question-item-custom .question-top .question-text strong {
+    color: var(--text-primary);
+  }
+
+  .question-item-custom .question-top .question-text .code-badge {
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .question-item-custom .question-tags {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .question-item-custom .question-tags .tag {
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .tag-critical { background: #fee2e2; color: #dc2626; }
+  .tag-remarks { background: var(--primary-teal-light); color: var(--primary-teal); }
+  .tag-photo { background: #fef3c7; color: #d97706; }
+  .tag-mandatory { background: #f1f5f9; color: #64748b; }
+
+  .btn-remove-question {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .btn-remove-question:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .dash-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .dash-empty-state .empty-icon {
+    font-size: 56px;
+    color: var(--primary-teal-light);
+    margin-bottom: 16px;
+  }
+
+  .dash-empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .dash-empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .dash-empty-state .empty-link {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .dash-empty-state .empty-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-card .card-body-custom {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-actions {
+      width: 100%;
+    }
+
+    .dash-actions .btn-dash {
+      flex: 1;
+      justify-content: center;
+      font-size: 11px;
+      padding: 5px 10px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .dash-card .card-header-custom {
+      padding: 10px 14px;
+    }
+
+    .dash-card .card-header-custom h3 {
+      font-size: 14px;
+    }
+
+    .dash-info-table tbody td {
+      padding: 4px 0;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dash-info-table tbody td:first-child {
+      width: 100%;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .dash-info-table tbody td:last-child {
+      font-size: 13px;
+    }
+
+    .question-item-custom {
+      padding: 10px 12px;
+    }
+
+    .question-item-custom .question-top {
+      flex-direction: column;
+    }
+
+    .question-item-custom .question-top .question-text {
+      font-size: 13px;
+    }
+
+    .config-card-custom {
+      padding: 12px 14px;
+    }
+
+    .config-meta-custom {
+      font-size: 12px;
+    }
+
+    .config-meta-custom span {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .config-actions-custom .btn-sm-config {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+
+    .dash-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .question-group-title {
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .question-item-custom .question-top .question-text {
+      font-size: 12px;
+    }
+
+    .config-meta-custom span {
+      display: block;
+      margin-right: 0;
+    }
+
+    .tag-pill-custom {
+      font-size: 10px;
+      padding: 1px 8px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <!-- Action Buttons -->
-        <div class="mb-3">
-            <a href="{% url 'inspections:template_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-            <a href="{% url 'inspections:template_edit' template.pk %}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit Template
-            </a>
-            <a href="{% url 'inspections:template_delete' template.pk %}" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete Template
-            </a>
-            <a href="{% url 'inspections:template_add_question' template.pk %}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Add Question
-            </a>
-            <a href="{% url 'inspections:template_bulk_add_questions' template.pk %}" class="btn btn-info">
-                <i class="fas fa-plus-square"></i> Bulk Add Questions
-            </a>
-            <!-- Schedule Inspection Button -->
-            <a href="{% url 'inspections:schedule_create' %}?template={{ template.pk }}" 
-               class="btn btn-primary">
-                <i class="fas fa-calendar-plus"></i> Schedule Inspection
-            </a>
-        </div>
 
-        <div class="row">
-            <!-- Template Info Card -->
-            <div class="col-md-4">
-                <div class="ehs-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-info-circle"></i> Template Info
-                        </h3>
-                        <div class="card-tools">
-                            {% if template.is_active %}
-                            <span class="badge badge-success">Active</span>
-                            {% else %}
-                            <span class="badge badge-secondary">Inactive</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <th width="120">Code:</th>
-                                <td><strong>{{ template.template_code }}</strong></td>
-                            </tr>
-                            <tr>
-                                <th>Name:</th>
-                                <td>{{ template.template_name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Type:</th>
-                                <td>
-                                    <span class="badge badge-info">
-                                        {{ template.get_inspection_type_display }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Total Questions:</th>
-                                <td><strong class="text-primary">{{ total_questions }}</strong></td>
-                            </tr>
-                            <tr>
-                                <th>Categories:</th>
-                                <td>{{ categories.count }}</td>
-                            </tr>
-                            <tr>
-                                <th>Min Score:</th>
-                                <td>{{ template.min_compliance_score }}%</td>
-                            </tr>
-                            <tr>
-                                <th>Created:</th>
-                                <td>{{ template.created_at|date:"d M Y" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Created By:</th>
-                                <td>{{ template.created_by.get_full_name }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
+<div class="container-fluid" style="padding: 0;">
 
-                <!-- Applicable Plants -->
-                {% if template.applicable_plants.count > 0 %}
-                <div class="ehs-card mt-3">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-building"></i> Applicable Plants
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0">
-                            {% for plant in template.applicable_plants.all %}
-                            <li class="mb-1">
-                                <i class="fas fa-check text-success"></i> {{ plant.name }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Applicable Departments -->
-                {% if template.applicable_departments.count > 0 %}
-                <div class="ehs-card mt-3">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-users"></i> Applicable Departments
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0">
-                            {% for dept in template.applicable_departments.all %}
-                            <li class="mb-1">
-                                <i class="fas fa-check text-success"></i> {{ dept.name }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- ============================================ -->
-                <!-- AUTO-SCHEDULE CONFIGS SECTION                -->
-                <!-- ============================================ -->
-                <div class="ehs-card mt-3">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-sync-alt"></i> Auto-Schedule Configs
-                        </h3>
-                        <div class="card-tools">
-                            <span class="badge badge-primary">
-                                {{ auto_configs.count }} config{{ auto_configs.count|pluralize }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-
-                        {% if auto_configs %}
-                            {% for config in auto_configs %}
-                            <div class="config-card 
-                                {% if config.status == 'ACTIVE' %}active-config
-                                {% elif config.status == 'PAUSED' %}paused-config
-                                {% else %}stopped-config{% endif %}">
-
-                                <!-- Status + Created -->
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="
-                                        {% if config.status == 'ACTIVE' %}status-badge-active
-                                        {% elif config.status == 'PAUSED' %}status-badge-paused
-                                        {% else %}status-badge-stopped{% endif %}">
-                                        <i class="fas 
-                                            {% if config.status == 'ACTIVE' %}fa-play
-                                            {% elif config.status == 'PAUSED' %}fa-pause
-                                            {% else %}fa-stop{% endif %} mr-1"></i>
-                                        {{ config.status }}
-                                    </span>
-                                    <small class="text-muted">
-                                        {{ config.created_at|date:"d M Y" }}
-                                    </small>
-                                </div>
-
-                                <!-- Meta info -->
-                                <div class="config-meta mb-2">
-                                    <span>
-                                        <i class="fas fa-calendar-day mr-1"></i>
-                                        Due offset: <strong>{{ config.due_date_offset_days }} days</strong>
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-industry mr-1"></i>
-                                        {{ config.plants.count }} plant{{ config.plants.count|pluralize }}
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-users mr-1"></i>
-                                        {{ config.assigned_users.count }} user{{ config.assigned_users.count|pluralize }}
-                                    </span>
-                                </div>
-
-                                <!-- Plants tags -->
-                                {% if config.plants.count > 0 %}
-                                <div class="tag-list mb-2">
-                                    {% for plant in config.plants.all %}
-                                    <span class="tag-pill">
-                                        <i class="fas fa-industry mr-1"></i>{{ plant.name }}
-                                    </span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-
-                                <!-- Assigned users tags -->
-                                {% if config.assigned_users.count > 0 %}
-                                <div class="tag-list mb-3">
-                                    {% for user in config.assigned_users.all %}
-                                    <span class="tag-pill">
-                                        <i class="fas fa-user mr-1"></i>{{ user.get_full_name }}
-                                    </span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-
-                                <!-- Action buttons -->
-                                <div class="d-flex gap-2" style="gap: 6px;">
-
-                                    {% if config.status == 'ACTIVE' %}
-                                    <!-- Pause -->
-                                    <form method="POST" 
-                                          action="{% url 'inspections:autoschedule_toggle' config.pk %}"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="pause">
-                                        <button type="submit" class="btn btn-sm btn-warning"
-                                                onclick="return confirm('Pause this auto-schedule?')">
-                                            <i class="fas fa-pause"></i> Pause
-                                        </button>
-                                    </form>
-                                    <!-- Stop -->
-                                    <form method="POST"
-                                          action="{% url 'inspections:autoschedule_toggle' config.pk %}"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="stop">
-                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Stop this auto-schedule? Existing schedules will be kept.')">
-                                            <i class="fas fa-stop"></i> Stop
-                                        </button>
-                                    </form>
-
-                                    {% elif config.status == 'PAUSED' %}
-                                    <!-- Resume -->
-                                    <form method="POST"
-                                          action="{% url 'inspections:autoschedule_toggle' config.pk %}"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="resume">
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            <i class="fas fa-play"></i> Resume
-                                        </button>
-                                    </form>
-                                    <!-- Stop -->
-                                    <form method="POST"
-                                          action="{% url 'inspections:autoschedule_toggle' config.pk %}"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="stop">
-                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Stop this auto-schedule?')">
-                                            <i class="fas fa-stop"></i> Stop
-                                        </button>
-                                    </form>
-
-                                    {% elif config.status == 'STOPPED' %}
-                                    <!-- Restart -->
-                                    <form method="POST"
-                                          action="{% url 'inspections:autoschedule_toggle' config.pk %}"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="resume">
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            <i class="fas fa-redo"></i> Restart
-                                        </button>
-                                    </form>
-                                    {% endif %}
-
-                                </div>
-                            </div>
-                            {% endfor %}
-
-                        {% else %}
-                            <div class="text-center py-3">
-                                <i class="fas fa-sync-alt fa-2x text-muted mb-2"></i>
-                                <p class="text-muted small mb-0">
-                                    No auto-schedule configs yet.<br>
-                                    Schedule an inspection and enable
-                                    <strong>"Auto Monthly Schedule"</strong>
-                                    to set one up.
-                                </p>
-                            </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-                <!-- END AUTO-SCHEDULE CONFIGS -->
-
-            </div>
-
-            <!-- Questions List -->
-            <div class="col-md-8">
-                <div class="ehs-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-list"></i> Questions ({{ total_questions }})
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {% if questions_by_category %}
-                            {% for category, questions in questions_by_category.items %}
-                            <div class="mb-4">
-                                <h5 class="text-primary mb-3">
-                                    <span class="badge" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-green)); color: white; padding: 0.5em 1em;">
-                                        {{ category.category_code }}
-                                    </span>
-                                    {{ category.category_name }}
-                                    <small class="text-muted">({{ questions|length }} questions)</small>
-                                </h5>
-
-                                <div class="list-group mb-3">
-                                    {% for tq in questions %}
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <div class="mb-2">
-                                                    <strong class="text-info">{{ tq.question.question_code }}</strong>
-                                                    <span class="ml-2">{{ tq.question.question_text }}</span>
-                                                </div>
-
-                                                <div>
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-tag"></i> {{ tq.question.get_question_type_display }}
-                                                    </small>
-
-                                                    {% if tq.question.is_critical %}
-                                                    <span class="badge badge-danger ml-2">Critical</span>
-                                                    {% endif %}
-
-                                                    {% if tq.question.is_remarks_mandatory %}
-                                                    <span class="badge badge-info ml-2">
-                                                        <i class="fas fa-comment"></i> Remarks Required
-                                                    </span>
-                                                    {% endif %}
-
-                                                    {% if tq.question.is_photo_required %}
-                                                    <span class="badge badge-warning ml-2">
-                                                        <i class="fas fa-camera"></i> Photo Required
-                                                    </span>
-                                                    {% endif %}
-
-                                                    {% if tq.is_mandatory %}
-                                                    <span class="badge badge-secondary ml-2">Mandatory</span>
-                                                    {% endif %}
-                                                </div>
-
-                                                {% if tq.section_name %}
-                                                <div class="mt-1">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-folder"></i> Section: {{ tq.section_name }}
-                                                    </small>
-                                                </div>
-                                                {% endif %}
-                                            </div>
-
-                                            <div class="ml-3">
-                                                <a href="{% url 'inspections:template_remove_question' template.pk tq.question.pk %}"
-                                                   class="btn btn-sm btn-danger"
-                                                   title="Remove Question"
-                                                   onclick="return confirm('Remove this question from template?')">
-                                                    <i class="fas fa-times"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
-                                <h5 class="text-muted">No Questions Added Yet</h5>
-                                <p class="text-muted">Start building your inspection template by adding questions.</p>
-                                <div class="mt-3">
-                                    <a href="{% url 'inspections:template_add_question' template.pk %}" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Add First Question
-                                    </a>
-                                    <a href="{% url 'inspections:template_bulk_add_questions' template.pk %}" class="btn btn-info ml-2">
-                                        <i class="fas fa-plus-square"></i> Bulk Add Questions
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div>
+        <h1>{{ template.template_name }}</h1>
+        <p class="subtitle">{{ template.template_code }}</p>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTION BUTTONS                                              -->
+  <!-- ========================================================== -->
+  <div class="dash-actions">
+    <a href="{% url 'inspections:template_list' %}" class="btn-dash secondary">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <a href="{% url 'inspections:template_edit' template.pk %}" class="btn-dash warning">
+      <i class="fas fa-edit"></i> Edit
+    </a>
+    <a href="{% url 'inspections:template_delete' template.pk %}" class="btn-dash danger">
+      <i class="fas fa-trash-alt"></i> Delete
+    </a>
+    <a href="{% url 'inspections:template_add_question' template.pk %}" class="btn-dash success">
+      <i class="fas fa-plus"></i> Add Question
+    </a>
+    <a href="{% url 'inspections:template_bulk_add_questions' template.pk %}" class="btn-dash info">
+      <i class="fas fa-plus-square"></i> Bulk Add
+    </a>
+    <a href="{% url 'inspections:schedule_create' %}?template={{ template.pk }}" class="btn-dash primary">
+      <i class="fas fa-calendar-plus"></i> Schedule
+    </a>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ========================================================== -->
+  <div class="row">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-md-4">
+
+      <!-- Template Info -->
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-info-circle"></i>
+            Template Info
+          </h3>
+          <div>
+            {% if template.is_active %}
+              <span class="dash-badge badge-success">
+                <i class="fas fa-check-circle"></i> Active
+              </span>
+            {% else %}
+              <span class="dash-badge badge-secondary">
+                <i class="fas fa-circle" style="font-size: 8px;"></i> Inactive
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body-custom">
+          <table class="dash-info-table">
+            <tr>
+              <td>Code</td>
+              <td><strong>{{ template.template_code }}</strong></td>
+            </tr>
+            <tr>
+              <td>Name</td>
+              <td>{{ template.template_name }}</td>
+            </tr>
+            <tr>
+              <td>Type</td>
+              <td>
+                <span class="dash-badge badge-info">{{ template.get_inspection_type_display }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Total Questions</td>
+              <td><strong style="color: var(--primary-teal);">{{ total_questions }}</strong></td>
+            </tr>
+            <tr>
+              <td>Categories</td>
+              <td>{{ categories.count }}</td>
+            </tr>
+            <tr>
+              <td>Min Score</td>
+              <td>{{ template.min_compliance_score }}%</td>
+            </tr>
+            <tr>
+              <td>Created</td>
+              <td>{{ template.created_at|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+              <td>Created By</td>
+              <td>{{ template.created_by.get_full_name }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Applicable Plants -->
+      {% if template.applicable_plants.count > 0 %}
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-building"></i>
+            Applicable Plants
+          </h3>
+        </div>
+        <div class="card-body-custom">
+          <ul class="list-unstyled mb-0" style="font-size: 14px;">
+            {% for plant in template.applicable_plants.all %}
+            <li class="mb-1" style="color: var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color: var(--secondary-green);"></i> {{ plant.name }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Applicable Departments -->
+      {% if template.applicable_departments.count > 0 %}
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-users"></i>
+            Applicable Departments
+          </h3>
+        </div>
+        <div class="card-body-custom">
+          <ul class="list-unstyled mb-0" style="font-size: 14px;">
+            {% for dept in template.applicable_departments.all %}
+            <li class="mb-1" style="color: var(--text-secondary);">
+              <i class="fas fa-check-circle" style="color: var(--secondary-green);"></i> {{ dept.name }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Auto-Schedule Configs -->
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-sync-alt"></i>
+            Auto-Schedule Configs
+          </h3>
+          <span class="dash-badge badge-primary">{{ auto_configs.count }} config{{ auto_configs.count|pluralize }}</span>
+        </div>
+        <div class="card-body-custom">
+          {% if auto_configs %}
+            {% for config in auto_configs %}
+            <div class="config-card-custom 
+              {% if config.status == 'ACTIVE' %}active-config
+              {% elif config.status == 'PAUSED' %}paused-config
+              {% else %}stopped-config{% endif %}">
+
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="
+                  {% if config.status == 'ACTIVE' %}status-badge-active
+                  {% elif config.status == 'PAUSED' %}status-badge-paused
+                  {% else %}status-badge-stopped{% endif %}">
+                  <i class="fas 
+                    {% if config.status == 'ACTIVE' %}fa-play
+                    {% elif config.status == 'PAUSED' %}fa-pause
+                    {% else %}fa-stop{% endif %} mr-1"></i>
+                  {{ config.status }}
+                </span>
+                <small class="text-muted">{{ config.created_at|date:"d M Y" }}</small>
+              </div>
+
+              <div class="config-meta-custom">
+                <span><i class="fas fa-calendar-day"></i> Due offset: <strong>{{ config.due_date_offset_days }} days</strong></span>
+                <span><i class="fas fa-industry"></i> {{ config.plants.count }} plant{{ config.plants.count|pluralize }}</span>
+                <span><i class="fas fa-users"></i> {{ config.assigned_users.count }} user{{ config.assigned_users.count|pluralize }}</span>
+              </div>
+
+              {% if config.plants.count > 0 %}
+              <div class="tag-list-custom">
+                {% for plant in config.plants.all %}
+                <span class="tag-pill-custom"><i class="fas fa-industry"></i>{{ plant.name }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if config.assigned_users.count > 0 %}
+              <div class="tag-list-custom">
+                {% for user in config.assigned_users.all %}
+                <span class="tag-pill-custom"><i class="fas fa-user"></i>{{ user.get_full_name }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <div class="config-actions-custom">
+                {% if config.status == 'ACTIVE' %}
+                <form method="POST" action="{% url 'inspections:autoschedule_toggle' config.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="pause">
+                  <button type="submit" class="btn-sm-config warning" onclick="return confirm('Pause this auto-schedule?')">
+                    <i class="fas fa-pause"></i> Pause
+                  </button>
+                </form>
+                <form method="POST" action="{% url 'inspections:autoschedule_toggle' config.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="stop">
+                  <button type="submit" class="btn-sm-config danger" onclick="return confirm('Stop this auto-schedule? Existing schedules will be kept.')">
+                    <i class="fas fa-stop"></i> Stop
+                  </button>
+                </form>
+
+                {% elif config.status == 'PAUSED' %}
+                <form method="POST" action="{% url 'inspections:autoschedule_toggle' config.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="resume">
+                  <button type="submit" class="btn-sm-config success">
+                    <i class="fas fa-play"></i> Resume
+                  </button>
+                </form>
+                <form method="POST" action="{% url 'inspections:autoschedule_toggle' config.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="stop">
+                  <button type="submit" class="btn-sm-config danger" onclick="return confirm('Stop this auto-schedule?')">
+                    <i class="fas fa-stop"></i> Stop
+                  </button>
+                </form>
+
+                {% elif config.status == 'STOPPED' %}
+                <form method="POST" action="{% url 'inspections:autoschedule_toggle' config.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="resume">
+                  <button type="submit" class="btn-sm-config success">
+                    <i class="fas fa-redo"></i> Restart
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-3">
+              <i class="fas fa-sync-alt fa-2x text-muted mb-2" style="color: var(--primary-teal-light);"></i>
+              <p class="text-muted small mb-0">
+                No auto-schedule configs yet.<br>
+                Schedule an inspection and enable
+                <strong>"Auto Monthly Schedule"</strong>
+                to set one up.
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN - QUESTIONS -->
+    <div class="col-md-8">
+      <div class="dash-card">
+        <div class="card-header-custom">
+          <h3>
+            <i class="fas fa-list"></i>
+            Questions ({{ total_questions }})
+          </h3>
+        </div>
+        <div class="card-body-custom">
+          {% if questions_by_category %}
+            {% for category, questions in questions_by_category.items %}
+            <div class="mb-4">
+              <div class="question-group-title">
+                <span class="category-badge">{{ category.category_code }}</span>
+                {{ category.category_name }}
+                <span class="question-count">({{ questions|length }} questions)</span>
+              </div>
+
+              {% for tq in questions %}
+              <div class="question-item-custom">
+                <div class="question-top">
+                  <div class="question-text">
+                    <span class="code-badge">{{ tq.question.question_code }}</span>
+                    {{ tq.question.question_text }}
+                  </div>
+                  <a href="{% url 'inspections:template_remove_question' template.pk tq.question.pk %}"
+                     class="btn-remove-question"
+                     title="Remove Question"
+                     onclick="return confirm('Remove this question from template?')">
+                    <i class="fas fa-times"></i>
+                  </a>
+                </div>
+
+                <div class="question-tags">
+                  <span class="tag tag-{{ tq.question.question_type|lower }}">{{ tq.question.get_question_type_display }}</span>
+                  {% if tq.question.is_critical %}
+                  <span class="tag tag-critical">Critical</span>
+                  {% endif %}
+                  {% if tq.question.is_remarks_mandatory %}
+                  <span class="tag tag-remarks"><i class="fas fa-comment"></i> Remarks Required</span>
+                  {% endif %}
+                  {% if tq.question.is_photo_required %}
+                  <span class="tag tag-photo"><i class="fas fa-camera"></i> Photo Required</span>
+                  {% endif %}
+                  {% if tq.is_mandatory %}
+                  <span class="tag tag-mandatory">Mandatory</span>
+                  {% endif %}
+                </div>
+
+                {% if tq.section_name %}
+                <div class="mt-1">
+                  <small class="text-muted"><i class="fas fa-folder"></i> Section: {{ tq.section_name }}</small>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="dash-empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-question-circle"></i>
+              </div>
+              <h4>No Questions Added Yet</h4>
+              <p>Start building your inspection template by adding questions.</p>
+              <div class="mt-3" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="{% url 'inspections:template_add_question' template.pk %}" class="empty-link">
+                  <i class="fas fa-plus"></i> Add First Question
+                </a>
+                <a href="{% url 'inspections:template_bulk_add_questions' template.pk %}" class="empty-link">
+                  <i class="fas fa-plus-square"></i> Bulk Add Questions
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
 </div>
+
 {% endblock %}
