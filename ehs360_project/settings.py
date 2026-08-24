@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.accidents',
     'apps.inspections',
     'apps.dashboards',
+    'apps.alert_engine.apps.AlertEngineConfig',
     'apps.notifications',
     'apps.ENVdata.apps.EnvdataConfig',
     'apps.environmental_mis',
@@ -98,6 +99,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
+                'apps.alert_engine.context_processors.notification_context',
 
             ],
         },
