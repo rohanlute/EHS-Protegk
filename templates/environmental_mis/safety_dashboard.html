@@ -1,673 +1,1010 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Indicator Dashboard{% endblock %}
+{% block title %}Indicator Analytics Dashboard | EHS-360{% endblock %}
 
 {% block extra_css %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 
 <style>
+  /* ===== INDICATOR ANALYTICS DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.dashboard-card{
-background:white;
-border-radius:10px;
-padding:20px;
-box-shadow:0 4px 10px rgba(0,0,0,0.06);
-margin-bottom:20px;
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-red-light: rgba(220, 38, 38, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.08);
+    --secondary-green: #22c55e;
+    --secondary-green-light: rgba(34, 197, 94, 0.08);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-.chart-box{
-height:320px;
-width:100%;
-}
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
 
-/* Plant selector */
+  /* ========================================================== */
+  /* PAGE HEADER - SMALLER VERSION                              */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-.plant-selector-section{
-background:linear-gradient(135deg,#2563eb,#1e40af);
-border-radius:10px;
-padding:1.5rem;
-margin-bottom:1.5rem;
-}
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.plant-selector-container{
-display:flex;
-align-items:center;
-gap:1rem;
-flex-wrap:wrap;
-}
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
 
-.plant-selector-container label{
-font-weight:600;
-color:#fff;
-display:flex;
-align-items:center;
-gap:0.5rem;
-font-size:0.95rem;
-}
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
 
-.plant-selector-container select{
-flex:1;
-min-width:250px;
-padding:0.75rem 1rem;
-border:2px solid #e2e8f0;
-border-radius:6px;
-font-size:0.95rem;
-background:white;
-cursor:pointer;
-}
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
 
-.plant-count-badge{
-display:inline-flex;
-align-items:center;
-gap:0.5rem;
-padding:0.5rem 1rem;
-background:linear-gradient(135deg,#10b981,#059669);
-color:white;
-border-radius:6px;
-font-size:0.875rem;
-font-weight:600;
-}
+  /* ========================================================== */
+  /* ADD BUTTON - SMALLER VERSION                               */
+  /* ========================================================== */
+  .add-indicator-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    border: none;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
+  }
 
-.content-header{
-display:none;
-}
+  .add-indicator-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+    text-decoration: none;
+  }
 
-.add-waste-btn{
-display:inline-flex;
-align-items:center;
-gap:8px;
-background:linear-gradient(135deg,#10b981,#059669);
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:8px;
-font-size:14px;
-font-weight:600;
-cursor:pointer;
-box-shadow:0 4px 10px rgba(0,0,0,0.15);
-}
+  .add-indicator-btn i {
+    font-size: 1rem;
+  }
 
+  /* ========================================================== */
+  /* PLANT SELECTOR SECTION                                     */
+  /* ========================================================== */
+  .plant-selector-section {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-radius: var(--radius-card);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .plant-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .plant-selector-container label {
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .plant-selector-container select {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem 0.8rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    font-weight: 500;
+    height: 38px;
+  }
+
+  .plant-selector-container select:focus {
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    outline: none;
+  }
+
+  .plant-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    white-space: nowrap;
+  }
+
+  /* ========================================================== */
+  /* DASHBOARD CARDS                                            */
+  /* ========================================================== */
+  .dashboard-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .dashboard-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .dashboard-card h6 {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dashboard-card h6 i {
+    margin-right: 6px;
+  }
+
+  /* ========================================================== */
+  /* KPI CARDS                                                  */
+  /* ========================================================== */
+  .kpi-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    text-align: center;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-teal), var(--secondary-gold));
+  }
+
+  .kpi-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.15);
+    transform: translateY(-3px);
+  }
+
+  .kpi-card .kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+
+  .kpi-card .kpi-label i {
+    margin-right: 4px;
+  }
+
+  .kpi-card .kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .kpi-card .kpi-value .percent {
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* CHART BOX                                                  */
+  /* ========================================================== */
+  .chart-box {
+    height: 280px;
+    width: 100%;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .plant-selector-section .row .col-md-5,
+    .plant-selector-section .row .col-md-2 {
+      margin-bottom: 8px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 34px;
+      height: 34px;
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 16px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 11px;
+    }
+
+    .add-indicator-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .plant-selector-section {
+      padding: 12px 14px;
+    }
+
+    .plant-selector-container {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .plant-selector-container select {
+      min-width: unset;
+      width: 100%;
+      height: 36px;
+      font-size: 0.8rem;
+    }
+
+    .plant-count-badge {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .kpi-card {
+      padding: 12px 14px;
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 1.5rem;
+    }
+
+    .kpi-card .kpi-label {
+      font-size: 0.7rem;
+    }
+
+    .chart-box {
+      height: 220px;
+    }
+
+    .dashboard-card {
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-card h6 {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 12px;
+    }
+
+    .dash-page-header .header-left {
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .add-indicator-btn {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+
+    .plant-selector-section {
+      padding: 10px 12px;
+    }
+
+    .plant-selector-container label {
+      font-size: 0.8rem;
+    }
+
+    .plant-selector-container select {
+      height: 34px;
+      font-size: 0.75rem;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .plant-count-badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.6rem;
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 1.3rem;
+    }
+
+    .kpi-card {
+      padding: 10px 12px;
+    }
+
+    .chart-box {
+      height: 180px;
+    }
+
+    .dashboard-card {
+      padding: 10px 12px;
+    }
+
+    .dashboard-card h6 {
+      font-size: 0.7rem;
+      margin-bottom: 6px;
+    }
+  }
 </style>
 
 {% endblock %}
-
 
 {% block content %}
 
 <div class="container-fluid">
 
-<div class="d-flex justify-content-between align-items-center mt-2">
-<h3 class="m-0">Indicator Analytics Dashboard</h3>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER - SMALLER                                      -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="header-text">
+        <h1>Indicator Analytics Dashboard</h1>
+        <p class="subtitle">Monitor and track safety performance indicators across all plants</p>
+      </div>
+    </div>
+    <a href="{% url 'environmental_mis:safety_indicator' %}" class="add-indicator-btn">
+      <i class="fas fa-plus-circle"></i>
+      Add Indicator Entry
+    </a>
+  </div>
 
-<a href="{% url 'environmental_mis:safety_indicator' %}" class="add-waste-btn">
-<i class="fas fa-plus-circle"></i>
-Add Indicator Entry
-</a>
+  <!-- ========================================================== -->
+  <!-- FILTER SECTION                                              -->
+  <!-- ========================================================== -->
+  <div class="plant-selector-section">
+    <div class="row align-items-center g-2">
+      <div class="col-md-5">
+        <div class="plant-selector-container">
+          <label>
+            <i class="fas fa-building"></i>
+            <span>Select Plant:</span>
+          </label>
+          <select id="plantSelect">
+            {% for plant in user_plants %}
+            <option value="{{ plant.id }}"
+              {% if plant.id == selected_plant.id %}selected{% endif %}>
+              {{ plant.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="col-md-2 text-md-end">
+        <span class="plant-count-badge">
+          <i class="fas fa-check-circle"></i>
+          {{ user_plants.count }} plant(s)
+        </span>
+      </div>
+
+      <div class="col-md-5">
+        <div class="plant-selector-container">
+          <label>
+            <i class="fas fa-recycle"></i>
+            <span>Indicator Type:</span>
+          </label>
+          <select id="wasteType">
+            <option value="LEADING_INDICATOR"
+              {% if selected_type == "LEADING_INDICATOR" %}selected{% endif %}>
+              LEADING INDICATOR
+            </option>
+            <option value="LAGGING_INDICATOR"
+              {% if selected_type == "LAGGING_INDICATOR" %}selected{% endif %}>
+              LAGGING INDICATOR
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- KPI CARDS                                                  -->
+  <!-- ========================================================== -->
+  <div class="row g-3 mb-3">
+
+    {% if selected_type == "LEADING_INDICATOR" %}
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-walking" style="color: var(--primary-teal);"></i>
+          Safety Walk Planned
+        </div>
+        <div class="kpi-value">{{ walk_plan_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-check-circle" style="color: var(--secondary-green);"></i>
+          Safety Walk Actual
+        </div>
+        <div class="kpi-value">{{ walk_actual_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-clipboard-check" style="color: var(--secondary-gold);"></i>
+          Audit Conducted
+        </div>
+        <div class="kpi-value">{{ audit_actual_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-users" style="color: var(--primary-teal);"></i>
+          Meeting Compliance
+        </div>
+        <div class="kpi-value">{{ meeting_compliance_avg }}<span class="percent">%</span></div>
+      </div>
+    </div>
+
+    {% endif %}
+
+    {% if selected_type == "LAGGING_INDICATOR" %}
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-clock" style="color: var(--secondary-red);"></i>
+          Lost Time Incidents
+        </div>
+        <div class="kpi-value">{{ lti_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-skull" style="color: var(--secondary-red);"></i>
+          Fatality
+        </div>
+        <div class="kpi-value">{{ fatality_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-exclamation-triangle" style="color: var(--secondary-gold);"></i>
+          HIPO Events
+        </div>
+        <div class="kpi-value">{{ hipo_total }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="kpi-card">
+        <div class="kpi-label">
+          <i class="fas fa-calendar-times" style="color: var(--secondary-red);"></i>
+          Days Lost
+        </div>
+        <div class="kpi-value">{{ days_lost_total }}</div>
+      </div>
+    </div>
+
+    {% endif %}
+
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- LEADING INDICATOR CHARTS                                   -->
+  <!-- ========================================================== -->
+  {% if selected_type == "LEADING_INDICATOR" %}
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-walking" style="color: var(--primary-teal);"></i> Safety Walk</h6>
+        <div id="walkChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-clipboard-check" style="color: var(--secondary-gold);"></i> Safety Audit</h6>
+        <div id="auditChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-users" style="color: var(--primary-teal);"></i> Meeting Compliance</h6>
+        <div id="meetingChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-eye" style="color: var(--secondary-gold);"></i> Safety Walk Observations</h6>
+        <div id="observationChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-handshake" style="color: var(--primary-teal);"></i> Committee Meetings</h6>
+        <div id="committeeChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-graduation-cap" style="color: var(--secondary-gold);"></i> Temp Employee Training</h6>
+        <div id="trainingChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- LAGGING INDICATOR CHARTS                                   -->
+  <!-- ========================================================== -->
+  {% if selected_type == "LAGGING_INDICATOR" %}
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-chart-line" style="color: var(--secondary-red);"></i> LTI Trend</h6>
+        <div id="ltiChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-chart-pie" style="color: var(--primary-teal);"></i> Incident Types</h6>
+        <div id="incidentChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-skull" style="color: var(--secondary-red);"></i> Fatality Trend</h6>
+        <div id="fatalityChart" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-exclamation-triangle" style="color: var(--secondary-gold);"></i> HIPO Events</h6>
+        <div id="hipoChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <div class="dashboard-card">
+        <h6><i class="fas fa-calendar-times" style="color: var(--secondary-red);"></i> Days Lost</h6>
+        <div id="daysLostChart" class="chart-box"></div>
+      </div>
+    </div>
+
+  </div>
+
+  {% endif %}
+
 </div>
-
-
-<!-- FILTER -->
-
-<div class="plant-selector-section mt-3">
-<div class="row align-items-center">
-
-<div class="col-md-5">
-<div class="plant-selector-container">
-
-<label>
-<i class="fas fa-building"></i>
-<span>Select Plant:</span>
-</label>
-
-<select id="plantSelect">
-{% for plant in user_plants %}
-<option value="{{ plant.id }}"
-{% if plant.id == selected_plant.id %}selected{% endif %}>
-{{ plant.name }}
-</option>
-{% endfor %}
-</select>
-
-</div>
-</div>
-
-
-<div class="col-md-2 text-end">
-<span class="plant-count-badge">
-<i class="fas fa-check-circle"></i>
-{{ user_plants.count }} plant(s)
-</span>
-</div>
-
-
-<div class="col-md-5">
-<div class="plant-selector-container">
-
-<label>
-<i class="fas fa-recycle"></i>
-<span>Indicator Type:</span>
-</label>
-
-<select id="wasteType">
-
-<option value="LEADING_INDICATOR"
-{% if selected_type == "LEADING_INDICATOR" %}selected{% endif %}>
-LEADING INDICATOR
-</option>
-
-<option value="LAGGING_INDICATOR"
-{% if selected_type == "LAGGING_INDICATOR" %}selected{% endif %}>
-LAGGING INDICATOR
-</option>
-
-</select>
-
-</div>
-</div>
-
-</div>
-</div>
-
-
-<!-- KPI CARDS -->
-
-<div class="row mt-4">
-
-{% if selected_type == "LEADING_INDICATOR" %}
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Safety Walk Planned</h6>
-<h3>{{ walk_plan_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Safety Walk Actual</h6>
-<h3>{{ walk_actual_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Audit Conducted</h6>
-<h3>{{ audit_actual_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Meeting Compliance</h6>
-<h3>{{ meeting_compliance_avg }}%</h3>
-</div>
-</div>
-
-{% endif %}
-
-
-{% if selected_type == "LAGGING_INDICATOR" %}
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Lost Time Incidents</h6>
-<h3>{{ lti_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Fatality</h6>
-<h3>{{ fatality_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>HIPO Events</h6>
-<h3>{{ hipo_total }}</h3>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="dashboard-card text-center">
-<h6>Days Lost</h6>
-<h3>{{ days_lost_total }}</h3>
-</div>
-</div>
-
-{% endif %}
-
-</div>
-
-
-
-<!-- LEADING INDICATOR -->
-
-{% if selected_type == "LEADING_INDICATOR" %}
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Safety Walk</h6>
-<div id="walkChart" class="chart-box"></div>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Safety Audit</h6>
-<div id="auditChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Meeting Compliance</h6>
-<div id="meetingChart" class="chart-box"></div>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Safety Walk Observations</h6>
-<div id="observationChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Committee Meetings</h6>
-<div id="committeeChart" class="chart-box"></div>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Temp Employee Training</h6>
-<div id="trainingChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-{% endif %}
-
-
-
-<!-- LAGGING INDICATOR -->
-
-{% if selected_type == "LAGGING_INDICATOR" %}
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>LTI Trend</h6>
-<div id="ltiChart" class="chart-box"></div>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Incident Types</h6>
-<div id="incidentChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Fatality Trend</h6>
-<div id="fatalityChart" class="chart-box"></div>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>HIPO Events</h6>
-<div id="hipoChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-
-<div class="row">
-
-<div class="col-md-6">
-<div class="dashboard-card">
-<h6>Days Lost</h6>
-<div id="daysLostChart" class="chart-box"></div>
-</div>
-</div>
-
-</div>
-
-{% endif %}
-
-</div>
-
-
 
 <script>
-
-const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-
-const walkPlan={{ walk_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const walkActual={{ walk_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const auditPlan={{ audit_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const auditActual={{ audit_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const meeting={{ meeting_compliance|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const lti={{ lti_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const recordable={{ recordable_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const firstAid={{ first_aid_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const fatality={{ fatality_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const hipo={{ hipo_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const daysLost={{ days_lost_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const observations={{ observations_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const committeePlan={{ committee_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-const committeeActual={{ committee_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-const training={{ training_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }}
-
-
-
-/* WALK STACKED */
-
-if(document.getElementById("walkChart")){
-echarts.init(document.getElementById("walkChart")).setOption({
-tooltip:{trigger:'axis'},
-legend:{data:['Plan','Actual']},
-xAxis:{type:'category',data:months},
-yAxis:{type:'value'},
-series:[
-{name:'Plan',type:'bar',stack:'total',data:walkPlan},
-{name:'Actual',type:'bar',stack:'total',data:walkActual}
-]
-})
-}
-
-
-/* AUDIT AREA */
-
-if(document.getElementById("auditChart")){
-echarts.init(document.getElementById("auditChart")).setOption({
-tooltip:{trigger:'axis'},
-legend:{data:['Planned','Conducted']},
-xAxis:{type:'category',data:months},
-yAxis:{type:'value'},
-series:[
-{name:'Planned',type:'line',areaStyle:{},data:auditPlan},
-{name:'Conducted',type:'line',areaStyle:{},data:auditActual}
-]
-})
-}
-
-
-/* MEETING GAUGE */
-
-/* MEETING COMPLIANCE (BAR + TREND LINE) */
-
-if(document.getElementById("meetingChart")){
-
-echarts.init(document.getElementById("meetingChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-legend:{data:['Compliance %','Trend']},
-
-xAxis:{
-type:'category',
-data:months
-},
-
-yAxis:{
-type:'value',
-max:100
-},
-
-series:[
-
-{
-name:'Compliance %',
-type:'bar',
-data:meeting,
-itemStyle:{
-color:'#3b82f6'
-}
-},
-
-{
-name:'Trend',
-type:'line',
-smooth:true,
-data:meeting,
-lineStyle:{
-width:3
-}
-}
-
-]
-
-})
-
-}
-
-
-/* OBSERVATIONS */
-
-if(document.getElementById("observationChart")){
-
-echarts.init(document.getElementById("observationChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'Observations',type:'bar',data:observations}
-]
-
-})
-
-}
-
-
-/* COMMITTEE MEETINGS */
-
-if(document.getElementById("committeeChart")){
-
-echarts.init(document.getElementById("committeeChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-legend:{data:['Planned','Actual']},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'Planned',type:'bar',data:committeePlan},
-{name:'Actual',type:'bar',data:committeeActual}
-]
-
-})
-
-}
-
-
-/* TRAINING */
-
-if(document.getElementById("trainingChart")){
-
-echarts.init(document.getElementById("trainingChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'Training %',type:'line',smooth:true,data:training}
-]
-
-})
-
-}
-
-
-/* LTI */
-
-if(document.getElementById("ltiChart")){
-echarts.init(document.getElementById("ltiChart")).setOption({
-tooltip:{trigger:'axis'},
-xAxis:{type:'category',data:months},
-yAxis:{type:'value'},
-series:[{
-name:'LTI',
-type:'line',
-smooth:true,
-areaStyle:{},
-data:lti
-}]
-})
-}
-
-
-/* INCIDENT STACKED */
-
-if(document.getElementById("incidentChart")){
-echarts.init(document.getElementById("incidentChart")).setOption({
-tooltip:{trigger:'axis'},
-legend:{data:['Recordable','First Aid']},
-xAxis:{type:'category',data:months},
-yAxis:{type:'value'},
-series:[
-{name:'Recordable',type:'bar',stack:'cases',data:recordable},
-{name:'First Aid',type:'bar',stack:'cases',data:firstAid}
-]
-})
-}
-
-
-/* FATALITY TREND */
-
-if(document.getElementById("fatalityChart")){
-
-echarts.init(document.getElementById("fatalityChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'Fatality',type:'line',smooth:true,data:fatality}
-]
-
-})
-
-}
-
-
-/* HIPO EVENTS */
-
-if(document.getElementById("hipoChart")){
-
-echarts.init(document.getElementById("hipoChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'HIPO',type:'bar',data:hipo}
-]
-
-})
-
-}
-
-
-/* DAYS LOST */
-
-if(document.getElementById("daysLostChart")){
-
-echarts.init(document.getElementById("daysLostChart")).setOption({
-
-tooltip:{trigger:'axis'},
-
-xAxis:{type:'category',data:months},
-
-yAxis:{type:'value'},
-
-series:[
-{name:'Days Lost',type:'line',data:daysLost}
-]
-
-})
-
-}
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const walkPlan = {{ walk_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const walkActual = {{ walk_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const auditPlan = {{ audit_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const auditActual = {{ audit_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const meeting = {{ meeting_compliance|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const lti = {{ lti_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const recordable = {{ recordable_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const firstAid = {{ first_aid_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const fatality = {{ fatality_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const hipo = {{ hipo_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const daysLost = {{ days_lost_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const observations = {{ observations_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const committeePlan = {{ committee_plan|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+  const committeeActual = {{ committee_actual|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  const training = {{ training_data|default:"[0,0,0,0,0,0,0,0,0,0,0,0]"|safe }};
+
+  // Teal theme colors
+  const tealColors = {
+    primary: '#0d9488',
+    primaryDark: '#0f766e',
+    primaryLight: 'rgba(13, 148, 136, 0.2)',
+    gold: '#d97706',
+    goldLight: 'rgba(217, 119, 6, 0.2)',
+    red: '#dc2626',
+    redLight: 'rgba(220, 38, 38, 0.2)',
+    green: '#22c55e',
+    greenLight: 'rgba(34, 197, 94, 0.2)',
+    blue: '#3b82f6',
+    blueLight: 'rgba(59, 130, 246, 0.2)',
+    purple: '#7c3aed',
+    purpleLight: 'rgba(124, 58, 237, 0.2)'
+  };
+
+  /* ===== WALK STACKED ===== */
+  if (document.getElementById("walkChart")) {
+    echarts.init(document.getElementById("walkChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Plan', 'Actual'], textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { top: 30, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        { name: 'Plan', type: 'bar', stack: 'total', data: walkPlan, itemStyle: { color: tealColors.gold, borderRadius: [0, 0, 0, 0] } },
+        { name: 'Actual', type: 'bar', stack: 'total', data: walkActual, itemStyle: { color: tealColors.primary, borderRadius: [0, 0, 0, 0] } }
+      ]
+    });
+  }
+
+  /* ===== AUDIT AREA ===== */
+  if (document.getElementById("auditChart")) {
+    echarts.init(document.getElementById("auditChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Planned', 'Conducted'], textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { top: 30, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        { name: 'Planned', type: 'line', areaStyle: { color: tealColors.goldLight }, data: auditPlan, lineStyle: { color: tealColors.gold, width: 2 }, symbol: 'circle', symbolSize: 6 },
+        { name: 'Conducted', type: 'line', areaStyle: { color: tealColors.primaryLight }, data: auditActual, lineStyle: { color: tealColors.primary, width: 2 }, symbol: 'circle', symbolSize: 6 }
+      ]
+    });
+  }
+
+  /* ===== MEETING COMPLIANCE (BAR + TREND LINE) ===== */
+  if (document.getElementById("meetingChart")) {
+    echarts.init(document.getElementById("meetingChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Compliance %', 'Trend'], textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { top: 30, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        {
+          name: 'Compliance %',
+          type: 'bar',
+          data: meeting,
+          itemStyle: { color: tealColors.primary, borderRadius: [3, 3, 0, 0] },
+          barWidth: '40%'
+        },
+        {
+          name: 'Trend',
+          type: 'line',
+          smooth: true,
+          data: meeting,
+          lineStyle: { width: 2, color: tealColors.gold },
+          symbol: 'circle',
+          symbolSize: 6,
+          itemStyle: { color: tealColors.gold }
+        }
+      ]
+    });
+  }
+
+  /* ===== OBSERVATIONS ===== */
+  if (document.getElementById("observationChart")) {
+    echarts.init(document.getElementById("observationChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        {
+          name: 'Observations',
+          type: 'bar',
+          data: observations,
+          itemStyle: { color: tealColors.gold, borderRadius: [3, 3, 0, 0] },
+          barWidth: '50%'
+        }
+      ]
+    });
+  }
+
+  /* ===== COMMITTEE MEETINGS ===== */
+  if (document.getElementById("committeeChart")) {
+    echarts.init(document.getElementById("committeeChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Planned', 'Actual'], textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { top: 30, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        { name: 'Planned', type: 'bar', data: committeePlan, itemStyle: { color: tealColors.goldLight, borderRadius: [3, 3, 0, 0] }, barWidth: '35%' },
+        { name: 'Actual', type: 'bar', data: committeeActual, itemStyle: { color: tealColors.primary, borderRadius: [3, 3, 0, 0] }, barWidth: '35%' }
+      ]
+    });
+  }
+
+  /* ===== TRAINING ===== */
+  if (document.getElementById("trainingChart")) {
+    echarts.init(document.getElementById("trainingChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        {
+          name: 'Training %',
+          type: 'line',
+          smooth: true,
+          data: training,
+          lineStyle: { width: 2, color: tealColors.primary },
+          areaStyle: { color: tealColors.primaryLight },
+          symbol: 'circle',
+          symbolSize: 6,
+          itemStyle: { color: tealColors.primary }
+        }
+      ]
+    });
+  }
+
+  /* ===== LTI ===== */
+  if (document.getElementById("ltiChart")) {
+    echarts.init(document.getElementById("ltiChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [{
+        name: 'LTI',
+        type: 'line',
+        smooth: true,
+        areaStyle: { color: tealColors.redLight },
+        data: lti,
+        lineStyle: { width: 2, color: tealColors.red },
+        symbol: 'circle',
+        symbolSize: 6,
+        itemStyle: { color: tealColors.red }
+      }]
+    });
+  }
+
+  /* ===== INCIDENT STACKED ===== */
+  if (document.getElementById("incidentChart")) {
+    echarts.init(document.getElementById("incidentChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Recordable', 'First Aid'], textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { top: 30, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [
+        { name: 'Recordable', type: 'bar', stack: 'cases', data: recordable, itemStyle: { color: tealColors.primary }, barWidth: '40%' },
+        { name: 'First Aid', type: 'bar', stack: 'cases', data: firstAid, itemStyle: { color: tealColors.gold }, barWidth: '40%' }
+      ]
+    });
+  }
+
+  /* ===== FATALITY TREND ===== */
+  if (document.getElementById("fatalityChart")) {
+    echarts.init(document.getElementById("fatalityChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [{
+        name: 'Fatality',
+        type: 'line',
+        smooth: true,
+        data: fatality,
+        lineStyle: { width: 2, color: tealColors.red },
+        symbol: 'circle',
+        symbolSize: 6,
+        itemStyle: { color: tealColors.red }
+      }]
+    });
+  }
+
+  /* ===== HIPO EVENTS ===== */
+  if (document.getElementById("hipoChart")) {
+    echarts.init(document.getElementById("hipoChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [{
+        name: 'HIPO',
+        type: 'bar',
+        data: hipo,
+        itemStyle: { color: tealColors.gold, borderRadius: [3, 3, 0, 0] },
+        barWidth: '50%'
+      }]
+    });
+  }
+
+  /* ===== DAYS LOST ===== */
+  if (document.getElementById("daysLostChart")) {
+    echarts.init(document.getElementById("daysLostChart")).setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, bottom: 20, left: 40, right: 10 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { fontSize: 10 } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLabel: { fontSize: 10 } },
+      series: [{
+        name: 'Days Lost',
+        type: 'line',
+        data: daysLost,
+        lineStyle: { width: 2, color: tealColors.primary },
+        areaStyle: { color: tealColors.primaryLight },
+        symbol: 'circle',
+        symbolSize: 6,
+        itemStyle: { color: tealColors.primary }
+      }]
+    });
+  }
 </script>
 
-
-
 <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const plantSelect = document.getElementById("plantSelect");
+    const wasteType = document.getElementById("wasteType");
 
-document.addEventListener("DOMContentLoaded",function(){
+    function updateDashboard() {
+      let plant = plantSelect.value;
+      let type = wasteType.value;
+      let url = new URL(window.location.href);
+      url.searchParams.set("plant_id", plant);
+      url.searchParams.set("type", type);
+      window.location.href = url.toString();
+    }
 
-const plantSelect=document.getElementById("plantSelect")
-const wasteType=document.getElementById("wasteType")
-
-function updateDashboard(){
-
-let plant=plantSelect.value
-let type=wasteType.value
-
-let url=new URL(window.location.href)
-
-url.searchParams.set("plant_id",plant)
-url.searchParams.set("type",type)
-
-window.location.href=url.toString()
-
-}
-
-if(plantSelect) plantSelect.addEventListener("change",updateDashboard)
-if(wasteType) wasteType.addEventListener("change",updateDashboard)
-
-})
-
+    if (plantSelect) plantSelect.addEventListener("change", updateDashboard);
+    if (wasteType) wasteType.addEventListener("change", updateDashboard);
+  });
 </script>
 
 {% endblock %}
