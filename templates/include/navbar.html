@@ -237,6 +237,64 @@ body.sidebar-collapse .pushmenu-toggle i {
   border-bottom: 1px solid rgba(13, 148, 136, 0.08);
 }
 
+.notif-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notif-count-badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 7px;
+}
+
+.notif-preview-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notif-preview-item {
+  display: block;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.06);
+  text-decoration: none;
+  color: #374151;
+}
+
+.notif-preview-item:hover {
+  background: rgba(13, 148, 136, 0.05);
+  text-decoration: none;
+}
+
+.notif-preview-item.unread {
+  background: rgba(13, 148, 136, 0.035);
+}
+
+.notif-preview-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.notif-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
 .notif-empty-state {
   padding: 28px 20px;
   text-align: center;
@@ -344,15 +402,36 @@ body.sidebar-collapse .pushmenu-toggle i {
     <div class="dropdown" style="position: relative;">
       <a href="#" class="icon-btn" id="notifDropdownToggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <i class="bi bi-bell"></i>
-        <span class="notif-dot"></span>
+        {% if notification_unread_count %}
+          <span class="notif-count-badge">{{ notification_unread_count }}</span>
+        {% else %}
+          <span class="notif-dot"></span>
+        {% endif %}
       </a>
       
       <div class="dropdown-menu custom-dropdown-menu dropdown-menu-right" aria-labelledby="notifDropdownToggle">
-        <div class="notif-header">Notifications</div>
-        <div class="notif-empty-state">
-          <i class="bi bi-bell-slash"></i>
-          <p>No notifications yet</p>
+        <div class="notif-header notif-header-row">
+          <span>Notifications</span>
+          <a href="{% url 'alert_engine:notification_list' %}" style="font-size: 12px; color: #0d9488; text-decoration: none;">View all</a>
         </div>
+        {% if recent_notifications %}
+          <div class="notif-preview-list">
+            {% for notification in recent_notifications %}
+              <a href="{% url 'alert_engine:notification_read' notification.pk %}" class="notif-preview-item {% if not notification.is_read %}unread{% endif %}">
+                <div class="notif-preview-title">{{ notification.title }}</div>
+                <div class="notif-preview-meta">
+                  <span>{{ notification.message|truncatechars:45 }}</span>
+                  <span>{{ notification.created_at|timesince }} ago</span>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="notif-empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <p>No notifications yet</p>
+          </div>
+        {% endif %}
       </div>
     </div>
 

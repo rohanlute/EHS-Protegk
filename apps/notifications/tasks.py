@@ -5,7 +5,7 @@ from celery import shared_task
 def send_investigation_overdue_notifications():
     import datetime
     from apps.accidents.models import Incident
-    from apps.notifications.services import NotificationService
+    from apps.notifications.services import NotificationService as CoreNotificationService
     
     today = datetime.date.today()
     
@@ -41,7 +41,7 @@ def send_investigation_overdue_notifications():
             if incident.investigator:
                 extra_recipients.append(incident.investigator)
             
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=incident,
                 notification_type='INCIDENT_INVESTIGATION_OVERDUE',
                 module='INVESTIGATION_OVERDUE',

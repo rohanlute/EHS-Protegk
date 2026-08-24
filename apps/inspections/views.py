@@ -23,7 +23,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import *
 from .forms import *
 from .utils import generate_inspection_pdf
-from apps.notifications.services import NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import NotificationService as AlertNotificationService
 from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
 
 
@@ -1063,7 +1064,7 @@ def schedule_create(request):
 
                         # Notify each user
                         try:
-                            NotificationService.notify(
+                            CoreNotificationService.notify(
                                 content_object=schedule,
                                 notification_type='INSPECTION_SCHEDULE',
                                 module='INSPECTION'
@@ -1522,7 +1523,7 @@ def schedule_send_reminder(request, pk):
     schedule.reminder_sent_at = timezone.now()
     schedule.save()
 
-    NotificationService.notify(
+    CoreNotificationService.notify(
         content_object=schedule,
         notification_type='NOTIFY_INSPECTION',
         module='INSPECTION'
@@ -1987,7 +1988,7 @@ def inspection_submit(request, schedule_id):
 
             InspectionDraft.objects.filter(schedule=schedule).delete()
 
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=submission,
                 notification_type='INSPECTION_SUBMITTED',
                 module='INSPECTION'
@@ -2437,9 +2438,10 @@ def handle_response_assignment(request):
         
         # Send notification
         try:
-            from apps.notifications.services import NotificationService
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
             first_response = response_list[0]
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=first_response,
                 notification_type='INSPECTION_NONCOMPLIANCE_ASSIGNED',
                 module='INSPECTION_NONCOMPLIANCE',
@@ -2641,7 +2643,7 @@ def convert_no_answer_to_hazard(request, response_id):
 
             # Notification
             try:
-                NotificationService.notify(
+                CoreNotificationService.notify(
                     content_object=hazard,
                     notification_type='HAZARD_REPORTED',
                     module='HAZARD'
@@ -2968,7 +2970,7 @@ def schedule_clone(request, pk):
     new_schedule = _clone_schedule_as_scheduled(original_schedule)
     
     # Trigger a notification for the newly created schedule.
-    NotificationService.notify(
+    CoreNotificationService.notify(
         content_object=new_schedule,
         notification_type='INSPECTION_SCHEDULE',
         module='INSPECTION'
@@ -3026,7 +3028,7 @@ def schedule_restart(request, pk):
     )
     original_schedule.refresh_from_db()
 
-    NotificationService.notify(
+    CoreNotificationService.notify(
         content_object=original_schedule,
         notification_type='INSPECTION_SCHEDULE',
         module='INSPECTION'

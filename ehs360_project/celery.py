@@ -12,14 +12,17 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'check-due-date-reminders': {
         'task': 'apps.notifications.tasks.send_due_date_reminders',
+        'task': 'apps.legal_compliance.tasks.send_compliance_reminders',
         'schedule': crontab(hour=9, minute=0),  # Run daily at 9 AM
     },
     'check-overdue-escalations': {
         'task': 'apps.notifications.tasks.send_overdue_escalations',
+        'task': 'apps.legal_compliance.tasks.send_overdue_escalations',
         'schedule': crontab(hour=10, minute=0),  # Run daily at 10 AM
     },
     'check-investigation-overdue': {
-    'task': 'apps.notifications.tasks.send_investigation_overdue_notifications',
+        'task': 'apps.notifications.tasks.send_investigation_overdue_notifications',
+    'task': 'apps.alert_engine.tasks.send_investigation_overdue_notifications',
     'schedule': crontab(hour=11, minute=0),  # Daily at 11 AM IST
     },
     'auto-create-inspection-schedules': {

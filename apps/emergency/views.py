@@ -15,7 +15,8 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 from apps.accounts.models import User
 from apps.organizations.models import Department, Location, Plant, SubLocation, Zone
 from apps.common.image_utils import compress_image
-from apps.notifications.services import NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import NotificationService as AlertNotificationService
 from .forms import *
 from .models import *
 from .utils import generate_emergency_report_pdf
@@ -941,7 +942,7 @@ class EmergencyReportCreateView(EmergencyAccessMixin, CreateView):
         form.save_m2m()
         self.object = report
 
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=report,
             notification_type="EMERGENCY_REPORTED",
             module="EMERGENCY",
@@ -956,7 +957,7 @@ class EmergencyReportCreateView(EmergencyAccessMixin, CreateView):
                 created_by=self.request.user,
             )
             action_item.assigned_to.set(response_team_members)
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=action_item,
                 notification_type="EMERGENCY_ACTION_ASSIGNED",
                 module="EMERGENCY",
@@ -1038,20 +1039,20 @@ class EmergencySOSControlPanelView(EmergencyAccessMixin, CreateView):
                 created_by=self.request.user,
             )
             action_item.assigned_to.set(recipients)
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=report,
                 notification_type="EMERGENCY_REPORTED",
                 module="EMERGENCY",
                 extra_recipients=[report.reported_by],
             )
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=action_item,
                 notification_type="EMERGENCY_ACTION_ASSIGNED",
                 module="EMERGENCY",
                 extra_recipients=recipients + [report.reported_by],
             )
         else:
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=report,
                 notification_type="EMERGENCY_REPORTED",
                 module="EMERGENCY",
@@ -1271,7 +1272,7 @@ class EmergencyActionItemCompleteView(EmergencyAccessMixin, UpdateView):
         report.status = "ACTION_PERFORMED"
         report.save(update_fields=["status", "updated_at"])
 
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=action_item,
             notification_type="EMERGENCY_ACTION_COMPLETED",
             module="EMERGENCY",
@@ -1314,7 +1315,7 @@ class EmergencyInvestigationCreateView(EmergencyAccessMixin, CreateView):
         self.report.status = "INVESTIGATION_COMPLETED"
         self.report.save(update_fields=["status", "updated_at"])
 
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=investigation,
             notification_type="EMERGENCY_INVESTIGATION_COMPLETED",
             module="EMERGENCY",
@@ -1362,7 +1363,7 @@ class EmergencyCAPACreateView(EmergencyAccessMixin, CreateView):
         form.instance.report = self.report
         form.instance.created_by = self.request.user
         response = super().form_valid(form)
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=self.object,
             notification_type="EMERGENCY_CAPA_CREATED",
             module="EMERGENCY",
@@ -1411,7 +1412,7 @@ class EmergencyCAPAUpdateView(EmergencyAccessMixin, UpdateView):
         if capa.closed_by:
             capa_recipients.append(capa.closed_by)
         capa_recipients.extend(list(capa.report.response_team_members.all()))
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=capa,
             notification_type="EMERGENCY_CAPA_UPDATED",
             module="EMERGENCY",
@@ -1484,7 +1485,7 @@ class EmergencyClosureView(EmergencyAccessMixin, UpdateView):
         report.closure_date = timezone.now()
         report.closed_by = self.request.user
         report.save()
-        NotificationService.notify(
+        CoreNotificationService.notify(
             content_object=report,
             notification_type="EMERGENCY_CLOSED",
             module="EMERGENCY",

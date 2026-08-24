@@ -6,8 +6,9 @@ from apps.legal_compliance.models import (
     ComplianceSchedule
 )
 
-from apps.notifications.services import (
-    NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import (
+    NotificationService as AlertNotificationService
 )
 
 
@@ -63,7 +64,7 @@ def send_compliance_reminders():
 
             if today >= reminder_date:
 
-                NotificationService.notify(
+                CoreNotificationService.notify(
 
                     content_object=schedule,
 
@@ -161,7 +162,7 @@ def send_overdue_escalations():
                 if not recipients:
                     continue
 
-                NotificationService.notify(
+                CoreNotificationService.notify(
 
                     content_object=schedule,
 

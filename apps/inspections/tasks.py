@@ -129,7 +129,8 @@ def auto_create_inspection_schedules(self):
         TemplateAutoScheduleConfig,
         InspectionSchedule,
     )
-    from apps.notifications.services import NotificationService
+    from apps.notifications.services import NotificationService as CoreNotificationService
+    from apps.alert_engine.services import NotificationService as AlertNotificationService
 
     # now = timezone.now()
     # =======================================================
@@ -272,7 +273,7 @@ def auto_create_inspection_schedules(self):
 
                         # Send notification
                         try:
-                            NotificationService.notify(
+                            CoreNotificationService.notify(
                                 content_object=schedule,
                                 notification_type='INSPECTION_SCHEDULE',
                                 module='INSPECTION'

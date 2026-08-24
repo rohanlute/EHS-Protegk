@@ -1,5 +1,5 @@
 from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
+from django.template.loader import select_template
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -18,6 +18,35 @@ class NotificationService:
     """
     Generic notification service that uses NotificationMaster configurations
     """
+
+    EMAIL_TEMPLATE_MAP = {
+        'INCIDENT_REPORTED': 'emails/incident/notification.html',
+        'INCIDENT_INVESTIGATION_COMPLETED': 'emails/incident_investigation_reported/notification.html',
+        'INCIDENT_INVESTIGATION_OVERDUE': 'emails/investigation_overdue/notification.html',
+        'INCIDENT_ACTION_ASSIGNED': 'emails/incident_action/notification.html',
+        'INCIDENT_CLOSED': 'emails/incident_closed/notification.html',
+        'HAZARD_REPORTED': 'emails/hazard/notification.html',
+        'HAZARD_ACTION_ASSIGNED': 'emails/hazard_action/notification.html',
+        'HAZARD_ACTION_COMPLETED': 'emails/hazard_action/notification.html',
+        'EMERGENCY_REPORTED': 'emails/emergency/notification.html',
+        'EMERGENCY_ACTION_ASSIGNED': 'emails/emergency/notification.html',
+        'EMERGENCY_ACTION_COMPLETED': 'emails/emergency/notification.html',
+        'EMERGENCY_INVESTIGATION_COMPLETED': 'emails/emergency/notification.html',
+        'EMERGENCY_CAPA_CREATED': 'emails/emergency/notification.html',
+        'EMERGENCY_CAPA_UPDATED': 'emails/emergency/notification.html',
+        'EMERGENCY_CLOSED': 'emails/emergency/notification.html',
+        'ENV_DATA_SUBMITTED': 'emails/env/notification.html',
+        'INSPECTION_SUBMITTED': 'emails/inspection/notification.html',
+        'NOTIFY_INSPECTION': 'emails/notify_inspection/notification.html',
+        'INSPECTION_SCHEDULE': 'emails/notify_inspection/notification.html',
+        'INSPECTION_NONCOMPLIANCE_ASSIGNED': 'emails/inspection_noncompliance/notification.html',
+        'SESSION_SCHEDULED': 'emails/notification.html',
+        'SESSION_REMINDER': 'emails/notification.html',
+        'SESSION_CANCELLED': 'emails/notification.html',
+        'CERTIFICATE_ISSUED': 'emails/notification.html',
+        'COMPLIANCE_REMINDER': 'emails/notification.html',
+        'COMPLIANCE_ESCALATION': 'emails/notification.html',
+    }
 
     @staticmethod
     def _normalize_users(value):
@@ -183,7 +212,7 @@ class NotificationService:
         try:
             # Render HTML template if provided
             if html_template and context:
-                html_content = render_to_string(html_template, context)
+                html_content = select_template([html_template, 'emails/notification.html']).render(context)
             else:
                 html_content = None
             
@@ -207,8 +236,47 @@ class NotificationService:
             import traceback
             traceback.print_exc()
             return False
-    
-    
+
+    @staticmethod
+    def _resolve_email_template(notification_type, module):
+        template = {
+            'INCIDENT_REPORTED': 'emails/incident/notification.html',
+            'INCIDENT_INVESTIGATION_COMPLETED': 'emails/incident_investigation_reported/notification.html',
+            'INCIDENT_INVESTIGATION_OVERDUE': 'emails/investigation_overdue/notification.html',
+            'INCIDENT_ACTION_ASSIGNED': 'emails/incident_action/notification.html',
+            'INCIDENT_CLOSED': 'emails/incident_closed/notification.html',
+            'HAZARD_REPORTED': 'emails/hazard/notification.html',
+            'HAZARD_ACTION_ASSIGNED': 'emails/hazard_action/notification.html',
+            'HAZARD_ACTION_COMPLETED': 'emails/hazard_action/notification.html',
+            'EMERGENCY_REPORTED': 'emails/emergency/notification.html',
+            'EMERGENCY_ACTION_ASSIGNED': 'emails/emergency/notification.html',
+            'EMERGENCY_ACTION_COMPLETED': 'emails/emergency/notification.html',
+            'EMERGENCY_INVESTIGATION_COMPLETED': 'emails/emergency/notification.html',
+            'EMERGENCY_CAPA_CREATED': 'emails/emergency/notification.html',
+            'EMERGENCY_CAPA_UPDATED': 'emails/emergency/notification.html',
+            'EMERGENCY_CLOSED': 'emails/emergency/notification.html',
+            'ENV_DATA_SUBMITTED': 'emails/env/notification.html',
+            'INSPECTION_SUBMITTED': 'emails/inspection/notification.html',
+            'NOTIFY_INSPECTION': 'emails/notify_inspection/notification.html',
+            'INSPECTION_SCHEDULE': 'emails/notify_inspection/notification.html',
+            'INSPECTION_NONCOMPLIANCE_ASSIGNED': 'emails/inspection_noncompliance/notification.html',
+        }.get(notification_type)
+
+        if template:
+            return template
+
+        normalized_module = (module or '').upper()
+        module_templates = {
+            'ENV': 'emails/env/notification.html',
+            'ENVIRONMENTAL': 'emails/env/notification.html',
+            'INSPECTION': 'emails/inspection/notification.html',
+            'INVESTIGATION_OVERDUE': 'emails/investigation_overdue/notification.html',
+        }
+        return module_templates.get(
+            normalized_module,
+            f'emails/{(module or "notification").lower()}/notification.html',
+        )
+
     @staticmethod
     def notify(content_object, notification_type, module='INCIDENT', extra_recipients=None):
         """
@@ -382,7 +450,7 @@ class NotificationService:
                     recipient=stakeholder,
                     subject=context.get('subject', ''),
                     message=context.get('message', ''),
-                    html_template=f'emails/{module.lower()}/notification.html',
+                    html_template=NotificationService._resolve_email_template(notification_type, module),
                     context=context
                 )
 
@@ -1073,7 +1141,7 @@ EHS Management System
             incident.incident_type.name
             if incident.incident_type else 'NA'
         )
-        incident_url = f"{settings.SITE_URL}{reverse('incidents:incident_detail', args=[incident.id])}"
+        incident_url = f"{settings.SITE_URL}{reverse('accidents:incident_detail', args=[incident.id])}"
 
         
         return {

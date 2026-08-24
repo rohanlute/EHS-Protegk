@@ -15,7 +15,8 @@ from apps.organizations.models import Plant
 from .models import *
 from .utils import *
 from django.shortcuts import render, redirect, get_object_or_404
-from apps.notifications.services import NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import NotificationService as AlertNotificationService
 
 from django.views.generic import TemplateView
 from django.db.models import Count, Sum, Q
@@ -697,7 +698,7 @@ class PlantMonthlyEntryView(LoginRequiredMixin, View):
                     continue
                 
         if saved_count > 0:
-            NotificationService.notify(
+            CoreNotificationService.notify(
                 content_object=selected_plant,
                 notification_type='ENV_DATA_SUBMITTED',
                 module='ENV'

@@ -8,7 +8,8 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.inspections.models import InspectionSchedule, InspectionTemplate
 from apps.inspections.views import _get_inspection_completion_status
-from apps.notifications.services import NotificationService
+from apps.notifications.services import NotificationService as CoreNotificationService
+from apps.alert_engine.services import NotificationService as AlertNotificationService
 
 
 class ScheduleRestartNotificationTests(TestCase):

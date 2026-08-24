@@ -437,8 +437,9 @@ class TrainingSessionCreateView(TrainingAccessMixin, CreateView):
 
         # Send notifications to invited participants
         try:
-            from apps.notifications.services import NotificationService
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+            CoreNotificationService.notify(
                 content_object=self.object,
                 notification_type='SESSION_SCHEDULED',
                 module='TRAINING'
@@ -678,8 +679,9 @@ class AddParticipantsView(TrainingAccessMixin, View):
         # Send notification to newly added participants
         if added_count > 0:
             try:
-                from apps.notifications.services import NotificationService
-                NotificationService.notify(
+                from apps.notifications.services import NotificationService as CoreNotificationService
+                from apps.alert_engine.services import NotificationService as AlertNotificationService
+                CoreNotificationService.notify(
                     content_object=self.session,
                     notification_type='SESSION_SCHEDULED',
                     module='TRAINING'
@@ -763,8 +765,9 @@ class CompleteSessionView(TrainingAccessMixin, UpdateView):
 
         # Send certificate issued notifications
         try:
-            from apps.notifications.services import NotificationService
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+            CoreNotificationService.notify(
                 content_object=session,
                 notification_type='CERTIFICATE_ISSUED',
                 module='TRAINING'
@@ -811,8 +814,9 @@ class CancelSessionView(TrainingAccessMixin, UpdateView):
 
         # Notify participants of cancellation
         try:
-            from apps.notifications.services import NotificationService
-            NotificationService.notify(
+            from apps.notifications.services import NotificationService as CoreNotificationService
+            from apps.alert_engine.services import NotificationService as AlertNotificationService
+            CoreNotificationService.notify(
                 content_object=session,
                 notification_type='SESSION_CANCELLED',
                 module='TRAINING'
