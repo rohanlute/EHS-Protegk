@@ -31,6 +31,7 @@ urlpatterns = [
     # path('data_collection/', include('apps.data_collection.urls')),
     path('env-data/', include('apps.ENVdata.urls')),
     path('notifications/', include('apps.notifications.urls')),
+    path('notifications/', include('apps.alert_engine.urls')),
     path('environmental-mis/', include('apps.environmental_mis.urls')),
     path('training/', include('apps.training.urls')),
     path('permit/', include('apps.permit.urls')),
