@@ -9,80 +9,721 @@
 <li class="breadcrumb-item active">{{ schedule.schedule_code }}</li>
 {% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* ==========================================================
+       TEAL THEME (matching Inspection Dashboard)
+       ========================================================== */
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        --secondary-blue: #3b82f6;
+
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    /* ----- BREADCRUMB ----- */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* ----- PAGE HEADER (hero) ----- */
+    .audit-hero {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        padding: 20px 24px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        margin-bottom: 24px;
+    }
+
+    .audit-hero .hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .audit-hero .hero-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .audit-hero .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .audit-hero .hero-text h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .audit-hero .hero-text .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .audit-hero .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* ----- PILLS (Priority & Status) ----- */
+    .audit-pill {
+        display: inline-block;
+        padding: 0.25rem 0.9rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+
+    /* Priority pills */
+    .audit-pill.priority-critical {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .audit-pill.priority-high {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .audit-pill.priority-medium {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .audit-pill.priority-low {
+        background: #dbeafe;
+        color: #3b82f6;
+    }
+
+    /* Status pills */
+    .audit-pill.status-draft {
+        background: #f1f5f9;
+        color: var(--text-muted);
+    }
+
+    .audit-pill.status-scheduled {
+        background: #dbeafe;
+        color: #3b82f6;
+    }
+
+    .audit-pill.status-in_progress {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .audit-pill.status-completed {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .audit-pill.status-cancelled {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .audit-pill.status-overdue {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .audit-pill.risk-high {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .audit-pill.risk-medium {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .audit-pill.risk-low {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .audit-pill.risk-none {
+        background: #f1f5f9;
+        color: var(--text-muted);
+    }
+
+    /* ----- CARDS (audit-panel) ----- */
+    .audit-panel {
+        border: none;
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        height: 100%;
+    }
+
+    .audit-panel .card-header {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .audit-panel .card-header .card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .audit-panel .card-header .card-title i {
+        color: var(--primary-teal);
+    }
+
+    .audit-panel .card-body {
+        padding: 20px;
+    }
+
+    /* ----- SUMMARY LIST (teal) ----- */
+    .summary-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .summary-list li {
+        display: flex;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+
+    .summary-list li:last-child {
+        border-bottom: none;
+    }
+
+    .summary-list .summary-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        min-width: 110px;
+        flex-shrink: 0;
+    }
+
+    .summary-list .summary-value {
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .summary-list .summary-value .text-muted {
+        color: var(--text-muted);
+    }
+
+    /* ----- BUTTONS (teal) ----- */
+    .btn {
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        padding: 0.55rem 1.4rem;
+        font-size: 14px;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn-primary {
+        background: var(--primary-teal);
+        color: white;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-teal-dark);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+
+    .btn-sm {
+        font-size: 12px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        border: 1px solid var(--primary-teal);
+        color: var(--primary-teal);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 12px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* ----- TABLE (teal) ----- */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-sm);
+    }
+
+    .audit-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .audit-table thead th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg-page);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .audit-table tbody td {
+        vertical-align: middle;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.6rem 0.75rem;
+        text-align: left;
+    }
+
+    .audit-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .audit-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .audit-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .audit-table .table-actions {
+        white-space: nowrap;
+    }
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 992px) {
+        .audit-hero .hero-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .audit-hero .hero-badges {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .audit-hero {
+            padding: 16px 18px;
+        }
+
+        .audit-hero .hero-text h2 {
+            font-size: 18px;
+        }
+
+        .audit-panel .card-body {
+            padding: 16px;
+        }
+
+        .audit-panel .card-header {
+            padding: 12px 16px;
+        }
+
+        .summary-list .summary-label {
+            min-width: 90px;
+        }
+
+        .audit-table thead th,
+        .audit-table tbody td {
+            padding: 0.5rem 0.4rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .audit-hero .hero-left {
+            width: 100%;
+        }
+
+        .audit-hero .hero-text h2 {
+            font-size: 17px;
+        }
+
+        .audit-hero .hero-badges {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .audit-hero .hero-badges .audit-pill {
+            text-align: center;
+        }
+
+        .summary-list li {
+            flex-direction: column;
+            padding: 6px 0;
+        }
+
+        .summary-list .summary-label {
+            min-width: auto;
+            margin-bottom: 2px;
+        }
+
+        .audit-table .table-actions {
+            display: flex;
+            gap: 4px;
+        }
+    }
+
+    /* utility */
+    .text-center {
+        text-align: center !important;
+    }
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+    .text-danger {
+        color: var(--secondary-red) !important;
+    }
+    .mb-0 {
+        margin-bottom: 0 !important;
+    }
+    .mb-2 {
+        margin-bottom: 8px !important;
+    }
+    .mt-3 {
+        margin-top: 16px !important;
+    }
+    .d-flex {
+        display: flex !important;
+    }
+    .justify-content-between {
+        justify-content: space-between !important;
+    }
+    .align-items-center {
+        align-items: center !important;
+    }
+    .flex-wrap {
+        flex-wrap: wrap !important;
+    }
+    .gap-2 {
+        gap: 8px !important;
+    }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -12px;
+    }
+    .col-lg-4 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+        padding: 0 12px;
+    }
+    .col-lg-8 {
+        flex: 0 0 66.667%;
+        max-width: 66.667%;
+        padding: 0 12px;
+    }
+
+    @media (max-width: 992px) {
+        .col-lg-4,
+        .col-lg-8 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .col-lg-4 {
+            margin-bottom: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                 -->
+<!-- ========================================================== -->
 <div class="audit-hero">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <h2 class="h4 mb-2">{{ schedule.template.title }}</h2>
-            <p>{{ schedule.schedule_code }} scheduled for {{ schedule.location_scope }}</p>
+    <div class="hero-top">
+        <div class="hero-left">
+            <div class="hero-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="hero-text">
+                <h2>{{ schedule.template.title }}</h2>
+                <span class="subtitle">
+                    <i class="fas fa-hashtag" style="color: var(--primary-teal);"></i>
+                    {{ schedule.schedule_code }} scheduled for {{ schedule.location_scope }}
+                </span>
+            </div>
         </div>
-        <div class="d-flex flex-wrap" style="gap:.5rem;">
-            <span class="audit-pill priority-{{ schedule.priority|lower }}">{{ schedule.get_priority_display }}</span>
-            <span class="audit-pill status-{{ schedule.status|lower }}">{{ schedule.get_status_display }}</span>
+        <div class="hero-badges">
+            <span class="audit-pill priority-{{ schedule.priority|lower }}">
+                <i class="fas fa-flag"></i> {{ schedule.get_priority_display }}
+            </span>
+            <span class="audit-pill status-{{ schedule.status|lower }}">
+                <i class="fas fa-circle" style="font-size: 8px; vertical-align: middle;"></i>
+                {{ schedule.get_status_display }}
+            </span>
         </div>
     </div>
 </div>
+
+<!-- ========================================================== -->
+<!-- MAIN CONTENT                                                -->
+<!-- ========================================================== -->
 <div class="row">
+    <!-- Left Column: Summary -->
     <div class="col-lg-4">
         <div class="card audit-panel">
-            <div class="card-header"><h3 class="card-title">Audit Summary</h3></div>
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i> Audit Summary
+                </h3>
+            </div>
             <div class="card-body">
-                <p><strong>Template:</strong> {{ schedule.template.title }}</p>
-                <p><strong>Standard:</strong> {{ schedule.template.standard_reference|default:"-" }}</p>
-                <p><strong>Auditor:</strong> {{ schedule.auditor.get_full_name }}</p>
-                <p><strong>Plants:</strong>
-                  {% for plant in schedule.plants.all %}{{ plant.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
-                </p>
-                <p><strong>Zones:</strong>
-                  {% for zone in schedule.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
-                </p>
-                <p><strong>Locations:</strong>
-                  {% for location in schedule.locations.all %}{{ location.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
-                </p>
-                <p><strong>Sub-Locations:</strong>
-                  {% for sublocation in schedule.sublocations.all %}{{ sublocation.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
-                </p>
-                <p><strong>Category:</strong> {{ schedule.template.category.category_name }}</p>
-                <p><strong>Priority:</strong> {{ schedule.get_priority_display }}</p>
-                <p><strong>Status:</strong> {{ schedule.get_status_display }}</p>
+                <ul class="summary-list">
+                    <li>
+                        <span class="summary-label">Template</span>
+                        <span class="summary-value">{{ schedule.template.title }}</span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Standard</span>
+                        <span class="summary-value">{{ schedule.template.standard_reference|default:"—" }}</span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Auditor</span>
+                        <span class="summary-value">{{ schedule.auditor.get_full_name }}</span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Category</span>
+                        <span class="summary-value">{{ schedule.template.category.category_name }}</span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Priority</span>
+                        <span class="summary-value">
+                            <span class="audit-pill priority-{{ schedule.priority|lower }}" style="font-size: 0.75rem;">
+                                {{ schedule.get_priority_display }}
+                            </span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Status</span>
+                        <span class="summary-value">
+                            <span class="audit-pill status-{{ schedule.status|lower }}" style="font-size: 0.75rem;">
+                                {{ schedule.get_status_display }}
+                            </span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Plants</span>
+                        <span class="summary-value">
+                            {% for plant in schedule.plants.all %}
+                            {{ plant.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            <span class="text-muted">—</span>
+                            {% endfor %}
+                        </span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Zones</span>
+                        <span class="summary-value">
+                            {% for zone in schedule.zones.all %}
+                            {{ zone.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            <span class="text-muted">—</span>
+                            {% endfor %}
+                        </span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Locations</span>
+                        <span class="summary-value">
+                            {% for location in schedule.locations.all %}
+                            {{ location.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            <span class="text-muted">—</span>
+                            {% endfor %}
+                        </span>
+                    </li>
+                    <li>
+                        <span class="summary-label">Sub-Locations</span>
+                        <span class="summary-value">
+                            {% for sublocation in schedule.sublocations.all %}
+                            {{ sublocation.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            <span class="text-muted">—</span>
+                            {% endfor %}
+                        </span>
+                    </li>
+                </ul>
+
                 {% if schedule.status == 'DRAFT' or schedule.status == 'SCHEDULED' %}
-                <a href="{% url 'audits:audit_execute' schedule.pk %}" class="btn btn-primary btn-block">Start Audit Execution</a>
+                <div class="mt-3">
+                    <a href="{% url 'audits:audit_execute' schedule.pk %}" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Audit Execution
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
+
+    <!-- Right Column: Findings -->
     <div class="col-lg-8">
         <div class="card audit-panel">
-            <div class="card-header"><h3 class="card-title">Findings</h3></div>
-            <div class="card-body">
-                <table class="table audit-table table-sm">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Clause</th>
-                            <th>Risk</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for finding in schedule.findings.all %}
-                        <tr>
-                            <td>{{ finding.finding_id }}</td>
-                            <td>{{ finding.origin_question.compliance_clause|default:"-" }}</td>
-                            <td><span class="audit-pill risk-{{ finding.risk_score|lower }}">{{ finding.get_risk_score_display }}</span></td>
-                            <td><span class="audit-pill status-{{ finding.status|lower }}">{{ finding.get_status_display }}</span></td>
-                            <td><a href="{% url 'audits:finding_detail' finding.pk %}" class="btn btn-sm btn-outline-primary">Open</a></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">No findings have been raised yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle"></i> Findings
+                </h3>
+                <span style="background: var(--primary-teal-light); color: var(--primary-teal); padding: 0.2rem 0.8rem; border-radius: 12px; font-weight: 600; font-size: 0.8rem;">
+                    {{ schedule.findings.all|length }} total
+                </span>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <div class="table-responsive">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Finding ID</th>
+                                <th style="width: 25%;">Clause</th>
+                                <th style="width: 20%;">Risk</th>
+                                <th style="width: 20%;">Status</th>
+                                <th style="width: 20%; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for finding in schedule.findings.all %}
+                            <tr>
+                                <td>
+                                    <span style="font-weight: 600; color: var(--primary-teal);">
+                                        {{ finding.finding_id }}
+                                    </span>
+                                </td>
+                                <td>{{ finding.origin_question.compliance_clause|default:"—" }}</td>
+                                <td>
+                                    <span class="audit-pill risk-{{ finding.risk_score|lower }}">
+                                        {{ finding.get_risk_score_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="audit-pill status-{{ finding.status|lower }}">
+                                        {{ finding.get_status_display }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <a href="{% url 'audits:finding_detail' finding.pk %}" class="btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Open
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem 0;">
+                                    <div style="color: var(--text-muted);">
+                                        <i class="fas fa-check-circle" style="display: block; font-size: 32px; margin-bottom: 8px; color: var(--secondary-green);"></i>
+                                        <p style="margin: 0; font-size: 0.95rem;">No findings have been raised yet.</p>
+                                        <p style="margin: 4px 0 0 0; font-size: 0.82rem;">Start the audit to begin recording findings.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

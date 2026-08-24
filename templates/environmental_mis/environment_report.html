@@ -1,817 +1,929 @@
-{% extends 'base/base.html' %} {% load static %} {% load environment_filters %}
-{% block title %}Environmental Data Entry{% endblock %} {% block extra_css %}
+{% extends 'base/base.html' %}
+{% load static %}
+{% load environment_filters %}
 
+{% block title %}Environmental Data Entry{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
 <style>
-  :root {
-    --border: #e2e8f0;
-    --header-bg: #f1f5f9;
-    --total-bg: #eef2ff;
-    --quarter-bg: #f8fafc;
-  }
+    /* ==========================================================
+       TEAL THEME (matching Inspection Dashboard)
+       ========================================================== */
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
 
-  /* ================= HEADER ================= */
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        --secondary-blue: #3b82f6;
 
-  .header-section {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    border-radius: 10px;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-    color: white;
-  }
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
 
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
 
-  .header-info h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1.8rem;
-    font-weight: 700;
-  }
+    /* ----- HEADER SECTION (teal) ----- */
+    .header-section {
+        background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+        border-radius: var(--radius-card);
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 24px rgba(13, 148, 136, 0.2);
+        color: white;
+    }
 
-  .plant-info {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    font-size: 0.95rem;
-  }
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
 
-  /* ================= CONTAINER ================= */
+    .header-info h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-  .env-data-container {
-    padding: 1.5rem;
-    background: #f8fafc;
-  }
+    .header-info h2 i {
+        opacity: 0.9;
+    }
 
-  /* ================= TABLE WRAPPER ================= */
+    .plant-info {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
 
-  .table-wrapper {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: #fff;
-  }
+    .plant-info strong {
+        font-weight: 600;
+    }
 
-  /* ================= TABLE ================= */
+    /* ----- CONTAINER ----- */
+    .env-data-container {
+        padding: 0;
+    }
 
-  .main-table {
-    border-collapse: separate;
-    border-spacing: 0;
-    width: max-content;
-    min-width: 2200px;
-    table-layout: fixed;
-  }
+    /* ----- PLANT SELECTOR (teal) ----- */
+    .plant-selector-section {
+        background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+        border-radius: var(--radius-card);
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 6px 20px rgba(13, 148, 136, 0.15);
+    }
 
-  /* ================= CELLS ================= */
+    .plant-selector-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
 
-  .main-table th,
-  .main-table td {
-    border: 1px solid var(--border);
-    padding: 6px;
-    font-size: 12px;
-    text-align: center;
-    vertical-align: middle;
-    background: #fff;
-    box-sizing: border-box;
-  }
+    .plant-selector-container label {
+        font-weight: 600;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        margin: 0;
+    }
 
-  /* ================= HEADER ================= */
+    .plant-selector-container label i {
+        opacity: 0.9;
+    }
 
-  .main-table thead th {
-    position: sticky;
-    top: 0;
-    background: var(--header-bg);
-    z-index: 500;
-  }
+    .plant-selector-container select {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.6rem 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        background: white;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
 
-  /* ================= COLUMN WIDTHS ================= */
+    .plant-selector-container select:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+    }
 
-  .main-table th:nth-child(1),
-  .main-table td:nth-child(1) {
-    width: 35px;
-  }
+    .plant-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-  .main-table th:nth-child(2),
-  .main-table td:nth-child(2) {
-    width: 100px;
-  }
+    .plant-count-badge i {
+        opacity: 0.9;
+    }
 
-  .main-table th:nth-child(3),
-  .main-table td:nth-child(3) {
-    width: 130px;
-  }
+    /* ----- TABLE WRAPPER (teal) ----- */
+    .table-wrapper {
+        overflow-x: auto;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        background: var(--bg-card);
+        box-shadow: var(--shadow-card);
+    }
 
-  .main-table th:nth-child(4),
-  .main-table td:nth-child(4) {
-    width: 120px;
-  }
+    /* ----- TABLE ----- */
+    .main-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: max-content;
+        min-width: 2200px;
+        table-layout: fixed;
+    }
 
-  .main-table th:nth-child(5),
-  .main-table td:nth-child(5) {
-    width: 90px;
-  }
+    .main-table th,
+    .main-table td {
+        border: 1px solid var(--border-color);
+        padding: 6px 8px;
+        font-size: 12px;
+        text-align: center;
+        vertical-align: middle;
+        background: var(--bg-card);
+        box-sizing: border-box;
+    }
 
-  .main-table th:nth-child(6),
-  .main-table td:nth-child(6) {
-    width: 90px;
-  }
+    /* ----- HEADER (teal) ----- */
+    .main-table thead th {
+        position: sticky;
+        top: 0;
+        background: var(--bg-page);
+        z-index: 500;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+        border-bottom: 2px solid var(--border-color);
+    }
 
-  /* ================= STICKY BASE ================= */
+    /* ----- COLUMN WIDTHS ----- */
+    .main-table th:nth-child(1),
+    .main-table td:nth-child(1) {
+        width: 35px;
+        min-width: 35px;
+    }
+    .main-table th:nth-child(2),
+    .main-table td:nth-child(2) {
+        width: 100px;
+        min-width: 100px;
+    }
+    .main-table th:nth-child(3),
+    .main-table td:nth-child(3) {
+        width: 130px;
+        min-width: 130px;
+    }
+    .main-table th:nth-child(4),
+    .main-table td:nth-child(4) {
+        width: 120px;
+        min-width: 120px;
+    }
+    .main-table th:nth-child(5),
+    .main-table td:nth-child(5) {
+        width: 90px;
+        min-width: 90px;
+    }
+    .main-table th:nth-child(6),
+    .main-table td:nth-child(6) {
+        width: 90px;
+        min-width: 90px;
+    }
 
-  .sticky-col,
-  .sticky-col-2,
-  .sticky-col-3,
-  .sticky-col-4,
-  .sticky-col-5,
-  .sticky-col-6 {
-    position: sticky;
-    background: #fff;
-    z-index: 200;
-    border-right: 1px solid var(--border);
-    box-shadow: 2px 0 3px rgba(0, 0, 0, 0.05);
-  }
+    /* ----- STICKY COLUMNS ----- */
+    .sticky-col,
+    .sticky-col-2,
+    .sticky-col-3,
+    .sticky-col-4,
+    .sticky-col-5,
+    .sticky-col-6 {
+        position: sticky;
+        background: var(--bg-card);
+        z-index: 200;
+        border-right: 1px solid var(--border-color);
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
+    }
 
-  /* ================= HEADER ABOVE BODY ================= */
+    .main-table thead .sticky-col,
+    .main-table thead .sticky-col-2,
+    .main-table thead .sticky-col-3,
+    .main-table thead .sticky-col-4,
+    .main-table thead .sticky-col-5,
+    .main-table thead .sticky-col-6 {
+        background: var(--bg-page);
+        z-index: 600;
+    }
 
-  .main-table thead .sticky-col,
-  .main-table thead .sticky-col-2,
-  .main-table thead .sticky-col-3,
-  .main-table thead .sticky-col-4,
-  .main-table thead .sticky-col-5,
-  .main-table thead .sticky-col-6 {
-    background: var(--header-bg);
-    z-index: 600;
-  }
+    /* ----- MANUFACTURING TABLE STICKY ----- */
+    #manufacturingTable .sticky-col {
+        left: 0;
+    }
+    #manufacturingTable .sticky-col-2 {
+        left: 35px;
+    }
+    #manufacturingTable .sticky-col-3 {
+        left: 135px;
+    }
+    #manufacturingTable .sticky-col-4 {
+        left: 265px;
+    }
+    #manufacturingTable .sticky-col-5 {
+        left: 385px;
+    }
+    #manufacturingTable .sticky-col-6 {
+        left: 475px;
+    }
 
-  /* ================= MANUFACTURING TABLE ================= */
+    /* ----- NON-MANUFACTURING TABLE STICKY ----- */
+    #nonManufacturingTable .sticky-col {
+        left: 0;
+    }
+    #nonManufacturingTable .sticky-col-2 {
+        left: 35px;
+    }
+    #nonManufacturingTable .sticky-col-4 {
+        left: 135px;
+    }
+    #nonManufacturingTable .sticky-col-5 {
+        left: 255px;
+    }
+    #nonManufacturingTable .sticky-col-6 {
+        left: 345px;
+    }
 
-  #manufacturingTable .sticky-col {
-    left: 0;
-  }
+    /* ----- ROWSPAN FIX ----- */
+    .main-table td[rowspan] {
+        vertical-align: middle;
+        background: var(--bg-card);
+        z-index: 250;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
 
-  #manufacturingTable .sticky-col-2 {
-    left: 35px;
-  }
+    /* ----- INPUT FIELDS (teal) ----- */
+    .data-input {
+        width: 90px;
+        min-width: 70px;
+        height: 30px;
+        padding: 4px 6px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        text-align: right;
+        background: white;
+        color: var(--text-primary);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
 
-  #manufacturingTable .sticky-col-3 {
-    left: 135px;
-  }
+    .data-input:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+    }
 
-  #manufacturingTable .sticky-col-4 {
-    left: 265px;
-  }
+    .data-input[readonly] {
+        background: var(--bg-page);
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: default;
+    }
 
-  #manufacturingTable .sticky-col-5 {
-    left: 385px;
-  }
+    /* ----- TOTAL ROW (teal) ----- */
+    .total-row td {
+        background: var(--primary-teal-light);
+        font-weight: 700;
+        color: var(--text-primary);
+    }
 
-  #manufacturingTable .sticky-col-6 {
-    left: 475px;
-  }
+    .total-row .data-input {
+        background: var(--primary-teal-light);
+        font-weight: 700;
+    }
 
-  /* ================= NON MANUFACTURING TABLE ================= */
+    /* ----- EMPTY CELLS ----- */
+    .empty-cell {
+        background: var(--bg-card);
+    }
+    .empty-cell::after {
+        content: "";
+        display: block;
+        height: 20px;
+    }
+    .main-table td:empty::after {
+        content: "";
+        display: inline-block;
+        height: 18px;
+    }
 
-  #nonManufacturingTable .sticky-col {
-    left: 0;
-  }
+    /* ----- SCROLLBAR (teal) ----- */
+    .table-wrapper::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+    .table-wrapper::-webkit-scrollbar-track {
+        background: var(--bg-page);
+        border-radius: 4px;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: var(--primary-teal);
+        border-radius: 4px;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-teal-dark);
+    }
 
-  #nonManufacturingTable .sticky-col-2 {
-    left: 35px;
-  }
+    /* ----- BUTTONS (teal) ----- */
+    .btn {
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        font-family: inherit;
+    }
 
-  #nonManufacturingTable .sticky-col-4 {
-    left: 135px;
-  }
+    .btn-primary {
+        background: var(--primary-teal);
+        color: white;
+    }
 
-  #nonManufacturingTable .sticky-col-5 {
-    left: 255px;
-  }
+    .btn-primary:hover {
+        background: var(--primary-teal-dark);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        transform: translateY(-1px);
+        color: white;
+    }
 
-  #nonManufacturingTable .sticky-col-6 {
-    left: 345px;
-  }
+    .btn-success {
+        background: var(--secondary-green);
+        color: white;
+    }
 
-  /* ================= ROWSPAN FIX ================= */
+    .btn-success:hover {
+        background: #16a34a;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        transform: translateY(-1px);
+        color: white;
+    }
 
-  .main-table td[rowspan] {
-    vertical-align: middle;
-    background: #fff;
-    z-index: 250;
-  }
+    .btn-warning {
+        background: var(--secondary-gold);
+        color: white;
+    }
 
-  /* ================= INPUT ================= */
+    .btn-warning:hover {
+        background: #b45309;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        transform: translateY(-1px);
+        color: white;
+    }
 
-  .data-input {
-    width: 90px;
-    height: 28px;
-    padding: 4px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 12px;
-    text-align: right;
-  }
+    /* ----- ACTION BUTTONS CONTAINER ----- */
+    .action-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-  .data-input[readonly] {
-    background: #f1f5f9;
-    font-weight: 500;
-  }
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 992px) {
+        .header-section {
+            padding: 1.2rem 1.5rem;
+        }
 
-  /* ================= TOTAL ROW ================= */
+        .header-info h2 {
+            font-size: 1.3rem;
+        }
 
-  .total-row td {
-    background: var(--total-bg);
-    font-weight: 600;
-  }
+        .plant-selector-section {
+            padding: 1rem 1.2rem;
+        }
 
-  /* ================= EMPTY CELLS ================= */
+        .plant-selector-container {
+            gap: 0.8rem;
+        }
 
-  .empty-cell {
-    background: #fff;
-  }
+        .plant-selector-container select {
+            min-width: 150px;
+        }
+    }
 
-  .empty-cell::after {
-    content: "";
-    display: block;
-    height: 20px;
-  }
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-  .main-table td:empty::after {
-    content: "";
-    display: inline-block;
-    height: 18px;
-  }
+        .header-info h2 {
+            font-size: 1.1rem;
+        }
 
-  /* ================= SCROLLBAR ================= */
+        .plant-info {
+            gap: 0.8rem;
+            font-size: 0.85rem;
+        }
 
-  .table-wrapper::-webkit-scrollbar {
-    height: 8px;
-  }
+        .plant-selector-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-  .table-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-  }
+        .plant-selector-container select {
+            min-width: auto;
+        }
 
-  /* ================= PLANT SELECTOR ================= */
+        .plant-count-badge {
+            justify-content: center;
+        }
 
-  .plant-selector-section {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
+        .action-buttons {
+            justify-content: center;
+        }
 
-  .plant-selector-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
+        .action-buttons .btn {
+            width: 100%;
+            justify-content: center;
+        }
 
-  .plant-selector-container label {
-    font-weight: 600;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-  }
+        .data-input {
+            width: 65px;
+            min-width: 50px;
+            font-size: 11px;
+            padding: 3px 4px;
+            height: 26px;
+        }
 
-  .plant-selector-container select {
-    flex: 1;
-    min-width: 250px;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    background: white;
-    cursor: pointer;
-  }
+        .main-table th,
+        .main-table td {
+            padding: 4px 6px;
+            font-size: 11px;
+        }
+    }
 
-  .plant-count-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  .content-header {
-    display: none;
-  }
+    @media (max-width: 480px) {
+        .header-section {
+            padding: 1rem;
+        }
+
+        .header-info h2 {
+            font-size: 1rem;
+        }
+
+        .plant-selector-section {
+            padding: 0.8rem 1rem;
+        }
+
+        .plant-selector-container label {
+            font-size: 0.85rem;
+        }
+
+        .data-input {
+            width: 55px;
+            min-width: 45px;
+            font-size: 10px;
+            padding: 2px 3px;
+            height: 24px;
+        }
+
+        .btn {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+
+    /* utility */
+    .content-header {
+        display: none;
+    }
+    .text-end {
+        text-align: right !important;
+    }
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+    .d-flex {
+        display: flex !important;
+    }
+    .justify-content-between {
+        justify-content: space-between !important;
+    }
+    .align-items-center {
+        align-items: center !important;
+    }
+    .flex-wrap {
+        flex-wrap: wrap !important;
+    }
+    .gap-2 {
+        gap: 8px !important;
+    }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -12px;
+    }
+    .col-md-5 {
+        flex: 0 0 41.667%;
+        max-width: 41.667%;
+        padding: 0 12px;
+    }
+    .col-md-2 {
+        flex: 0 0 16.667%;
+        max-width: 16.667%;
+        padding: 0 12px;
+    }
+
+    @media (max-width: 768px) {
+        .col-md-5,
+        .col-md-2 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .text-end {
+            text-align: left !important;
+        }
+    }
 </style>
+{% endblock %}
 
-{% endblock %} {% block content %}
+{% block content %}
 
 <div class="env-data-container">
-  <div class="header-section">
-    <div class="header-content">
-      <div class="header-info">
-        <h2>
-          <i class="fas fa-leaf"></i>
-          {% if selected_type == "MANUFACTURING" %} 
-          Manufacturing Environment Data Entry 
-          {% elif selected_type == "NON_MANUFACTURING" %} 
-          Non Manufacturing Environment Data Entry {% endif %}
-        </h2>
 
-        <div class="plant-info">
-          <span
-            ><strong>Currently Editing:</strong> {{ selected_plant.name }}</span
-          >
-          <span><strong>Year:</strong> {{ current_year }}</span>
-          <span><strong>Last Updated:</strong> {% now "F d, Y - H:i" %}</span>
+    <!-- ========================================================== -->
+    <!-- HEADER                                                       -->
+    <!-- ========================================================== -->
+    <div class="header-section">
+        <div class="header-content">
+            <div class="header-info">
+                <h2>
+                    <i class="fas fa-leaf"></i>
+                    {% if selected_type == "MANUFACTURING" %}
+                    Manufacturing Environment Data Entry
+                    {% elif selected_type == "NON_MANUFACTURING" %}
+                    Non Manufacturing Environment Data Entry
+                    {% endif %}
+                </h2>
+
+                <div class="plant-info">
+                    <span><strong>Currently Editing:</strong> {{ selected_plant.name }}</span>
+                    <span><strong>Year:</strong> {{ current_year }}</span>
+                    <span><strong>Last Updated:</strong> {% now "F d, Y - H:i" %}</span>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- ============================= -->
-  <!-- Plant & Waste Selector -->
-  <!-- ============================= -->
-  <div class="plant-selector-section">
-    <div class="row align-items-center">
-      <!-- Plant Selector -->
-      <div class="col-md-5">
-        <div class="plant-selector-container">
-          <label>
-            <i class="fas fa-building"></i>
-            <span>Select Plant:</span>
-          </label>
+    <!-- ========================================================== -->
+    <!-- PLANT & WASTE SELECTOR                                       -->
+    <!-- ========================================================== -->
+    <div class="plant-selector-section">
+        <div class="row align-items-center">
+            <div class="col-md-5">
+                <div class="plant-selector-container">
+                    <label>
+                        <i class="fas fa-building"></i>
+                        <span>Select Plant:</span>
+                    </label>
+                    <select onchange="switchPlant(this.value)">
+                        {% for plant in user_plants %}
+                        <option value="{{ plant.id }}" {% if plant.id == selected_plant.id %}selected{% endif %}>
+                            {{ plant.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-          <select onchange="switchPlant(this.value)">
-            {% for plant in user_plants %}
+            <div class="col-md-2 text-end">
+                <span class="plant-count-badge">
+                    <i class="fas fa-check-circle"></i>
+                    {{ user_plants.count }} plant(s)
+                </span>
+            </div>
 
-            <option value="{{ plant.id }}" {% if plant.id == selected_plant.id %}selected{% endif %}>
-                    {{ plant.name }}
-            </option>
-
-            {% endfor %}
-          </select>
+            <div class="col-md-5">
+                <div class="plant-selector-container">
+                    <label>
+                        <i class="fas fa-recycle"></i>
+                        <span>Environment Type:</span>
+                    </label>
+                    <select id="wasteType" onchange="switchWasteType()">
+                        <option value="MANUFACTURING" {% if selected_type == "MANUFACTURING" %}selected{% endif %}>
+                            Manufacturing Waste
+                        </option>
+                        <option value="NON_MANUFACTURING" {% if selected_type == "NON_MANUFACTURING" %}selected{% endif %}>
+                            Non Manufacturing Waste
+                        </option>
+                    </select>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <!-- Plant Count Badge -->
-      <div class="col-md-2 text-end">
-        <span class="plant-count-badge">
-          <i class="fas fa-check-circle"></i>
-          {{ user_plants.count }} plant(s)
-        </span>
-      </div>
-
-      <!-- Waste Type -->
-      <div class="col-md-5">
-        <div class="plant-selector-container">
-          <label>
-            <i class="fas fa-recycle"></i>
-            <span>Environment <br> Type:</span>
-          </label>
-
-          <select id="wasteType" onchange="switchWasteType()">
-            <option value="MANUFACTURING" 
-            {% if selected_type == "MANUFACTURING" %}selected{% endif %}>
-              Manufacturing Waste
-            </option>
-
-            <option value="NON_MANUFACTURING" {% if selected_type == "NON_MANUFACTURING" %}selected{% endif %}>
-              Non Manufacturing Waste
-            </option>
-          </select>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- ============================= -->
-  <!-- Manufacturing -->
-  <!-- ============================= -->
+    <!-- ========================================================== -->
+    <!-- MANUFACTURING TABLE                                         -->
+    <!-- ========================================================== -->
+    {% if selected_type == "MANUFACTURING" %}
+    <div class="table-wrapper">
+        <table class="main-table" id="manufacturingTable">
+            <thead>
+                <tr>
+                    <th class="sticky-col">SL NO.</th>
+                    <th class="sticky-col sticky-col-2"></th>
+                    <th class="sticky-col sticky-col-3"></th>
+                    <th class="sticky-col sticky-col-4"></th>
+                    <th class="sticky-col sticky-col-5"></th>
+                    <th class="sticky-col sticky-col-6"></th>
+                    <th>2024</th>
+                    <th>2025</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in manufacturing_rows %}
+                <tr data-row="{{ row.row_key }}">
+                    {% if row.category_rowspan %}
+                    <td class="sticky-col" rowspan="{{ row.category_rowspan }}">
+                        {{ row.sr_no }}
+                    </td>
+                    {% endif %}
 
-  {% if selected_type == "MANUFACTURING" %}
-  <div class="table-wrapper">
-    <table class="main-table" id="manufacturingTable">
-      <thead>
-        <tr>
-          <th class="sticky-col">SL NO.</th>
-          <th class="sticky-col sticky-col-2"></th>
-          <th class="sticky-col sticky-col-3"></th>
-          <th class="sticky-col sticky-col-4"></th>
-          <th class="sticky-col sticky-col-5"></th>
-          <th class="sticky-col sticky-col-6"></th>
+                    {% if row.category_rowspan %}
+                    <td class="sticky-col sticky-col-2" rowspan="{{ row.category_rowspan }}">
+                        {{ row.category }}
+                    </td>
+                    {% endif %}
 
-          <th>2024</th>
-          <th>2025</th>
+                    {% if row.subcategory_rowspan %}
+                    <td class="sticky-col sticky-col-3" rowspan="{{ row.subcategory_rowspan }}">
+                        {{ row.subcategory }}
+                    </td>
+                    {% elif not row.subcategory %}
+                    <td class="sticky-col sticky-col-3 empty-cell"></td>
+                    {% endif %}
 
-          <th>Jan</th>
-          <th>Feb</th>
-          <th>Mar</th>
-          <th>Apr</th>
-          <th>May</th>
-          <th>Jun</th>
-          <th>Jul</th>
-          <th>Aug</th>
-          <th>Sep</th>
-          <th>Oct</th>
-          <th>Nov</th>
-          <th>Dec</th>
+                    <td class="sticky-col sticky-col-4">{{ row.question }}</td>
+                    <td class="sticky-col sticky-col-5">{{ row.unit_category }}</td>
+                    <td class="sticky-col sticky-col-6">{{ row.unit }}</td>
 
-          <th>TOTAL</th>
-        </tr>
-      </thead>
+                    {% with entry=data_map|get_item:row.row_key %}
+                    <td>
+                        <input class="data-input year-2024" value="{{ entry.year_2024|default:'' }}" />
+                    </td>
+                    <td>
+                        <input class="data-input year-2025" value="{{ entry.year_2025|default:'' }}" />
+                    </td>
+                    {% for m in months %}
+                    <td>
+                        <input type="number" class="data-input {{m}}" value="{{ entry|get_month_value:m }}" />
+                    </td>
+                    {% endfor %}
+                    <td>
+                        <input class="data-input total-val" readonly value="{{ entry.total_quantity|default:'' }}" />
+                    </td>
+                    {% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 
-      <tbody>
-        {% for row in manufacturing_rows %}
+    <!-- ========================================================== -->
+    <!-- NON-MANUFACTURING TABLE                                     -->
+    <!-- ========================================================== -->
+    {% if selected_type == "NON_MANUFACTURING" %}
+    <div class="table-wrapper">
+        <table class="main-table" id="nonManufacturingTable">
+            <thead>
+                <tr>
+                    <th class="sticky-col">SL NO</th>
+                    <th class="sticky-col sticky-col-2"></th>
+                    <th class="sticky-col sticky-col-4"></th>
+                    <th class="sticky-col sticky-col-5"></th>
+                    <th class="sticky-col sticky-col-6"></th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>I Q</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>II Q</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>III Q</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+                    <th>IV Q</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in non_manufacturing_rows %}
+                <tr data-row="{{ row.row_key }}">
+                    {% if row.category_rowspan %}
+                    <td class="sticky-col" rowspan="{{ row.category_rowspan }}">
+                        {{ row.sr_no }}
+                    </td>
+                    {% endif %}
 
-        <tr data-row="{{ row.row_key }}">
-            {% if row.category_rowspan %}
-            <td class="sticky-col" rowspan="{{ row.category_rowspan }}">
-                {{ row.sr_no }}
-            </td>
-            {% endif %}
+                    {% if row.category_rowspan %}
+                    <td class="sticky-col sticky-col-2" rowspan="{{ row.category_rowspan }}">
+                        {{ row.category }}
+                    </td>
+                    {% endif %}
 
-          {% if row.category_rowspan %}
-          <td
-            class="sticky-col sticky-col-2"
-            rowspan="{{ row.category_rowspan }}">
-            {{ row.category }}
-          </td>
-          {% endif %} 
-          {% if row.subcategory_rowspan %}
-          <td
-            class="sticky-col sticky-col-3"
-            rowspan="{{ row.subcategory_rowspan }}">
-            {{ row.subcategory }}
-          </td>
-          {% elif not row.subcategory %}
-          <td class="sticky-col sticky-col-3 empty-cell"></td>
-          {% endif %}
+                    <td class="sticky-col sticky-col-4">{{ row.question }}</td>
+                    <td class="sticky-col sticky-col-5">{{ row.unit_category }}</td>
+                    <td class="sticky-col sticky-col-6">{{ row.unit }}</td>
 
-          <td class="sticky-col sticky-col-4">{{ row.question }}</td>
+                    {% with entry=data_map|get_item:row.row_key %}
+                    <td><input class="data-input jan" value="{{ entry.jan_qty|default:'' }}" /></td>
+                    <td><input class="data-input feb" value="{{ entry.feb_qty|default:'' }}" /></td>
+                    <td><input class="data-input mar" value="{{ entry.mar_qty|default:'' }}" /></td>
+                    <td><input class="data-input q1" readonly value="{{ entry.q1_quantity|default:'' }}" /></td>
+                    <td><input class="data-input apr" value="{{ entry.apr_qty|default:'' }}" /></td>
+                    <td><input class="data-input may" value="{{ entry.may_qty|default:'' }}" /></td>
+                    <td><input class="data-input jun" value="{{ entry.jun_qty|default:'' }}" /></td>
+                    <td><input class="data-input q2" readonly value="{{ entry.q2_quantity|default:'' }}" /></td>
+                    <td><input class="data-input jul" value="{{ entry.jul_qty|default:'' }}" /></td>
+                    <td><input class="data-input aug" value="{{ entry.aug_qty|default:'' }}" /></td>
+                    <td><input class="data-input sep" value="{{ entry.sep_qty|default:'' }}" /></td>
+                    <td><input class="data-input q3" readonly value="{{ entry.q3_quantity|default:'' }}" /></td>
+                    <td><input class="data-input oct" value="{{ entry.oct_qty|default:'' }}" /></td>
+                    <td><input class="data-input nov" value="{{ entry.nov_qty|default:'' }}" /></td>
+                    <td><input class="data-input dec" value="{{ entry.dec_qty|default:'' }}" /></td>
+                    <td><input class="data-input q4" readonly value="{{ entry.q4_quantity|default:'' }}" /></td>
+                    <td><input class="data-input total" readonly value="{{ entry.total_quantity|default:'' }}" /></td>
+                    {% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 
-          <td class="sticky-col sticky-col-5">{{ row.unit_category }}</td>
+    <!-- ========================================================== -->
+    <!-- ACTION BUTTONS                                              -->
+    <!-- ========================================================== -->
+    <div class="action-buttons">
+        <button id="generateDemoDataBtn" class="btn btn-warning">
+            <i class="fas fa-random"></i> Generate Demo Data
+        </button>
+        <button id="downloadEnvExcel" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Download Excel
+        </button>
+        <button id="saveDataBtn" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Report
+        </button>
+    </div>
 
-          <td class="sticky-col sticky-col-6">{{ row.unit }}</td>
-
-          {% with entry=data_map|get_item:row.row_key %}
-
-          <td>
-            <input
-              class="data-input year-2024"
-              value="{{ entry.year_2024|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input year-2025"
-              value="{{ entry.year_2025|default:'' }}"
-            />
-          </td>
-
-          {% for m in months %}
-          <td>
-            <input
-              type="number"
-              class="data-input {{m}}"
-              value="{{ entry|get_month_value:m }}"
-            />
-          </td>
-          {% endfor %}
-
-          <td>
-            <input
-              class="data-input total-val"
-              readonly
-              value="{{ entry.total_quantity|default:'' }}"
-            />
-          </td>
-
-          {% endwith %}
-        </tr>
-
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
-
-  <!-- ============================= -->
-  <!-- Non - Manufacturing -->
-  <!-- ============================= -->
-  {% if selected_type == "NON_MANUFACTURING" %}
-  <div class="table-wrapper">
-    <table class="main-table" id="nonManufacturingTable">
-      <thead>
-        <tr>
-          <th class="sticky-col">SL NO</th>
-          <th class="sticky-col sticky-col-2"></th>
-          <th class="sticky-col sticky-col-4"></th>
-          <th class="sticky-col sticky-col-5"></th>
-          <th class="sticky-col sticky-col-6"></th>
-
-          <th>Jan</th>
-          <th>Feb</th>
-          <th>Mar</th>
-          <th>I Q</th>
-
-          <th>Apr</th>
-          <th>May</th>
-          <th>Jun</th>
-          <th>II Q</th>
-
-          <th>Jul</th>
-          <th>Aug</th>
-          <th>Sep</th>
-          <th>III Q</th>
-
-          <th>Oct</th>
-          <th>Nov</th>
-          <th>Dec</th>
-          <th>IV Q</th>
-
-          <th>TOTAL</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {% for row in non_manufacturing_rows %}
-
-        <tr data-row="{{ row.row_key }}">
-          {% if row.category_rowspan %}
-            <td class="sticky-col" rowspan="{{ row.category_rowspan }}">
-                {{ row.sr_no }}
-            </td>
-            {% endif %}
-
-          {% if row.category_rowspan %}
-          <td
-            class="sticky-col sticky-col-2"
-            rowspan="{{ row.category_rowspan }}"
-          >
-            {{ row.category }}
-          </td>
-          {% endif %}
-
-          <td class="sticky-col sticky-col-4">{{ row.question }}</td>
-
-          <td class="sticky-col sticky-col-5">{{ row.unit_category }}</td>
-
-          <td class="sticky-col sticky-col-6">{{ row.unit }}</td>
-
-          {% with entry=data_map|get_item:row.row_key %}
-
-          <td>
-            <input
-              class="data-input jan"
-              value="{{ entry.jan_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input feb"
-              value="{{ entry.feb_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input mar"
-              value="{{ entry.mar_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input q1"
-              readonly
-              value="{{ entry.q1_quantity|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input apr"
-              value="{{ entry.apr_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input may"
-              value="{{ entry.may_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input jun"
-              value="{{ entry.jun_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input q2"
-              readonly
-              value="{{ entry.q2_quantity|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input jul"
-              value="{{ entry.jul_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input aug"
-              value="{{ entry.aug_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input sep"
-              value="{{ entry.sep_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input q3"
-              readonly
-              value="{{ entry.q3_quantity|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input oct"
-              value="{{ entry.oct_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input nov"
-              value="{{ entry.nov_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input dec"
-              value="{{ entry.dec_qty|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input q4"
-              readonly
-              value="{{ entry.q4_quantity|default:'' }}"
-            />
-          </td>
-
-          <td>
-            <input
-              class="data-input total"
-              readonly
-              value="{{ entry.total_quantity|default:'' }}"
-            />
-          </td>
-
-          {% endwith %}
-        </tr>
-
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
-
-  <div style="margin-top: 20px; text-align: right">
-    <button id="generateDemoDataBtn" class="btn btn-warning">
-      <i class="fas fa-random"></i> Generate Demo Data
-    </button>
-    <button id="downloadEnvExcel" class="btn btn-success">
-        <i class="fas fa-file-excel"></i> Download Excel
-    </button>
-    <button id="saveDataBtn" class="btn btn-primary">
-      <i class="fas fa-save"></i> Save Report
-    </button>
-  </div>
 </div>
 
+<!-- ========================================================== -->
+<!-- JAVASCRIPT                                                   -->
+<!-- ========================================================== -->
 <script>
-  /* =====================================================
-GLOBAL
-===================================================== */
+    /* =====================================================
+    GLOBAL
+    ===================================================== */
 
-  const months = [
-    "jan",
-    "feb",
-    "mar",
-    "apr",
-    "may",
-    "jun",
-    "jul",
-    "aug",
-    "sep",
-    "oct",
-    "nov",
-    "dec",
-  ];
+    const months = [
+        "jan", "feb", "mar", "apr", "may", "jun",
+        "jul", "aug", "sep", "oct", "nov", "dec"
+    ];
 
-  let isDataChanged = false;
+    let isDataChanged = false;
 
-  /* =====================================================
-DETECT CHANGES
-===================================================== */
+    /* =====================================================
+    DETECT CHANGES
+    ===================================================== */
 
-  document.addEventListener("input", function (e) {
-    if (e.target.classList.contains("data-input")) {
-      isDataChanged = true;
-    }
-  });
-
-  /* =====================================================
-SWITCH PLANT
-===================================================== */
-
-  function switchPlant(plantId) {
-    if (isDataChanged) {
-      if (!confirm("Switch plant? Any unsaved data will be lost.")) {
-        return;
-      }
-    }
-
-    const wasteType = document.getElementById("wasteType").value;
-
-    let url = new URL(window.location.href);
-
-    url.searchParams.set("plant_id", plantId);
-    url.searchParams.set("type", wasteType);
-
-    window.location.href = url.toString();
-  }
-
-  /* =====================================================
-SWITCH WASTE TYPE
-===================================================== */
-
-  function switchWasteType() {
-    if (isDataChanged) {
-      if (!confirm("Switch waste type? Any unsaved data will be lost.")) {
-        return;
-      }
-    }
-
-    const wasteType = document.getElementById("wasteType").value;
-
-    let url = new URL(window.location.href);
-
-    url.searchParams.set("type", wasteType);
-
-    window.location.href = url.toString();
-  }
-
-  /* =====================================================
-ROW TOTAL (Manufacturing)
-===================================================== */
-
-  function calculateRowTotal(row) {
-    let total = 0;
-
-    months.forEach((month) => {
-      const val = parseFloat(row.querySelector(`.${month}`)?.value) || 0;
-
-      total += val;
+    document.addEventListener("input", function(e) {
+        if (e.target.classList.contains("data-input")) {
+            isDataChanged = true;
+        }
     });
 
-    const totalField = row.querySelector(".total-val");
+    /* =====================================================
+    SWITCH PLANT
+    ===================================================== */
 
-    if (totalField) {
-      totalField.value = total.toFixed(2);
+    function switchPlant(plantId) {
+        if (isDataChanged) {
+            if (!confirm("Switch plant? Any unsaved data will be lost.")) {
+                return;
+            }
+        }
+
+        const wasteType = document.getElementById("wasteType").value;
+        let url = new URL(window.location.href);
+        url.searchParams.set("plant_id", plantId);
+        url.searchParams.set("type", wasteType);
+        window.location.href = url.toString();
     }
-  }
 
-  /* =====================================================
-WATER / WASHER CALCULATION - Manufacturing 
-water_kl_was = (total_kl_manufacturing / prodn_washer) * 1000
-===================================================== */
+    /* =====================================================
+    SWITCH WASTE TYPE
+    ===================================================== */
+
+    function switchWasteType() {
+        if (isDataChanged) {
+            if (!confirm("Switch waste type? Any unsaved data will be lost.")) {
+                return;
+            }
+        }
+
+        const wasteType = document.getElementById("wasteType").value;
+        let url = new URL(window.location.href);
+        url.searchParams.set("type", wasteType);
+        window.location.href = url.toString();
+    }
+
+    /* =====================================================
+    ROW TOTAL (Manufacturing)
+    ===================================================== */
+
+    function calculateRowTotal(row) {
+        let total = 0;
+        months.forEach((month) => {
+            const val = parseFloat(row.querySelector(`.${month}`)?.value) || 0;
+            total += val;
+        });
+        const totalField = row.querySelector(".total-val");
+        if (totalField) {
+            totalField.value = total.toFixed(2);
+        }
+    }
+
+    /* =====================================================
+    WATER / WASHER CALCULATION - Manufacturing
+    ===================================================== */
 
     function calculateConsumptionPerWasher() {
-
         const prodnRow = document.querySelector('tr[data-row="prodn_washer"]');
         const totalManufacturingRow = document.querySelector('tr[data-row="total_kl_manufacturing"]');
         const waterKLWasRow = document.querySelector('tr[data-row="water_kl_was"]');
@@ -822,46 +934,29 @@ water_kl_was = (total_kl_manufacturing / prodn_washer) * 1000
         let totalProdnYear = 0;
 
         months.forEach((month) => {
-
             const prodn = parseFloat(prodnRow.querySelector(`.${month}`)?.value) || 0;
-            const totalManufacturing = parseFloat(
-            totalManufacturingRow.querySelector(`.${month}`)?.value
-            ) || 0;
-
+            const totalManufacturing = parseFloat(totalManufacturingRow.querySelector(`.${month}`)?.value) || 0;
             let result = prodn ? (totalManufacturing / prodn) * 1000 : 0;
-
             const target = waterKLWasRow.querySelector(`.${month}`);
-
             if (target) {
-            target.value = result.toFixed(2);
+                target.value = result.toFixed(2);
             }
-
             totalManufacturingYear += totalManufacturing;
             totalProdnYear += prodn;
-
         });
 
-        /* ===== TOTAL CALCULATION (CORRECT FORMULA) ===== */
-
         const totalField = waterKLWasRow.querySelector(".total-val");
-
         if (totalField) {
-
-            const yearlyResult = totalProdnYear
-            ? (totalManufacturingYear / totalProdnYear) * 1000
-            : 0;
-
+            const yearlyResult = totalProdnYear ? (totalManufacturingYear / totalProdnYear) * 1000 : 0;
             totalField.value = yearlyResult.toFixed(2);
-
         }
-
     }
 
-      /* =====================================================
-Total Consumption (L)/washer - Manufacturing 
-===================================================== */
-    function calculateTotalConsumptionWasher() {
+    /* =====================================================
+    Total Consumption (L)/washer - Manufacturing
+    ===================================================== */
 
+    function calculateTotalConsumptionWasher() {
         const prodnRow = document.querySelector('tr[data-row="prodn_washer"]');
         const waterIntakeRow = document.querySelector('tr[data-row="total_water_intake"]');
         const washerRow = document.querySelector('tr[data-row="total_consumption_washer"]');
@@ -872,643 +967,454 @@ Total Consumption (L)/washer - Manufacturing
         let totalProdnYear = 0;
 
         months.forEach((month) => {
-
             const prodn = parseFloat(prodnRow.querySelector(`.${month}`)?.value) || 0;
             const water = parseFloat(waterIntakeRow.querySelector(`.${month}`)?.value) || 0;
-
             const result = prodn ? (water / prodn) * 1000 : 0;
-
             const target = washerRow.querySelector(`.${month}`);
-
             if (target) {
-            target.value = result.toFixed(2);
+                target.value = result.toFixed(2);
             }
-
             totalWaterYear += water;
             totalProdnYear += prodn;
-
         });
-
-        /* TOTAL column calculation */
 
         const totalField = washerRow.querySelector(".total-val");
-
         if (totalField) {
-
-            const yearlyResult = totalProdnYear
-            ? (totalWaterYear / totalProdnYear) * 1000
-            : 0;
-
+            const yearlyResult = totalProdnYear ? (totalWaterYear / totalProdnYear) * 1000 : 0;
             totalField.value = yearlyResult.toFixed(2);
         }
-
     }
 
-  /* =====================================================
-ERA BILL CALCULATION
-===================================================== */
+    /* =====================================================
+    ERA BILL CALCULATION
+    ===================================================== */
 
-  function calculateERABill() {
-    const nmCostRow = document.querySelector(
-      'tr[data-row="electric_power_nm_cost"]',
-    );
+    function calculateERABill() {
+        const nmCostRow = document.querySelector('tr[data-row="electric_power_nm_cost"]');
+        const costRow = document.querySelector('tr[data-row="electric_power_cost"]');
+        const totalCostRow = document.querySelector('tr[data-row="total_ERA_bill_cost"]');
 
-    const costRow = document.querySelector(
-      'tr[data-row="electric_power_cost"]',
-    );
+        if (!nmCostRow || !costRow || !totalCostRow) return;
 
-    const totalCostRow = document.querySelector(
-      'tr[data-row="total_ERA_bill_cost"]',
-    );
-
-    if (!nmCostRow || !costRow || !totalCostRow) return;
-
-    let totalYear = 0;
-
-    months.forEach((month) => {
-      const nmCost =
-        parseFloat(nmCostRow.querySelector(`.${month}`)?.value) || 0;
-
-      const cost = parseFloat(costRow.querySelector(`.${month}`)?.value) || 0;
-
-      const result = nmCost + cost;
-
-      const target = totalCostRow.querySelector(`.${month}`);
-
-      if (target) {
-        target.value = result.toFixed(2);
-      }
-
-      totalYear += result;
-    });
-
-    const totalField = totalCostRow.querySelector(".total-val");
-
-    if (totalField) {
-      totalField.value = totalYear.toFixed(2);
-    }
-  }
-
-  /* =====================================================
-QUARTER CALCULATION (Non-Manufacturing)
-===================================================== */
-
-  function calculateQuarter(row) {
-    const jan = parseFloat(row.querySelector(".jan")?.value) || 0;
-    const feb = parseFloat(row.querySelector(".feb")?.value) || 0;
-    const mar = parseFloat(row.querySelector(".mar")?.value) || 0;
-
-    const apr = parseFloat(row.querySelector(".apr")?.value) || 0;
-    const may = parseFloat(row.querySelector(".may")?.value) || 0;
-    const jun = parseFloat(row.querySelector(".jun")?.value) || 0;
-
-    const jul = parseFloat(row.querySelector(".jul")?.value) || 0;
-    const aug = parseFloat(row.querySelector(".aug")?.value) || 0;
-    const sep = parseFloat(row.querySelector(".sep")?.value) || 0;
-
-    const oct = parseFloat(row.querySelector(".oct")?.value) || 0;
-    const nov = parseFloat(row.querySelector(".nov")?.value) || 0;
-    const dec = parseFloat(row.querySelector(".dec")?.value) || 0;
-
-    const q1 = jan + feb + mar;
-    const q2 = apr + may + jun;
-    const q3 = jul + aug + sep;
-    const q4 = oct + nov + dec;
-
-    const q1Input = row.querySelector(".q1");
-    const q2Input = row.querySelector(".q2");
-    const q3Input = row.querySelector(".q3");
-    const q4Input = row.querySelector(".q4");
-
-    if (q1Input) q1Input.value = q1.toFixed(2);
-    if (q2Input) q2Input.value = q2.toFixed(2);
-    if (q3Input) q3Input.value = q3.toFixed(2);
-    if (q4Input) q4Input.value = q4.toFixed(2);
-
-    const total = q1 + q2 + q3 + q4;
-
-    const totalInput = row.querySelector(".total");
-
-    if (totalInput) {
-      totalInput.value = total.toFixed(2);
-    }
-  }
-
-  /* =====================================================
-TOTAL KL (Non-Manufacturing)
-===================================================== */
-
-  function calculateTotalKL() {
-    const row1 = document.querySelector(
-      'tr[data-row="Non_water_consume_kl_1"]',
-    );
-    const row2 = document.querySelector(
-      'tr[data-row="Non_water_consume_kl_2"]',
-    );
-    const row3 = document.querySelector(
-      'tr[data-row="Non_water_consume_kl_3"]',
-    );
-    const totalRow = document.querySelector('tr[data-row="Non_total_kl"]');
-    const costRow = document.querySelector('tr[data-row="Non_water_cost_rs"]');
-
-    if (!row1 || !row2 || !row3 || !totalRow) return;
-
-    const months = [
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
-    ];
-
-    let yearlyTotal = 0;
-
-    months.forEach((month) => {
-      const v1 = parseFloat(row1.querySelector(`.${month}`)?.value) || 0;
-      const v2 = parseFloat(row2.querySelector(`.${month}`)?.value) || 0;
-      const v3 = parseFloat(row3.querySelector(`.${month}`)?.value) || 0;
-
-      const result = v1 + v2 + v3;
-
-      const target = totalRow.querySelector(`.${month}`);
-
-      if (target) {
-        target.value = result.toFixed(2);
-      }
-
-      /* ================= WATER COST ================= */
-
-      if (costRow) {
-        const cost = result * 1.4;
-
-        const costTarget = costRow.querySelector(`.${month}`);
-
-        if (costTarget) {
-          costTarget.value = cost.toFixed(2);
-        }
-      }
-
-      yearlyTotal += result;
-    });
-
-    /* ================= QUARTER CALCULATION ================= */
-
-    const jan = parseFloat(totalRow.querySelector(".jan")?.value) || 0;
-    const feb = parseFloat(totalRow.querySelector(".feb")?.value) || 0;
-    const mar = parseFloat(totalRow.querySelector(".mar")?.value) || 0;
-
-    const apr = parseFloat(totalRow.querySelector(".apr")?.value) || 0;
-    const may = parseFloat(totalRow.querySelector(".may")?.value) || 0;
-    const jun = parseFloat(totalRow.querySelector(".jun")?.value) || 0;
-
-    const jul = parseFloat(totalRow.querySelector(".jul")?.value) || 0;
-    const aug = parseFloat(totalRow.querySelector(".aug")?.value) || 0;
-    const sep = parseFloat(totalRow.querySelector(".sep")?.value) || 0;
-
-    const oct = parseFloat(totalRow.querySelector(".oct")?.value) || 0;
-    const nov = parseFloat(totalRow.querySelector(".nov")?.value) || 0;
-    const dec = parseFloat(totalRow.querySelector(".dec")?.value) || 0;
-
-    const q1 = jan + feb + mar;
-    const q2 = apr + may + jun;
-    const q3 = jul + aug + sep;
-    const q4 = oct + nov + dec;
-
-    const q1Input = totalRow.querySelector(".q1");
-    const q2Input = totalRow.querySelector(".q2");
-    const q3Input = totalRow.querySelector(".q3");
-    const q4Input = totalRow.querySelector(".q4");
-
-    if (q1Input) q1Input.value = q1.toFixed(2);
-    if (q2Input) q2Input.value = q2.toFixed(2);
-    if (q3Input) q3Input.value = q3.toFixed(2);
-    if (q4Input) q4Input.value = q4.toFixed(2);
-
-    /* ================= TOTAL ================= */
-
-    const totalInput = totalRow.querySelector(".total");
-
-    if (totalInput) {
-      totalInput.value = yearlyTotal.toFixed(2);
-    }
-  }
-
-  function calculateEnergyCost() {
-    const volumeRow1 = document.querySelector(
-      'tr[data-row="Non_energy_power_volume_1"]',
-    );
-
-    const volumeRow2 = document.querySelector(
-      'tr[data-row="Non_energy_power_volume_2"]',
-    );
-
-    const totalVolumeRow = document.querySelector(
-      'tr[data-row="Non_total_energy_power_volume"]',
-    );
-
-    const costRow1 = document.querySelector(
-      'tr[data-row="Non_energy_power_cost_1"]',
-    );
-
-    const costRow2 = document.querySelector(
-      'tr[data-row="Non_energy_power_cost_2"]',
-    );
-
-    const totalCostRow = document.querySelector(
-      'tr[data-row="Non_total_energy_power_cost"]',
-    );
-
-    if (!volumeRow1 || !costRow1) return;
-
-    const rateMap = {
-      jan: 10,
-      feb: 9.6,
-      mar: 8.1,
-      apr: 7.9,
-      may: 7.9,
-      jun: 7.9,
-      jul: 7.9,
-      aug: 7.9,
-      sep: 7.9,
-      oct: 7.9,
-      nov: 7.9,
-      dec: 7.9,
-    };
-
-    let total1 = 0;
-    let total2 = 0;
-    let total3 = 0;
-
-    months.forEach((month) => {
-      const rate = rateMap[month] || 7.9;
-
-      /* ================= TOTAL VOLUME ================= */
-
-      if (volumeRow1 && volumeRow2 && totalVolumeRow) {
-        const v1 =
-          parseFloat(volumeRow1.querySelector(`.${month}`)?.value) || 0;
-
-        const v2 =
-          parseFloat(volumeRow2.querySelector(`.${month}`)?.value) || 0;
-
-        const totalVolume = v1 + v2;
-
-        const targetVolume = totalVolumeRow.querySelector(`.${month}`);
-
-        if (targetVolume) {
-          targetVolume.value = totalVolume.toFixed(2);
-
-          /* make readonly */
-          targetVolume.setAttribute("readonly", true);
-        }
-      }
-
-      /* ================= COST 1 ================= */
-
-      if (volumeRow1 && costRow1) {
-        const v1 =
-          parseFloat(volumeRow1.querySelector(`.${month}`)?.value) || 0;
-
-        const result1 = v1 * rate;
-
-        const target1 = costRow1.querySelector(`.${month}`);
-
-        if (target1) {
-          target1.value = result1.toFixed(2);
-        }
-
-        total1 += result1;
-      }
-
-      /* ================= COST 2 ================= */
-
-      if (volumeRow2 && costRow2) {
-        const v2 =
-          parseFloat(volumeRow2.querySelector(`.${month}`)?.value) || 0;
-
-        const result2 = v2 * rate;
-
-        const target2 = costRow2.querySelector(`.${month}`);
-
-        if (target2) {
-          target2.value = result2.toFixed(2);
-        }
-
-        total2 += result2;
-      }
-
-      /* ================= TOTAL COST ================= */
-
-      if (totalVolumeRow && totalCostRow) {
-        const v3 =
-          parseFloat(totalVolumeRow.querySelector(`.${month}`)?.value) || 0;
-
-        const result3 = v3 * rate;
-
-        const target3 = totalCostRow.querySelector(`.${month}`);
-
-        if (target3) {
-          target3.value = result3.toFixed(2);
-        }
-
-        total3 += result3;
-      }
-    });
-
-    /* ================= QUARTERS ================= */
-
-    function setQuarter(row) {
-      if (!row) return;
-
-      const jan = parseFloat(row.querySelector(".jan")?.value) || 0;
-      const feb = parseFloat(row.querySelector(".feb")?.value) || 0;
-      const mar = parseFloat(row.querySelector(".mar")?.value) || 0;
-
-      const apr = parseFloat(row.querySelector(".apr")?.value) || 0;
-      const may = parseFloat(row.querySelector(".may")?.value) || 0;
-      const jun = parseFloat(row.querySelector(".jun")?.value) || 0;
-
-      const jul = parseFloat(row.querySelector(".jul")?.value) || 0;
-      const aug = parseFloat(row.querySelector(".aug")?.value) || 0;
-      const sep = parseFloat(row.querySelector(".sep")?.value) || 0;
-
-      const oct = parseFloat(row.querySelector(".oct")?.value) || 0;
-      const nov = parseFloat(row.querySelector(".nov")?.value) || 0;
-      const dec = parseFloat(row.querySelector(".dec")?.value) || 0;
-
-      const q1 = jan + feb + mar;
-      const q2 = apr + may + jun;
-      const q3 = jul + aug + sep;
-      const q4 = oct + nov + dec;
-
-      if (row.querySelector(".q1"))
-        row.querySelector(".q1").value = q1.toFixed(2);
-      if (row.querySelector(".q2"))
-        row.querySelector(".q2").value = q2.toFixed(2);
-      if (row.querySelector(".q3"))
-        row.querySelector(".q3").value = q3.toFixed(2);
-      if (row.querySelector(".q4"))
-        row.querySelector(".q4").value = q4.toFixed(2);
-
-      const total = q1 + q2 + q3 + q4;
-
-      if (row.querySelector(".total")) {
-        row.querySelector(".total").value = total.toFixed(2);
-      }
-    }
-
-    setQuarter(totalVolumeRow);
-    setQuarter(costRow1);
-    setQuarter(costRow2);
-    setQuarter(totalCostRow);
-  }
-
-  /* =====================================================
-INPUT EVENT
-===================================================== */
-
-  document.addEventListener("input", function (e) {
-    if (!e.target.classList.contains("data-input")) return;
-
-    const row = e.target.closest("tr");
-
-    if (row) {
-      calculateRowTotal(row);
-      calculateQuarter(row);
-    }
-
-    if (document.querySelector("#manufacturingTable")) {
-      calculateConsumptionPerWasher();
-      calculateTotalConsumptionWasher();
-      calculateERABill();
-    }
-
-    if (document.querySelector("#nonManufacturingTable")) {
-      calculateTotalKL();
-      calculateEnergyCost();
-    }
-  });
-
-  /* =====================================================
-PAGE LOAD
-===================================================== */
-
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("tbody tr").forEach((row) => {
-      calculateRowTotal(row);
-      calculateQuarter(row);
-    });
-
-    if (document.querySelector("#manufacturingTable")) {
-      calculateConsumptionPerWasher();
-      calculateTotalConsumptionWasher();
-      calculateERABill();
-    }
-
-    if (document.querySelector("#nonManufacturingTable")) {
-      calculateTotalKL();
-      calculateEnergyCost();
-    }
-  });
-
-  /* =====================================================
-Save Manufacturing and Non-Manufacturing Report
-===================================================== */
-
-  /* ================= HELPER ================= */
-
-  function num(v) {
-    return parseFloat(v) || 0;
-  }
-
-  /* ================= COLLECT DATA ================= */
-
-  function collectEnvironmentData() {
-    const rows = document.querySelectorAll("tbody tr");
-
-    const months = [
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
-    ];
-
-    const payload = [];
-
-    rows.forEach((row) => {
-      const rowName = row.dataset.row;
-
-      if (!rowName) return;
-
-      const data = {
-        row_name: rowName,
-
-        year_2024: num(row.querySelector(".year-2024")?.value),
-        year_2025: num(row.querySelector(".year-2025")?.value),
-
-        jan_qty: num(row.querySelector(".jan")?.value),
-        feb_qty: num(row.querySelector(".feb")?.value),
-        mar_qty: num(row.querySelector(".mar")?.value),
-
-        apr_qty: num(row.querySelector(".apr")?.value),
-        may_qty: num(row.querySelector(".may")?.value),
-        jun_qty: num(row.querySelector(".jun")?.value),
-
-        jul_qty: num(row.querySelector(".jul")?.value),
-        aug_qty: num(row.querySelector(".aug")?.value),
-        sep_qty: num(row.querySelector(".sep")?.value),
-
-        oct_qty: num(row.querySelector(".oct")?.value),
-        nov_qty: num(row.querySelector(".nov")?.value),
-        dec_qty: num(row.querySelector(".dec")?.value),
-
-        q1_quantity: num(row.querySelector(".q1")?.value),
-        q2_quantity: num(row.querySelector(".q2")?.value),
-        q3_quantity: num(row.querySelector(".q3")?.value),
-        q4_quantity: num(row.querySelector(".q4")?.value),
-
-        total_quantity: num(row.querySelector(".total")?.value),
-      };
-
-      payload.push(data);
-    });
-
-    return payload;
-  }
-
-  /* ================= SAVE ================= */
-
-  function saveEnvironmentReport() {
-    const rows = collectEnvironmentData();
-
-    const wasteType = document.getElementById("wasteType").value;
-
-    fetch("{% url 'environmental_mis:save_environment_report' %}", {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-
-      body: JSON.stringify({
-        plant_id: "{{selected_plant.id}}",
-        year: "{{current_year}}",
-        report_type: wasteType,
-        rows: rows,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success") {
-          alert("Environment report saved ✓");
-
-          isDataChanged = false;
-        }
-      });
-  }
-
-  /* ================= SAVE BUTTON ================= */
-
-  document
-    .getElementById("saveDataBtn")
-    .addEventListener("click", saveEnvironmentReport);
-</script>
-<!-- Random Data Testing -->
-<script>
-  document
-    .getElementById("generateDemoDataBtn")
-    .addEventListener("click", function () {
-      const rows = document.querySelectorAll("tbody tr");
-
-      rows.forEach((row) => {
-        const rowKey = row.dataset.row;
-        if (!rowKey) return;
-
-        /* ================= YEAR FIELDS ================= */
-
-        const year2024 = row.querySelector(".year-2024");
-        const year2025 = row.querySelector(".year-2025");
-
-        if (year2024) {
-          year2024.value = Math.floor(Math.random() * 5000) + 1000;
-        }
-
-        if (year2025) {
-          year2025.value = Math.floor(Math.random() * 5000) + 1000;
-        }
-
-        /* ================= MONTHS ================= */
+        let totalYear = 0;
 
         months.forEach((month) => {
-          const input = row.querySelector(`.${month}`);
-
-          if (input && !input.hasAttribute("readonly")) {
-            let value = Math.floor(Math.random() * 300) + 50;
-
-            input.value = value;
-          }
+            const nmCost = parseFloat(nmCostRow.querySelector(`.${month}`)?.value) || 0;
+            const cost = parseFloat(costRow.querySelector(`.${month}`)?.value) || 0;
+            const result = nmCost + cost;
+            const target = totalCostRow.querySelector(`.${month}`);
+            if (target) {
+                target.value = result.toFixed(2);
+            }
+            totalYear += result;
         });
-      });
 
-      /* ================= RUN ALL CALCULATIONS ================= */
+        const totalField = totalCostRow.querySelector(".total-val");
+        if (totalField) {
+            totalField.value = totalYear.toFixed(2);
+        }
+    }
 
-      document.querySelectorAll("tbody tr").forEach((row) => {
-        calculateRowTotal(row);
-        calculateQuarter(row);
-      });
+    /* =====================================================
+    QUARTER CALCULATION (Non-Manufacturing)
+    ===================================================== */
 
-      if (document.querySelector("#manufacturingTable")) {
-        calculateConsumptionPerWasher();
-        calculateTotalConsumptionWasher();
-        calculateERABill();
-      }
+    function calculateQuarter(row) {
+        const jan = parseFloat(row.querySelector(".jan")?.value) || 0;
+        const feb = parseFloat(row.querySelector(".feb")?.value) || 0;
+        const mar = parseFloat(row.querySelector(".mar")?.value) || 0;
+        const apr = parseFloat(row.querySelector(".apr")?.value) || 0;
+        const may = parseFloat(row.querySelector(".may")?.value) || 0;
+        const jun = parseFloat(row.querySelector(".jun")?.value) || 0;
+        const jul = parseFloat(row.querySelector(".jul")?.value) || 0;
+        const aug = parseFloat(row.querySelector(".aug")?.value) || 0;
+        const sep = parseFloat(row.querySelector(".sep")?.value) || 0;
+        const oct = parseFloat(row.querySelector(".oct")?.value) || 0;
+        const nov = parseFloat(row.querySelector(".nov")?.value) || 0;
+        const dec = parseFloat(row.querySelector(".dec")?.value) || 0;
 
-      if (document.querySelector("#nonManufacturingTable")) {
-        calculateTotalKL();
-        calculateEnergyCost();
-      }
+        const q1 = jan + feb + mar;
+        const q2 = apr + may + jun;
+        const q3 = jul + aug + sep;
+        const q4 = oct + nov + dec;
+
+        const q1Input = row.querySelector(".q1");
+        const q2Input = row.querySelector(".q2");
+        const q3Input = row.querySelector(".q3");
+        const q4Input = row.querySelector(".q4");
+
+        if (q1Input) q1Input.value = q1.toFixed(2);
+        if (q2Input) q2Input.value = q2.toFixed(2);
+        if (q3Input) q3Input.value = q3.toFixed(2);
+        if (q4Input) q4Input.value = q4.toFixed(2);
+
+        const total = q1 + q2 + q3 + q4;
+        const totalInput = row.querySelector(".total");
+        if (totalInput) {
+            totalInput.value = total.toFixed(2);
+        }
+    }
+
+    /* =====================================================
+    TOTAL KL (Non-Manufacturing)
+    ===================================================== */
+
+    function calculateTotalKL() {
+        const row1 = document.querySelector('tr[data-row="Non_water_consume_kl_1"]');
+        const row2 = document.querySelector('tr[data-row="Non_water_consume_kl_2"]');
+        const row3 = document.querySelector('tr[data-row="Non_water_consume_kl_3"]');
+        const totalRow = document.querySelector('tr[data-row="Non_total_kl"]');
+        const costRow = document.querySelector('tr[data-row="Non_water_cost_rs"]');
+
+        if (!row1 || !row2 || !row3 || !totalRow) return;
+
+        let yearlyTotal = 0;
+
+        months.forEach((month) => {
+            const v1 = parseFloat(row1.querySelector(`.${month}`)?.value) || 0;
+            const v2 = parseFloat(row2.querySelector(`.${month}`)?.value) || 0;
+            const v3 = parseFloat(row3.querySelector(`.${month}`)?.value) || 0;
+            const result = v1 + v2 + v3;
+            const target = totalRow.querySelector(`.${month}`);
+            if (target) {
+                target.value = result.toFixed(2);
+            }
+
+            if (costRow) {
+                const cost = result * 1.4;
+                const costTarget = costRow.querySelector(`.${month}`);
+                if (costTarget) {
+                    costTarget.value = cost.toFixed(2);
+                }
+            }
+
+            yearlyTotal += result;
+        });
+
+        const jan = parseFloat(totalRow.querySelector(".jan")?.value) || 0;
+        const feb = parseFloat(totalRow.querySelector(".feb")?.value) || 0;
+        const mar = parseFloat(totalRow.querySelector(".mar")?.value) || 0;
+        const apr = parseFloat(totalRow.querySelector(".apr")?.value) || 0;
+        const may = parseFloat(totalRow.querySelector(".may")?.value) || 0;
+        const jun = parseFloat(totalRow.querySelector(".jun")?.value) || 0;
+        const jul = parseFloat(totalRow.querySelector(".jul")?.value) || 0;
+        const aug = parseFloat(totalRow.querySelector(".aug")?.value) || 0;
+        const sep = parseFloat(totalRow.querySelector(".sep")?.value) || 0;
+        const oct = parseFloat(totalRow.querySelector(".oct")?.value) || 0;
+        const nov = parseFloat(totalRow.querySelector(".nov")?.value) || 0;
+        const dec = parseFloat(totalRow.querySelector(".dec")?.value) || 0;
+
+        const q1 = jan + feb + mar;
+        const q2 = apr + may + jun;
+        const q3 = jul + aug + sep;
+        const q4 = oct + nov + dec;
+
+        const q1Input = totalRow.querySelector(".q1");
+        const q2Input = totalRow.querySelector(".q2");
+        const q3Input = totalRow.querySelector(".q3");
+        const q4Input = totalRow.querySelector(".q4");
+
+        if (q1Input) q1Input.value = q1.toFixed(2);
+        if (q2Input) q2Input.value = q2.toFixed(2);
+        if (q3Input) q3Input.value = q3.toFixed(2);
+        if (q4Input) q4Input.value = q4.toFixed(2);
+
+        const totalInput = totalRow.querySelector(".total");
+        if (totalInput) {
+            totalInput.value = yearlyTotal.toFixed(2);
+        }
+    }
+
+    /* =====================================================
+    ENERGY COST CALCULATION (Non-Manufacturing)
+    ===================================================== */
+
+    function calculateEnergyCost() {
+        const volumeRow1 = document.querySelector('tr[data-row="Non_energy_power_volume_1"]');
+        const volumeRow2 = document.querySelector('tr[data-row="Non_energy_power_volume_2"]');
+        const totalVolumeRow = document.querySelector('tr[data-row="Non_total_energy_power_volume"]');
+        const costRow1 = document.querySelector('tr[data-row="Non_energy_power_cost_1"]');
+        const costRow2 = document.querySelector('tr[data-row="Non_energy_power_cost_2"]');
+        const totalCostRow = document.querySelector('tr[data-row="Non_total_energy_power_cost"]');
+
+        if (!volumeRow1 || !costRow1) return;
+
+        const rateMap = {
+            jan: 10, feb: 9.6, mar: 8.1, apr: 7.9, may: 7.9, jun: 7.9,
+            jul: 7.9, aug: 7.9, sep: 7.9, oct: 7.9, nov: 7.9, dec: 7.9
+        };
+
+        months.forEach((month) => {
+            const rate = rateMap[month] || 7.9;
+
+            if (volumeRow1 && volumeRow2 && totalVolumeRow) {
+                const v1 = parseFloat(volumeRow1.querySelector(`.${month}`)?.value) || 0;
+                const v2 = parseFloat(volumeRow2.querySelector(`.${month}`)?.value) || 0;
+                const totalVolume = v1 + v2;
+                const targetVolume = totalVolumeRow.querySelector(`.${month}`);
+                if (targetVolume) {
+                    targetVolume.value = totalVolume.toFixed(2);
+                    targetVolume.setAttribute("readonly", true);
+                }
+            }
+
+            if (volumeRow1 && costRow1) {
+                const v1 = parseFloat(volumeRow1.querySelector(`.${month}`)?.value) || 0;
+                const result1 = v1 * rate;
+                const target1 = costRow1.querySelector(`.${month}`);
+                if (target1) {
+                    target1.value = result1.toFixed(2);
+                }
+            }
+
+            if (volumeRow2 && costRow2) {
+                const v2 = parseFloat(volumeRow2.querySelector(`.${month}`)?.value) || 0;
+                const result2 = v2 * rate;
+                const target2 = costRow2.querySelector(`.${month}`);
+                if (target2) {
+                    target2.value = result2.toFixed(2);
+                }
+            }
+
+            if (totalVolumeRow && totalCostRow) {
+                const v3 = parseFloat(totalVolumeRow.querySelector(`.${month}`)?.value) || 0;
+                const result3 = v3 * rate;
+                const target3 = totalCostRow.querySelector(`.${month}`);
+                if (target3) {
+                    target3.value = result3.toFixed(2);
+                }
+            }
+        });
+
+        function setQuarter(row) {
+            if (!row) return;
+            const jan = parseFloat(row.querySelector(".jan")?.value) || 0;
+            const feb = parseFloat(row.querySelector(".feb")?.value) || 0;
+            const mar = parseFloat(row.querySelector(".mar")?.value) || 0;
+            const apr = parseFloat(row.querySelector(".apr")?.value) || 0;
+            const may = parseFloat(row.querySelector(".may")?.value) || 0;
+            const jun = parseFloat(row.querySelector(".jun")?.value) || 0;
+            const jul = parseFloat(row.querySelector(".jul")?.value) || 0;
+            const aug = parseFloat(row.querySelector(".aug")?.value) || 0;
+            const sep = parseFloat(row.querySelector(".sep")?.value) || 0;
+            const oct = parseFloat(row.querySelector(".oct")?.value) || 0;
+            const nov = parseFloat(row.querySelector(".nov")?.value) || 0;
+            const dec = parseFloat(row.querySelector(".dec")?.value) || 0;
+
+            const q1 = jan + feb + mar;
+            const q2 = apr + may + jun;
+            const q3 = jul + aug + sep;
+            const q4 = oct + nov + dec;
+
+            if (row.querySelector(".q1")) row.querySelector(".q1").value = q1.toFixed(2);
+            if (row.querySelector(".q2")) row.querySelector(".q2").value = q2.toFixed(2);
+            if (row.querySelector(".q3")) row.querySelector(".q3").value = q3.toFixed(2);
+            if (row.querySelector(".q4")) row.querySelector(".q4").value = q4.toFixed(2);
+
+            const total = q1 + q2 + q3 + q4;
+            if (row.querySelector(".total")) {
+                row.querySelector(".total").value = total.toFixed(2);
+            }
+        }
+
+        setQuarter(totalVolumeRow);
+        setQuarter(costRow1);
+        setQuarter(costRow2);
+        setQuarter(totalCostRow);
+    }
+
+    /* =====================================================
+    INPUT EVENT
+    ===================================================== */
+
+    document.addEventListener("input", function(e) {
+        if (!e.target.classList.contains("data-input")) return;
+
+        const row = e.target.closest("tr");
+        if (row) {
+            calculateRowTotal(row);
+            calculateQuarter(row);
+        }
+
+        if (document.querySelector("#manufacturingTable")) {
+            calculateConsumptionPerWasher();
+            calculateTotalConsumptionWasher();
+            calculateERABill();
+        }
+
+        if (document.querySelector("#nonManufacturingTable")) {
+            calculateTotalKL();
+            calculateEnergyCost();
+        }
     });
-</script>
 
-<!-- Download Excel -->
-<script>
-    document.getElementById("downloadEnvExcel").addEventListener("click", function(){
+    /* =====================================================
+    PAGE LOAD
+    ===================================================== */
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll("tbody tr").forEach((row) => {
+            calculateRowTotal(row);
+            calculateQuarter(row);
+        });
+
+        if (document.querySelector("#manufacturingTable")) {
+            calculateConsumptionPerWasher();
+            calculateTotalConsumptionWasher();
+            calculateERABill();
+        }
+
+        if (document.querySelector("#nonManufacturingTable")) {
+            calculateTotalKL();
+            calculateEnergyCost();
+        }
+    });
+
+    /* =====================================================
+    COLLECT DATA
+    ===================================================== */
+
+    function num(v) {
+        return parseFloat(v) || 0;
+    }
+
+    function collectEnvironmentData() {
+        const rows = document.querySelectorAll("tbody tr");
+        const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const payload = [];
+
+        rows.forEach((row) => {
+            const rowName = row.dataset.row;
+            if (!rowName) return;
+
+            const data = {
+                row_name: rowName,
+                year_2024: num(row.querySelector(".year-2024")?.value),
+                year_2025: num(row.querySelector(".year-2025")?.value),
+                jan_qty: num(row.querySelector(".jan")?.value),
+                feb_qty: num(row.querySelector(".feb")?.value),
+                mar_qty: num(row.querySelector(".mar")?.value),
+                apr_qty: num(row.querySelector(".apr")?.value),
+                may_qty: num(row.querySelector(".may")?.value),
+                jun_qty: num(row.querySelector(".jun")?.value),
+                jul_qty: num(row.querySelector(".jul")?.value),
+                aug_qty: num(row.querySelector(".aug")?.value),
+                sep_qty: num(row.querySelector(".sep")?.value),
+                oct_qty: num(row.querySelector(".oct")?.value),
+                nov_qty: num(row.querySelector(".nov")?.value),
+                dec_qty: num(row.querySelector(".dec")?.value),
+                q1_quantity: num(row.querySelector(".q1")?.value),
+                q2_quantity: num(row.querySelector(".q2")?.value),
+                q3_quantity: num(row.querySelector(".q3")?.value),
+                q4_quantity: num(row.querySelector(".q4")?.value),
+                total_quantity: num(row.querySelector(".total")?.value),
+            };
+
+            payload.push(data);
+        });
+
+        return payload;
+    }
+
+    /* =====================================================
+    SAVE REPORT
+    ===================================================== */
+
+    function saveEnvironmentReport() {
+        const rows = collectEnvironmentData();
+        const wasteType = document.getElementById("wasteType").value;
+
+        fetch("{% url 'environmental_mis:save_environment_report' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({
+                plant_id: "{{selected_plant.id}}",
+                year: "{{current_year}}",
+                report_type: wasteType,
+                rows: rows,
+            }),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.status === "success") {
+                alert("Environment report saved ✓");
+                isDataChanged = false;
+            }
+        });
+    }
+
+    document.getElementById("saveDataBtn").addEventListener("click", saveEnvironmentReport);
+
+    /* =====================================================
+    GENERATE DEMO DATA
+    ===================================================== */
+
+    document.getElementById("generateDemoDataBtn").addEventListener("click", function() {
+        const rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach((row) => {
+            const rowKey = row.dataset.row;
+            if (!rowKey) return;
+
+            const year2024 = row.querySelector(".year-2024");
+            const year2025 = row.querySelector(".year-2025");
+
+            if (year2024) {
+                year2024.value = Math.floor(Math.random() * 5000) + 1000;
+            }
+            if (year2025) {
+                year2025.value = Math.floor(Math.random() * 5000) + 1000;
+            }
+
+            months.forEach((month) => {
+                const input = row.querySelector(`.${month}`);
+                if (input && !input.hasAttribute("readonly")) {
+                    input.value = Math.floor(Math.random() * 300) + 50;
+                }
+            });
+        });
+
+        document.querySelectorAll("tbody tr").forEach((row) => {
+            calculateRowTotal(row);
+            calculateQuarter(row);
+        });
+
+        if (document.querySelector("#manufacturingTable")) {
+            calculateConsumptionPerWasher();
+            calculateTotalConsumptionWasher();
+            calculateERABill();
+        }
+
+        if (document.querySelector("#nonManufacturingTable")) {
+            calculateTotalKL();
+            calculateEnergyCost();
+        }
+    });
+
+    /* =====================================================
+    DOWNLOAD EXCEL
+    ===================================================== */
+
+    document.getElementById("downloadEnvExcel").addEventListener("click", function() {
         let plantId = "{{selected_plant.id}}";
         let type = document.getElementById("wasteType").value;
-        
         let baseUrl = "{% url 'environmental_mis:download_environment_excel' %}";
         let url = `${baseUrl}?plant_id=${plantId}&type=${type}`;
 
         if (isDataChanged) {
             let proceed = confirm(
-            "Data is not saved. Unsaved data will not reflect in Excel.\n\nClick OK to Proceed or Cancel to go Back.",
+                "Data is not saved. Unsaved data will not reflect in Excel.\n\nClick OK to Proceed or Cancel to go Back."
             );
-
             if (!proceed) {
-            return; // back to page
+                return;
             }
         }
 
         window.location.href = url;
-
     });
-
 </script>
 
 {% endblock %}
