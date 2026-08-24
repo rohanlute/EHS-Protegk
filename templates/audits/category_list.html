@@ -1,29 +1,642 @@
 {% extends 'audits/audit_base.html' %}
 
 {% block title %}Audit Categories{% endblock %}
-{% block page_title %}{% endblock %}
+{% block page_title %}Audit Categories{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item active">Audit Categories</li>
 {% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* ==========================================================
+       TEAL THEME (matching Inspection Dashboard)
+       ========================================================== */
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        --secondary-blue: #3b82f6;
+
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    /* ----- BREADCRUMB (teal) ----- */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* ----- PAGE HEADER (hero) ----- */
+    .audit-hero {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        padding: 20px 24px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .audit-hero .hero-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .audit-hero .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .audit-hero .hero-text h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .audit-hero .hero-text p {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .audit-hero .btn-light {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        padding: 8px 20px;
+        font-size: 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .audit-hero .btn-light:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    /* ----- CARD (audit-panel) ----- */
+    .audit-panel {
+        border: none;
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
+    .audit-panel .card-header {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .audit-panel .card-header .card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .audit-panel .card-header .card-title i {
+        color: var(--primary-teal);
+    }
+
+    .audit-panel .card-body {
+        padding: 20px;
+    }
+
+    .audit-panel .card-body.border-bottom {
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-page);
+    }
+
+    .audit-panel .card-footer {
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+        padding: 12px 20px;
+    }
+
+    /* ----- FORM CONTROLS (teal) ----- */
+    .form-control {
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-size: 0.9rem;
+        padding: 0.45rem 0.75rem;
+        background: white;
+        width: 100%;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        outline: none;
+    }
+
+    .btn-primary {
+        background: var(--primary-teal);
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        padding: 0.45rem 1rem;
+        transition: background 0.2s, box-shadow 0.2s;
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-teal-dark);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+    }
+
+    .btn-secondary {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        padding: 0.45rem 1rem;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-secondary:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .btn-sm {
+        font-size: 12px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        border: 1px solid var(--primary-teal);
+        color: var(--primary-teal);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        border: 1px solid var(--secondary-red);
+        color: var(--secondary-red);
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--secondary-red);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* ==========================================================
+       TABLE - FIXED PROPERLY
+       ========================================================== */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-sm);
+    }
+
+    .audit-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .audit-table thead th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 0.7rem 0.75rem;
+        background: var(--bg-page);
+        text-align: left;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .audit-table tbody td {
+        vertical-align: middle;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.65rem 0.75rem;
+        text-align: left;
+    }
+
+    .audit-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .audit-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .audit-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Column width control */
+    .audit-table .col-code {
+        width: 12%;
+        min-width: 90px;
+    }
+    .audit-table .col-name {
+        width: 20%;
+        min-width: 140px;
+    }
+    .audit-table .col-desc {
+        width: 35%;
+        min-width: 180px;
+    }
+    .audit-table .col-status {
+        width: 12%;
+        min-width: 90px;
+    }
+    .audit-table .col-templates {
+        width: 10%;
+        min-width: 80px;
+        text-align: center;
+    }
+    .audit-table .col-actions {
+        width: 18%;
+        min-width: 150px;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .audit-table .col-templates td,
+    .audit-table .col-templates th {
+        text-align: center;
+    }
+
+    .audit-table .col-actions td {
+        text-align: right;
+    }
+
+    .audit-table .col-actions .btn-outline-primary,
+    .audit-table .col-actions .btn-outline-danger {
+        margin-left: 4px;
+    }
+
+    /* ----- PILLS / BADGES (teal) ----- */
+    .audit-pill {
+        display: inline-block;
+        padding: 0.2rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+
+    .audit-pill.status-open {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .audit-pill.status-draft {
+        background: var(--primary-teal-light);
+        color: var(--text-muted);
+    }
+
+    /* Code styling */
+    .category-code {
+        font-weight: 700;
+        color: var(--primary-teal);
+        font-size: 0.85rem;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.03em;
+    }
+
+    /* Template count badge */
+    .template-count {
+        display: inline-block;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        padding: 0.1rem 0.6rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    /* ----- PAGINATION (teal) ----- */
+    .pagination {
+        margin: 0;
+        gap: 4px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .pagination .page-item .page-link {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 0.35rem 0.75rem;
+        font-size: 13px;
+        transition: all 0.2s;
+        background: var(--bg-card);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pagination .page-item .page-link:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 992px) {
+        .audit-table .col-desc {
+            max-width: 200px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .audit-hero {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .audit-hero .hero-text h2 {
+            font-size: 18px;
+        }
+
+        .audit-panel .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .audit-panel .card-body {
+            padding: 16px;
+        }
+
+        .audit-table .col-desc {
+            max-width: 120px;
+        }
+        
+        .audit-table .col-actions {
+            min-width: 130px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .audit-hero .hero-left {
+            width: 100%;
+        }
+
+        .audit-hero .hero-text h2 {
+            font-size: 17px;
+        }
+
+        .audit-hero .btn-light {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .audit-table thead th,
+        .audit-table tbody td {
+            padding: 0.5rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .audit-table .col-code {
+            min-width: 70px;
+        }
+        .audit-table .col-name {
+            min-width: 100px;
+        }
+        .audit-table .col-desc {
+            max-width: 80px;
+            min-width: 60px;
+        }
+        .audit-table .col-status {
+            min-width: 70px;
+        }
+        .audit-table .col-templates {
+            min-width: 60px;
+        }
+        .audit-table .col-actions {
+            min-width: 110px;
+        }
+
+        .audit-table .col-actions .btn-outline-primary,
+        .audit-table .col-actions .btn-outline-danger {
+            font-size: 11px;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .audit-pill {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.6rem;
+        }
+
+        .pagination .page-item .page-link {
+            font-size: 12px;
+            padding: 0.25rem 0.55rem;
+        }
+    }
+
+    /* utility */
+    .text-center {
+        text-align: center !important;
+    }
+    .text-right {
+        text-align: right !important;
+    }
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+    .mb-0 {
+        margin-bottom: 0 !important;
+    }
+    .mb-2 {
+        margin-bottom: 8px !important;
+    }
+    .gap-2 {
+        gap: 8px;
+    }
+    .align-items-end {
+        align-items: flex-end;
+    }
+    .d-flex {
+        display: flex;
+    }
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+    .justify-content-end {
+        justify-content: flex-end;
+    }
+    .w-100 {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="audit-hero d-flex justify-content-between align-items-center flex-wrap">
-    <div>
-        <h2 class="h4 mb-2">Audit Categories</h2>
-        <p>Create and maintain the categories used by audit templates.</p>
+
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                 -->
+<!-- ========================================================== -->
+<div class="audit-hero">
+    <div class="hero-left">
+        <div class="hero-icon">
+            <i class="fas fa-folder-tree"></i>
+        </div>
+        <div class="hero-text">
+            <h2>Audit Categories</h2>
+            <p>Create and maintain the categories used by audit templates.</p>
+        </div>
     </div>
-    <a href="{% url 'audits:category_create' %}" class="btn btn-light btn-sm">Create Category</a>
+    <a href="{% url 'audits:category_create' %}" class="btn-light">
+        <i class="fas fa-plus-circle"></i> Create Category
+    </a>
 </div>
 
+<!-- ========================================================== -->
+<!-- CATEGORIES LIST                                             -->
+<!-- ========================================================== -->
 <div class="card audit-panel">
     <div class="card-header">
-        <h3 class="card-title mb-0">All Categories</h3>
+        <h3 class="card-title">
+            <i class="fas fa-list"></i> All Categories
+        </h3>
+        <span style="background: var(--primary-teal-light); color: var(--primary-teal); padding: 0.3rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+            {{ categories|length }} total
+        </span>
     </div>
+
+    <!-- Filters -->
     <div class="card-body border-bottom">
         <form method="get">
-            <div class="row">
+            <div class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <input type="text" name="search" class="form-control" placeholder="Search code, name, description" value="{{ search }}">
                 </div>
@@ -35,64 +648,108 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                    <a href="{% url 'audits:category_list' %}" class="btn btn-secondary">Reset</a>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a href="{% url 'audits:category_list' %}" class="btn-secondary">
+                        <i class="fas fa-undo-alt"></i> Reset
+                    </a>
                 </div>
             </div>
         </form>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table audit-table table-hover">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Templates</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for category in categories %}
-                <tr>
-                    <td>{{ category.category_code }}</td>
-                    <td>{{ category.category_name }}</td>
-                    <td>{{ category.description|default:"-"|truncatechars:70 }}</td>
-                    <td>
-                        {% if category.is_active %}
-                        <span class="audit-pill status-open">Active</span>
-                        {% else %}
-                        <span class="audit-pill status-draft">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ category.template_count }}</td>
-                    <td class="text-right">
-                        <a href="{% url 'audits:category_edit' category.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <a href="{% url 'audits:category_delete' category.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted">No audit categories created yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <!-- Table -->
+    <div class="card-body" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th class="col-code">Code</th>
+                        <th class="col-name">Name</th>
+                        <th class="col-desc">Description</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-templates">Templates</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td class="col-code">
+                            <span class="category-code">{{ category.category_code }}</span>
+                        </td>
+                        <td class="col-name">
+                            <strong>{{ category.category_name }}</strong>
+                        </td>
+                        <td class="col-desc">
+                            {{ category.description|default:"—"|truncatechars:80 }}
+                        </td>
+                        <td class="col-status">
+                            {% if category.is_active %}
+                            <span class="audit-pill status-open">Active</span>
+                            {% else %}
+                            <span class="audit-pill status-draft">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-templates">
+                            <span class="template-count">{{ category.template_count }}</span>
+                        </td>
+                        <td class="col-actions">
+                            <a href="{% url 'audits:category_edit' category.pk %}" class="btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'audits:category_delete' category.pk %}" class="btn-outline-danger">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2.5rem 0;">
+                            <div style="color: var(--text-muted);">
+                                <i class="fas fa-folder-open" style="display: block; font-size: 36px; margin-bottom: 10px; color: var(--primary-teal-light);"></i>
+                                <p style="margin: 0; font-size: 0.95rem;">No audit categories created yet.</p>
+                                <p style="margin: 4px 0 0 0; font-size: 0.82rem;">Click "Create Category" to get started.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- Pagination -->
     {% if is_paginated %}
     <div class="card-footer">
         <nav>
-            <ul class="pagination pagination-sm mb-0 justify-content-end">
+            <ul class="pagination">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if selected_status %}&status={{ selected_status|urlencode }}{% endif %}">Previous</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if selected_status %}&status={{ selected_status|urlencode }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-left"></i> Previous</span>
                 </li>
                 {% endif %}
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }}</span>
+                </li>
+
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if selected_status %}&status={{ selected_status|urlencode }}{% endif %}">Next</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if selected_status %}&status={{ selected_status|urlencode }}{% endif %}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Next <i class="fas fa-chevron-right"></i></span>
                 </li>
                 {% endif %}
             </ul>
@@ -100,4 +757,5 @@
     </div>
     {% endif %}
 </div>
+
 {% endblock %}
