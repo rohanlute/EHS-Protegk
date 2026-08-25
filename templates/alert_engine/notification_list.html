@@ -1,39 +1,688 @@
 {% extends 'base/base.html' %}
+{% load static %}
+
 {% block title %}Notifications{% endblock %}
-{% block page_title %}Notifications{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">Notifications</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-body {
+    padding: 0;
+  }
+
+  .ehs-card .card-footer {
+    background: var(--bg-page);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 16px;
+  }
+
+  .notification-card-header {
+    padding: 14px 20px;
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .notification-card-header .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .notification-card-header .header-title i {
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .notification-card-header .header-title h5 {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .notification-card-header .header-title .badge-count {
+    background: var(--primary-teal);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-left: 6px;
+  }
+
+  .notification-card-header .header-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .btn-mark-read {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-mark-read:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .btn-mark-read i {
+    font-size: 14px;
+  }
+
+  .list-group {
+    border-radius: 0;
+  }
+
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 14px 20px;
+    transition: all 0.2s ease;
+    background: var(--bg-card);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .list-group-item:last-child {
+    border-bottom: none;
+  }
+
+  .list-group-item:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .list-group-item.unread {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .list-group-item.unread:hover {
+    background: var(--primary-teal-hover);
+  }
+
+  .notification-content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 12px;
+  }
+
+  .notification-content .notification-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .notification-content .notification-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+    font-size: 13px;
+  }
+
+  .notification-content .notification-message {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .notification-content .notification-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .notification-content .notification-meta .badge-unread {
+    background: var(--primary-teal);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 8px;
+    border-radius: 10px;
+  }
+
+  .notification-content .notification-meta i {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-open:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-open i {
+    font-size: 12px;
+  }
+
+  .notification-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .dash-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .dash-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .dash-pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .dash-pagination .page-link.active {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+    cursor: default;
+  }
+
+  .dash-pagination .page-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .notification-card-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .notification-card-header .btn-mark-read {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .list-group-item {
+      padding: 12px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .notification-content {
+      padding-right: 0;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .notification-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .notification-actions .btn-open {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .notification-time {
+      font-size: 11px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .empty-state i {
+      font-size: 2.5rem;
+    }
+
+    .empty-state h4 {
+      font-size: 16px;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .notification-card-header {
+      padding: 8px 12px;
+    }
+
+    .notification-card-header .header-title h5 {
+      font-size: 0.9rem;
+    }
+
+    .list-group-item {
+      padding: 10px 12px;
+    }
+
+    .notification-content .notification-title {
+      font-size: 13px;
+    }
+
+    .notification-content .notification-message {
+      font-size: 12px;
+    }
+
+    .btn-open {
+      font-size: 11px;
+      padding: 4px 12px;
+    }
+
+    .btn-mark-read {
+      font-size: 12px;
+      padding: 5px 12px;
+    }
+
+    .dash-pagination .page-link {
+      min-width: 32px;
+      height: 32px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-sm">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <div>
-      <h5 class="mb-0"><i class="bi bi-bell mr-2"></i>Your Notifications</h5>
-      <small class="text-muted">Latest alerts across all modules</small>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="header-text">
+        <h1>Notifications</h1>
+        <p class="subtitle">Latest alerts across all modules</p>
+      </div>
     </div>
-    <a href="{% url 'alert_engine:notifications_read_all' %}" class="btn btn-sm btn-outline-primary">
-      Mark all read
-    </a>
   </div>
-  <div class="card-body p-0">
-    {% if notifications %}
-      <div class="list-group list-group-flush">
-        {% for notification in notifications %}
-          <a href="{% url 'alert_engine:notification_read' notification.pk %}"
-             class="list-group-item list-group-item-action {% if not notification.is_read %}font-weight-bold{% endif %}">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div>{{ notification.title }}</div>
-                <small class="text-muted">{{ notification.message|truncatechars:120 }}</small>
+
+  <div class="ehs-card">
+    <div class="notification-card-header">
+      <div>
+        <div class="header-title">
+          <i class="fas fa-bell"></i>
+          <h5>
+            Your Notifications
+            {% if notifications %}
+              <span class="badge-count">{{ notifications|length }}</span>
+            {% endif %}
+          </h5>
+        </div>
+        <div class="header-subtitle">
+          <i class="fas fa-info-circle"></i> Latest alerts from all modules
+        </div>
+      </div>
+      {% if notifications %}
+        <a href="{% url 'alert_engine:notifications_read_all' %}" class="btn-mark-read">
+          <i class="fas fa-check-double"></i> Mark All Read
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="card-body">
+      {% if notifications %}
+        <div class="list-group list-group-flush">
+          {% for notification in notifications %}
+            <div class="list-group-item {% if not notification.is_read %}unread{% endif %}">
+              <div class="notification-content">
+                <div class="notification-title">
+                  {% if not notification.is_read %}
+                    <i class="fas fa-circle" style="color: var(--primary-teal); font-size: 10px;"></i>
+                  {% endif %}
+                  {{ notification.title }}
+                </div>
+                <div class="notification-message">{{ notification.message|truncatechars:120 }}</div>
+                <div class="notification-meta">
+                  <span>
+                    <i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago
+                  </span>
+                  {% if not notification.is_read %}
+                    <span class="badge-unread">New</span>
+                  {% endif %}
+                  {% if notification.module %}
+                    <span>
+                      <i class="fas fa-folder"></i> {{ notification.module|title }}
+                    </span>
+                  {% endif %}
+                </div>
               </div>
-              <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+              <div class="notification-actions">
+                <span class="notification-time">{{ notification.created_at|date:"d M Y, h:i A" }}</span>
+                <a href="{% url 'alert_engine:notification_detail' notification.pk %}" class="btn-open">
+                  <i class="fas fa-eye"></i> Open
+                </a>
+              </div>
             </div>
-          </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="p-4 text-center text-muted">
-        No notifications yet.
-      </div>
-    {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+        <div class="card-footer">
+          <nav class="dash-pagination">
+            {% if page_obj.has_previous %}
+              <a class="page-link" href="?page=1">
+                <i class="fas fa-angle-double-left"></i>
+              </a>
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                <i class="fas fa-angle-left"></i>
+              </a>
+            {% endif %}
+
+            <span class="page-link active">
+              {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                <i class="fas fa-angle-right"></i>
+              </a>
+              <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                <i class="fas fa-angle-double-right"></i>
+              </a>
+            {% endif %}
+          </nav>
+        </div>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-bell-slash"></i>
+          <h4>No Notifications</h4>
+          <p>You're all caught up! No notifications to display.</p>
+        </div>
+      {% endif %}
+    </div>
   </div>
+
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const listItems = document.querySelectorAll('.list-group-item');
+    listItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transition = 'background 0.2s ease';
+        });
+    });
+
+    const markAllBtn = document.querySelector('.btn-mark-read');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function(e) {
+            const count = {{ notifications|length|default:0 }};
+            if (count > 0) {
+                const confirmed = confirm('Are you sure you want to mark all ' + count + ' notifications as read?');
+                if (!confirmed) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

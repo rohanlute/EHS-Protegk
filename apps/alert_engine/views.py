@@ -34,6 +34,23 @@ def mark_notification_read(request, pk):
 
 
 @login_required
+def open_notification(request, pk):
+    notification = get_object_or_404(
+        Notification,
+        pk=pk,
+        recipient=request.user,
+    )
+    notification.mark_as_read()
+
+    target_url = notification.get_target_url()
+    if not target_url:
+        messages.warning(request, "This notification does not have a linked detail page.")
+        return redirect(request.META.get("HTTP_REFERER") or "alert_engine:notification_list")
+
+    return redirect(target_url)
+
+
+@login_required
 def mark_all_notifications_read(request):
     Notification.objects.filter(
         recipient=request.user,

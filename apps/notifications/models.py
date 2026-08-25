@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -203,3 +204,57 @@ class Notification(models.Model):
             self.is_read = True
             self.read_at = timezone.now()
             self.save(update_fields=['is_read', 'read_at'])
+
+    def get_target_url(self):
+        """
+        Return the detail URL for the object this notification points to.
+
+        Notifications can be attached either to a main record (hazard, incident,
+        emergency report, inspection schedule) or to a related action item. In
+        the action-item case we redirect to the parent object detail page.
+        """
+        obj = self.content_object
+        if not obj:
+            return None
+
+        # Prefer an object-specific URL helper when one exists.
+        get_absolute_url = getattr(obj, "get_absolute_url", None)
+        if callable(get_absolute_url):
+            try:
+                return get_absolute_url()
+            except Exception:
+                pass
+
+        try:
+            if hasattr(obj, "hazard") and getattr(obj, "hazard", None):
+                return reverse("hazards:hazard_detail", kwargs={"pk": obj.hazard.pk})
+
+            if hasattr(obj, "incident") and getattr(obj, "incident", None):
+                return reverse("accidents:incident_detail", kwargs={"pk": obj.incident.pk})
+
+            if hasattr(obj, "report") and getattr(obj, "report", None):
+                return reverse("emergency:report_detail", kwargs={"pk": obj.report.pk})
+
+            if hasattr(obj, "schedule") and getattr(obj, "schedule", None):
+                return reverse("inspections:schedule_detail", kwargs={"pk": obj.schedule.pk})
+
+            if hasattr(obj, "submission") and getattr(obj, "submission", None):
+                return reverse("inspections:schedule_detail", kwargs={"pk": obj.submission.schedule.pk})
+
+            app_label = obj._meta.app_label
+            model_name = obj._meta.model_name
+
+            direct_routes = {
+                ("hazards", "hazard"): "hazards:hazard_detail",
+                ("accidents", "incident"): "accidents:incident_detail",
+                ("emergency", "emergencyreport"): "emergency:report_detail",
+                ("inspections", "inspectionschedule"): "inspections:schedule_detail",
+            }
+
+            route_name = direct_routes.get((app_label, model_name))
+            if route_name:
+                return reverse(route_name, kwargs={"pk": obj.pk})
+        except Exception:
+            return None
+
+        return None
