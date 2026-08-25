@@ -2,73 +2,663 @@
 {% load permission_tags %}
 {% load static %}
 
-{% block title %}Training Sessions{% endblock %}
-{% block page_title %}Training Sessions{% endblock %}
+{% block title %}Training Sessions | EHS-360{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'training:dashboard' %}">Training Management</a></li>
 <li class="breadcrumb-item active">Sessions</li>
 {% endblock %}
+
 {% block extra_css %}
 <style>
-.ehs-card {
-  border-radius: 10px;
-  border: none;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-}
-.table thead th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-.badge {
-  font-size: 0.7rem;
-  padding: 5px 8px;
-}
-.filter-card input,
-.filter-card select {
-  border-radius: 6px;
-}
-.page-header {
-  background: #fff;
-  padding: 12px 18px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
+  /* ===== TRAINING SESSIONS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-body {
+    padding: 0;
+  }
+
+  .ehs-card .card-footer {
+    background: var(--bg-page);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 16px;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD                                                */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .filter-card .card-body {
+    padding: 14px 18px;
+  }
+
+  .filter-card .form-control,
+  .filter-card .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    height: 34px;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
+
+  .filter-card .form-control:focus,
+  .filter-card .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .filter-card .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .filter-card .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    padding: 5px 14px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .filter-card .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+
+  .filter-card .btn-outline-secondary {
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 5px 14px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-card);
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .filter-card .btn-outline-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                      */
+  /* ========================================================== */
+  .table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 8px 12px;
+  }
+
+  .table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td strong {
+    color: var(--text-primary);
+  }
+
+  .table tbody td .text-muted {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+  }
+
+  .table .thead-light {
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge-success-custom {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-warning-custom {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-danger-custom {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-info-custom {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-secondary-custom {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-secondary);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-primary-custom {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    text-decoration: none;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-primary-custom:hover {
+    background: var(--primary-teal);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-success-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--secondary-green);
+    color: var(--secondary-green);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-success-custom:hover {
+    background: var(--secondary-green);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-secondary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-secondary-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .empty-state h5 {
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                 */
+  /* ========================================================== */
+  .pagination .page-link {
+    color: var(--primary-teal);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .btn-primary-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .filter-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+    }
+
+    .filter-card .btn-primary,
+    .filter-card .btn-outline-secondary {
+      font-size: 0.75rem;
+      height: 32px;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+      padding: 6px 8px;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .btn-primary-custom {
+      font-size: 0.7rem;
+      padding: 4px 12px;
+    }
+
+    .table {
+      font-size: 0.65rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+      padding: 4px 6px;
+    }
+
+    .badge {
+      font-size: 0.55rem;
+      padding: 2px 6px;
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+    }
+
+    .empty-state h5 {
+      font-size: 0.9rem;
+    }
+
+    .empty-state p {
+      font-size: 0.8rem;
+    }
+
+    .pagination .page-link {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-  <div class="col-12 d-flex justify-content-between align-items-center page-header">
-    <div>
-      <h5 class="mb-0">All Training Sessions</h5>
-      <small class="text-muted">Manage and track all sessions</small>
-    </div>
 
-    {% if request.user|has_perm:'CREATE_TRAINING_SESSION' or request.user.is_superuser %}
-    <a href="{% url 'training:session_create' %}" class="btn btn-primary shadow-sm">
-      <i class="fas fa-plus mr-1"></i> Add Session
-    </a>
-    {% endif %}
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="dash-page-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <i class="fas fa-chalkboard-teacher"></i>
+    </div>
+    <div class="header-text">
+      <h1>Training Sessions</h1>
+      <p class="subtitle">Manage and track all training sessions across the organization</p>
+    </div>
   </div>
+  {% if request.user|has_perm:'CREATE_TRAINING_SESSION' or request.user.is_superuser %}
+  <a href="{% url 'training:session_create' %}" class="btn-primary-custom">
+    <i class="fas fa-plus"></i> Add Session
+  </a>
+  {% endif %}
 </div>
 
-<!-- Filters -->
-<div class="ehs-card mb-3 filter-card">
+<!-- ========================================================== -->
+<!-- FILTER SECTION                                             -->
+<!-- ========================================================== -->
+<div class="filter-card">
   <div class="card-body">
     <form method="GET">
       <div class="row">
         <div class="col-md-3 mb-2">
-          <input type="text" name="search" class="form-control form-control-sm"
+          <input type="text" name="search" class="form-control"
                  placeholder="Search session # or topic..." value="{{ search_query }}">
         </div>
         <div class="col-md-2 mb-2">
-          <select name="status" class="form-control form-control-sm">
+          <select name="status" class="form-select">
             <option value="">All Status</option>
             {% for val, label in status_choices %}
             <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
@@ -76,7 +666,7 @@
           </select>
         </div>
         <div class="col-md-2 mb-2">
-          <select name="topic" class="form-control form-control-sm">
+          <select name="topic" class="form-select">
             <option value="">All Topics</option>
             {% for topic in topics %}
             <option value="{{ topic.id }}" {% if selected_topic == topic.id|stringformat:"s" %}selected{% endif %}>
@@ -86,7 +676,7 @@
           </select>
         </div>
         <div class="col-md-2 mb-2">
-          <select name="plant" class="form-control form-control-sm">
+          <select name="plant" class="form-select">
             <option value="">All Plants</option>
             {% for plant in plants %}
             <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
@@ -96,7 +686,7 @@
           </select>
         </div>
         <div class="col-md-2 mb-2">
-          <select name="training_mode" class="form-control form-control-sm">
+          <select name="training_mode" class="form-select">
             <option value="">All Modes</option>
             {% for val, label in mode_choices %}
             <option value="{{ val }}" {% if selected_mode == val %}selected{% endif %}>{{ label }}</option>
@@ -104,23 +694,23 @@
           </select>
         </div>
         <div class="col-md-1 mb-2">
-          <button type="submit" class="btn btn-sm btn-primary w-100">
+          <button type="submit" class="btn btn-primary w-100">
             <i class="fas fa-filter"></i>
           </button>
         </div>
       </div>
       <div class="row mt-1">
         <div class="col-md-3 mb-2">
-          <input type="date" name="date_from" class="form-control form-control-sm"
+          <input type="date" name="date_from" class="form-control"
                  value="{{ request.GET.date_from }}">
         </div>
         <div class="col-md-3 mb-2">
-          <input type="date" name="date_to" class="form-control form-control-sm"
+          <input type="date" name="date_to" class="form-control"
                  value="{{ request.GET.date_to }}">
         </div>
         <div class="col-md-2">
-          <a href="{% url 'training:session_list' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-times mr-1"></i> Clear
+          <a href="{% url 'training:session_list' %}" class="btn-outline-secondary">
+            <i class="fas fa-times"></i> Clear
           </a>
         </div>
       </div>
@@ -128,7 +718,9 @@
   </div>
 </div>
 
-<!-- Table -->
+<!-- ========================================================== -->
+<!-- SESSIONS TABLE                                             -->
+<!-- ========================================================== -->
 <div class="ehs-card">
   <div class="card-body p-0">
     {% if sessions %}
@@ -151,8 +743,8 @@
           {% for session in sessions %}
           <tr>
             <td>
-              <a href="{% url 'training:session_detail' session.pk %}">
-                <strong>{{ session.session_number }}</strong>
+              <a href="{% url 'training:session_detail' session.pk %}" style="color: var(--primary-teal); font-weight: 600;">
+                {{ session.session_number }}
               </a>
             </td>
             <td>
@@ -160,13 +752,13 @@
               <small class="text-muted">{{ session.topic.get_category_display }}</small>
             </td>
             <td>
-              <span class="badge badge-info">{{ session.get_training_mode_display }}</span>
+              <span class="badge-info-custom">{{ session.get_training_mode_display }}</span>
             </td>
             <td>
               {{ session.scheduled_date|date:"d M Y" }}<br>
               <small class="text-muted">{{ session.scheduled_time|time:"H:i" }}</small>
               {% if session.is_overdue %}
-              <br><span class="badge badge-danger">Overdue</span>
+              <br><span class="badge-danger-custom">Overdue</span>
               {% endif %}
             </td>
             <td>
@@ -176,41 +768,43 @@
             <td>
               {{ session.trainer_name }}<br>
               {% if session.trainer_is_external %}
-              <small class="badge badge-secondary">External</small>
+              <small class="badge-secondary-custom">External</small>
               {% endif %}
             </td>
             <td class="text-center">
-              <span class="badge badge-primary">
+              <span class="badge-primary-custom">
                 {{ session.total_present }}/{{ session.total_invited }}
               </span>
             </td>
             <td>
               {% if session.status == 'SCHEDULED' %}
-              <span class="badge badge-warning">Scheduled</span>
+              <span class="badge-warning-custom">Scheduled</span>
               {% elif session.status == 'COMPLETED' %}
-              <span class="badge badge-success">Completed</span>
+              <span class="badge-success-custom">Completed</span>
               {% elif session.status == 'CANCELLED' %}
-              <span class="badge badge-danger">Cancelled</span>
+              <span class="badge-danger-custom">Cancelled</span>
               {% elif session.status == 'ONGOING' %}
-              <span class="badge badge-info">Ongoing</span>
+              <span class="badge-info-custom">Ongoing</span>
               {% endif %}
             </td>
             <td>
-              <a href="{% url 'training:session_detail' session.pk %}" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-eye"></i>
-              </a>
-              {% if session.status == 'SCHEDULED' %}
-                {% if request.user|has_perm:'MARK_TRAINING_ATTENDANCE' or request.user.is_superuser %}
-                <a href="{% url 'training:mark_attendance' session.pk %}" class="btn btn-sm btn-outline-success">
-                  <i class="fas fa-user-check"></i>
+              <div class="d-flex gap-1">
+                <a href="{% url 'training:session_detail' session.pk %}" class="btn-outline-primary-custom" title="View Details">
+                  <i class="fas fa-eye"></i>
                 </a>
+                {% if session.status == 'SCHEDULED' %}
+                  {% if request.user|has_perm:'MARK_TRAINING_ATTENDANCE' or request.user.is_superuser %}
+                  <a href="{% url 'training:mark_attendance' session.pk %}" class="btn-outline-success-custom" title="Mark Attendance">
+                    <i class="fas fa-user-check"></i>
+                  </a>
+                  {% endif %}
+                  {% if request.user|has_perm:'EDIT_TRAINING_SESSION' or request.user.is_superuser %}
+                  <a href="{% url 'training:session_edit' session.pk %}" class="btn-outline-secondary-custom" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% endif %}
                 {% endif %}
-                {% if request.user|has_perm:'EDIT_TRAINING_SESSION' or request.user.is_superuser %}
-                <a href="{% url 'training:session_edit' session.pk %}" class="btn btn-sm btn-outline-secondary">
-                  <i class="fas fa-edit"></i>
-                </a>
-                {% endif %}
-              {% endif %}
+              </div>
             </td>
           </tr>
           {% endfor %}
@@ -218,7 +812,7 @@
       </table>
     </div>
 
-    <!-- Pagination — same pattern as your other list views -->
+    <!-- Pagination -->
     {% if is_paginated %}
     <div class="card-footer">
       <nav>
@@ -246,17 +840,18 @@
     {% endif %}
 
     {% else %}
-    <div class="text-center py-5 text-muted">
-      <i class="fas fa-chalkboard-teacher fa-3x mb-3"></i>
+    <div class="empty-state">
+      <i class="fas fa-chalkboard-teacher"></i>
       <h5>No training sessions found</h5>
       <p>Try adjusting your filters or create a new session.</p>
       {% if request.user|has_perm:'CREATE_TRAINING_SESSION' or request.user.is_superuser %}
-      <a href="{% url 'training:session_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus mr-1"></i> Add Session
+      <a href="{% url 'training:session_create' %}" class="btn-primary-custom">
+        <i class="fas fa-plus"></i> Add Session
       </a>
       {% endif %}
     </div>
     {% endif %}
   </div>
 </div>
+
 {% endblock %}

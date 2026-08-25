@@ -1,60 +1,661 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Data Collection List{% endblock %}
-{% block page_title %}All Data Collections{% endblock %}
+{% block title %}Data Collection List | EHS-360{% endblock %}
 
 {% block extra_css %}
 <style>
-.filter-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px;
+  /* ===== DATA COLLECTION LIST - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    --secondary-purple: #7c3aed;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD                                                */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
     margin-bottom: 20px;
-}
+    transition: all 0.3s ease;
+  }
 
-.collection-table {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+  .filter-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.12);
+  }
 
-.status-badge {
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.85rem;
+  .filter-card .form-group {
+    margin-bottom: 8px;
+  }
+
+  .filter-card label {
     font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-right: 8px;
+  }
+
+  .filter-card .form-control {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    height: 36px;
+    min-width: 160px;
+  }
+
+  .filter-card .form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    outline: none;
+  }
+
+  .filter-card .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+    height: 36px;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+  }
+
+  .filter-card .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(13, 148, 136, 0.35);
+  }
+
+  .filter-card .btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    height: 36px;
+  }
+
+  .filter-card .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .filter-card .form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  /* ========================================================== */
+  /* COLLECTION TABLE CARD                                      */
+  /* ========================================================== */
+  .collection-table {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .collection-table:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .collection-table .card-header {
+    background: var(--primary-teal);
+    color: white;
+    padding: 14px 20px;
+    border-bottom: none;
+  }
+
+  .collection-table .card-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .collection-table .card-header h4 i {
+    margin-right: 8px;
+  }
+
+  .collection-table .card-body {
+    padding: 0;
+  }
+
+  .collection-table .card-footer {
+    background: var(--bg-page);
+    border-top: 1px solid var(--border-color);
+    padding: 12px 20px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .collection-table .table {
+    margin-bottom: 0;
+  }
+
+  .collection-table .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
     text-transform: uppercase;
-}
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
 
-.status-badge.draft {
-    background-color: #6c757d;
+  .collection-table .table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .collection-table .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .collection-table .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .collection-table .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .collection-table .table td strong {
+    color: var(--text-primary);
+  }
+
+  .collection-table .table .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* STATUS BADGES                                              */
+  /* ========================================================== */
+  .status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+  }
+
+  .status-badge.draft {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .status-badge.submitted {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .status-badge.under-review {
+    background: #fffbeb;
+    color: var(--secondary-gold);
+  }
+
+  .status-badge.approved {
+    background: #dcfce7;
+    color: var(--secondary-green);
+  }
+
+  .status-badge.rejected {
+    background: #fef2f2;
+    color: var(--secondary-red);
+  }
+
+  /* ========================================================== */
+  /* PROGRESS BAR                                               */
+  /* ========================================================== */
+  .progress {
+    height: 20px;
+    border-radius: 20px;
+    background: var(--bg-page);
+    min-width: 80px;
+    overflow: hidden;
+  }
+
+  .progress .progress-bar {
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    transition: width 0.6s ease;
     color: white;
-}
+  }
 
-.status-badge.submitted {
-    background-color: #007bff;
-    color: white;
-}
+  .progress .progress-bar.bg-success {
+    background: var(--secondary-green) !important;
+  }
 
-.status-badge.under-review {
-    background-color: #ffc107;
-    color: #000;
-}
+  .progress .progress-bar.bg-warning {
+    background: var(--secondary-gold) !important;
+    color: #78350f;
+  }
 
-.status-badge.approved {
-    background-color: #28a745;
-    color: white;
-}
+  .progress .progress-bar.bg-danger {
+    background: var(--secondary-red) !important;
+  }
 
-.status-badge.rejected {
-    background-color: #dc3545;
-    color: white;
-}
+  .progress .progress-bar.bg-teal {
+    background: var(--primary-teal) !important;
+  }
 
-.action-btn {
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .action-btn {
     margin: 2px;
-}
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .action-btn.btn-primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .action-btn.btn-primary:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+    color: white;
+  }
+
+  .action-btn.btn-info {
+    background: var(--secondary-blue);
+    color: white;
+  }
+
+  .action-btn.btn-info:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    color: white;
+  }
+
+  .action-btn.btn-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .action-btn.btn-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                 */
+  /* ========================================================== */
+  .pagination .page-link {
+    color: var(--primary-teal);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .filter-card {
+      padding: 14px 16px;
+    }
+
+    .filter-card .form-inline {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-card .form-group {
+      width: 100%;
+      margin-right: 0 !important;
+    }
+
+    .filter-card .form-control {
+      width: 100%;
+      min-width: unset;
+    }
+
+    .filter-card .btn-primary,
+    .filter-card .btn-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .collection-table .table thead th {
+      font-size: 0.6rem;
+      padding: 8px 10px;
+    }
+
+    .collection-table .table tbody td {
+      padding: 8px 10px;
+      font-size: 0.75rem;
+    }
+
+    .status-badge {
+      font-size: 0.6rem;
+      padding: 3px 10px;
+    }
+
+    .progress {
+      height: 18px;
+      min-width: 60px;
+    }
+
+    .progress .progress-bar {
+      font-size: 0.6rem;
+      line-height: 18px;
+    }
+
+    .action-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 10px;
+    }
+
+    .collection-table .card-header h4 {
+      font-size: 0.9rem;
+    }
+
+    .pagination .page-link {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .filter-card {
+      padding: 10px 12px;
+    }
+
+    .filter-card label {
+      font-size: 0.7rem;
+    }
+
+    .filter-card .form-control {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 4px 10px;
+    }
+
+    .filter-card .btn-primary,
+    .filter-card .btn-secondary {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 4px 12px;
+    }
+
+    .collection-table .table thead th {
+      font-size: 0.55rem;
+      padding: 6px 8px;
+    }
+
+    .collection-table .table tbody td {
+      padding: 6px 8px;
+      font-size: 0.7rem;
+    }
+
+    .status-badge {
+      font-size: 0.55rem;
+      padding: 2px 8px;
+    }
+
+    .action-btn {
+      width: 24px;
+      height: 24px;
+      font-size: 9px;
+    }
+
+    .progress {
+      height: 16px;
+      min-width: 50px;
+    }
+
+    .progress .progress-bar {
+      font-size: 0.55rem;
+      line-height: 16px;
+    }
+
+    .collection-table .card-header {
+      padding: 10px 14px;
+    }
+
+    .collection-table .card-header h4 {
+      font-size: 0.8rem;
+    }
+
+    .pagination .page-link {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -65,175 +666,212 @@
 {% endblock %}
 
 {% block content %}
-<!-- Filters -->
-<div class="filter-card">
-    <form method="GET" class="form-inline">
-        <div class="form-group mr-3 mb-2">
-            <label for="period" class="mr-2">Period:</label>
-            <select name="period" id="period" class="form-control">
-                <option value="">All Periods</option>
-                {% for period in periods %}
-                    <option value="{{ period.id }}" {% if selected_period == period.id|stringformat:"s" %}selected{% endif %}>
-                        {{ period.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="form-group mr-3 mb-2">
-            <label for="status" class="mr-2">Status:</label>
-            <select name="status" id="status" class="form-control">
-                <option value="">All Status</option>
-                <option value="DRAFT" {% if selected_status == 'DRAFT' %}selected{% endif %}>Draft</option>
-                <option value="SUBMITTED" {% if selected_status == 'SUBMITTED' %}selected{% endif %}>Submitted</option>
-                <option value="UNDER_REVIEW" {% if selected_status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
-                <option value="APPROVED" {% if selected_status == 'APPROVED' %}selected{% endif %}>Approved</option>
-                <option value="REJECTED" {% if selected_status == 'REJECTED' %}selected{% endif %}>Rejected</option>
-            </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary mb-2">
-            <i class="fas fa-filter mr-1"></i>Apply Filters
-        </button>
-        
-        <a href="{% url 'data_collection:list' %}" class="btn btn-secondary mb-2 ml-2">
-            <i class="fas fa-times mr-1"></i>Clear
-        </a>
-    </form>
+
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="dash-page-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <i class="fas fa-table"></i>
+    </div>
+    <div class="header-text">
+      <h1>Data Collection List</h1>
+      <p class="subtitle">View and manage all data collection entries across plants</p>
+    </div>
+  </div>
 </div>
 
-<!-- Collections Table -->
-<div class="ehs-card collection-table">
-    <div class="card-header bg-primary text-white">
-        <h4 class="card-title mb-0">
-            <i class="fas fa-table mr-2"></i>Data Collections
-        </h4>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Period</th>
-                        <th>Plant</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                        <th>Completion</th>
-                        <th>Reported By</th>
-                        <th>Submitted At</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for collection in page_obj %}
-                    <tr>
-                        <td>
-                            <strong>{{ collection.period.name }}</strong><br>
-                            <small class="text-muted">{{ collection.period.year }}-{{ collection.period.month|stringformat:"02d" }}</small>
-                        </td>
-                        <td>{{ collection.plant.name }}</td>
-                        <td>
-                            {{ collection.location.name }}<br>
-                            {% if collection.sublocation %}
-                                <small class="text-muted">{{ collection.sublocation.name }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="status-badge {{ collection.status|lower }}">
-                                {{ collection.get_status_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="progress" style="height: 20px; width: 100px;">
-                                <div class="progress-bar {% if collection.completion_percentage == 100 %}bg-success{% elif collection.completion_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                     role="progressbar" 
-                                     style="width: {{ collection.completion_percentage }}%;" 
-                                     aria-valuenow="{{ collection.completion_percentage }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
-                                    {{ collection.completion_percentage }}%
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            {{ collection.reported_by.get_full_name|default:collection.reported_by.username }}<br>
-                            <small class="text-muted">{{ collection.reported_at|date:"d M Y" }}</small>
-                        </td>
-                        <td>
-                            {% if collection.submitted_at %}
-                                {{ collection.submitted_at|date:"d M Y H:i" }}
-                            {% else %}
-                                <span class="text-muted">Not submitted</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if collection.status == 'DRAFT' or collection.status == 'REJECTED' %}
-                                <a href="{% url 'data_collection:edit_collection' collection.id %}" 
-                                   class="btn btn-sm btn-primary action-btn" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            {% else %}
-                                <a href="{% url 'data_collection:view_collection' collection.id %}" 
-                                   class="btn btn-sm btn-info action-btn" 
-                                   title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            {% endif %}
-                            
-                            {% if user.is_staff and collection.can_approve %}
-                                <a href="{% url 'data_collection:view_collection' collection.id %}" 
-                                   class="btn btn-sm btn-success action-btn" 
-                                   title="Review">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                            <p class="text-muted">No data collections found matching your filters.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- ========================================================== -->
+<!-- FILTER SECTION                                              -->
+<!-- ========================================================== -->
+<div class="filter-card">
+  <form method="GET" class="form-inline">
+    <div class="form-group mr-3 mb-2">
+      <label for="period" class="mr-2">Period:</label>
+      <select name="period" id="period" class="form-control">
+        <option value="">All Periods</option>
+        {% for period in periods %}
+          <option value="{{ period.id }}" {% if selected_period == period.id|stringformat:"s" %}selected{% endif %}>
+            {{ period.name }}
+          </option>
+        {% endfor %}
+      </select>
     </div>
     
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-    <div class="card-footer">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mb-0">
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">First</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Previous</a>
-                    </li>
-                {% endif %}
-                
-                <li class="page-item active">
-                    <span class="page-link">
-                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                    </span>
-                </li>
-                
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Next</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Last</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
+    <div class="form-group mr-3 mb-2">
+      <label for="status" class="mr-2">Status:</label>
+      <select name="status" id="status" class="form-control">
+        <option value="">All Status</option>
+        <option value="DRAFT" {% if selected_status == 'DRAFT' %}selected{% endif %}>Draft</option>
+        <option value="SUBMITTED" {% if selected_status == 'SUBMITTED' %}selected{% endif %}>Submitted</option>
+        <option value="UNDER_REVIEW" {% if selected_status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+        <option value="APPROVED" {% if selected_status == 'APPROVED' %}selected{% endif %}>Approved</option>
+        <option value="REJECTED" {% if selected_status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+      </select>
     </div>
-    {% endif %}
+    
+    <button type="submit" class="btn btn-primary mb-2">
+      <i class="fas fa-filter mr-1"></i>Apply Filters
+    </button>
+    
+    <a href="{% url 'data_collection:list' %}" class="btn btn-secondary mb-2 ml-2">
+      <i class="fas fa-times mr-1"></i>Clear
+    </a>
+  </form>
 </div>
+
+<!-- ========================================================== -->
+<!-- COLLECTIONS TABLE                                          -->
+<!-- ========================================================== -->
+<div class="collection-table">
+  <div class="card-header">
+    <h4>
+      <i class="fas fa-table mr-2"></i>Data Collections
+    </h4>
+  </div>
+  
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Plant</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Completion</th>
+            <th>Reported By</th>
+            <th>Submitted At</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for collection in page_obj %}
+          <tr>
+            <td>
+              <strong>{{ collection.period.name }}</strong><br>
+              <small class="text-muted">{{ collection.period.year }}-{{ collection.period.month|stringformat:"02d" }}</small>
+            </td>
+            <td>{{ collection.plant.name }}</td>
+            <td>
+              {{ collection.location.name }}<br>
+              {% if collection.sublocation %}
+                <small class="text-muted">{{ collection.sublocation.name }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="status-badge {{ collection.status|lower }}">
+                {{ collection.get_status_display }}
+              </span>
+            </td>
+            <td>
+              <div class="progress">
+                <div class="progress-bar 
+                  {% if collection.completion_percentage == 100 %}bg-success
+                  {% elif collection.completion_percentage >= 50 %}bg-warning
+                  {% else %}bg-danger{% endif %}" 
+                  role="progressbar" 
+                  style="width: {{ collection.completion_percentage }}%;" 
+                  aria-valuenow="{{ collection.completion_percentage }}" 
+                  aria-valuemin="0" 
+                  aria-valuemax="100">
+                  {{ collection.completion_percentage }}%
+                </div>
+              </div>
+            </td>
+            <td>
+              {{ collection.reported_by.get_full_name|default:collection.reported_by.username }}<br>
+              <small class="text-muted">{{ collection.reported_at|date:"d M Y" }}</small>
+            </td>
+            <td>
+              {% if collection.submitted_at %}
+                {{ collection.submitted_at|date:"d M Y H:i" }}
+              {% else %}
+                <span class="text-muted">Not submitted</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if collection.status == 'DRAFT' or collection.status == 'REJECTED' %}
+                <a href="{% url 'data_collection:edit_collection' collection.id %}" 
+                   class="action-btn btn-primary" 
+                   title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+              {% else %}
+                <a href="{% url 'data_collection:view_collection' collection.id %}" 
+                   class="action-btn btn-info" 
+                   title="View">
+                  <i class="fas fa-eye"></i>
+                </a>
+              {% endif %}
+              
+              {% if user.is_staff and collection.can_approve %}
+                <a href="{% url 'data_collection:view_collection' collection.id %}" 
+                   class="action-btn btn-success" 
+                   title="Review">
+                  <i class="fas fa-check"></i>
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No data collections found matching your filters.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- ========================================================== -->
+  <!-- PAGINATION                                                 -->
+  <!-- ========================================================== -->
+  {% if page_obj.has_other_pages %}
+  <div class="card-footer">
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+              <i class="fas fa-angle-double-left"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+              <i class="fas fa-angle-left"></i>
+            </a>
+          </li>
+        {% endif %}
+        
+        <li class="page-item active">
+          <span class="page-link">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+              <i class="fas fa-angle-double-right"></i>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}

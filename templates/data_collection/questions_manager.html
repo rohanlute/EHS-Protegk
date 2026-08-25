@@ -1,1134 +1,1416 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}Environmental Data{% endblock %}
-{% block page_title %}{% endblock %}
+
+{% block title %}Environmental Questions Manager | EHS-360{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'environmental:unit-manager' %}">Manage Units</a></li>
 <li class="breadcrumb-item active">Manage Questions</li>
 {% endblock %}
+
 {% block extra_css %}
-
 <style>
-:root {
-    --primary-color: #2563eb;
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --info-color: #3b82f6;
-    --bg-light: #f8fafc;
-    --border-color: #e2e8f0;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --radius: 0.5rem;
-}
+  /* ===== ENVIRONMENTAL QUESTIONS MANAGER - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.questions-manager {
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* QUESTIONS MANAGER CONTAINER                                */
+  /* ========================================================== */
+  .questions-manager {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1.5rem;
-    background: var(--bg-light);
+    padding: 0;
+    background: var(--bg-page);
     min-height: calc(100vh - 100px);
-}
+  }
 
-.header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
-    margin-bottom: 2rem;
-    padding: 2rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
-    color: white;
-}
-
-.header h2 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.875rem;
-    font-weight: 700;
-}
-
-.header p {
-    margin: 0;
-    opacity: 0.95;
-}
-
-.questions-list {
-    display: grid;
-    gap: 2rem;
-}
-
-.add-question-form {
-    background: white;
-    padding: 2rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
+  /* ========================================================== */
+  /* ADD QUESTION FORM                                          */
+  /* ========================================================== */
+  .add-question-form {
+    background: var(--bg-card);
+    padding: 18px 20px;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
     border: 1px solid var(--border-color);
-}
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+  }
 
-.add-question-form h3 {
+  .add-question-form:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.12);
+  }
+
+  .add-question-form h3 {
     margin-top: 0;
     color: var(--text-primary);
-    border-bottom: 3px solid var(--primary-color);
-    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--primary-teal);
+    padding-bottom: 0.6rem;
     font-weight: 700;
-}
+    font-size: 1.1rem;
+  }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
+  .add-question-form h3 i {
+    color: var(--primary-teal);
+    margin-right: 8px;
+  }
 
-.form-group label {
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
     font-weight: 600;
     color: var(--text-primary);
-}
+    font-size: 0.85rem;
+  }
 
-.form-group small {
+  .form-group small {
     display: block;
-    margin-top: 0.375rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
 
-.required {
-    color: var(--danger-color);
-}
+  .required {
+    color: var(--secondary-red);
+  }
 
-.form-control {
+  .form-control {
     border: 2px solid var(--border-color);
-    border-radius: 6px;
-    padding: 10px 15px;
-    height: 45px;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    height: 38px;
     transition: all 0.3s ease;
-}
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    width: 100%;
+  }
 
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  .form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
     outline: none;
-}
+  }
 
-.units-container {
+  textarea.form-control {
+    height: auto;
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  /* ========================================================== */
+  /* UNITS CONTAINER                                            */
+  /* ========================================================== */
+  .units-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
-    background: var(--bg-light);
-    border-radius: 0.375rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
     max-height: 250px;
     overflow-y: auto;
     border: 2px solid var(--border-color);
-}
+  }
 
-.unit-checkbox {
+  .units-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .units-container::-webkit-scrollbar-track {
+    background: var(--bg-page);
+    border-radius: 10px;
+  }
+
+  .units-container::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 10px;
+  }
+
+  .unit-checkbox {
     display: flex;
     align-items: center;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid var(--border-color);
-}
+    font-size: 0.8rem;
+  }
 
-.unit-checkbox:hover {
-    background: #eff6ff;
-    border-color: var(--primary-color);
-}
+  .unit-checkbox:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+  }
 
-.unit-checkbox input[type="checkbox"] {
+  .unit-checkbox input[type="checkbox"] {
     margin-right: 0.5rem;
     cursor: pointer;
-    width: 18px;
-    height: 18px;
-}
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-teal);
+  }
 
-.empty {
-    padding: 1.5rem;
+  .empty {
+    padding: 1rem;
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-style: italic;
-}
+    font-size: 0.85rem;
+  }
 
-.btn {
-    padding: 0.75rem 1.5rem;
+  .loading {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .loading i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-success-custom {
+    background: linear-gradient(135deg, var(--secondary-green), #16a34a);
     border: none;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    font-size: 0.95rem;
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.3s;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(34, 197, 94, 0.2);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-}
+    gap: 6px;
+    cursor: pointer;
+  }
 
-.btn-success {
-    background: var(--success-color);
-    color: white;
-}
-
-.btn-success:hover {
-    background: #059669;
+  .btn-success-custom:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
+    box-shadow: 0 5px 18px rgba(34, 197, 94, 0.35);
+    color: white;
+  }
 
-.btn-success:disabled {
-    background: #9ca3af;
+  .btn-success-custom:disabled {
+    background: var(--text-muted);
     cursor: not-allowed;
     transform: none;
-}
+    box-shadow: none;
+  }
 
-/* ==================== TABLE STYLES ==================== */
-.existing-questions {
-    background: white;
-    padding: 0;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
+  .btn-secondary-custom {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .btn-secondary-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-sm-custom {
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+  }
+
+  .btn-sm-custom.btn-info {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.15);
+  }
+
+  .btn-sm-custom.btn-info:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-sm-custom.btn-danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--secondary-red);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+  }
+
+  .btn-sm-custom.btn-danger:hover {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* EXISTING QUESTIONS TABLE                                   */
+  /* ========================================================== */
+  .existing-questions {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
     border: 1px solid var(--border-color);
     overflow: hidden;
-}
+    transition: all 0.3s ease;
+  }
 
-.table-header {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    padding: 1.5rem 2rem;
-    border-bottom: 2px solid var(--border-color);
-}
+  .existing-questions:hover {
+    box-shadow: var(--shadow-hover);
+  }
 
-.table-header h3 {
+  .table-header {
+    background: var(--primary-teal-light);
+    padding: 12px 20px;
+    border-bottom: 2px solid var(--primary-teal);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .table-header h3 {
     margin: 0;
     color: var(--text-primary);
     font-weight: 700;
+    font-size: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-}
+    gap: 0.5rem;
+  }
 
-.table-wrapper {
+  .table-header h3 .badge {
+    background: var(--primary-teal);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .table-wrapper {
     overflow-x: auto;
-}
+  }
 
-.questions-table {
+  /* ========================================================== */
+  /* QUESTIONS TABLE                                            */
+  /* ========================================================== */
+  .questions-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
-}
+    font-size: 0.85rem;
+    min-width: 900px;
+  }
 
-.questions-table thead {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  .questions-table thead {
+    background: var(--primary-teal);
     color: white;
-}
+  }
 
-.questions-table th {
-    padding: 1rem;
+  .questions-table th {
+    padding: 8px 12px;
     text-align: left;
     font-weight: 600;
     white-space: nowrap;
-    border-bottom: 2px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.questions-table th:first-child {
-    padding-left: 2rem;
-}
-
-.questions-table th:last-child {
-    padding-right: 2rem;
-}
-
-.questions-table tbody tr {
-    border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s;
-}
-
-.questions-table tbody tr:hover {
-    background: #f8fafc;
-}
-
-.questions-table tbody tr:last-child {
     border-bottom: none;
-}
-
-.questions-table td {
-    padding: 1rem;
-    vertical-align: top;
-}
-
-.questions-table td:first-child {
-    padding-left: 2rem;
-}
-
-.questions-table td:last-child {
-    padding-right: 2rem;
-}
-
-.question-text {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.source-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-}
+  }
 
-.source-manual {
-    background: #dbeafe;
-    color: #1e40af;
-}
+  .questions-table th:first-child {
+    padding-left: 16px;
+  }
 
-.source-auto {
-    background: #d1fae5;
-    color: #065f46;
-}
+  .questions-table th:last-child {
+    padding-right: 16px;
+  }
 
-.filter-tag {
-    display: inline-block;
-    padding: 0.375rem 0.75rem;
-    background: #fef3c7;
-    color: #92400e;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    font-family: 'Courier New', monospace;
-}
+  .questions-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+  }
 
-.unit-info {
+  .questions-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .questions-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .questions-table td {
+    padding: 8px 12px;
+    vertical-align: middle;
     color: var(--text-secondary);
-    font-size: 0.875rem;
-}
+  }
 
-.default-unit {
+  .questions-table td:first-child {
+    padding-left: 16px;
+  }
+
+  .questions-table td:last-child {
+    padding-right: 16px;
+  }
+
+  .question-text {
     font-weight: 600;
-    color: var(--primary-color);
-}
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
 
-.unit-list {
+  /* ========================================================== */
+  /* SOURCE BADGE                                               */
+  /* ========================================================== */
+  .source-badge {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .source-manual {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .source-auto {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  /* ========================================================== */
+  /* FILTER TAG                                                 */
+  /* ========================================================== */
+  .filter-tag {
+    display: inline-block;
+    padding: 2px 12px;
+    background: #fffbeb;
+    color: #92400e;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-family: 'Courier New', monospace;
+    border: 1px solid #fcd34d;
+  }
+
+  .filter-tag i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                     */
+  /* ========================================================== */
+  .alert {
+    padding: 10px 14px;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    border-left: 4px solid;
+  }
+
+  .alert-info {
+    background: var(--primary-teal-light);
+    border-left-color: var(--primary-teal);
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
+  }
 
-.no-data {
+  .alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-success {
+    background: rgba(34, 197, 94, 0.08);
+    border-left-color: var(--secondary-green);
+    color: #065f46;
+  }
+
+  .alert-warning {
+    background: #fffbeb;
+    border-left-color: var(--secondary-gold);
+    color: #92400e;
+  }
+
+  .alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    border-left-color: var(--secondary-red);
+    color: #991b1b;
+  }
+
+  /* ========================================================== */
+  /* NO DATA                                                    */
+  /* ========================================================== */
+  .no-data {
     text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-}
+    padding: 2.5rem;
+    color: var(--text-muted);
+  }
 
-.no-data i {
-    font-size: 3rem;
+  .no-data i {
+    font-size: 2.5rem;
     opacity: 0.3;
     display: block;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}
+    margin-bottom: 0.5rem;
+    color: var(--primary-teal);
+  }
 
-.alert {
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.95rem;
-    border-left: 4px solid;
-}
-
-.alert-info {
-    background: #dbeafe;
-    border-left-color: var(--info-color);
-    color: #1e40af;
-}
-
-.alert-success {
-    background: #d1fae5;
-    border-left-color: var(--success-color);
-    color: #065f46;
-}
-
-.alert-warning {
-    background: #fef3c7;
-    border-left-color: var(--warning-color);
-    color: #92400e;
-}
-
-.alert-danger {
-    background: #fee2e2;
-    border-left-color: var(--danger-color);
-    color: #991b1b;
-}
-
-.filter-separator {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 2px dashed var(--border-color);
-}
-
-.loading {
-    text-align: center;
-    padding: 1rem;
+  .no-data h4 {
     color: var(--text-secondary);
-}
-
-.badge {
-    display: inline-block;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.875rem;
     font-weight: 600;
-    border-radius: 0.375rem;
-    background: var(--primary-color);
-    color: white;
-}
+    margin: 0;
+    font-size: 1rem;
+  }
 
-@media (max-width: 768px) {
-    .questions-manager {
-        padding: 1rem;
+  /* ========================================================== */
+  /* FILTER SEPARATOR                                           */
+  /* ========================================================== */
+  .filter-separator {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px dashed var(--border-color);
+  }
+
+  /* ========================================================== */
+  /* SORTABLE GHOST                                             */
+  /* ========================================================== */
+  .sortable-ghost {
+    opacity: 0.5;
+    background: var(--primary-teal-light) !important;
+  }
+
+  .drag-handle {
+    color: var(--text-muted);
+    cursor: grab;
+    font-size: 0.9rem;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
-    
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
     .add-question-form {
-        padding: 1.25rem;
+      padding: 14px 16px;
     }
-    
+
+    .add-question-form h3 {
+      font-size: 1rem;
+    }
+
     .units-container {
-        grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
     }
-    
+
+    .table-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
     .questions-table {
-        font-size: 0.875rem;
+      font-size: 0.75rem;
+      min-width: 700px;
     }
-    
+
     .questions-table th,
     .questions-table td {
-        padding: 0.75rem 0.5rem;
+      padding: 6px 8px;
     }
-    
+
     .questions-table th:first-child,
     .questions-table td:first-child {
-        padding-left: 1rem;
+      padding-left: 10px;
     }
-    
+
     .questions-table th:last-child,
     .questions-table td:last-child {
-        padding-right: 1rem;
+      padding-right: 10px;
     }
-}
 
-.sortable-ghost {
-    opacity: 0.5;
-    background: #dbeafe !important;
-}
+    .action-buttons {
+      flex-direction: column;
+    }
 
-.drag-handle {
-    color: #64748b;
-    cursor: grab;
-}
+    .action-buttons .btn-success-custom,
+    .action-buttons .btn-secondary-custom {
+      width: 100%;
+      justify-content: center;
+    }
 
-.drag-handle:active {
-    cursor: grabbing;
-}
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .add-question-form {
+      padding: 10px 12px;
+    }
+
+    .add-question-form h3 {
+      font-size: 0.9rem;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+    }
+
+    .form-control {
+      font-size: 0.75rem;
+      height: 34px;
+      padding: 4px 8px;
+    }
+
+    .units-container {
+      grid-template-columns: 1fr;
+    }
+
+    .unit-checkbox {
+      font-size: 0.75rem;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .questions-table {
+      font-size: 0.65rem;
+      min-width: 550px;
+    }
+
+    .questions-table th,
+    .questions-table td {
+      padding: 4px 6px;
+    }
+
+    .questions-table th {
+      font-size: 0.6rem;
+    }
+
+    .source-badge {
+      font-size: 0.5rem;
+      padding: 1px 8px;
+    }
+
+    .filter-tag {
+      font-size: 0.6rem;
+      padding: 1px 8px;
+    }
+
+    .btn-success-custom,
+    .btn-secondary-custom,
+    .btn-primary-custom {
+      font-size: 0.75rem;
+      padding: 4px 12px;
+    }
+
+    .btn-sm-custom {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+    }
+
+    .table-header h3 {
+      font-size: 0.85rem;
+    }
+
+    .no-data i {
+      font-size: 2rem;
+    }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
 <div class="questions-manager">
-<div class="header">
-    <h2><i class="fas fa-question-circle"></i> Environmental Questions Manager</h2>
-    <p>Configure environmental indicators for data collection</p>
-</div>
 
-<!-- Success/Error Messages -->
-<!-- {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-question-circle"></i>
+      </div>
+      <div class="header-text">
+        <h1>Environmental Questions Manager</h1>
+        <p class="subtitle">Configure environmental indicators for data collection</p>
+      </div>
     </div>
-    {% endfor %}
-{% endif %} -->
+  </div>
 
-<div class="questions-list">
+  <!-- ========================================================== -->
+  <!-- ADD / EDIT QUESTION FORM                                   -->
+  <!-- ========================================================== -->
+  <div class="add-question-form">
+    <h3>
+      {% if editing_question %}
+        <i class="fas fa-edit"></i> Edit Question
+      {% else %}
+        <i class="fas fa-plus-circle"></i> Add New Question
+      {% endif %}
+    </h3>
 
-    <!-- ================= ADD / EDIT QUESTION FORM ================= -->
-    <div class="add-question-form">
+    <form method="post"
+          action="{% if editing_question %}{% url 'environmental:questions-manager-edit' editing_question.id %}{% else %}{% url 'environmental:questions-manager' %}{% endif %}"
+          id="addQuestionForm">
+      {% csrf_token %}
+
+      <input type="hidden" name="action" value="{% if editing_question %}update{% else %}add{% endif %}">
+      {% if editing_question %}
+        <input type="hidden" name="question_id" value="{{ editing_question.id }}">
+      {% endif %}
+
+      <!-- QUESTION TEXT -->
+      <div class="form-group">
+        <label>Question Text <span class="required">*</span></label>
+        <input type="text"
+               name="question_text"
+               class="form-control"
+               required
+               value="{{ editing_question.question_text|default:'' }}">
+      </div>
+
+      <!-- SOURCE TYPE -->
+      <div class="form-group">
+        <label>Source Type <span class="required">*</span></label>
+        <select name="source_type" id="sourceType" class="form-control" required>
+          <option value="MANUAL" {% if editing_question.source_type == 'MANUAL' %}selected{% endif %}>Manual Entry</option>
+          <option value="INCIDENT" {% if editing_question.source_type == 'INCIDENT' %}selected{% endif %}>Incident Module</option>
+          <option value="HAZARD" {% if editing_question.source_type == 'HAZARD' %}selected{% endif %}>Hazard Module</option>
+          <option value="INSPECTION" {% if editing_question.source_type == 'INSPECTION' %}selected{% endif %}>Inspection Module</option>
+        </select>
+      </div>
+
+      <!-- FILTER CONFIGURATION (for auto-calculated questions) -->
+      <div id="filterConfigSection" style="display:none;">
+
+        <!-- PRIMARY FILTER -->
+        <div class="form-group">
+          <label>Primary Filter Field <span class="required">*</span></label>
+          <select name="filter_field" id="filterField" class="form-control">
+            <option value="">-- Select Field to Filter --</option>
+          </select>
+          <small>Choose which field to filter by (e.g., incident_type, hazard_type)</small>
+        </div>
+
+        <div class="form-group" id="filterValueSection" style="display:none;">
+          <label>Primary Filter Value <span class="required">*</span></label>
+          <select name="filter_value" id="filterValue" class="form-control">
+            <option value="">-- Select Value --</option>
+          </select>
+          <small>Select the specific value to count</small>
+        </div>
+
+        <!-- SECONDARY FILTER -->
+        <div class="form-group filter-separator">
+          <label>Secondary Filter Field <span style="color: var(--text-muted);">(Optional)</span></label>
+          <select name="filter_field_2" id="filterField2" class="form-control">
+            <option value="">-- No Secondary Filter --</option>
+          </select>
+          <small>Add an additional filter condition (optional)</small>
+        </div>
+
+        <div class="form-group" id="filterValueSection2" style="display:none;">
+          <label>Secondary Filter Value</label>
+          <select name="filter_value_2" id="filterValue2" class="form-control">
+            <option value="">-- Select Value --</option>
+          </select>
+          <small>Select the secondary filter value</small>
+        </div>
+
+        <div class="alert alert-info">
+          <strong><i class="fas fa-lightbulb"></i> Examples:</strong><br>
+          <strong>Incidents:</strong><br>
+          • <strong>All Fatalities:</strong> incident_type = FATALITY<br>
+          • <strong>LTI Reported:</strong> incident_type = LTI + status = REPORTED<br>
+          • <strong>Closed MTC Cases:</strong> incident_type = MTC + status = CLOSED<br>
+          <strong>Hazards:</strong><br>
+          • <strong>High Severity Hazards:</strong> severity = HIGH<br>
+          • <strong>Open Chemical Hazards:</strong> hazard_type = CHEMICAL + status = OPEN<br>
+          <strong>Inspections:</strong><br>
+          • <strong>Completed Fire Inspections:</strong> template = Fire Safety + status = COMPLETED<br>
+          • <strong>Monthly Inspections:</strong> inspection_type = MONTHLY<br>
+          • <strong>Overdue Inspections:</strong> status = OVERDUE
+        </div>
+      </div>
+
+      <!-- UNIT CATEGORY (only for MANUAL) -->
+      <div class="form-group" id="unitCategorySection">
+        <label>Unit Category <span class="required">*</span></label>
+        <select name="category_id" id="categorySelect" class="form-control">
+          <option value="">-- Select Unit Category --</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}"
+              {% if editing_question.category_id == cat.id %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- UNITS -->
+      <div id="unitsWrapper" style="display:none;">
+        <div class="form-group">
+          <label>Available Units</label>
+          <div class="units-container" id="unitsCheckboxContainer"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Default Unit</label>
+          <select name="default_unit_id" id="defaultUnitSelect" class="form-control"></select>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button type="submit" class="btn-success-custom" id="submitBtn">
+          {% if editing_question %}
+            <i class="fas fa-save"></i> Update Question
+          {% else %}
+            <i class="fas fa-plus-circle"></i> Add Question
+          {% endif %}
+        </button>
+
+        {% if editing_question %}
+          <a href="{% url 'environmental:questions-manager' %}" class="btn-secondary-custom">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- EXISTING QUESTIONS TABLE                                   -->
+  <!-- ========================================================== -->
+  <div class="existing-questions">
+    <div class="table-header">
+      <div class="d-flex justify-content-between align-items-center" style="width:100%;flex-wrap:wrap;gap:8px;">
         <h3>
-            {% if editing_question %}
-                <i class="fas fa-edit"></i> Edit Question
-            {% else %}
-                <i class="fas fa-plus-circle"></i> Add New Question
-            {% endif %}
+          <i class="fas fa-table"></i> Existing Questions
+          <span class="badge">{{ questions|length }}</span>
         </h3>
 
-        <form method="post"
-              action="{% if editing_question %}{% url 'environmental:questions-manager-edit' editing_question.id %}{% else %}{% url 'environmental:questions-manager' %}{% endif %}"
-              id="addQuestionForm">
-            {% csrf_token %}
-
-            <input type="hidden" name="action" value="{% if editing_question %}update{% else %}add{% endif %}">
-            {% if editing_question %}
-                <input type="hidden" name="question_id" value="{{ editing_question.id }}">
-            {% endif %}
-
-            <!-- QUESTION TEXT -->
-            <div class="form-group">
-                <label>Question Text <span class="required">*</span></label>
-                <input type="text"
-                    name="question_text"
-                    class="form-control"
-                    required
-                    value="{{ editing_question.question_text|default:'' }}">
-            </div>
-
-            <!-- SOURCE TYPE -->
-            <div class="form-group">
-                <label>Source Type <span class="required">*</span></label>
-                <select name="source_type" id="sourceType" class="form-control" required>
-                    <option value="MANUAL" {% if editing_question.source_type == 'MANUAL' %}selected{% endif %}>Manual Entry</option>
-                    <option value="INCIDENT" {% if editing_question.source_type == 'INCIDENT' %}selected{% endif %}>Incident Module</option>
-                    <option value="HAZARD" {% if editing_question.source_type == 'HAZARD' %}selected{% endif %}>Hazard Module</option>
-                    <option value="INSPECTION" {% if editing_question.source_type == 'INSPECTION' %}selected{% endif %}>Inspection Module</option>
-
-                </select>
-            </div>
-
-            <!-- FILTER CONFIGURATION (for auto-calculated questions) -->
-            <div id="filterConfigSection" style="display:none;">
-                
-                <!-- PRIMARY FILTER -->
-                <div class="form-group">
-                    <label>Primary Filter Field <span class="required">*</span></label>
-                    <select name="filter_field" id="filterField" class="form-control">
-                        <option value="">-- Select Field to Filter --</option>
-                    </select>
-                    <small>Choose which field to filter by (e.g., incident_type, hazard_type)</small>
-                </div>
-
-                <div class="form-group" id="filterValueSection" style="display:none;">
-                    <label>Primary Filter Value <span class="required">*</span></label>
-                    <select name="filter_value" id="filterValue" class="form-control">
-                        <option value="">-- Select Value --</option>
-                    </select>
-                    <small>Select the specific value to count</small>
-                </div>
-
-                <!-- SECONDARY FILTER -->
-                <div class="form-group filter-separator">
-                    <label>Secondary Filter Field <span style="color: #64748b;">(Optional)</span></label>
-                    <select name="filter_field_2" id="filterField2" class="form-control">
-                        <option value="">-- No Secondary Filter --</option>
-                    </select>
-                    <small>Add an additional filter condition (optional)</small>
-                </div>
-
-                <div class="form-group" id="filterValueSection2" style="display:none;">
-                    <label>Secondary Filter Value</label>
-                    <select name="filter_value_2" id="filterValue2" class="form-control">
-                        <option value="">-- Select Value --</option>
-                    </select>
-                    <small>Select the secondary filter value</small>
-                </div>
-
-                <div class="alert alert-info">
-                    <strong><i class="fas fa-lightbulb"></i> Examples:</strong><br>
-                    <!-- Incident Examples -->
-                    <strong>Incidents:</strong><br>
-                    • <strong>All Fatalities:</strong> incident_type = FATALITY<br>
-                    • <strong>LTI Reported:</strong> incident_type = LTI + status = REPORTED<br>
-                    • <strong>Closed MTC Cases:</strong> incident_type = MTC + status = CLOSED<br>
-                    
-                    <!-- Hazard Examples -->
-                    <strong>Hazards:</strong><br>
-                    • <strong>High Severity Hazards:</strong> severity = HIGH<br>
-                    • <strong>Open Chemical Hazards:</strong> hazard_type = CHEMICAL + status = OPEN<br>
-                    
-                    <!-- ⬇️ ADD INSPECTION EXAMPLES -->
-                    <strong>Inspections:</strong><br>
-                    • <strong>Completed Fire Inspections:</strong> template = Fire Safety + status = COMPLETED<br>
-                    • <strong>Monthly Inspections:</strong> inspection_type = MONTHLY<br>
-                    • <strong>Overdue Inspections:</strong> status = OVERDUE
-                                </div>
-            </div>
-
-            <!-- UNIT CATEGORY (only for MANUAL) -->
-            <div class="form-group" id="unitCategorySection">
-                <label>Unit Category <span class="required">*</span></label>
-                <select name="category_id" id="categorySelect" class="form-control">
-                    <option value="">-- Select Unit Category --</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.id }}"
-                          {% if editing_question.category_id == cat.id %}selected{% endif %}>
-                          {{ cat.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- UNITS (AJAX stays same) -->
-            <div id="unitsWrapper" style="display:none;">
-                <div class="form-group">
-                    <label>Available Units</label>
-                    <div class="units-container" id="unitsCheckboxContainer"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Default Unit</label>
-                    <select name="default_unit_id" id="defaultUnitSelect" class="form-control"></select>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button type="submit" class="btn btn-success">
-                    {% if editing_question %}
-                        <i class="fas fa-save"></i> Update Question
-                    {% else %}
-                        <i class="fas fa-plus-circle"></i> Add Question
-                    {% endif %}
-                </button>
-
-                {% if editing_question %}
-                    <a href="{% url 'environmental:questions-manager' %}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-<!-- ================= EXISTING QUESTIONS TABLE ================= -->
-<div class="existing-questions">
-    <div class="table-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3>
-                <i class="fas fa-table"></i> Existing Questions
-                <span class="badge">{{ questions|length }}</span>
-            </h3>
-
-            <button type="button" class="btn btn-primary" id="editSequenceBtn">
-                <i class="fas fa-sort"></i> Save Sequence
-            </button>
-        </div>
+        <button type="button" class="btn-primary-custom" id="editSequenceBtn">
+          <i class="fas fa-sort"></i> Save Sequence
+        </button>
+      </div>
     </div>
 
-<div class="table-wrapper">
-
-    {% if questions %}
-    <table class="questions-table">
+    <div class="table-wrapper">
+      {% if questions %}
+      <table class="questions-table">
         <thead>
-            <tr>
-                <th width="5%">Move</th>
-                <th style="width: 5%;">#</th>
-                <th style="width: 25%;">Question</th>
-                <th style="width: 10%;">Source</th>
-                <th style="width: 25%;">Filter / Configuration</th>
-                <th style="width: 15%;">Category</th>
-                <th style="width: 15%;">Units</th>
-                <th style="width: 5%;">Actions</th>
-            </tr>
+          <tr>
+            <th width="5%">Move</th>
+            <th style="width: 5%;">#</th>
+            <th style="width: 25%;">Question</th>
+            <th style="width: 10%;">Source</th>
+            <th style="width: 25%;">Filter / Configuration</th>
+            <th style="width: 15%;">Category</th>
+            <th style="width: 10%;">Units</th>
+            <th style="width: 5%;">Actions</th>
+          </tr>
         </thead>
-
         <tbody id="sortableQuestions">
-        {% for item in questions %}
-            <tr data-question-id="{{ item.id }}">
-                <td>
-                    <i class="fas fa-grip-vertical drag-handle" style="cursor:move;"></i>
-                </td>
-                <td>{{ forloop.counter }}</td>
+          {% for item in questions %}
+          <tr data-question-id="{{ item.id }}">
+            <td>
+              <i class="fas fa-grip-vertical drag-handle"></i>
+            </td>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <div class="question-text">{{ item.question }}</div>
+            </td>
+            <td>
+              <span class="source-badge {% if item.source_type == 'MANUAL' %}source-manual{% else %}source-auto{% endif %}">
+                {{ item.source_type }}
+              </span>
+            </td>
+            <td>
+              {% if item.filter_description %}
+                <span class="filter-tag">
+                  <i class="fas fa-filter"></i>
+                  {{ item.filter_description }}
+                </span>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {{ item.category_name|default:"—" }}
+            </td>
+            <td>
+              {% if item.default_unit_name %}
+                <strong style="color:var(--text-primary);">{{ item.default_unit_name }}</strong>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'environmental:questions-manager-edit' item.id %}"
+                 class="btn-sm-custom btn-info" title="Edit">
+                <i class="fas fa-edit"></i>
+              </a>
 
-                <td>
-                    <div class="question-text">{{ item.question }}</div>
-                </td>
-
-                <td>
-                    <span class="source-badge {% if item.source_type == 'MANUAL' %}source-manual{% else %}source-auto{% endif %}">
-                        {{ item.source_type }}
-                    </span>
-                </td>
-
-                <!-- FILTER / CONFIGURATION -->
-                <td>
-                    {% if item.filter_description %}
-                        <span class="filter-tag">
-                            <i class="fas fa-filter"></i>
-                            {{ item.filter_description }}
-                        </span>
-                    {% else %}
-                        <span style="color:#9ca3af;">—</span>
-                    {% endif %}
-                </td>
-
-                <td>
-                    {{ item.category_name|default:"—" }}
-                </td>
-
-                <td>
-                    {% if item.default_unit_name %}
-                        <strong>{{ item.default_unit_name }}</strong>
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-
-                <!-- ACTIONS -->
-                <td>
-                    <a href="{% url 'environmental:questions-manager-edit' item.id %}"
-                       class="btn btn-sm btn-info" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </a>
-
-                    <form method="post"
-                          action="{% url 'environmental:questions-manager' %}"
-                          style="display:inline;"
-                          onsubmit="return confirm('Are you sure you want to delete this question?');">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="question_id" value="{{ item.id }}">
-                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
+              <form method="post"
+                    action="{% url 'environmental:questions-manager' %}"
+                    style="display:inline;"
+                    onsubmit="return confirm('Are you sure you want to delete this question?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="question_id" value="{{ item.id }}">
+                <button type="submit" class="btn-sm-custom btn-danger" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
-
-    {% else %}
-        <div class="no-data">
-            <i class="fas fa-inbox"></i>
-            <h4>No Questions Configured</h4>
-        </div>
-    {% endif %}
+      </table>
+      {% else %}
+      <div class="no-data">
+        <i class="fas fa-inbox"></i>
+        <h4>No Questions Configured</h4>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 
 </div>
-</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Element References ---
-    const sourceType = document.getElementById('sourceType');
-    const filterConfigSection = document.getElementById('filterConfigSection');
-    const filterField = document.getElementById('filterField');
-    const filterValue = document.getElementById('filterValue');
-    const filterValueSection = document.getElementById('filterValueSection');
-    const filterField2 = document.getElementById('filterField2');
-    const filterValue2 = document.getElementById('filterValue2');
-    const filterValueSection2 = document.getElementById('filterValueSection2');
-    const unitCategorySection = document.getElementById('unitCategorySection');
-    const categorySelect = document.getElementById('categorySelect');
-    const unitsWrapper = document.getElementById('unitsWrapper');
-    const unitsCheckboxContainer = document.getElementById('unitsCheckboxContainer');
-    const defaultUnitSelect = document.getElementById('defaultUnitSelect');
+  // --- Element References ---
+  const sourceType = document.getElementById('sourceType');
+  const filterConfigSection = document.getElementById('filterConfigSection');
+  const filterField = document.getElementById('filterField');
+  const filterValue = document.getElementById('filterValue');
+  const filterValueSection = document.getElementById('filterValueSection');
+  const filterField2 = document.getElementById('filterField2');
+  const filterValue2 = document.getElementById('filterValue2');
+  const filterValueSection2 = document.getElementById('filterValueSection2');
+  const unitCategorySection = document.getElementById('unitCategorySection');
+  const categorySelect = document.getElementById('categorySelect');
+  const unitsWrapper = document.getElementById('unitsWrapper');
+  const unitsCheckboxContainer = document.getElementById('unitsCheckboxContainer');
+  const defaultUnitSelect = document.getElementById('defaultUnitSelect');
 
-    const sortableTable = document.getElementById('sortableQuestions');
+  const sortableTable = document.getElementById('sortableQuestions');
 
-    if (sortableTable) {
-        new Sortable(sortableTable, {
-            animation: 150,
-            handle: '.drag-handle',
-            ghostClass: 'sortable-ghost'
-        });
-    }
-        
-    // --- Source Type Change Handler ---
-    sourceType.addEventListener('change', function () {
-        const isManual = this.value === 'MANUAL';
-        
-        // Show/hide appropriate sections
-        filterConfigSection.style.display = isManual ? 'none' : 'block';
-        unitCategorySection.style.display = isManual ? 'block' : 'none';
-        
-        // Reset and hide units if not manual
-        if (!isManual) {
-            unitsWrapper.style.display = 'none';
-            categorySelect.value = '';
-        }
-        
-        // Load fields for auto-calculated questions
-        if (!isManual) {
-            loadSourceFields(this.value);
-        }
+  if (sortableTable) {
+    new Sortable(sortableTable, {
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost'
     });
+  }
 
-    // --- Category Selection Handler (AJAX) ---
-    categorySelect.addEventListener('change', function() {
-        const categoryId = this.value;
+  // --- Source Type Change Handler ---
+  sourceType.addEventListener('change', function () {
+    const isManual = this.value === 'MANUAL';
 
-        if (categoryId && sourceType.value === 'MANUAL') {
-            // Show loading state
-            unitsWrapper.style.display = 'block';
-            unitsCheckboxContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading units...</div>';
-            defaultUnitSelect.innerHTML = '<option value="">-- Loading --</option>';
+    filterConfigSection.style.display = isManual ? 'none' : 'block';
+    unitCategorySection.style.display = isManual ? 'block' : 'none';
 
-            // Fetch units via AJAX
-            fetch(`/env-data/api/get-category-units/?category_id=${categoryId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updateUnitSelectionUI(data.units);
-                    } else {
-                        unitsCheckboxContainer.innerHTML = `<div class="empty">Error: ${data.error || 'Could not load units'}</div>`;
-                        defaultUnitSelect.innerHTML = '<option value="">-- Error --</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching units:', error);
-                    unitsCheckboxContainer.innerHTML = '<div class="empty">Network error. Please try again.</div>';
-                    defaultUnitSelect.innerHTML = '<option value="">-- Error --</option>';
-                });
-        } else {
-            unitsWrapper.style.display = 'none';
-        }
-    });
-
-    // --- Update Unit Selection UI ---
-    function updateUnitSelectionUI(units) {
-        unitsCheckboxContainer.innerHTML = '';
-        defaultUnitSelect.innerHTML = '<option value="">-- Select Default Unit --</option>';
-
-        if (!units || units.length === 0) {
-            unitsCheckboxContainer.innerHTML = '<div class="empty">No units found for this category. Please add units first.</div>';
-            return;
-        }
-
-        units.forEach(unit => {
-            // Create checkbox
-            const label = document.createElement('label');
-            label.className = 'unit-checkbox';
-            label.innerHTML = `
-                <input type="checkbox" name="selected_unit_ids[]" value="${unit.id}" onchange="updateDefaultUnitDropdown()">
-                ${unit.name} (${unit.base_unit})
-            `;
-            unitsCheckboxContainer.appendChild(label);
-
-            // Add to default dropdown
-            const option = document.createElement('option');
-            option.value = unit.id;
-            option.textContent = unit.name;
-            option.dataset.unitName = unit.name;
-            defaultUnitSelect.appendChild(option);
-        });
+    if (!isManual) {
+      unitsWrapper.style.display = 'none';
+      categorySelect.value = '';
     }
 
-    // --- Update Default Unit Dropdown Based on Selected Checkboxes ---
-    window.updateDefaultUnitDropdown = function() {
-        const selectedCheckboxes = document.querySelectorAll('input[name="selected_unit_ids[]"]:checked');
-        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
-        
-        // Get all options
-        const allOptions = Array.from(defaultUnitSelect.querySelectorAll('option'));
-        
-        // Show/hide options based on selection
-        allOptions.forEach(option => {
-            if (option.value === '') {
-                option.style.display = 'block'; // Keep the placeholder
-            } else if (selectedIds.includes(option.value)) {
-                option.style.display = 'block';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-        
-        // Clear default unit if it's no longer in selected units
-        if (defaultUnitSelect.value && !selectedIds.includes(defaultUnitSelect.value)) {
-            defaultUnitSelect.value = '';
-        }
-    };
-
-    // --- Load Source Fields for Auto-Calculated Questions ---
-    function loadSourceFields(sourceType) {
-        fetch(`/env-data/api/get-source-fields/?source_type=${sourceType}`)
-            .then(response => response.json())
-            .then(data => {
-                filterField.innerHTML = '<option value="">-- Select Field to Filter --</option>';
-                filterField2.innerHTML = '<option value="">-- No Secondary Filter --</option>';
-                
-                if (data.success && data.fields && data.fields.length > 0) {
-                    data.fields.forEach(field => {
-                        const option = document.createElement('option');
-                        option.value = field.field_name;
-                        option.textContent = field.field_verbose_name;
-                        option.dataset.choices = JSON.stringify(field.choices);
-                        
-                        filterField.appendChild(option.cloneNode(true));
-                        filterField2.appendChild(option);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error loading fields:', error);
-                alert('Could not load fields. Please refresh the page.');
-            });
+    if (!isManual) {
+      loadSourceFields(this.value);
     }
+  });
 
-    function initializeEditForm() {
-    {% if editing_question %}
-        const editingQuestion = {
-            source_type: "{{ editing_question.source_type }}",
-            category_id: "{{ editing_question.unit_category.id }}",
-            default_unit_id: "{{ editing_question.default_unit.id }}",
-            selected_unit_ids: [
-                {% for unit in editing_question.selected_units.all %}"{{ unit.id }}",{% endfor %}
-            ]
-        };
+  // --- Category Selection Handler (AJAX) ---
+  categorySelect.addEventListener('change', function() {
+    const categoryId = this.value;
 
-        // 1. Set the source type dropdown's value
-        sourceType.value = editingQuestion.source_type;
-        // 2. Manually trigger its 'change' event to show/hide sections
-        sourceType.dispatchEvent(new Event('change'));
+    if (categoryId && sourceType.value === 'MANUAL') {
+      unitsWrapper.style.display = 'block';
+      unitsCheckboxContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading units...</div>';
+      defaultUnitSelect.innerHTML = '<option value="">-- Loading --</option>';
 
-        // 3. If it's a manual question, set the category dropdown's value
-        if (editingQuestion.source_type === 'MANUAL' && editingQuestion.category_id) {
-            categorySelect.value = editingQuestion.category_id;
-            
-            // 4. THIS IS THE FIX: Manually trigger the category's 'change' event.
-            // This will start the AJAX call to load the units, just like a user click.
-            categorySelect.dispatchEvent(new Event('change'));
-
-            // The AJAX listener will now handle loading and pre-selecting the units.
-            // We need to wait for the AJAX to finish before setting the default unit.
-            // We will modify the 'categorySelect' event listener to handle this.
-        }
-    {% endif %}
-
-
-    const saveSequenceBtn =
-        document.getElementById('editSequenceBtn');
-
-    if (saveSequenceBtn) {
-
-        saveSequenceBtn.addEventListener('click', function () {
-
-            const questionIds = [];
-
-            document.querySelectorAll(
-                '#sortableQuestions tr'
-            ).forEach(row => {
-                questionIds.push(
-                    row.dataset.questionId
-                );
-            });
-
-            fetch(
-                '/env-data/update-question-sequence/',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken':
-                            document.querySelector(
-                                '[name=csrfmiddlewaretoken]'
-                            ).value
-                    },
-                    body: JSON.stringify({
-                        question_ids: questionIds
-                    })
-                }
-            )
-            .then(response => response.json())
-            .then(data => {
-
-                if (data.success) {
-                    alert(
-                        'Question sequence saved successfully.'
-                    );
-
-                    location.reload();
-                } else {
-                    alert(
-                        data.error || 'Unable to save sequence.'
-                    );
-                }
-
-            })
-            .catch(error => {
-                console.error(error);
-                alert('Error saving sequence.');
-            });
-
+      fetch(`/env-data/api/get-category-units/?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateUnitSelectionUI(data.units);
+          } else {
+            unitsCheckboxContainer.innerHTML = `<div class="empty">Error: ${data.error || 'Could not load units'}</div>`;
+            defaultUnitSelect.innerHTML = '<option value="">-- Error --</option>';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching units:', error);
+          unitsCheckboxContainer.innerHTML = '<div class="empty">Network error. Please try again.</div>';
+          defaultUnitSelect.innerHTML = '<option value="">-- Error --</option>';
         });
-
+    } else {
+      unitsWrapper.style.display = 'none';
     }
-}
-    // New function to fetch units AND pre-select them
-    // function fetchAndPreselectUnits(categoryId, selectedUnitIds, defaultUnitId) {
-    //     unitsWrapper.style.display = 'block';
-    //     unitsCheckboxContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading units...</div>';
-    //     defaultUnitSelect.innerHTML = '<option value="">-- Loading --</option>';
+  });
 
-    //     fetch(`/api/get-category-units/?category_id=${categoryId}`)
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             if (data.success) {
-    //                 // Update UI with pre-selection logic
-    //                 updateUnitSelectionUI(data.units, selectedUnitIds);
-    //                 // Set the default unit after the dropdown is populated
-    //                 defaultUnitSelect.value = defaultUnitId;
-    //                 // Trigger update to show correct options in default unit dropdown
-    //                 window.updateDefaultUnitDropdown();
-    //             } else {
-    //                 unitsCheckboxContainer.innerHTML = `<div class="empty">Error: ${data.error}</div>`;
-    //             }
-    //         });
-    // }
-
-    // --- Modify the original updateUnitSelectionUI function ---
-    // Replace your old function with this new one
-    function updateUnitSelectionUI(units, selectedUnitIds = []) {
+  // --- Update Unit Selection UI ---
+  function updateUnitSelectionUI(units, selectedUnitIds = []) {
     unitsCheckboxContainer.innerHTML = '';
     defaultUnitSelect.innerHTML = '<option value="">-- Select Default Unit --</option>';
 
     if (!units || units.length === 0) {
-        unitsCheckboxContainer.innerHTML = '<div class="empty">No units found for this category.</div>';
-        return;
+      unitsCheckboxContainer.innerHTML = '<div class="empty">No units found for this category. Please add units first.</div>';
+      return;
     }
 
     units.forEach(unit => {
-        // Check if the current unit's ID is in the list of IDs to be pre-selected
-        const isChecked = selectedUnitIds.includes(String(unit.id));
-        
-        const label = document.createElement('label');
-        label.className = 'unit-checkbox';
-        // Add the 'checked' attribute if isChecked is true
-        label.innerHTML = `
-            <input type="checkbox" name="selected_unit_ids[]" value="${unit.id}" onchange="updateDefaultUnitDropdown()" ${isChecked ? 'checked' : ''}>
-            ${unit.name}
-        `;
-        unitsCheckboxContainer.appendChild(label);
+      const isChecked = selectedUnitIds.includes(String(unit.id));
 
-        const option = document.createElement('option');
-        option.value = unit.id;
-        option.textContent = unit.name;
-        defaultUnitSelect.appendChild(option);
+      const label = document.createElement('label');
+      label.className = 'unit-checkbox';
+      label.innerHTML = `
+        <input type="checkbox" name="selected_unit_ids[]" value="${unit.id}" onchange="updateDefaultUnitDropdown()" ${isChecked ? 'checked' : ''}>
+        ${unit.name} (${unit.base_unit})
+      `;
+      unitsCheckboxContainer.appendChild(label);
+
+      const option = document.createElement('option');
+      option.value = unit.id;
+      option.textContent = unit.name;
+      defaultUnitSelect.appendChild(option);
     });
 
-    // After creating all checkboxes, update the dropdown visibility
     updateDefaultUnitDropdown();
-}
+  }
 
-    
-    // Call the initialization function when the page loads
-    initializeEditForm();
+  // --- Update Default Unit Dropdown ---
+  window.updateDefaultUnitDropdown = function() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="selected_unit_ids[]"]:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
+    const allOptions = Array.from(defaultUnitSelect.querySelectorAll('option'));
 
-    // --- Filter Field Change Handlers ---
-    function handleFilterFieldChange(fieldSelect, valueSelect, valueSection) {
-        const selectedOption = fieldSelect.options[fieldSelect.selectedIndex];
-        valueSelect.innerHTML = '<option value="">-- Select Value --</option>';
+    allOptions.forEach(option => {
+      if (option.value === '') {
+        option.style.display = 'block';
+      } else if (selectedIds.includes(option.value)) {
+        option.style.display = 'block';
+      } else {
+        option.style.display = 'none';
+      }
+    });
 
-        if (!fieldSelect.value) {
-            valueSection.style.display = 'none';
-            return;
+    if (defaultUnitSelect.value && !selectedIds.includes(defaultUnitSelect.value)) {
+      defaultUnitSelect.value = '';
+    }
+  };
+
+  // --- Load Source Fields ---
+  function loadSourceFields(sourceType) {
+    fetch(`/env-data/api/get-source-fields/?source_type=${sourceType}`)
+      .then(response => response.json())
+      .then(data => {
+        filterField.innerHTML = '<option value="">-- Select Field to Filter --</option>';
+        filterField2.innerHTML = '<option value="">-- No Secondary Filter --</option>';
+
+        if (data.success && data.fields && data.fields.length > 0) {
+          data.fields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field.field_name;
+            option.textContent = field.field_verbose_name;
+            option.dataset.choices = JSON.stringify(field.choices);
+
+            filterField.appendChild(option.cloneNode(true));
+            filterField2.appendChild(option);
+          });
         }
-        
-        try {
-            const choices = JSON.parse(selectedOption.dataset.choices || '[]');
-            if (choices.length > 0) {
-                choices.forEach(choice => {
-                    const option = document.createElement('option');
-                    option.value = choice.value;
-                    option.textContent = choice.display;
-                    valueSelect.appendChild(option);
-                });
-                valueSection.style.display = 'block';
+      })
+      .catch(error => {
+        console.error('Error loading fields:', error);
+        alert('Could not load fields. Please refresh the page.');
+      });
+  }
+
+  // --- Initialize Edit Form ---
+  function initializeEditForm() {
+    {% if editing_question %}
+      const editingQuestion = {
+        source_type: "{{ editing_question.source_type }}",
+        category_id: "{{ editing_question.unit_category.id }}",
+        default_unit_id: "{{ editing_question.default_unit.id }}",
+        selected_unit_ids: [
+          {% for unit in editing_question.selected_units.all %}"{{ unit.id }}",{% endfor %}
+        ]
+      };
+
+      sourceType.value = editingQuestion.source_type;
+      sourceType.dispatchEvent(new Event('change'));
+
+      if (editingQuestion.source_type === 'MANUAL' && editingQuestion.category_id) {
+        categorySelect.value = editingQuestion.category_id;
+        // Load units with pre-selected values
+        fetch(`/env-data/api/get-category-units/?category_id=${editingQuestion.category_id}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              updateUnitSelectionUI(data.units, editingQuestion.selected_unit_ids);
+              defaultUnitSelect.value = editingQuestion.default_unit_id;
+              updateDefaultUnitDropdown();
             }
-        } catch (e) {
-            console.error('Error parsing choices:', e);
+          });
+      }
+    {% endif %}
+  }
+
+  // --- Save Sequence ---
+  const saveSequenceBtn = document.getElementById('editSequenceBtn');
+  if (saveSequenceBtn) {
+    saveSequenceBtn.addEventListener('click', function () {
+      const questionIds = [];
+      document.querySelectorAll('#sortableQuestions tr').forEach(row => {
+        questionIds.push(row.dataset.questionId);
+      });
+
+      fetch('/env-data/update-question-sequence/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ question_ids: questionIds })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Question sequence saved successfully.');
+          location.reload();
+        } else {
+          alert(data.error || 'Unable to save sequence.');
         }
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Error saving sequence.');
+      });
+    });
+  }
+
+  // --- Filter Field Change Handlers ---
+  function handleFilterFieldChange(fieldSelect, valueSelect, valueSection) {
+    const selectedOption = fieldSelect.options[fieldSelect.selectedIndex];
+    valueSelect.innerHTML = '<option value="">-- Select Value --</option>';
+
+    if (!fieldSelect.value) {
+      valueSection.style.display = 'none';
+      return;
     }
 
-    filterField.addEventListener('change', function() {
-        handleFilterFieldChange(this, filterValue, filterValueSection);
-    });
-
-    filterField2.addEventListener('change', function() {
-        if (this.value) {
-            handleFilterFieldChange(this, filterValue2, filterValueSection2);
-        } else {
-            filterValueSection2.style.display = 'none';
-        }
-    });
-
-    // --- Form Validation ---
-    document.getElementById('addQuestionForm').addEventListener('submit', function(e) {
-        const isManual = sourceType.value === 'MANUAL';
-        
-        if (isManual) {
-            // Validate manual entry questions
-            if (!categorySelect.value) {
-                e.preventDefault();
-                alert('Please select a unit category.');
-                categorySelect.focus();
-                return false;
-            }
-            
-            const selectedUnits = document.querySelectorAll('input[name="selected_unit_ids[]"]:checked');
-            if (selectedUnits.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one unit.');
-                return false;
-            }
-            
-            if (!defaultUnitSelect.value) {
-                e.preventDefault();
-                alert('Please select a default unit.');
-                defaultUnitSelect.focus();
-                return false;
-            }
-            
-            // Check if default unit is in selected units
-            const selectedIds = Array.from(selectedUnits).map(cb => cb.value);
-            if (!selectedIds.includes(defaultUnitSelect.value)) {
-                e.preventDefault();
-                alert('Default unit must be one of the selected units.');
-                return false;
-            }
-        } else {
-            // Validate auto-calculated questions
-            if (!filterField.value) {
-                e.preventDefault();
-                alert('Please select a primary filter field.');
-                filterField.focus();
-                return false;
-            }
-            
-            if (!filterValue.value) {
-                e.preventDefault();
-                alert('Please select a primary filter value.');
-                filterValue.focus();
-                return false;
-            }
-            
-            if (filterField2.value && !filterValue2.value) {
-                e.preventDefault();
-                alert('Please select a secondary filter value or clear the secondary field.');
-                filterValue2.focus();
-                return false;
-            }
-        }
-        
-        // Disable submit button to prevent double submission
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-    });
-
-    // --- Auto-dismiss success alerts ---
-    setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert-success');
-        alerts.forEach(alert => {
-            alert.style.transition = 'opacity 0.5s';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
+    try {
+      const choices = JSON.parse(selectedOption.dataset.choices || '[]');
+      if (choices.length > 0) {
+        choices.forEach(choice => {
+          const option = document.createElement('option');
+          option.value = choice.value;
+          option.textContent = choice.display;
+          valueSelect.appendChild(option);
         });
-    }, 5000);
+        valueSection.style.display = 'block';
+      }
+    } catch (e) {
+      console.error('Error parsing choices:', e);
+    }
+  }
 
+  filterField.addEventListener('change', function() {
+    handleFilterFieldChange(this, filterValue, filterValueSection);
+  });
+
+  filterField2.addEventListener('change', function() {
+    if (this.value) {
+      handleFilterFieldChange(this, filterValue2, filterValueSection2);
+    } else {
+      filterValueSection2.style.display = 'none';
+    }
+  });
+
+  // --- Form Validation ---
+  document.getElementById('addQuestionForm').addEventListener('submit', function(e) {
+    const isManual = sourceType.value === 'MANUAL';
+
+    if (isManual) {
+      if (!categorySelect.value) {
+        e.preventDefault();
+        alert('Please select a unit category.');
+        categorySelect.focus();
+        return false;
+      }
+
+      const selectedUnits = document.querySelectorAll('input[name="selected_unit_ids[]"]:checked');
+      if (selectedUnits.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one unit.');
+        return false;
+      }
+
+      if (!defaultUnitSelect.value) {
+        e.preventDefault();
+        alert('Please select a default unit.');
+        defaultUnitSelect.focus();
+        return false;
+      }
+
+      const selectedIds = Array.from(selectedUnits).map(cb => cb.value);
+      if (!selectedIds.includes(defaultUnitSelect.value)) {
+        e.preventDefault();
+        alert('Default unit must be one of the selected units.');
+        return false;
+      }
+    } else {
+      if (!filterField.value) {
+        e.preventDefault();
+        alert('Please select a primary filter field.');
+        filterField.focus();
+        return false;
+      }
+
+      if (!filterValue.value) {
+        e.preventDefault();
+        alert('Please select a primary filter value.');
+        filterValue.focus();
+        return false;
+      }
+
+      if (filterField2.value && !filterValue2.value) {
+        e.preventDefault();
+        alert('Please select a secondary filter value or clear the secondary field.');
+        filterValue2.focus();
+        return false;
+      }
+    }
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  });
+
+  // --- Auto-dismiss alerts ---
+  setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert-success');
+    alerts.forEach(alert => {
+      alert.style.transition = 'opacity 0.5s';
+      alert.style.opacity = '0';
+      setTimeout(() => alert.remove(), 500);
+    });
+  }, 5000);
+
+  // Call initialization
+  initializeEditForm();
 });
 </script>
+
 {% endblock %}

@@ -196,7 +196,7 @@
   /* ========================================================== */
   .dash-stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -234,6 +234,7 @@
   .dash-stat-card .stat-icon.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
   .dash-stat-card .stat-icon.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
   .dash-stat-card .stat-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dash-stat-card .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 
   .dash-stat-card .stat-info {
     flex: 1;
@@ -360,6 +361,7 @@
   /* ========================================================== */
   .dash-table {
     font-size: 14px;
+    width: 100%;
   }
 
   .dash-table thead th {
@@ -373,6 +375,15 @@
     padding: 10px 14px;
     white-space: nowrap;
   }
+
+  /* Column Widths */
+  .dash-table .col-sno { width: 50px; }
+  .dash-table .col-name { width: 180px; }
+  .dash-table .col-code { width: 100px; }
+  .dash-table .col-description { width: auto; }
+  .dash-table .col-status { width: 120px; }
+  .dash-table .col-usage { width: 130px; }
+  .dash-table .col-actions { width: 100px; }
 
   .dash-table tbody td {
     padding: 10px 14px;
@@ -391,6 +402,14 @@
 
   .dash-table tbody tr:last-child td {
     border-bottom: none;
+  }
+
+  .dash-table .text-center {
+    text-align: center;
+  }
+
+  .dash-table .text-left {
+    text-align: left;
   }
 
   /* ===== BADGES ===== */
@@ -422,6 +441,11 @@
   .dash-badge.badge-info {
     background: var(--primary-teal-light);
     color: var(--primary-teal);
+  }
+
+  .dash-badge.badge-warning {
+    background: #fef3c7;
+    color: #d97706;
   }
 
   /* ========================================================== */
@@ -520,7 +544,7 @@
     flex-wrap: wrap;
   }
 
-  .dash-pagination .page-item .page-link {
+  .dash-pagination .page-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -537,19 +561,20 @@
     text-decoration: none;
   }
 
-  .dash-pagination .page-item .page-link:hover {
+  .dash-pagination .page-link:hover {
     background: var(--primary-teal-light);
     border-color: var(--primary-teal);
     color: var(--primary-teal);
   }
 
-  .dash-pagination .page-item.active .page-link {
+  .dash-pagination .page-link.active {
     background: var(--primary-teal);
     border-color: var(--primary-teal);
     color: white;
+    cursor: default;
   }
 
-  .dash-pagination .page-item.disabled .page-link {
+  .dash-pagination .page-link.disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -559,7 +584,7 @@
   /* ========================================================== */
   @media (max-width: 1024px) {
     .dash-stats-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
@@ -595,7 +620,7 @@
     }
 
     .dash-stats-grid {
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
@@ -631,6 +656,17 @@
     .btn-clear-teal {
       flex: 1;
       justify-content: center;
+    }
+
+    /* Column widths reset for mobile */
+    .dash-table .col-sno,
+    .dash-table .col-name,
+    .dash-table .col-code,
+    .dash-table .col-description,
+    .dash-table .col-status,
+    .dash-table .col-usage,
+    .dash-table .col-actions {
+      width: auto;
     }
 
     .dash-table thead {
@@ -679,7 +715,7 @@
       gap: 2px;
     }
 
-    .dash-pagination .page-item .page-link {
+    .dash-pagination .page-link {
       min-width: 32px;
       height: 32px;
       font-size: 12px;
@@ -793,8 +829,8 @@
             <i class="fas fa-list"></i>
           </div>
           <div class="stat-info">
-            <div class="stat-value">{{ incident_types|length }}</div>
-            <div class="stat-label">Total Injury Types</div>
+            <div class="stat-value">{{ total_types|default:incident_types|length }}</div>
+            <div class="stat-label">Total Types</div>
           </div>
         </div>
         <div class="dash-stat-card">
@@ -802,7 +838,7 @@
             <i class="fas fa-check-circle"></i>
           </div>
           <div class="stat-info">
-            <div class="stat-value">{{ incident_types|length }}</div>
+            <div class="stat-value">{{ active_types|default:incident_types|length }}</div>
             <div class="stat-label">Active Types</div>
           </div>
         </div>
@@ -811,8 +847,17 @@
             <i class="fas fa-exclamation-triangle"></i>
           </div>
           <div class="stat-info">
-            <div class="stat-value">{{ total_injuries }}</div>
+            <div class="stat-value">{{ total_injuries|default:"0" }}</div>
             <div class="stat-label">Total Injuries</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="stat-icon blue">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ inactive_types|default:"0" }}</div>
+            <div class="stat-label">Inactive Types</div>
           </div>
         </div>
       </div>
@@ -848,33 +893,33 @@
         <table class="dash-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Description</th>
-              <th class="text-center">Status</th>
-              <th class="text-center">Usage</th>
-              <th class="text-center">Actions</th>
+              <th class="col-sno">#</th>
+              <th class="col-name">Name</th>
+              <th class="col-code">Code</th>
+              <th class="col-description">Description</th>
+              <th class="col-status text-center">Status</th>
+              <th class="col-usage text-center">Usage</th>
+              <th class="col-actions text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for incident_type in incident_types %}
             <tr>
-              <td data-label="#">{{ forloop.counter }}</td>
-              <td data-label="Name">
+              <td data-label="#" class="col-sno">{{ forloop.counter }}</td>
+              <td data-label="Name" class="col-name">
                 <strong>{{ incident_type.name }}</strong>
               </td>
-              <td data-label="Code">
+              <td data-label="Code" class="col-code">
                 <span class="dash-badge badge-secondary">{{ incident_type.code }}</span>
               </td>
-              <td data-label="Description">
+              <td data-label="Description" class="col-description">
                 {% if incident_type.description %}
-                  {{ incident_type.description|truncatewords:20 }}
+                  {{ incident_type.description|truncatechars:50 }}
                 {% else %}
                   <span class="text-muted">—</span>
                 {% endif %}
               </td>
-              <td data-label="Status" class="text-center">
+              <td data-label="Status" class="col-status text-center">
                 {% if incident_type.is_active %}
                   <span class="dash-badge badge-success">
                     <i class="fas fa-check-circle"></i> Active
@@ -885,13 +930,13 @@
                   </span>
                 {% endif %}
               </td>
-              <td data-label="Usage" class="text-center">
-                <span class="dash-badge badge-info" title="Number of incidents using this type">
+              <td data-label="Usage" class="col-usage text-center">
+                <span class="dash-badge badge-warning">
                   <i class="fas fa-exclamation-triangle"></i>
-                  {{ incident_type.incident_count }} Injuries
+                  {{ incident_type.incident_count|default:"0" }}
                 </span>
               </td>
-              <td data-label="Actions" class="text-center">
+              <td data-label="Actions" class="col-actions text-center">
                 <div class="btn-action-group">
                   <a href="{% url 'accidents:incident_type_update' incident_type.pk %}" 
                      class="btn-action edit" title="Edit this incident type">
@@ -976,17 +1021,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!confirmed) {
                 e.preventDefault();
             }
-        });
-    });
-
-    // Highlight active row on hover
-    const tableRows = document.querySelectorAll('.dash-table tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = 'var(--primary-teal-light)';
-        });
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
         });
     });
 });

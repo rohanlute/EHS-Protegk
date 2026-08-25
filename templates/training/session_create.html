@@ -1,40 +1,584 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Schedule Training Session{% endblock %}
-{% block page_title %}Schedule Training Session{% endblock %}
+{% block title %}Schedule Training Session | EHS-360{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'training:dashboard' %}">Training Management</a></li>
 <li class="breadcrumb-item"><a href="{% url 'training:session_list' %}">Sessions</a></li>
 <li class="breadcrumb-item active">Schedule New Session</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-  .readonly-field {
-    background-color: #e9ecef;
-    cursor: not-allowed;
+  /* ===== SCHEDULE TRAINING SESSION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
   }
-  .section-divider {
-    border-left: 4px solid #007bff;
-    padding-left: 12px;
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 12px 20px;
+  }
+
+  .ehs-card .card-header .card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 8px;
+  }
+
+  .ehs-card .card-body {
+    padding: 20px;
+  }
+
+  .ehs-card .card-footer {
+    background: var(--bg-page);
+    border-top: 1px solid var(--border-color);
+    padding: 14px 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                     */
+  /* ========================================================== */
+  .alert-info-custom {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 12px 16px;
     margin-bottom: 20px;
+    font-size: 0.85rem;
+  }
+
+  .alert-info-custom i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .alert-info-custom strong {
+    color: var(--text-primary);
+  }
+
+  .alert-danger-custom {
+    background: rgba(220, 38, 38, 0.08);
+    border-left: 4px solid var(--secondary-red);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+  }
+
+  .alert-danger-custom h6 {
+    color: var(--secondary-red);
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+  }
+
+  .alert-danger-custom h6 i {
+    color: var(--secondary-red);
+    margin-right: 6px;
+  }
+
+  .alert-danger-custom ul {
+    margin: 6px 0 0 20px;
+    padding-left: 0;
+  }
+
+  .alert-danger-custom ul li {
+    padding: 2px 0;
+    color: var(--text-secondary);
+  }
+
+  .alert-danger-custom ul li strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* SECTION DIVIDER                                            */
+  /* ========================================================== */
+  .section-divider {
+    border-left: 4px solid var(--primary-teal);
+    padding-left: 12px;
+    margin-bottom: 16px;
+    margin-top: 4px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-divider i {
+    color: var(--primary-teal);
+  }
+
+  hr {
+    border-color: var(--border-color);
+    margin: 18px 0;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
     font-weight: 600;
-    color: #343a40;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .form-group .text-danger {
+    color: var(--secondary-red) !important;
+  }
+
+  .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    height: 38px;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .readonly-field {
+    background: var(--primary-teal-light) !important;
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
+
+  .readonly-field:focus {
+    box-shadow: none;
+    border-color: var(--border-color);
+  }
+
+  .form-text {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 2px;
+  }
+
+  .form-check-input {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    accent-color: var(--primary-teal);
+  }
+
+  .form-check-label {
+    margin-left: 6px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 24px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-primary-custom:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-secondary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 24px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+  }
+
+  .btn-secondary-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* BADGE                                                      */
+  /* ========================================================== */
+  .badge-danger-custom {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* CARD WIDTH - WIDER                                         */
+  /* ========================================================== */
+  .card-wide {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-header {
+      padding: 10px 14px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 1rem;
+    }
+
+    .ehs-card .card-body {
+      padding: 14px 16px;
+    }
+
+    .ehs-card .card-footer {
+      flex-direction: column;
+    }
+
+    .ehs-card .card-footer .btn-primary-custom,
+    .ehs-card .card-footer .btn-secondary-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-control {
+      font-size: 0.8rem;
+      height: 36px;
+    }
+
+    .btn-primary-custom,
+    .btn-secondary-custom {
+      font-size: 0.85rem;
+      padding: 6px 18px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .section-divider {
+      font-size: 0.85rem;
+    }
+
+    .card-wide {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-footer {
+      padding: 10px 14px;
+    }
+
+    .form-control {
+      font-size: 0.75rem;
+      height: 34px;
+      padding: 4px 8px;
+    }
+
+    .btn-primary-custom,
+    .btn-secondary-custom {
+      font-size: 0.8rem;
+      padding: 5px 14px;
+    }
+
+    .section-divider {
+      font-size: 0.8rem;
+      padding-left: 8px;
+    }
+
+    .alert-info-custom,
+    .alert-danger-custom {
+      padding: 8px 12px;
+      font-size: 0.75rem;
+    }
+
+    .form-check-label {
+      font-size: 0.75rem;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+    }
+
+    .card-wide {
+      max-width: 100%;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="dash-page-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <i class="fas fa-chalkboard-teacher"></i>
+    </div>
+    <div class="header-text">
+      <h1>Schedule New Training Session</h1>
+      <p class="subtitle">Create and schedule a new training session</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- MAIN FORM - WIDER CARD                                     -->
+<!-- ========================================================== -->
 <div class="row">
-  <div class="col-md-10 offset-md-1">
-    <div class="ehs-card">
+  <div class="col-12">
+    <div class="ehs-card card-wide">
       <div class="card-header">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-chalkboard-teacher mr-2"></i>Schedule New Training Session
-        </h3>
+        <i class="fas fa-calendar-plus" style="color: var(--primary-teal); font-size: 1.2rem;"></i>
+        <h3 class="card-title">Schedule New Training Session</h3>
       </div>
 
       <form method="POST" id="sessionForm" enctype="multipart/form-data">
@@ -43,17 +587,16 @@
         <div class="card-body">
 
           <!-- Alert -->
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle mr-2"></i>
-            <strong>Note:</strong> After creating the session, add participants and mark attendance after the session is conducted.
-            Fields marked <span class="text-danger">*</span> are mandatory.
+          <div class="alert-info-custom">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> After creating the session, you can add participants and mark attendance after the session is conducted. Fields marked <span class="text-danger">*</span> are mandatory.
           </div>
 
           <!-- Form Errors -->
           {% if form.errors %}
-          <div class="alert alert-danger alert-dismissible fade show">
-            <h6><i class="fas fa-exclamation-triangle mr-2"></i>Please fix the errors below:</h6>
-            <ul class="mb-0">
+          <div class="alert-danger-custom">
+            <h6><i class="fas fa-exclamation-triangle"></i> Please fix the errors below:</h6>
+            <ul>
               {% for field in form %}
                 {% for error in field.errors %}
                   <li><strong>{{ field.label }}:</strong> {{ error }}</li>
@@ -63,232 +606,313 @@
                 <li>{{ error }}</li>
               {% endfor %}
             </ul>
-            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
           </div>
           {% endif %}
 
-          <!-- Section 1: Training Info -->
-          <h5 class="section-divider"><i class="fas fa-book mr-2"></i>Training Information</h5>
+          <!-- ========================================================== -->
+          <!-- SECTION 1: TRAINING INFO                                    -->
+          <!-- ========================================================== -->
+          <div class="section-divider"><i class="fas fa-book"></i>Training Information</div>
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="id_topic">Training Topic <span class="text-danger">*</span></label>
-              <select name="topic" id="id_topic" class="form-control" required>
-                <option value="">-- Select Training Topic --</option>
-                {% for topic in active_topics %}
-                  <option value="{{ topic.id }}"
-                    data-validity="{{ topic.validity_period_days }}"
-                    data-mandatory="{{ topic.is_mandatory }}"
-                    {% if form.topic.value == topic.id|stringformat:"s" %}selected{% endif %}>
-                    {{ topic.name }} ({{ topic.code }})
-                  </option>
-                {% endfor %}
-              </select>
-              {% if form.topic.errors %}
-                <div class="text-danger small">{{ form.topic.errors }}</div>
-              {% endif %}
-              <small class="form-text text-muted">
-                <span id="topicValidity"></span>
-              </small>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="id_topic">Training Topic <span class="text-danger">*</span></label>
+                <select name="topic" id="id_topic" class="form-control" required>
+                  <option value="">-- Select Training Topic --</option>
+                  {% for topic in active_topics %}
+                    <option value="{{ topic.id }}"
+                      data-validity="{{ topic.validity_period_days }}"
+                      data-mandatory="{{ topic.is_mandatory }}"
+                      {% if form.topic.value == topic.id|stringformat:"s" %}selected{% endif %}>
+                      {{ topic.name }} ({{ topic.code }})
+                    </option>
+                  {% endfor %}
+                </select>
+                {% if form.topic.errors %}
+                  <div class="text-danger small">{{ form.topic.errors }}</div>
+                {% endif %}
+                <small class="form-text text-muted">
+                  <span id="topicValidity"></span>
+                </small>
+              </div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label for="id_training_mode">Training Mode <span class="text-danger">*</span></label>
-              {{ form.training_mode }}
-              {% if form.training_mode.errors %}
-                <div class="text-danger small">{{ form.training_mode.errors }}</div>
-              {% endif %}
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="id_training_mode">Training Mode <span class="text-danger">*</span></label>
+                {{ form.training_mode }}
+                {% if form.training_mode.errors %}
+                  <div class="text-danger small">{{ form.training_mode.errors }}</div>
+                {% endif %}
+              </div>
             </div>
           </div>
 
-          <!-- Section 2: Schedule -->
+          <!-- ========================================================== -->
+          <!-- SECTION 2: SCHEDULE                                        -->
+          <!-- ========================================================== -->
           <hr>
-          <h5 class="section-divider"><i class="fas fa-calendar-alt mr-2"></i>Schedule</h5>
+          <div class="section-divider"><i class="fas fa-calendar-alt"></i>Schedule</div>
           <div class="row">
-            <div class="col-md-3 mb-3">
-              <label for="id_scheduled_date">Scheduled Date <span class="text-danger">*</span></label>
-              {{ form.scheduled_date }}
-              {% if form.scheduled_date.errors %}
-                <div class="text-danger small">{{ form.scheduled_date.errors }}</div>
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_scheduled_date">Scheduled Date <span class="text-danger">*</span></label>
+                {{ form.scheduled_date }}
+                {% if form.scheduled_date.errors %}
+                  <div class="text-danger small">{{ form.scheduled_date.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-md-3 mb-3">
-              <label for="id_scheduled_time">Start Time <span class="text-danger">*</span></label>
-              {{ form.scheduled_time }}
-              {% if form.scheduled_time.errors %}
-                <div class="text-danger small">{{ form.scheduled_time.errors }}</div>
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_scheduled_time">Start Time <span class="text-danger">*</span></label>
+                {{ form.scheduled_time }}
+                {% if form.scheduled_time.errors %}
+                  <div class="text-danger small">{{ form.scheduled_time.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-md-3 mb-3">
-              <label for="id_end_time">End Time</label>
-              {{ form.end_time }}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_end_time">End Time</label>
+                {{ form.end_time }}
+                {% if form.end_time.errors %}
+                  <div class="text-danger small">{{ form.end_time.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-md-3 mb-3">
-              <label for="id_max_participants">Max Participants</label>
-              {{ form.max_participants }}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_max_participants">Max Participants</label>
+                {{ form.max_participants }}
+                {% if form.max_participants.errors %}
+                  <div class="text-danger small">{{ form.max_participants.errors }}</div>
+                {% endif %}
+              </div>
             </div>
           </div>
 
-          <!-- Section 3: Location — EXACT same pattern as your incident_create.html -->
+          <!-- ========================================================== -->
+          <!-- SECTION 3: LOCATION                                        -->
+          <!-- ========================================================== -->
           <hr>
-          <h5 class="section-divider"><i class="fas fa-map-marker-alt mr-2"></i>Location Information</h5>
+          <div class="section-divider"><i class="fas fa-map-marker-alt"></i>Location Information</div>
           <div class="row">
 
             <!-- Plant -->
-            <div class="col-md-3 mb-3">
-              <label for="id_plant">Plant <span class="text-danger">*</span></label>
-              {% if user_assigned_plants.count == 1 %}
-                <input type="text" class="form-control readonly-field"
-                       value="{{ user_assigned_plants.first.name }} ({{ user_assigned_plants.first.code }})"
-                       readonly>
-                <input type="hidden" name="plant" id="id_plant" value="{{ user_assigned_plants.first.id }}">
-              {% else %}
-                {{ form.plant }}
-              {% endif %}
-              {% if form.plant.errors %}
-                <div class="text-danger small">{{ form.plant.errors }}</div>
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_plant">Plant <span class="text-danger">*</span></label>
+                {% if user_assigned_plants.count == 1 %}
+                  <input type="text" class="form-control readonly-field"
+                         value="{{ user_assigned_plants.first.name }} ({{ user_assigned_plants.first.code }})"
+                         readonly>
+                  <input type="hidden" name="plant" id="id_plant" value="{{ user_assigned_plants.first.id }}">
+                {% else %}
+                  {{ form.plant }}
+                {% endif %}
+                {% if form.plant.errors %}
+                  <div class="text-danger small">{{ form.plant.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
             <!-- Zone -->
-            <div class="col-md-3 mb-3">
-              <label for="id_zone">Zone</label>
-              {% if user_assigned_zones.count == 1 %}
-                <input type="text" class="form-control readonly-field"
-                       value="{{ user_assigned_zones.first.name }} ({{ user_assigned_zones.first.code }})"
-                       readonly>
-                <input type="hidden" name="zone" id="id_zone" value="{{ user_assigned_zones.first.id }}">
-              {% else %}
-                {{ form.zone }}
-              {% endif %}
-              {% if form.zone.errors %}
-                <div class="text-danger small">{{ form.zone.errors }}</div>
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_zone">Zone</label>
+                {% if user_assigned_zones.count == 1 %}
+                  <input type="text" class="form-control readonly-field"
+                         value="{{ user_assigned_zones.first.name }} ({{ user_assigned_zones.first.code }})"
+                         readonly>
+                  <input type="hidden" name="zone" id="id_zone" value="{{ user_assigned_zones.first.id }}">
+                {% else %}
+                  {{ form.zone }}
+                {% endif %}
+                {% if form.zone.errors %}
+                  <div class="text-danger small">{{ form.zone.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
             <!-- Location -->
-            <div class="col-md-3 mb-3">
-              <label for="id_location">Location <span class="text-danger">*</span></label>
-              {% if user_assigned_locations.count == 1 %}
-                <input type="text" class="form-control readonly-field"
-                       value="{{ user_assigned_locations.first.name }} ({{ user_assigned_locations.first.code }})"
-                       readonly>
-                <input type="hidden" name="location" id="id_location" value="{{ user_assigned_locations.first.id }}">
-              {% else %}
-                {{ form.location }}
-              {% endif %}
-              {% if form.location.errors %}
-                <div class="text-danger small">{{ form.location.errors }}</div>
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_location">Location <span class="text-danger">*</span></label>
+                {% if user_assigned_locations.count == 1 %}
+                  <input type="text" class="form-control readonly-field"
+                         value="{{ user_assigned_locations.first.name }} ({{ user_assigned_locations.first.code }})"
+                         readonly>
+                  <input type="hidden" name="location" id="id_location" value="{{ user_assigned_locations.first.id }}">
+                {% else %}
+                  {{ form.location }}
+                {% endif %}
+                {% if form.location.errors %}
+                  <div class="text-danger small">{{ form.location.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
             <!-- Sub-Location -->
-            <div class="col-md-3 mb-3">
-              <label for="id_sublocation">Sub-Location</label>
-              {% if user_assigned_sublocations.count == 1 %}
-                <input type="text" class="form-control readonly-field"
-                       value="{{ user_assigned_sublocations.first.name }}"
-                       readonly>
-                <input type="hidden" name="sublocation" id="id_sublocation" value="{{ user_assigned_sublocations.first.id }}">
-              {% else %}
-                {{ form.sublocation }}
-              {% endif %}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="id_sublocation">Sub-Location</label>
+                {% if user_assigned_sublocations.count == 1 %}
+                  <input type="text" class="form-control readonly-field"
+                         value="{{ user_assigned_sublocations.first.name }}"
+                         readonly>
+                  <input type="hidden" name="sublocation" id="id_sublocation" value="{{ user_assigned_sublocations.first.id }}">
+                {% else %}
+                  {{ form.sublocation }}
+                {% endif %}
+                {% if form.sublocation.errors %}
+                  <div class="text-danger small">{{ form.sublocation.errors }}</div>
+                {% endif %}
+              </div>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-12 mb-3">
-              <label for="id_venue_details">Venue Details</label>
-              {{ form.venue_details }}
-              <small class="form-text text-muted">e.g. Conference Room A, Shop Floor Gate 2</small>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="id_venue_details">Venue Details</label>
+                {{ form.venue_details }}
+                {% if form.venue_details.errors %}
+                  <div class="text-danger small">{{ form.venue_details.errors }}</div>
+                {% endif %}
+                <small class="form-text text-muted">e.g. Conference Room A, Shop Floor Gate 2</small>
+              </div>
             </div>
           </div>
 
-          <!-- Section 4: Trainer -->
+          <!-- ========================================================== -->
+          <!-- SECTION 4: TRAINER                                         -->
+          <!-- ========================================================== -->
           <hr>
-          <h5 class="section-divider"><i class="fas fa-user-tie mr-2"></i>Trainer Information</h5>
+          <div class="section-divider"><i class="fas fa-user-tie"></i>Trainer Information</div>
           <div class="row">
-            <div class="col-md-4 mb-3">
-              <label for="id_trainer_name">Trainer Name <span class="text-danger">*</span></label>
-              {{ form.trainer_name }}
-              {% if form.trainer_name.errors %}
-                <div class="text-danger small">{{ form.trainer_name.errors }}</div>
-              {% endif %}
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="id_trainer_name">Trainer Name <span class="text-danger">*</span></label>
+                {{ form.trainer_name }}
+                {% if form.trainer_name.errors %}
+                  <div class="text-danger small">{{ form.trainer_name.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-              <label for="id_trainer_designation">Trainer Designation</label>
-              {{ form.trainer_designation }}
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="id_trainer_designation">Trainer Designation</label>
+                {{ form.trainer_designation }}
+                {% if form.trainer_designation.errors %}
+                  <div class="text-danger small">{{ form.trainer_designation.errors }}</div>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-md-4 mb-3">
-              <label class="d-block">Trainer Type</label>
-              <div class="form-check mt-2">
-                {{ form.trainer_is_external }}
-                <label class="form-check-label" for="id_trainer_is_external">
-                  External Trainer (from outside organization)
-                </label>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="d-block">Trainer Type</label>
+                <div class="form-check mt-1">
+                  {{ form.trainer_is_external }}
+                  <label class="form-check-label" for="id_trainer_is_external">
+                    External Trainer (from outside organization)
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="row" id="externalOrgRow" style="display:none;">
-            <div class="col-md-6 mb-3">
-              <label for="id_trainer_organization">Trainer's Organization</label>
-              {{ form.trainer_organization }}
-              <small class="form-text text-muted">Only if external trainer</small>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="id_trainer_organization">Trainer's Organization</label>
+                {{ form.trainer_organization }}
+                {% if form.trainer_organization.errors %}
+                  <div class="text-danger small">{{ form.trainer_organization.errors }}</div>
+                {% endif %}
+                <small class="form-text text-muted">Only required if trainer is external</small>
+              </div>
             </div>
           </div>
 
-          <!-- Section 5: Agenda & Material -->
+          <!-- ========================================================== -->
+          <!-- SECTION 5: AGENDA & MATERIAL                                -->
+          <!-- ========================================================== -->
           <hr>
-          <h5 class="section-divider"><i class="fas fa-file-alt mr-2"></i>Session Details</h5>
+          <div class="section-divider"><i class="fas fa-file-alt"></i>Session Details</div>
           <div class="row">
-            <div class="col-md-12 mb-3">
-              <label for="id_agenda">Agenda / Topics to Cover</label>
-              {{ form.agenda }}
-              <small class="form-text text-muted">List the topics and activities planned for this session</small>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="id_agenda">Agenda / Topics to Cover</label>
+                {{ form.agenda }}
+                {% if form.agenda.errors %}
+                  <div class="text-danger small">{{ form.agenda.errors }}</div>
+                {% endif %}
+                <small class="form-text text-muted">List the topics and activities planned for this session</small>
+              </div>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="id_attachment">Training Material (Optional)</label>
-              {{ form.attachment }}
-              <small class="form-text text-muted">Upload presentation, PDF, or any reference material</small>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="id_attachment">Training Material (Optional)</label>
+                {{ form.attachment }}
+                {% if form.attachment.errors %}
+                  <div class="text-danger small">{{ form.attachment.errors }}</div>
+                {% endif %}
+                <small class="form-text text-muted">Upload presentation, PDF, or any reference material</small>
+              </div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label for="id_remarks">Additional Remarks</label>
-              {{ form.remarks }}
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="id_remarks">Additional Remarks</label>
+                {{ form.remarks }}
+                {% if form.remarks.errors %}
+                  <div class="text-danger small">{{ form.remarks.errors }}</div>
+                {% endif %}
+              </div>
             </div>
           </div>
 
-          <!-- Reported By (readonly like your incident form) -->
+          <!-- ========================================================== -->
+          <!-- CREATED BY                                                 -->
+          <!-- ========================================================== -->
           <hr>
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label>Created By</label>
-              <input type="text" class="form-control readonly-field"
-                     value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Created By</label>
+                <input type="text" class="form-control readonly-field"
+                       value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+              </div>
             </div>
-            <div class="col-md-6 mb-3">
-              <label>Created On</label>
-              <input type="text" class="form-control readonly-field"
-                     value="{% now 'd/m/Y H:i' %}" readonly>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Created On</label>
+                <input type="text" class="form-control readonly-field"
+                       value="{% now 'd/m/Y H:i' %}" readonly>
+              </div>
             </div>
           </div>
 
         </div>
 
+        <!-- ========================================================== -->
+        <!-- FOOTER                                                     -->
+        <!-- ========================================================== -->
         <div class="card-footer">
-          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-            <i class="fas fa-calendar-plus mr-2"></i>Schedule Training Session
+          <button type="submit" class="btn-primary-custom" id="submitBtn">
+            <i class="fas fa-calendar-plus"></i> Schedule Training Session
           </button>
-          <a href="{{ cancel_url }}" class="btn btn-secondary btn-lg ml-2">
-            <i class="fas fa-times mr-2"></i>Cancel
+          <a href="{{ cancel_url }}" class="btn-secondary-custom">
+            <i class="fas fa-times"></i> Cancel
           </a>
         </div>
       </form>
@@ -296,6 +920,7 @@
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -308,18 +933,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const topicSelect = document.getElementById('id_topic');
     const topicValidity = document.getElementById('topicValidity');
 
-    topicSelect.addEventListener('change', function () {
-        const option = this.options[this.selectedIndex];
-        if (option.value) {
+    if (topicSelect) {
+        // Trigger on load if a topic is pre-selected
+        if (topicSelect.value) {
+            const option = topicSelect.options[topicSelect.selectedIndex];
             const days = option.getAttribute('data-validity');
             const mandatory = option.getAttribute('data-mandatory');
-            topicValidity.innerHTML =
-                `Validity: <strong>${days} days</strong>` +
-                (mandatory === 'True' ? ' &nbsp;|&nbsp; <span class="badge badge-danger">Mandatory</span>' : '');
-        } else {
-            topicValidity.innerHTML = '';
+            if (days) {
+                topicValidity.innerHTML =
+                    `Validity: <strong>${days} days</strong>` +
+                    (mandatory === 'True' ? ' &nbsp;|&nbsp; <span class="badge-danger-custom">Mandatory</span>' : '');
+            }
         }
-    });
+
+        topicSelect.addEventListener('change', function () {
+            const option = this.options[this.selectedIndex];
+            if (option.value) {
+                const days = option.getAttribute('data-validity');
+                const mandatory = option.getAttribute('data-mandatory');
+                topicValidity.innerHTML =
+                    `Validity: <strong>${days} days</strong>` +
+                    (mandatory === 'True' ? ' &nbsp;|&nbsp; <span class="badge-danger-custom">Mandatory</span>' : '');
+            } else {
+                topicValidity.innerHTML = '';
+            }
+        });
+    }
 
     // ── External trainer toggle ──
     const externalCheckbox = document.getElementById('id_trainer_is_external');
@@ -327,8 +966,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (externalCheckbox) {
         externalCheckbox.addEventListener('change', function () {
-            externalOrgRow.style.display = this.checked ? 'flex' : 'none';
+            externalOrgRow.style.display = this.checked ? 'block' : 'none';
         });
+        // Check initial state
+        if (externalCheckbox.checked) {
+            externalOrgRow.style.display = 'block';
+        }
     }
 
     // ── Set today as default date ──
@@ -341,17 +984,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── AJAX location chain — EXACTLY like your incident_create.html ──
+    // ── AJAX location chain ──
     const plantSelect = document.getElementById('id_plant');
     const zoneSelect = document.getElementById('id_zone');
     const locationSelect = document.getElementById('id_location');
     const sublocationSelect = document.getElementById('id_sublocation');
 
     function resetSelect(el, text) {
-        if (el) el.innerHTML = `<option value="">-- ${text} --</option>`;
+        if (el && el.tagName === 'SELECT') {
+            el.innerHTML = '<option value="">-- ' + text + ' --</option>';
+        }
     }
 
-    if (plantSelect) {
+    if (plantSelect && plantSelect.tagName === 'SELECT') {
         plantSelect.addEventListener('change', function () {
             const plantId = this.value;
             resetSelect(zoneSelect, 'Select Zone');
@@ -363,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(r => r.json())
                     .then(data => {
                         data.forEach(z => {
-                            const opt = new Option(`${z.name} (${z.code})`, z.id);
+                            const opt = new Option(z.code ? `${z.name} (${z.code})` : z.name, z.id);
                             zoneSelect.add(opt);
                         });
                     });
@@ -371,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (zoneSelect) {
+    if (zoneSelect && zoneSelect.tagName === 'SELECT') {
         zoneSelect.addEventListener('change', function () {
             const zoneId = this.value;
             resetSelect(locationSelect, 'Select Location');
@@ -382,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(r => r.json())
                     .then(data => {
                         data.forEach(l => {
-                            const opt = new Option(`${l.name} (${l.code})`, l.id);
+                            const opt = new Option(l.code ? `${l.name} (${l.code})` : l.name, l.id);
                             locationSelect.add(opt);
                         });
                     });
@@ -390,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (locationSelect) {
+    if (locationSelect && locationSelect.tagName === 'SELECT') {
         locationSelect.addEventListener('change', function () {
             const locationId = this.value;
             resetSelect(sublocationSelect, 'Select Sub-Location');
@@ -408,31 +1053,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Trigger on page load if pre-selected (single assignment case)
-    if (plantSelect && plantSelect.value) {
-        plantSelect.dispatchEvent(new Event('change'));
-        setTimeout(() => {
-            if (zoneSelect && zoneSelect.value) {
-                zoneSelect.dispatchEvent(new Event('change'));
-                setTimeout(() => {
-                    if (locationSelect && locationSelect.value) {
-                        locationSelect.dispatchEvent(new Event('change'));
-                    }
-                }, 200);
-            }
-        }, 200);
-    }
-
     // ── Prevent double submit ──
-    form.addEventListener('submit', function (e) {
-        if (isSubmitting) { e.preventDefault(); return false; }
-        isSubmitting = true;
-        const btn = document.getElementById('submitBtn');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scheduling...';
-        }
-    });
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+            isSubmitting = true;
+            const btn = document.getElementById('submitBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scheduling...';
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

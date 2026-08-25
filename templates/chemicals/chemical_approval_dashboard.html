@@ -1,147 +1,940 @@
 {% extends 'base/base.html' %}
-{% block title %}Chemical Approvals{% endblock %}
-{% block page_title %}Chemical Approval Dashboard{% endblock %}
+{% load static %}
+
+{% block title %}Chemical Approvals | EHS-360{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'chemicals:chemical_list' %}">Chemicals</a></li>
 <li class="breadcrumb-item active">Approvals</li>
 {% endblock %}
+
 {% block extra_css %}
 <style>
-  .request-card { border-radius: 12px; border-left: 5px solid; margin-bottom: 15px; transition: .2s; }
-  .request-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
-  .request-pending { border-color: #ffc107; }
-  .request-approved { border-color: #28a745; }
-  .request-rejected { border-color: #dc3545; }
-  .quick-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .quick-info .info-box { background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center; }
-  .info-label { font-size: 11px; color: #6c757d; }
-  .info-value { font-weight: 600; }
-  @media (max-width: 768px) { .quick-info { grid-template-columns: 1fr 1fr; } }
+  /* ===== CHEMICAL APPROVALS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                 */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* INFO BOXES - STATS CARDS                                   */
+  /* ========================================================== */
+  .info-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .info-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(13, 148, 136, 0.12);
+  }
+
+  .info-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .info-box.bg-warning::before {
+    background: linear-gradient(90deg, var(--secondary-gold), #b45309);
+  }
+
+  .info-box.bg-success::before {
+    background: linear-gradient(90deg, var(--secondary-green), #16a34a);
+  }
+
+  .info-box.bg-danger::before {
+    background: linear-gradient(90deg, var(--secondary-red), #b91c1c);
+  }
+
+  .info-box .info-box-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .info-box.bg-warning .info-box-icon {
+    background: linear-gradient(135deg, var(--secondary-gold), #b45309);
+  }
+
+  .info-box.bg-success .info-box-icon {
+    background: linear-gradient(135deg, var(--secondary-green), #16a34a);
+  }
+
+  .info-box.bg-danger .info-box-icon {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
+  }
+
+  .info-box .info-box-content {
+    flex: 1;
+  }
+
+  .info-box .info-box-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 0;
+  }
+
+  .info-box .info-box-number {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  /* ========================================================== */
+  /* CARD - TAB STYLING                                        */
+  /* ========================================================== */
+  .main-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .main-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .main-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .main-card .card-header .nav-tabs {
+    border-bottom: none;
+    padding: 0 16px;
+  }
+
+  .main-card .card-header .nav-tabs .nav-item {
+    margin-bottom: 0;
+  }
+
+  .main-card .card-header .nav-tabs .nav-link {
+    color: var(--text-secondary);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border-radius: 0;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+  }
+
+  .main-card .card-header .nav-tabs .nav-link:hover {
+    color: var(--primary-teal);
+    background: transparent;
+  }
+
+  .main-card .card-header .nav-tabs .nav-link.active {
+    color: var(--primary-teal);
+    background: transparent;
+    border-bottom: 3px solid var(--primary-teal);
+  }
+
+  .main-card .card-header .nav-tabs .nav-link i {
+    margin-right: 6px;
+  }
+
+  .main-card .card-body {
+    padding: 20px;
+  }
+
+  /* ========================================================== */
+  /* REQUEST CARD                                               */
+  /* ========================================================== */
+  .request-card {
+    border-radius: var(--radius-card);
+    border-left: 5px solid;
+    margin-bottom: 14px;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left-width: 5px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .request-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .request-card .card-body {
+    padding: 16px 20px;
+  }
+
+  .request-pending {
+    border-left-color: var(--secondary-gold);
+  }
+
+  .request-approved {
+    border-left-color: var(--secondary-green);
+  }
+
+  .request-rejected {
+    border-left-color: var(--secondary-red);
+  }
+
+  .request-card h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+  }
+
+  .request-card small {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .badge-pending {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-approved {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-rejected {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* ========================================================== */
+  /* QUICK INFO GRID                                            */
+  /* ========================================================== */
+  .quick-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .quick-info .info-box-mini {
+    background: var(--bg-page);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    border: 1px solid var(--border-color);
+  }
+
+  .quick-info .info-box-mini .info-value {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+
+  .quick-info .info-box-mini .info-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .btn-success-sm {
+    background: linear-gradient(135deg, var(--secondary-green), #16a34a);
+    border: none;
+    padding: 5px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+  }
+
+  .btn-success-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+    color: white;
+  }
+
+  .btn-danger-sm {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
+    border: none;
+    padding: 5px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+  }
+
+  .btn-danger-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* MODAL                                                      */
+  /* ========================================================== */
+  .modal-content {
+    border-radius: var(--radius-card);
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: 14px 20px;
+  }
+
+  .modal-header.bg-success {
+    background: linear-gradient(135deg, var(--secondary-green), #16a34a) !important;
+    color: white;
+  }
+
+  .modal-header.bg-danger {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c) !important;
+    color: white;
+  }
+
+  .modal-header .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .modal-header .close {
+    color: white;
+    opacity: 0.8;
+  }
+
+  .modal-header .close:hover {
+    opacity: 1;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-body .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    height: 38px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  .modal-body .form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    outline: none;
+  }
+
+  .modal-body textarea.form-control {
+    height: auto;
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .modal-body .text-muted {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .modal-footer .btn-success {
+    background: linear-gradient(135deg, var(--secondary-green), #16a34a);
+    border: none;
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+  }
+
+  .modal-footer .btn-danger {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
+    border: none;
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+  }
+
+  .modal-footer .btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .info-box {
+      padding: 12px 16px;
+    }
+
+    .info-box .info-box-number {
+      font-size: 1.3rem;
+    }
+
+    .info-box .info-box-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+
+    .quick-info {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .quick-info .info-box-mini {
+      padding: 6px 8px;
+    }
+
+    .quick-info .info-box-mini .info-value {
+      font-size: 0.8rem;
+    }
+
+    .main-card .card-header .nav-tabs .nav-link {
+      padding: 8px 14px;
+      font-size: 0.75rem;
+    }
+
+    .request-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .request-card h5 {
+      font-size: 0.9rem;
+    }
+
+    .request-card small {
+      font-size: 0.7rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .btn-success-sm,
+    .btn-danger-sm {
+      font-size: 0.7rem;
+      padding: 4px 12px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .info-box {
+      padding: 10px 12px;
+    }
+
+    .info-box .info-box-number {
+      font-size: 1.1rem;
+    }
+
+    .info-box .info-box-icon {
+      width: 34px;
+      height: 34px;
+      font-size: 14px;
+    }
+
+    .quick-info {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .main-card .card-header .nav-tabs {
+      padding: 0 8px;
+    }
+
+    .main-card .card-header .nav-tabs .nav-link {
+      padding: 6px 10px;
+      font-size: 0.65rem;
+    }
+
+    .main-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .request-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .request-card h5 {
+      font-size: 0.8rem;
+    }
+
+    .badge-pending,
+    .badge-approved,
+    .badge-rejected {
+      font-size: 0.6rem;
+      padding: 2px 10px;
+    }
+
+    .btn-success-sm,
+    .btn-danger-sm {
+      font-size: 0.6rem;
+      padding: 3px 10px;
+    }
+
+    .modal-body {
+      padding: 14px;
+    }
+
+    .modal-footer {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .modal-footer .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="row mb-3">
+
+<!-- ========================================================== -->
+<!-- PAGE HEADER                                                -->
+<!-- ========================================================== -->
+<div class="dash-page-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <i class="fas fa-check-double"></i>
+    </div>
+    <div class="header-text">
+      <h1>Chemical Approval Dashboard</h1>
+      <p class="subtitle">Manage and track chemical approval requests</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- STATISTICS CARDS                                           -->
+<!-- ========================================================== -->
+<div class="row mb-4">
   <div class="col-md-4">
     <div class="info-box bg-warning">
-      <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+      <div class="info-box-icon">
+        <i class="fas fa-clock"></i>
+      </div>
       <div class="info-box-content">
-        <span class="info-box-text">Pending for Approval</span>
-        <span class="info-box-number">{{ pending_count }}</span>
+        <div class="info-box-text">Pending for Approval</div>
+        <div class="info-box-number">{{ pending_count }}</div>
       </div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="info-box bg-success">
-      <span class="info-box-icon"><i class="fas fa-check"></i></span>
+      <div class="info-box-icon">
+        <i class="fas fa-check"></i>
+      </div>
       <div class="info-box-content">
-        <span class="info-box-text">Approved</span>
-        <span class="info-box-number">{{ approved_count }}</span>
+        <div class="info-box-text">Approved</div>
+        <div class="info-box-number">{{ approved_count }}</div>
       </div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="info-box bg-danger">
-      <span class="info-box-icon"><i class="fas fa-times"></i></span>
+      <div class="info-box-icon">
+        <i class="fas fa-times"></i>
+      </div>
       <div class="info-box-content">
-        <span class="info-box-text">Rejected</span>
-        <span class="info-box-number">{{ rejected_count }}</span>
+        <div class="info-box-text">Rejected</div>
+        <div class="info-box-number">{{ rejected_count }}</div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="card card-outline card-primary">
-  <div class="card-header p-0">
+<!-- ========================================================== -->
+<!-- MAIN CARD WITH TABS                                        -->
+<!-- ========================================================== -->
+<div class="main-card">
+  <div class="card-header">
     <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#pending">Pending</a></li>
-      <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#approved">Approved</a></li>
-      <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#rejected">Rejected</a></li>
+      <li class="nav-item">
+        <a class="nav-link active" data-toggle="pill" href="#pending">
+          <i class="fas fa-clock"></i> Pending
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="pill" href="#approved">
+          <i class="fas fa-check"></i> Approved
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="pill" href="#rejected">
+          <i class="fas fa-times"></i> Rejected
+        </a>
+      </li>
     </ul>
   </div>
+
   <div class="card-body">
     <div class="tab-content">
+
+      <!-- ========================================================== -->
+      <!-- PENDING TAB                                                -->
+      <!-- ========================================================== -->
       <div class="tab-pane fade show active" id="pending">
         {% for request_obj in pending_requests %}
-        <div class="card request-card request-pending">
+        <div class="request-card request-pending">
           <div class="card-body">
             <div class="d-flex justify-content-between flex-wrap">
               <div>
-                <h5 class="mb-1">{{ request_obj.chemical_name }}</h5>
+                <h5>{{ request_obj.chemical_name }}</h5>
                 <small>{{ request_obj.requester_name }} | CAS: {{ request_obj.cas_number }}</small>
               </div>
-              <span class="badge badge-warning">Pending for Approval</span>
+              <span class="badge-pending">Pending for Approval</span>
             </div>
+
             <div class="quick-info mt-3">
-              <div class="info-box"><div class="info-value">{{ request_obj.quantity }} {{ request_obj.quantity_unit }}</div><div class="info-label">Quantity</div></div>
-              <div class="info-box"><div class="info-value">{{ request_obj.get_urgency_display }}</div><div class="info-label">Urgency</div></div>
-              <div class="info-box"><div class="info-value">{{ request_obj.plant|default:"-" }}</div><div class="info-label">Plant</div></div>
-              <div class="info-box"><div class="info-value">{{ request_obj.location|default:"-" }}</div><div class="info-label">Location</div></div>
+              <div class="info-box-mini">
+                <div class="info-value">{{ request_obj.quantity }} {{ request_obj.quantity_unit }}</div>
+                <div class="info-label">Quantity</div>
+              </div>
+              <div class="info-box-mini">
+                <div class="info-value">{{ request_obj.get_urgency_display }}</div>
+                <div class="info-label">Urgency</div>
+              </div>
+              <div class="info-box-mini">
+                <div class="info-value">{{ request_obj.plant|default:"-" }}</div>
+                <div class="info-label">Plant</div>
+              </div>
+              <div class="info-box-mini">
+                <div class="info-value">{{ request_obj.location|default:"-" }}</div>
+                <div class="info-label">Location</div>
+              </div>
             </div>
+
             <div class="mt-3">
               <strong>Justification</strong>
               <p class="mb-2 text-muted">{{ request_obj.justification }}</p>
             </div>
+
             <div class="d-flex flex-wrap justify-content-end" style="gap: 8px;">
-              <button type="button" class="btn btn-success btn-sm open-approve-modal" data-url="{% url 'chemicals:chemical_request_approve' request_obj.pk %}" data-linked-chemical="{{ request_obj.chemical_id|default:'' }}">Approve</button>
-              <button type="button" class="btn btn-danger btn-sm open-reject-modal" data-url="{% url 'chemicals:chemical_request_reject' request_obj.pk %}">Reject</button>
+              <button type="button" class="btn-success-sm open-approve-modal"
+                      data-url="{% url 'chemicals:chemical_request_approve' request_obj.pk %}"
+                      data-linked-chemical="{{ request_obj.chemical_id|default:'' }}">
+                <i class="fas fa-check"></i> Approve
+              </button>
+              <button type="button" class="btn-danger-sm open-reject-modal"
+                      data-url="{% url 'chemicals:chemical_request_reject' request_obj.pk %}">
+                <i class="fas fa-times"></i> Reject
+              </button>
             </div>
           </div>
         </div>
         {% empty %}
-        <p class="mb-0">No pending chemical requests.</p>
+        <div class="empty-state">
+          <p>No pending chemical requests.</p>
+        </div>
         {% endfor %}
       </div>
 
+      <!-- ========================================================== -->
+      <!-- APPROVED TAB                                               -->
+      <!-- ========================================================== -->
       <div class="tab-pane fade" id="approved">
         {% for request_obj in approved_requests %}
-        <div class="card request-card request-approved">
+        <div class="request-card request-approved">
           <div class="card-body">
             <div class="d-flex justify-content-between flex-wrap">
               <div>
-                <h5 class="mb-1">{{ request_obj.chemical_name }}</h5>
+                <h5>{{ request_obj.chemical_name }}</h5>
                 <small>{{ request_obj.requester_name }} | Approved by {{ request_obj.approved_by|default:"-" }}</small>
               </div>
-              <span class="badge badge-success">Approved</span>
+              <span class="badge-approved">Approved</span>
             </div>
+
             <p class="mb-1 mt-3"><strong>Linked Chemical:</strong> {{ request_obj.chemical|default:"Not linked" }}</p>
             <p class="mb-0 text-muted">Approved on {{ request_obj.approved_at|date:"d M Y H:i"|default:"-" }}</p>
           </div>
         </div>
         {% empty %}
-        <p class="mb-0">No approved chemical requests.</p>
+        <div class="empty-state">
+          <p>No approved chemical requests.</p>
+        </div>
         {% endfor %}
       </div>
 
+      <!-- ========================================================== -->
+      <!-- REJECTED TAB                                               -->
+      <!-- ========================================================== -->
       <div class="tab-pane fade" id="rejected">
         {% for request_obj in rejected_requests %}
-        <div class="card request-card request-rejected">
+        <div class="request-card request-rejected">
           <div class="card-body">
             <div class="d-flex justify-content-between flex-wrap">
               <div>
-                <h5 class="mb-1">{{ request_obj.chemical_name }}</h5>
+                <h5>{{ request_obj.chemical_name }}</h5>
                 <small>{{ request_obj.requester_name }}</small>
               </div>
-              <span class="badge badge-danger">Rejected</span>
+              <span class="badge-rejected">Rejected</span>
             </div>
+
             <p class="mb-1 mt-3"><strong>Reason:</strong> {{ request_obj.rejection_reason|default:"-" }}</p>
             <p class="mb-0 text-muted">Reviewed by {{ request_obj.approved_by|default:"-" }} on {{ request_obj.approved_at|date:"d M Y H:i"|default:"-" }}</p>
           </div>
         </div>
         {% empty %}
-        <p class="mb-0">No rejected chemical requests.</p>
+        <div class="empty-state">
+          <p>No rejected chemical requests.</p>
+        </div>
         {% endfor %}
       </div>
+
     </div>
   </div>
 </div>
 
+<!-- ========================================================== -->
+<!-- APPROVE MODAL                                              -->
+<!-- ========================================================== -->
 <div class="modal fade" id="approveModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="post" id="approveForm">
       {% csrf_token %}
       <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Approve Chemical Request</h5>
+        <div class="modal-header bg-success">
+          <h5 class="modal-title"><i class="fas fa-check mr-2"></i>Approve Chemical Request</h5>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -155,21 +948,24 @@
           <small class="text-muted">Optional. You can approve the request even if the inventory chemical is added later.</small>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Approve Request</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success"><i class="fas fa-check mr-2"></i>Approve Request</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times mr-2"></i>Cancel</button>
         </div>
       </div>
     </form>
   </div>
 </div>
 
+<!-- ========================================================== -->
+<!-- REJECT MODAL                                               -->
+<!-- ========================================================== -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
   <div class="modal-dialog">
     <form method="post" id="rejectForm">
       {% csrf_token %}
       <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Reject Chemical Request</h5>
+        <div class="modal-header bg-danger">
+          <h5 class="modal-title"><i class="fas fa-times mr-2"></i>Reject Chemical Request</h5>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
@@ -177,29 +973,35 @@
           <textarea name="rejection_reason" id="rejectionReason" class="form-control" rows="4" required></textarea>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-danger">Reject Request</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger"><i class="fas fa-times mr-2"></i>Reject Request</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times mr-2"></i>Cancel</button>
         </div>
       </div>
     </form>
   </div>
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
-  document.querySelectorAll('.open-approve-modal').forEach(button => {
-    button.addEventListener('click', function () {
-      document.getElementById('approveForm').action = this.dataset.url;
-      document.getElementById('approveChemical').value = this.dataset.linkedChemical || '';
-      $('#approveModal').modal('show');
+  document.addEventListener('DOMContentLoaded', function() {
+    // Approve Modal
+    document.querySelectorAll('.open-approve-modal').forEach(button => {
+      button.addEventListener('click', function () {
+        document.getElementById('approveForm').action = this.dataset.url;
+        document.getElementById('approveChemical').value = this.dataset.linkedChemical || '';
+        $('#approveModal').modal('show');
+      });
     });
-  });
 
-  document.querySelectorAll('.open-reject-modal').forEach(button => {
-    button.addEventListener('click', function () {
-      document.getElementById('rejectForm').action = this.dataset.url;
-      document.getElementById('rejectionReason').value = '';
-      $('#rejectModal').modal('show');
+    // Reject Modal
+    document.querySelectorAll('.open-reject-modal').forEach(button => {
+      button.addEventListener('click', function () {
+        document.getElementById('rejectForm').action = this.dataset.url;
+        document.getElementById('rejectionReason').value = '';
+        $('#rejectModal').modal('show');
+      });
     });
   });
 </script>
