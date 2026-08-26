@@ -1132,6 +1132,78 @@ EHS Management System
     }
 
     @staticmethod
+    def _build_compliance_base_context(requirement, event_label, subject_prefix):
+        requirement_url = f"{settings.SITE_URL}{reverse('legal_compliance:compliance_detail', args=[requirement.id])}"
+
+        responsible_names = ", ".join(
+            filter(
+                None,
+                [
+                    user.get_full_name() or user.username
+                    for user in requirement.responsible_person.all()
+                ],
+            )
+        ) or "N/A"
+
+        reviewer_names = ", ".join(
+            filter(
+                None,
+                [
+                    user.get_full_name() or user.username
+                    for user in requirement.reviewer.all()
+                ],
+            )
+        ) or "N/A"
+
+        return {
+            'title': f"{event_label} | {requirement.requirement_code}",
+            'subject': f"{subject_prefix} - {requirement.requirement_code}",
+            'message': f"""
+Hello,
+
+A legal compliance item requires your attention.
+
+COMPLIANCE DETAILS
+--------------------------------------------------
+Requirement Code   : {requirement.requirement_code}
+Title              : {requirement.title}
+Legal Act          : {requirement.legal_act.act_name if requirement.legal_act else 'N/A'}
+Criticality        : {requirement.get_criticality_display()}
+Status             : {requirement.get_status_display()}
+Due Date           : {requirement.due_date if requirement.due_date else 'N/A'}
+Responsible Users  : {responsible_names}
+Reviewers          : {reviewer_names}
+
+DESCRIPTION
+--------------------------------------------------
+{(requirement.description or 'N/A')[:500]}
+
+Please review the requirement in the system and take the necessary action.
+
+Regards,
+EHS Management System
+""",
+            'compliance_requirement': requirement,
+            'compliance_url': requirement_url,
+        }
+
+    @staticmethod
+    def _build_compliance_reminder_context(requirement):
+        return NotificationService._build_compliance_base_context(
+            requirement,
+            event_label=f"Compliance Reminder",
+            subject_prefix=f"Compliance Reminder",
+        )
+
+    @staticmethod
+    def _build_compliance_escalation_context(requirement):
+        return NotificationService._build_compliance_base_context(
+            requirement,
+            event_label=f"Compliance Escalation",
+            subject_prefix=f"Compliance Escalation",
+        )
+
+    @staticmethod
     def _build_investigation_overdue_context(incident):
         """Build context for investigation overdue notifications"""
         import datetime

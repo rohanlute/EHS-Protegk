@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import admin_views as notification_admin_views
-from .views import NotificationListView, mark_all_notifications_read, mark_notification_read, open_notification
+from .views import NotificationListView, delete_notification, mark_all_notifications_read, mark_notification_read, open_notification
 
 app_name = "alert_engine"
 
@@ -9,6 +9,7 @@ urlpatterns = [
     path("", NotificationListView.as_view(), name="notification_list"),
     path("inbox/", NotificationListView.as_view(), name="notification_inbox"),
     path("<int:pk>/open/", open_notification, name="notification_detail"),
+    path("<int:pk>/delete/", delete_notification, name="notification_delete"),
     path("<int:pk>/read/", mark_notification_read, name="notification_read"),
     path("read-all/", mark_all_notifications_read, name="notifications_read_all"),
 

@@ -297,7 +297,7 @@
   .notification-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
   }
 
@@ -329,10 +329,41 @@
     font-size: 12px;
   }
 
+  .btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(220, 38, 38, 0.22);
+    background: #fff;
+    color: var(--secondary-red);
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-delete:hover {
+    background: var(--secondary-red);
+    color: white;
+    border-color: var(--secondary-red);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.16);
+    text-decoration: none;
+  }
+
+  .btn-delete i {
+    font-size: 12px;
+  }
+
   .notification-time {
     font-size: 12px;
     color: var(--text-muted);
     white-space: nowrap;
+    margin-right: 4px;
   }
 
   /* ========================================================== */
@@ -407,6 +438,9 @@
     cursor: not-allowed;
   }
 
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
   @media (max-width: 768px) {
     .dash-page-header {
       padding: 10px 14px;
@@ -454,7 +488,9 @@
 
     .notification-actions {
       width: 100%;
-      justify-content: space-between;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .notification-actions .btn-open {
@@ -462,8 +498,16 @@
       justify-content: center;
     }
 
+    .notification-actions .btn-delete {
+      flex: 1;
+      justify-content: center;
+    }
+
     .notification-time {
       font-size: 11px;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 4px;
     }
 
     .breadcrumb {
@@ -528,6 +572,11 @@
       padding: 4px 12px;
     }
 
+    .btn-delete {
+      font-size: 11px;
+      padding: 4px 10px;
+    }
+
     .btn-mark-read {
       font-size: 12px;
       padding: 5px 12px;
@@ -547,6 +596,9 @@
 
 <div class="container-fluid" style="padding: 0;">
 
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
   <div class="dash-page-header">
     <div class="header-left">
       <div class="header-icon">
@@ -559,6 +611,9 @@
     </div>
   </div>
 
+  <!-- ========================================================== -->
+  <!-- NOTIFICATIONS CARD                                         -->
+  <!-- ========================================================== -->
   <div class="ehs-card">
     <div class="notification-card-header">
       <div>
@@ -614,11 +669,18 @@
                 <a href="{% url 'alert_engine:notification_detail' notification.pk %}" class="btn-open">
                   <i class="fas fa-eye"></i> Open
                 </a>
+                <form action="{% url 'alert_engine:notification_delete' notification.pk %}" method="post" class="d-inline mb-0">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-delete" onclick="return confirm('Delete this notification?');">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </form>
               </div>
             </div>
           {% endfor %}
         </div>
 
+        <!-- Pagination -->
         {% if is_paginated %}
         <div class="card-footer">
           <nav class="dash-pagination">
@@ -648,6 +710,7 @@
         {% endif %}
 
       {% else %}
+        <!-- Empty State -->
         <div class="empty-state">
           <i class="fas fa-bell-slash"></i>
           <h4>No Notifications</h4>
@@ -664,6 +727,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Smooth hover effects for list items
     const listItems = document.querySelectorAll('.list-group-item');
     listItems.forEach(item => {
         item.addEventListener('mouseenter', function() {
@@ -671,6 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Confirm before marking all as read
     const markAllBtn = document.querySelector('.btn-mark-read');
     if (markAllBtn) {
         markAllBtn.addEventListener('click', function(e) {
@@ -683,6 +748,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Delete button hover effect enhancement
+    const deleteBtns = document.querySelectorAll('.btn-delete');
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.25s ease';
+        });
+    });
 });
 </script>
 {% endblock %}

@@ -51,6 +51,22 @@ def open_notification(request, pk):
 
 
 @login_required
+def delete_notification(request, pk):
+    notification = get_object_or_404(
+        Notification,
+        pk=pk,
+        recipient=request.user,
+    )
+
+    if request.method != "POST":
+        return redirect(request.META.get("HTTP_REFERER") or "alert_engine:notification_list")
+
+    notification.delete()
+    messages.success(request, "Notification deleted.")
+    return redirect(request.META.get("HTTP_REFERER") or "alert_engine:notification_list")
+
+
+@login_required
 def mark_all_notifications_read(request):
     Notification.objects.filter(
         recipient=request.user,
