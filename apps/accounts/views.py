@@ -729,11 +729,6 @@ class RolePermission(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['roles'] = Role.objects.all()
-        return context
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
         search = self.request.GET.get('search', '')
         roles = Role.objects.all()
         if search:
@@ -744,14 +739,110 @@ class RolePermission(LoginRequiredMixin, TemplateView):
         context['roles'] = roles
         context['search_query'] = search
         return context
-    
+
 class RoleCreateView(LoginRequiredMixin, TemplateView):
-    """Assigning user roles"""
+    """Assigning user roles with module-wise permissions"""
     template_name = 'roles/roles_permission.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['permission'] = Permissions.objects.all()
+        
+        # Get all permissions
+        all_permissions = Permissions.objects.all().order_by('module', 'display_order')
+        
+        # Group permissions by module - using dictionary to avoid duplicates
+        module_dict = {}
+        module_icons = {
+            'DASHBOARD': 'fas fa-tachometer-alt',
+            'ORGANIZATION': 'fas fa-sitemap',
+            'USER_MANAGEMENT': 'fas fa-users-cog',
+            'INJURY': 'fas fa-exclamation-triangle',
+            'HAZARD': 'fas fa-biohazard',
+            'APPROVALS': 'fas fa-clipboard-check',
+            'PERMIT': 'fas fa-file-signature',
+            'INSPECTION': 'fas fa-clipboard-check',
+            'AUDIT': 'fas fa-clipboard-list',
+            'NOTIFICATION': 'fas fa-bell',
+            'LEGAL_COMPLIANCE': 'fas fa-gavel',
+            'EHS_INDICATORS': 'fas fa-chart-line',
+            'TRAINING': 'fas fa-chalkboard-teacher',
+            'ENVIRONMENTAL_MIS': 'fas fa-chart-pie',
+            'CHEMICAL': 'fas fa-flask',
+            'TOOLBOX_TALK': 'fas fa-tools',
+            'EMERGENCY': 'fas fa-broadcast-tower',
+            'PPE': 'fas fa-user-shield',
+        }
+        
+        module_names = {
+            'DASHBOARD': 'Dashboard',
+            'ORGANIZATION': 'Organization Setup',
+            'USER_MANAGEMENT': 'User Management',
+            'INJURY': 'Injury Management',
+            'HAZARD': 'Hazards Management',
+            'APPROVALS': 'Approvals',
+            'PERMIT': 'Permit Management',
+            'INSPECTION': 'Inspection Management',
+            'AUDIT': 'Audit Management',
+            'NOTIFICATION': 'Notification Configuration',
+            'LEGAL_COMPLIANCE': 'Legal Compliance',
+            'EHS_INDICATORS': 'Monthly EHS Indicators',
+            'TRAINING': 'Training Management',
+            'ENVIRONMENTAL_MIS': 'Environmental MIS',
+            'CHEMICAL': 'Chemical Management',
+            'TOOLBOX_TALK': 'Toolbox Talk',
+            'EMERGENCY': 'Emergency Response',
+            'PPE': 'PPE Management',
+        }
+        
+        # Define module order - EXACT sequence from the image
+        module_order = [
+            'User Management',
+            'Injury Management',
+            'Hazards Management',
+            'Approvals',
+            'Permit Management',
+            'Inspection Management',
+            'Audit Management',
+            'Notification Configuration',
+            'Legal Compliance',
+            'Monthly EHS Indicators',
+            'Training Management',
+            'Environmental MIS',
+            'Chemical Management',
+            'Toolbox Talk',
+            'Emergency Response',
+            'PPE Management',
+            'Organization Setup',
+            'Dashboard',
+        ]
+        
+        # Group permissions by module - using dictionary to avoid duplicates
+        for perm in all_permissions:
+            module_code = perm.module
+            if module_code:  # Skip None/empty
+                module_display_name = module_names.get(module_code, module_code.title().replace('_', ' '))
+                if module_code not in module_dict:
+                    module_dict[module_code] = {
+                        'module_name': module_display_name,
+                        'icon': module_icons.get(module_code, 'fas fa-cubes'),
+                        'permissions': []
+                    }
+                module_dict[module_code]['permissions'].append(perm)
+        
+        # Convert dict to list and sort by module order
+        modules_with_perms = list(module_dict.values())
+        
+        # Sort using the defined order
+        def get_module_order(module):
+            module_name = module['module_name']
+            try:
+                return module_order.index(module_name)
+            except ValueError:
+                return 999  # Put unknown modules at the end
+        
+        modules_with_perms.sort(key=get_module_order)
+        
+        context['modules_with_perms'] = modules_with_perms
         return context
 
     def post(self, request):
@@ -781,9 +872,10 @@ class RoleCreateView(LoginRequiredMixin, TemplateView):
 
         messages.success(request, "Role created successfully")
         return redirect('accounts:role-list')
-    
+
+
 class RoleUpdateView(LoginRequiredMixin, TemplateView):
-    """Update an existing role"""
+    """Update an existing role with module-wise permissions"""
     template_name = 'roles/roleupdate.html'
 
     def get_context_data(self, **kwargs):
@@ -791,9 +883,104 @@ class RoleUpdateView(LoginRequiredMixin, TemplateView):
         role_id = self.kwargs.get('role_id')
         role = get_object_or_404(Role, id=role_id)
 
+        # Get all permissions
+        all_permissions = Permissions.objects.all().order_by('module', 'display_order')
+        
+        # Group permissions by module - using dictionary to avoid duplicates
+        module_dict = {}
+        module_icons = {
+            'DASHBOARD': 'fas fa-tachometer-alt',
+            'ORGANIZATION': 'fas fa-sitemap',
+            'USER_MANAGEMENT': 'fas fa-users-cog',
+            'INJURY': 'fas fa-exclamation-triangle',
+            'HAZARD': 'fas fa-biohazard',
+            'APPROVALS': 'fas fa-clipboard-check',
+            'PERMIT': 'fas fa-file-signature',
+            'INSPECTION': 'fas fa-clipboard-check',
+            'AUDIT': 'fas fa-clipboard-list',
+            'NOTIFICATION': 'fas fa-bell',
+            'LEGAL_COMPLIANCE': 'fas fa-gavel',
+            'EHS_INDICATORS': 'fas fa-chart-line',
+            'TRAINING': 'fas fa-chalkboard-teacher',
+            'ENVIRONMENTAL_MIS': 'fas fa-chart-pie',
+            'CHEMICAL': 'fas fa-flask',
+            'TOOLBOX_TALK': 'fas fa-tools',
+            'EMERGENCY': 'fas fa-broadcast-tower',
+            'PPE': 'fas fa-user-shield',
+        }
+        
+        module_names = {
+            'DASHBOARD': 'Dashboard',
+            'ORGANIZATION': 'Organization Setup',
+            'USER_MANAGEMENT': 'User Management',
+            'INJURY': 'Injury Management',
+            'HAZARD': 'Hazards Management',
+            'APPROVALS': 'Approvals',
+            'PERMIT': 'Permit Management',
+            'INSPECTION': 'Inspection Management',
+            'AUDIT': 'Audit Management',
+            'NOTIFICATION': 'Notification Configuration',
+            'LEGAL_COMPLIANCE': 'Legal Compliance',
+            'EHS_INDICATORS': 'Monthly EHS Indicators',
+            'TRAINING': 'Training Management',
+            'ENVIRONMENTAL_MIS': 'Environmental MIS',
+            'CHEMICAL': 'Chemical Management',
+            'TOOLBOX_TALK': 'Toolbox Talk',
+            'EMERGENCY': 'Emergency Response',
+            'PPE': 'PPE Management',
+        }
+        
+        # Define module order - EXACT sequence from the image
+        module_order = [
+            'User Management',
+            'Injury Management',
+            'Hazards Management',
+            'Approvals',
+            'Permit Management',
+            'Inspection Management',
+            'Audit Management',
+            'Notification Configuration',
+            'Legal Compliance',
+            'Monthly EHS Indicators',
+            'Training Management',
+            'Environmental MIS',
+            'Chemical Management',
+            'Toolbox Talk',
+            'Emergency Response',
+            'PPE Management',
+            'Organization Setup',
+            'Dashboard',
+        ]
+        
+        # Group permissions by module - using dictionary to avoid duplicates
+        for perm in all_permissions:
+            module_code = perm.module
+            if module_code:  # Skip None/empty
+                module_display_name = module_names.get(module_code, module_code.title().replace('_', ' '))
+                if module_code not in module_dict:
+                    module_dict[module_code] = {
+                        'module_name': module_display_name,
+                        'icon': module_icons.get(module_code, 'fas fa-cubes'),
+                        'permissions': []
+                    }
+                module_dict[module_code]['permissions'].append(perm)
+        
+        # Convert dict to list and sort by module order
+        modules_with_perms = list(module_dict.values())
+        
+        # Sort using the defined order
+        def get_module_order(module):
+            module_name = module['module_name']
+            try:
+                return module_order.index(module_name)
+            except ValueError:
+                return 999  # Put unknown modules at the end
+        
+        modules_with_perms.sort(key=get_module_order)
+
         context['role'] = role
-        context['permission'] = Permissions.objects.all()
-        context['role_permissions'] = role.permissions.values_list('id', flat=True)
+        context['modules_with_perms'] = modules_with_perms
+        context['role_permission_ids'] = list(role.permissions.values_list('id', flat=True))
         return context
 
     def post(self, request, *args, **kwargs):
@@ -824,7 +1011,7 @@ class RoleUpdateView(LoginRequiredMixin, TemplateView):
         else:
             role.permissions.clear()
 
-        # ✅ NEW: Sync permissions to all users with this role
+        # ✅ Sync permissions to all users with this role
         affected_users = role.role_user.all()
         synced_count = 0
         for user in affected_users:
@@ -836,9 +1023,9 @@ class RoleUpdateView(LoginRequiredMixin, TemplateView):
 
         messages.success(request, "Role updated successfully")
         return redirect('accounts:role-list')
-    
 
-###########################Role-permissin#############################
+
+###########################Role-permission#############################
 
 class RolePermissionsHierarchicalView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
     """Hierarchical permission management with module grouping"""
@@ -916,7 +1103,7 @@ def toggle_module_access(request, role_id):
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid action'}, status=400)
             
-            # ✅ NEW: Sync permissions to all users with this role
+            # ✅ Sync permissions to all users with this role
             affected_users = role.role_user.all()
             synced_count = 0
             for user in affected_users:
@@ -979,7 +1166,7 @@ def toggle_permission_in_module(request, role_id):
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid action'}, status=400)
             
-            # ✅ NEW: Sync permissions to all users with this role
+            # ✅ Sync permissions to all users with this role
             affected_users = role.role_user.all()
             synced_count = 0
             for user in affected_users:
@@ -999,8 +1186,6 @@ def toggle_permission_in_module(request, role_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
-
-
 
 
 ###Download the excel for the user list 
