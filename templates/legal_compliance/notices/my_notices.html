@@ -1,324 +1,819 @@
 {% extends 'base/base.html' %}
+{% load static %}
+{% load permission_tags %}
 
-{% block title %}
-My Regulatory Notices
+{% block title %}My Regulatory Notices{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Legal Compliance</a></li>
+<li class="breadcrumb-item active">My Regulatory Notices</li>
 {% endblock %}
 
-{% block page_title %}
-My Regulatory Notices
+{% block extra_css %}
+<style>
+  /* ===== MY REGULATORY NOTICES - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    --secondary-dark: #1e293b;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ========================================================== */
+  /* STATS CARDS - Full Width                                   */
+  /* ========================================================== */
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 14px 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .stat-card .stat-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    opacity: 0.12;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Stat Card Variants */
+  .stat-card.teal { border-left: 4px solid var(--primary-teal); }
+  .stat-card.teal .stat-icon { color: var(--primary-teal); }
+
+  .stat-card.red { border-left: 4px solid var(--secondary-red); }
+  .stat-card.red .stat-icon { color: var(--secondary-red); }
+
+  .stat-card.gold { border-left: 4px solid var(--secondary-gold); }
+  .stat-card.gold .stat-icon { color: var(--secondary-gold); }
+
+  .stat-card.blue { border-left: 4px solid var(--secondary-blue); }
+  .stat-card.blue .stat-icon { color: var(--secondary-blue); }
+
+  .stat-card.green { border-left: 4px solid var(--secondary-green); }
+  .stat-card.green .stat-icon { color: var(--secondary-green); }
+
+  .stat-card.dark { border-left: 4px solid var(--secondary-dark); }
+  .stat-card.dark .stat-icon { color: var(--secondary-dark); }
+
+  /* ========================================================== */
+  /* STATS ROW - Full Width Fix                                 */
+  /* ========================================================== */
+  .stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -6px;
+  }
+
+  .stats-row .stat-col {
+    flex: 0 0 16.666%;
+    max-width: 16.666%;
+    padding: 0 6px;
+    margin-bottom: 12px;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 30px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    min-height: 24px;
+    height: 24px;
+  }
+
+  .btn-info {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-info:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn i {
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.55rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td strong {
+    color: var(--text-primary);
+  }
+
+  .table .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .badge-info {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+
+  .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+  }
+
+  .badge-dark {
+    background: var(--secondary-dark);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 3rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .empty-state h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 992px) {
+    .stats-row .stat-col {
+      flex: 0 0 33.333%;
+      max-width: 33.333%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .dash-page-header .header-right .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stats-row .stat-col {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 6px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.2rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.8rem;
+    }
+
+    .ehs-card .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .ehs-card .card-header .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .table {
+      font-size: 0.7rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 10px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      min-width: 90px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.55rem;
+      padding: 1px 6px;
+    }
+
+    .btn-sm {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      min-height: 20px;
+      height: 20px;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 2.5rem;
+    }
+
+    .empty-state h4 {
+      font-size: 0.95rem;
+    }
+
+    .empty-state p {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .stats-row .stat-col {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card {
+      padding: 8px 10px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.4rem;
+      right: 8px;
+    }
+
+    .ehs-card .card-body {
+      padding: 8px 10px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.8rem;
+    }
+
+    .table tbody td {
+      padding: 3px 8px;
+      font-size: 0.65rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.55rem;
+      min-width: 70px;
+    }
+
+    .btn-sm {
+      font-size: 0.6rem;
+      padding: 1px 4px;
+      min-height: 18px;
+      height: 18px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<div class="row mb-3">
+<div class="container-fluid" style="padding: 0;">
 
-    <div class="col-md-2">
-
-        <div class="small-box bg-info">
-
-            <div class="inner">
-
-                <h3>{{ stats.total }}</h3>
-
-                <p>Total</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-file-alt"></i>
-
-            </div>
-
-        </div>
-
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-gavel"></i>
+      </div>
+      <div class="header-text">
+        <h1>My Regulatory Notices</h1>
+        <p class="subtitle">View and manage assigned regulatory notices</p>
+      </div>
     </div>
-
-
-    <div class="col-md-2">
-
-        <div class="small-box bg-danger">
-
-            <div class="inner">
-
-                <h3>{{ stats.open }}</h3>
-
-                <p>Open</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-exclamation-circle"></i>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-2">
-
-        <div class="small-box bg-warning">
-
-            <div class="inner">
-
-                <h3>{{ stats.under_review }}</h3>
-
-                <p>Under Review</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-search"></i>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-2">
-
-        <div class="small-box bg-primary">
-
-            <div class="inner">
-
-                <h3>{{ stats.reply_submitted }}</h3>
-
-                <p>Reply Submitted</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-paper-plane"></i>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-2">
-
-        <div class="small-box bg-success">
-
-            <div class="inner">
-
-                <h3>{{ stats.closed }}</h3>
-
-                <p>Closed</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-check-circle"></i>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-2">
-
-        <div class="small-box bg-dark">
-
-            <div class="inner">
-
-                <h3>{{ stats.escalated }}</h3>
-
-                <p>Escalated</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-bell"></i>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<div class="card">
-
-    <div class="card-header d-flex justify-content-between align-items-center">
-
-        <h5 class="mb-0">
-
-            <i class="fas fa-gavel"></i>
-
-            Assigned Regulatory Notices
-
-        </h5>
-
-        <a href="{% url 'legal_compliance:notice_create' %}"
-        class="btn btn-primary btn-sm">
-
-            <i class="fas fa-plus"></i>
-
-            Create Notice
-
+    <div class="header-right">
+      {% if request.user|has_perm:'MANAGE_LEGAL_COMPLIANCE_CONFIGURATION' %}
+        <a href="{% url 'legal_compliance:notice_create' %}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Create Notice
         </a>
+      {% endif %}
+    </div>
+  </div>
 
+  <!-- ========================================================== -->
+  <!-- STATS - Full Width                                         -->
+  <!-- ========================================================== -->
+  <div class="stats-row">
+    <div class="stat-col">
+      <div class="stat-card teal">
+        <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+
+    <div class="stat-col">
+      <div class="stat-card red">
+        <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="stat-value">{{ stats.open }}</div>
+        <div class="stat-label">Open</div>
+      </div>
+    </div>
+
+    <div class="stat-col">
+      <div class="stat-card gold">
+        <div class="stat-icon"><i class="fas fa-search"></i></div>
+        <div class="stat-value">{{ stats.under_review }}</div>
+        <div class="stat-label">Under Review</div>
+      </div>
+    </div>
+
+    <div class="stat-col">
+      <div class="stat-card blue">
+        <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+        <div class="stat-value">{{ stats.reply_submitted }}</div>
+        <div class="stat-label">Reply Submitted</div>
+      </div>
+    </div>
+
+    <div class="stat-col">
+      <div class="stat-card green">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ stats.closed }}</div>
+        <div class="stat-label">Closed</div>
+      </div>
+    </div>
+
+    <div class="stat-col">
+      <div class="stat-card dark">
+        <div class="stat-icon"><i class="fas fa-bell"></i></div>
+        <div class="stat-value">{{ stats.escalated }}</div>
+        <div class="stat-label">Escalated</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- NOTICES TABLE                                              -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h5 class="card-title">
+        <i class="fas fa-gavel"></i> Assigned Regulatory Notices
+      </h5>
     </div>
 
     <div class="card-body">
-
-        <div class="table-responsive">
-
-            <table class="table table-bordered table-hover">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Reference</th>
-
-                        <th>Authority</th>
-
-                        <th>Notice</th>
-
-                        <th>Due Date</th>
-
-                        <th>Priority</th>
-
-                        <th>Status</th>
-
-                        <th>Actions</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for notice in notices %}
-
-                    <tr>
-
-                        <td>
-
-                            {{ notice.notice_reference }}
-
-                        </td>
-
-                        <td>
-
-                            {{ notice.authority_name }}
-
-                        </td>
-
-                        <td>
-
-                            {{ notice.notice_title }}
-
-                        </td>
-
-                        <td>
-
-                            {{ notice.response_due_date|date:"d M Y" }}
-
-                        </td>
-
-                        <td>
-
-                            <span class="badge
-
-                                {% if notice.priority == 'CRITICAL' %}
-                                    badge-danger
-
-                                {% elif notice.priority == 'HIGH' %}
-                                    badge-warning
-
-                                {% elif notice.priority == 'MEDIUM' %}
-                                    badge-info
-
-                                {% else %}
-                                    badge-secondary
-                                {% endif %}
-                            ">
-
-                                {{ notice.get_priority_display }}
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <span class="badge
-
-                                {% if notice.status == 'OPEN' %}
-                                    badge-danger
-
-                                {% elif notice.status == 'UNDER_REVIEW' %}
-                                    badge-warning
-
-                                {% elif notice.status == 'REPLY_SUBMITTED' %}
-                                    badge-primary
-
-                                {% elif notice.status == 'CLOSED' %}
-                                    badge-success
-
-                                {% elif notice.status == 'ESCALATED' %}
-                                    badge-dark
-                                {% endif %}
-                            ">
-
-                                {{ notice.get_status_display }}
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <a href="{% url 'legal_compliance:notice_detail' notice.id %}"
-                            class="btn btn-sm btn-info">
-
-                                <i class="fas fa-eye"></i>
-
-                            </a>
-
-                        </td>
-
-                    </tr>
-
-                    {% empty %}
-
-                    <tr>
-
-                        <td colspan="6"
-                            class="text-center text-muted">
-
-                            No regulatory notices assigned.
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Authority</th>
+              <th>Notice</th>
+              <th>Due Date</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for notice in notices %}
+              <tr>
+                <td data-label="Reference">
+                  <strong>{{ notice.notice_reference }}</strong>
+                </td>
+                <td data-label="Authority">
+                  {{ notice.authority_name }}
+                </td>
+                <td data-label="Notice">
+                  {{ notice.notice_title }}
+                </td>
+                <td data-label="Due Date">
+                  {{ notice.response_due_date|date:"d M Y" }}
+                </td>
+                <td data-label="Priority">
+                  <span class="badge
+                    {% if notice.priority == 'CRITICAL' %}
+                      badge-danger
+                    {% elif notice.priority == 'HIGH' %}
+                      badge-warning
+                    {% elif notice.priority == 'MEDIUM' %}
+                      badge-info
+                    {% else %}
+                      badge-secondary
+                    {% endif %}
+                  ">
+                    {{ notice.get_priority_display }}
+                  </span>
+                </td>
+                <td data-label="Status">
+                  <span class="badge
+                    {% if notice.status == 'OPEN' %}
+                      badge-danger
+                    {% elif notice.status == 'UNDER_REVIEW' %}
+                      badge-warning
+                    {% elif notice.status == 'REPLY_SUBMITTED' %}
+                      badge-primary
+                    {% elif notice.status == 'CLOSED' %}
+                      badge-success
+                    {% elif notice.status == 'ESCALATED' %}
+                      badge-dark
+                    {% endif %}
+                  ">
+                    {{ notice.get_status_display }}
+                  </span>
+                </td>
+                <td data-label="Actions" class="table-actions">
+                  <a href="{% url 'legal_compliance:notice_detail' notice.id %}" class="btn btn-sm btn-info" title="View Notice">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  No regulatory notices assigned.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
 </div>
 

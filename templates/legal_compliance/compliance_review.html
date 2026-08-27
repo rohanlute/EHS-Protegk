@@ -1,604 +1,999 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}
-Compliance Review
-{% endblock %}
-
-{% block page_title %}
-Compliance Review
-{% endblock %}
+{% block title %}Compliance Review{% endblock %}
 
 {% block breadcrumb %}
-
-<li class="breadcrumb-item">
-    <a href="{% url 'dashboards:home' %}">
-        Home
-    </a>
-</li>
-
-<li class="breadcrumb-item">
-    <a href="{% url 'legal_compliance:dashboard' %}">
-        Legal Compliance
-    </a>
-</li>
-
-<li class="breadcrumb-item">
-    <a href="{% url 'legal_compliance:my_compliances' %}">
-        My Compliances
-    </a>
-</li>
-
-<li class="breadcrumb-item active">
-    Review
-</li>
-
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Legal Compliance</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:my_compliances' %}">My Compliances</a></li>
+<li class="breadcrumb-item active">Review</li>
 {% endblock %}
-
 
 {% block extra_css %}
-
 <style>
+  /* ===== COMPLIANCE REVIEW - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-    .response-card.border-success {
-        border-left: 4px solid #28a745 !important;
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER with Back Button                               */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-back-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    height: 34px;
+  }
+
+  .btn-back-header:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .btn-back-header i {
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* INFO HEADER CARD - Properly Aligned to Far Right          */
+  /* ========================================================== */
+  .info-header-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+
+  .info-header-card .card-body {
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .info-header-card .info-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .info-header-card .info-left .info-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .info-header-card .info-left .info-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .info-header-card .info-left .info-subtitle i {
+    margin-right: 4px;
+  }
+
+  .info-header-card .info-right {
+    text-align: right;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .info-header-card .info-right .badge {
+    font-size: 0.78rem;
+    padding: 4px 14px;
+  }
+
+  .info-header-card .info-right .meta-text {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .info-header-card .info-right .meta-text i {
+    margin-right: 4px;
+    width: 14px;
+  }
+
+  /* ========================================================== */
+  /* STAT CARDS                                                 */
+  /* ========================================================== */
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 14px 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .stat-card .stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .stat-card .stat-number.teal { color: var(--primary-teal); }
+  .stat-card .stat-number.green { color: var(--secondary-green); }
+  .stat-card .stat-number.red { color: var(--secondary-red); }
+  .stat-card .stat-number.gray { color: var(--text-muted); }
+
+  .stat-card .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSE CARD                                              */
+  /* ========================================================== */
+  .response-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .response-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .response-card:hover {
+    border-color: var(--primary-teal);
+  }
+
+  .response-card .card-body {
+    padding: 14px 16px;
+  }
+
+  .response-card.border-success {
+    border-left: 4px solid var(--secondary-green) !important;
+  }
+
+  .response-card.border-danger {
+    border-left: 4px solid var(--secondary-red) !important;
+  }
+
+  .response-card.border-secondary {
+    border-left: 4px solid var(--text-muted) !important;
+  }
+
+  .response-card .response-question {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .response-card .response-question strong {
+    color: var(--primary-teal);
+  }
+
+  .response-card .response-remarks {
+    background: var(--bg-page);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary-teal);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .response-card .response-reference {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .response-card .response-badge {
+    font-size: 0.75rem;
+    padding: 4px 14px;
+  }
+
+  .response-card .response-badge.badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .response-card .response-badge.badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .response-card .response-badge.badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .response-card .evidence-link {
+    margin-top: 8px;
+  }
+
+  .response-card .evidence-link .btn {
+    padding: 3px 12px;
+    font-size: 0.72rem;
+    height: 28px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .badge-info {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+
+  .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    color: white;
+  }
+
+  .btn-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-outline-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--primary-teal);
+    background: transparent;
+    color: var(--primary-teal);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--primary-teal);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn i {
+    font-size: 13px;
+  }
+
+  .btn-group-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+
+  .alert i {
+    font-size: 16px;
+    margin-top: 1px;
+  }
+
+  .alert-info {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+  }
+
+  .alert-info i {
+    color: var(--primary-teal);
+  }
+
+  .alert-light {
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
 
-    .response-card.border-danger {
-        border-left: 4px solid #dc3545 !important;
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
     }
 
-    .response-card.border-secondary {
-        border-left: 4px solid #6c757d !important;
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
     }
 
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .btn-back-header {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .info-header-card .card-body {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .info-header-card .info-right {
+      text-align: left;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.4rem;
+    }
+
+    .response-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .btn-group-center {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-group-center .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+    }
+
+    .info-header-card .info-left .info-title {
+      font-size: 0.9rem;
+    }
+
+    .info-header-card .info-left .info-subtitle {
+      font-size: 0.72rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .btn-back-header {
+      font-size: 0.75rem;
+      height: 30px;
+      padding: 4px 12px;
+    }
+
+    .info-header-card .info-right .badge {
+      font-size: 0.72rem;
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.2rem;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 12px;
+    }
+  }
 </style>
-
 {% endblock %}
-
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<div class="container-fluid" style="padding: 0;">
 
-    <div class="row">
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER with Back Button                               -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div class="header-text">
+        <h1>Compliance Review</h1>
+        <p class="subtitle">Review compliance submission details</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="{% url 'legal_compliance:my_compliances' %}" class="btn-back-header">
+        <i class="fas fa-arrow-left"></i> Back to My Compliances
+      </a>
+    </div>
+  </div>
 
-        <div class="col-12">
+  <!-- ========================================================== -->
+  <!-- INFO HEADER CARD - Right Content at Far Right             -->
+  <!-- ========================================================== -->
+  <div class="info-header-card">
+    <div class="card-body">
+      <div class="info-left">
+        <span class="info-title">{{ submission.requirement.requirement_code }} - {{ submission.requirement.title }}</span>
+        <span class="info-subtitle">
+          <i class="fas fa-file-alt"></i> Compliance Review
+        </span>
+      </div>
+      <div class="info-right">
+        <span class="badge
+          {% if submission.status == 'SUBMITTED' %}
+            badge-warning
+          {% elif submission.status == 'APPROVED' %}
+            badge-success
+          {% elif submission.status == 'REJECTED' %}
+            badge-danger
+          {% else %}
+            badge-secondary
+          {% endif %}
+        ">
+          {{ submission.get_status_display }}
+        </span>
+        <span class="meta-text">
+          <i class="fas fa-user"></i> Submitted by: {{ submission.submitted_by.get_full_name }}
+        </span>
+        <span class="meta-text">
+          <i class="fas fa-calendar-alt"></i> Date: {{ submission.submitted_at|date:"d M Y, h:i A" }}
+        </span>
+      </div>
+    </div>
+  </div>
 
-            <!-- HEADER -->
+  <!-- ========================================================== -->
+  <!-- STATS                                                       -->
+  <!-- ========================================================== -->
+  <div class="row mb-3">
+    <div class="col-md-3 col-6 mb-3">
+      <div class="stat-card">
+        <div class="stat-number teal">{{ total_questions }}</div>
+        <div class="stat-label">Total Questions</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="stat-card">
+        <div class="stat-number green">{{ yes_count }}</div>
+        <div class="stat-label">Complied</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="stat-card">
+        <div class="stat-number red">{{ no_count }}</div>
+        <div class="stat-label">Non-Complied</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="stat-card">
+        <div class="stat-number gray">{{ na_count }}</div>
+        <div class="stat-label">Not Applicable</div>
+      </div>
+    </div>
+  </div>
 
-            <div class="card mb-4 shadow-sm">
+  <!-- ========================================================== -->
+  <!-- RESPONSES LIST                                             -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h5 class="card-title">
+        <i class="fas fa-list-ul"></i> Full Compliance Report
+      </h5>
+    </div>
+    <div class="card-body">
+      {% if responses %}
+        {% for response in responses %}
+          <div class="response-card border-
+            {% if response.answer == 'YES' %}
+              success
+            {% elif response.answer == 'NO' %}
+              danger
+            {% else %}
+              secondary
+            {% endif %}
+          ">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <div class="response-question">
+                    <strong>{{ response.question.question_code }}:</strong>
+                    {{ response.question.question_text }}
+                    {% if response.question.is_critical %}
+                      <span class="badge badge-danger ml-2">Critical</span>
+                    {% endif %}
+                  </div>
 
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-
-                        <div>
-
-                            <h4 class="mb-1">
-
-                                Compliance Review
-
-                            </h4>
-
-                            <p class="text-muted mb-0">
-
-                                {{ submission.requirement.requirement_code }}
-
-                                -
-
-                                {{ submission.requirement.title }}
-
-                            </p>
-
-                        </div>
-
-                        <div class="text-end mt-2 mt-md-0">
-
-                            <span class="badge badge-success"
-                                  style="font-size: 1rem;">
-
-                                {{ submission.get_status_display }}
-
-                            </span>
-
-                            <br>
-
-                            <small class="text-muted">
-
-                                Submitted by:
-
-                                {{ submission.submitted_by.get_full_name }}
-
-                                <br>
-
-                                Date:
-
-                                {{ submission.submitted_at|date:"d M Y, h:i A" }}
-
-                            </small>
-
-                        </div>
-
+                  {% if response.remarks %}
+                    <div class="response-remarks">
+                      <strong>Remarks:</strong> {{ response.remarks }}
                     </div>
+                  {% endif %}
 
-                </div>
-
-            </div>
-
-
-            <!-- STATS -->
-
-            <div class="row mb-4">
-
-                <div class="col-md-3 col-6 mb-3">
-
-                    <div class="card text-center h-100 shadow-sm">
-
-                        <div class="card-body">
-
-                            <h3 class="text-primary fw-bold">
-
-                                {{ total_questions }}
-
-                            </h3>
-
-                            <p class="mb-0 text-muted">
-
-                                Total Questions
-
-                            </p>
-
-                        </div>
-
+                  {% if response.question.reference_standard %}
+                    <div class="response-reference">
+                      <i class="fas fa-book"></i> Reference: {{ response.question.reference_standard }}
                     </div>
-
+                  {% endif %}
                 </div>
 
-
-                <div class="col-md-3 col-6 mb-3">
-
-                    <div class="card text-center h-100 shadow-sm">
-
-                        <div class="card-body">
-
-                            <h3 class="text-success fw-bold">
-
-                                {{ yes_count }}
-
-                            </h3>
-
-                            <p class="mb-0 text-muted">
-
-                                Complied
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-3 col-6 mb-3">
-
-                    <div class="card text-center h-100 shadow-sm">
-
-                        <div class="card-body">
-
-                            <h3 class="text-danger fw-bold">
-
-                                {{ no_count }}
-
-                            </h3>
-
-                            <p class="mb-0 text-muted">
-
-                                Non-Complied
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-3 col-6 mb-3">
-
-                    <div class="card text-center h-100 shadow-sm">
-
-                        <div class="card-body">
-
-                            <h3 class="text-secondary fw-bold">
-
-                                {{ na_count }}
-
-                            </h3>
-
-                            <p class="mb-0 text-muted">
-
-                                Not Applicable
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- RESPONSE LIST -->
-
-            <div class="card shadow-sm">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-
-                        <i class="fas fa-list-ul text-primary"></i>
-
-                        Full Compliance Report
-
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    {% if responses %}
-
-                        {% for response in responses %}
-
-                        <div class="card mb-3 response-card border-
-
-                            {% if response.answer == 'YES' %}
-
-                                success
-
-                            {% elif response.answer == 'NO' %}
-
-                                danger
-
-                            {% else %}
-
-                                secondary
-
-                            {% endif %}
-                        ">
-
-                            <div class="card-body">
-
-                                <div class="row align-items-center">
-
-                                    <div class="col-md-8">
-
-                                        <p class="mb-2">
-
-                                            <strong class="text-primary">
-
-                                                {{ response.question.question_code }}
-
-                                                :
-
-                                            </strong>
-
-                                            {{ response.question.question_text }}
-
-                                            {% if response.question.is_critical %}
-
-                                            <span class="badge badge-danger ml-2">
-
-                                                Critical
-
-                                            </span>
-
-                                            {% endif %}
-
-                                        </p>
-
-
-                                        {% if response.remarks %}
-
-                                        <div class="alert alert-light py-2 mb-2 border-left border-info">
-
-                                            <strong>
-
-                                                Remarks:
-
-                                            </strong>
-
-                                            {{ response.remarks }}
-
-                                        </div>
-
-                                        {% endif %}
-
-
-                                        {% if response.question.reference_standard %}
-
-                                        <small class="text-muted d-block mt-2">
-
-                                            <i class="fas fa-book"></i>
-
-                                            Reference:
-
-                                            {{ response.question.reference_standard }}
-
-                                        </small>
-
-                                        {% endif %}
-
-                                    </div>
-
-
-                                    <div class="col-md-4 text-center text-md-end">
-
-                                        <span class="badge badge-
-                                            {% if response.answer == 'YES' %}
-
-                                                success
-
-                                            {% elif response.answer == 'NO' %}
-
-                                                danger
-
-                                            {% else %}
-
-                                                secondary
-
-                                            {% endif %}
-
-                                            p-2">
-
-                                            {{ response.get_answer_display }}
-
-                                        </span>
-
-
-                                        <!-- EVIDENCE -->
-
-                                        {% if response.evidence_file %}
-
-                                        <div class="mt-3">
-
-                                            <a href="{{ response.evidence_file.url }}"
-                                               target="_blank"
-                                               class="btn btn-sm btn-outline-primary">
-
-                                                <i class="fas fa-file"></i>
-
-                                                View Evidence
-
-                                            </a>
-
-                                        </div>
-
-                                        {% endif %}
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        {% endfor %}
-
+                <div class="col-md-4 text-center text-md-end">
+                  <span class="response-badge badge
+                    {% if response.answer == 'YES' %}
+                      success
+                    {% elif response.answer == 'NO' %}
+                      danger
                     {% else %}
-
-                    <div class="alert alert-info">
-
-                        <i class="fas fa-info-circle"></i>
-
-                        No responses found.
-
-                    </div>
-
+                      secondary
                     {% endif %}
-
-                </div>
-
-            </div>
-
-
-            <!-- REVIEW ACTIONS -->
-
-            {% if request.user in submission.requirement.reviewer.all and submission.status == 'SUBMITTED' %}
-
-            <div class="card mt-4 shadow-sm">
-
-                <div class="card-body">
-
-                    <form method="post">
-
-                        {% csrf_token %}
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Reviewer Comments
-
-                            </label>
-
-                            <textarea name="reviewer_comments"
-                                      class="form-control"
-                                      rows="3"></textarea>
-
-                        </div>
-
-                        <div class="text-center mt-3">
-
-                            <button type="submit"
-                                    name="action"
-                                    value="approve"
-                                    class="btn btn-success mr-2">
-
-                                <i class="fas fa-check"></i>
-
-                                Approve
-
-                            </button>
-
-                            <button type="submit"
-                                    name="action"
-                                    value="reject"
-                                    class="btn btn-danger">
-
-                                <i class="fas fa-times"></i>
-
-                                Reject
-
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-            {% endif %}
-
-            <!-- REVIEW RESULT -->
-
-            {% if submission.status == 'APPROVED' or submission.status == 'REJECTED' %}
-
-            <div class="card mt-4 shadow-sm">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-
-                        <i class="fas fa-user-check text-success"></i>
-
-                        Review Summary
-
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="row">
-
-                        <div class="col-md-4">
-
-                            <strong>
-
-                                Review Status
-
-                            </strong>
-
-                            <br>
-
-                            {% if submission.status == 'APPROVED' %}
-
-                                <span class="badge badge-success p-2">
-
-                                    Approved
-
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge badge-danger p-2">
-
-                                    Rejected
-
-                                </span>
-
-                            {% endif %}
-
-                        </div>
-
-
-                        <div class="col-md-4">
-
-                            <strong>
-
-                                Reviewed By
-
-                            </strong>
-
-                            <br>
-
-                            {{ submission.reviewed_by.get_full_name }}
-
-                        </div>
-
-
-                        <div class="col-md-4">
-
-                            <strong>
-
-                                Reviewed On
-
-                            </strong>
-
-                            <br>
-
-                            {{ submission.reviewed_at|date:"d M Y h:i A" }}
-
-                        </div>
-
+                  ">
+                    {{ response.get_answer_display }}
+                  </span>
+
+                  {% if response.evidence_file %}
+                    <div class="evidence-link">
+                      <a href="{{ response.evidence_file.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file"></i> View Evidence
+                      </a>
                     </div>
-
-
-                    {% if submission.reviewer_comments %}
-
-                    <div class="alert alert-light mt-3 mb-0 border-left border-primary">
-
-                        <strong>
-
-                            Reviewer Comments:
-
-                        </strong>
-
-                        <br>
-
-                        {{ submission.reviewer_comments }}
-
-                    </div>
-
-                    {% endif %}
-
+                  {% endif %}
                 </div>
-
+              </div>
             </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> No responses found.
+        </div>
+      {% endif %}
+    </div>
+  </div>
 
+  <!-- ========================================================== -->
+  <!-- REVIEW ACTIONS                                             -->
+  <!-- ========================================================== -->
+  {% if request.user in submission.requirement.reviewer.all and submission.status == 'SUBMITTED' %}
+    <div class="ehs-card">
+      <div class="card-header">
+        <h5 class="card-title">
+          <i class="fas fa-user-check"></i> Reviewer Actions
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Reviewer Comments</label>
+            <textarea name="reviewer_comments" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="btn-group-center">
+            <button type="submit" name="action" value="approve" class="btn btn-success">
+              <i class="fas fa-check"></i> Approve
+            </button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger">
+              <i class="fas fa-times"></i> Reject
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ========================================================== -->
+  <!-- REVIEW RESULT                                              -->
+  <!-- ========================================================== -->
+  {% if submission.status == 'APPROVED' or submission.status == 'REJECTED' %}
+    <div class="ehs-card">
+      <div class="card-header">
+        <h5 class="card-title">
+          <i class="fas fa-user-check"></i> Review Summary
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <strong>Review Status</strong>
+            <br>
+            {% if submission.status == 'APPROVED' %}
+              <span class="badge badge-success" style="font-size: 0.85rem; padding: 4px 14px;">Approved</span>
+            {% else %}
+              <span class="badge badge-danger" style="font-size: 0.85rem; padding: 4px 14px;">Rejected</span>
             {% endif %}
-
-
-            <!-- ACTIONS -->
-
-            <div class="card mt-4 shadow-sm">
-
-                <div class="card-body text-center">
-
-                    <a href="{% url 'legal_compliance:my_compliances' %}"
-                       class="btn btn-secondary">
-
-                        <i class="fas fa-arrow-left"></i>
-
-                        Back to My Compliances
-
-                    </a>
-
-                </div>
-
-            </div>
-
+          </div>
+          <div class="col-md-4">
+            <strong>Reviewed By</strong>
+            <br>
+            {{ submission.reviewed_by.get_full_name }}
+          </div>
+          <div class="col-md-4">
+            <strong>Reviewed On</strong>
+            <br>
+            {{ submission.reviewed_at|date:"d M Y h:i A" }}
+          </div>
         </div>
 
+        {% if submission.reviewer_comments %}
+          <div class="alert alert-light mt-3 mb-0">
+            <strong>Reviewer Comments:</strong>
+            <br>
+            {{ submission.reviewer_comments }}
+          </div>
+        {% endif %}
+      </div>
     </div>
+  {% endif %}
 
 </div>
 

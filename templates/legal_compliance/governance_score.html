@@ -1,238 +1,627 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}
-Governance Score
+{% block title %}Governance Score{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Legal Compliance</a></li>
+<li class="breadcrumb-item active">Governance Score</li>
 {% endblock %}
 
-{% block page_title %}
-Compliance Governance Score
+{% block extra_css %}
+<style>
+  /* ===== GOVERNANCE SCORE - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* STATS CARDS - Score Cards                                  */
+  /* ========================================================== */
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .stat-card .stat-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.8rem;
+    opacity: 0.12;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Stat Card Variants */
+  .stat-card.teal { border-left: 4px solid var(--primary-teal); }
+  .stat-card.teal .stat-icon { color: var(--primary-teal); }
+
+  .stat-card.green { border-left: 4px solid var(--secondary-green); }
+  .stat-card.green .stat-icon { color: var(--secondary-green); }
+
+  .stat-card.gold { border-left: 4px solid var(--secondary-gold); }
+  .stat-card.gold .stat-icon { color: var(--secondary-gold); }
+
+  .stat-card.red { border-left: 4px solid var(--secondary-red); }
+  .stat-card.red .stat-icon { color: var(--secondary-red); }
+
+  .stat-card.blue { border-left: 4px solid var(--secondary-blue); }
+  .stat-card.blue .stat-icon { color: var(--secondary-blue); }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 8px 12px;
+  }
+
+  .table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td strong {
+    color: var(--text-primary);
+  }
+
+  .table tbody td .badge {
+    font-size: 0.7rem;
+  }
+
+  /* KPI Table specific */
+  .kpi-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .kpi-value {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .kpi-value .badge {
+    font-size: 0.85rem;
+    padding: 4px 14px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .badge-info {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+
+  .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.4rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 2.2rem;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.7rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .stat-card {
+      padding: 12px 14px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.2rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.8rem;
+      right: 12px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .table tbody td {
+      padding: 4px 10px;
+      font-size: 0.7rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.55rem;
+      padding: 1px 6px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<div class="row">
+<div class="container-fluid" style="padding: 0;">
 
-    <!-- SCORE CARD -->
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="header-text">
+        <h1>Compliance Governance Score</h1>
+        <p class="subtitle">Monitor compliance governance metrics and KPIs</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="col-md-4">
-
-        <div class="small-box bg-info">
-
-            <div class="inner">
-
-                <h3>{{ governance_score }}%</h3>
-
-                <p>Governance Score</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-chart-line"></i>
-
-            </div>
-
-        </div>
-
+  <!-- ========================================================== -->
+  <!-- SCORE CARDS                                                -->
+  <!-- ========================================================== -->
+  <div class="row mb-3">
+    <!-- Governance Score -->
+    <div class="col-md-4 mb-3">
+      <div class="stat-card teal">
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-value">{{ governance_score }}%</div>
+        <div class="stat-label">Governance Score</div>
+      </div>
     </div>
 
-
-    <!-- RISK LEVEL -->
-
-    <div class="col-md-4">
-
+    <!-- Risk Level -->
+    <div class="col-md-4 mb-3">
+      <div class="stat-card 
         {% if risk_level == 'LOW' %}
-
-        <div class="small-box bg-success">
-
+          green
         {% elif risk_level == 'MEDIUM' %}
-
-        <div class="small-box bg-warning">
-
+          gold
         {% else %}
-
-        <div class="small-box bg-danger">
-
+          red
         {% endif %}
-
-            <div class="inner">
-
-                <h3>{{ risk_level }}</h3>
-
-                <p>Risk Level</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-shield-alt"></i>
-
-            </div>
-
-        </div>
-
+      ">
+        <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="stat-value">{{ risk_level }}</div>
+        <div class="stat-label">Risk Level</div>
+      </div>
     </div>
 
+    <!-- Compliance Rate -->
+    <div class="col-md-4 mb-3">
+      <div class="stat-card blue">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ compliance_rate }}%</div>
+        <div class="stat-label">Compliance Rate</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- COMPLIANCE RATE -->
-
-    <div class="col-md-4">
-
-        <div class="small-box bg-primary">
-
-            <div class="inner">
-
-                <h3>{{ compliance_rate }}%</h3>
-
-                <p>Compliance Rate</p>
-
-            </div>
-
-            <div class="icon">
-
-                <i class="fas fa-check-circle"></i>
-
-            </div>
-
-        </div>
-
+  <!-- ========================================================== -->
+  <!-- KPI TABLE                                                  -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-chart-pie"></i> Governance KPI Summary
+      </h3>
     </div>
 
-</div>
-
-
-<!-- KPI TABLE -->
-
-<div class="row">
-
-    <div class="col-md-12">
-
-        <div class="ehs-card">
-
-            <div class="card-header">
-
-                <h3 class="card-title">
-
-                    <i class="fas fa-chart-pie"></i>
-                    Governance KPI Summary
-
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-                <table class="table table-bordered">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>KPI</th>
-                            <th>Value</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-
-                            <td>Total Schedules</td>
-                            <td>{{ total }}</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Approved</td>
-                            <td>{{ approved }}</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Overdue</td>
-                            <td>{{ overdue }}</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Rejected</td>
-                            <td>{{ rejected }}</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Pending</td>
-                            <td>{{ pending }}</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Compliance Rate</td>
-                            <td>{{ compliance_rate }}%</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Overdue Rate</td>
-                            <td>{{ overdue_rate }}%</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Rejection Rate</td>
-                            <td>{{ rejection_rate }}%</td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Governance Score</td>
-                            <td>
-
-                                <strong>
-
-                                    {{ governance_score }}%
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>Risk Level</td>
-
-                            <td>
-
-                                <strong>
-
-                                    {{ risk_level }}
-
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>KPI</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Total Schedules</td>
+              <td data-label="Value" class="kpi-value">{{ total }}</td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Approved</td>
+              <td data-label="Value" class="kpi-value">{{ approved }}</td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Overdue</td>
+              <td data-label="Value" class="kpi-value">{{ overdue }}</td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Rejected</td>
+              <td data-label="Value" class="kpi-value">{{ rejected }}</td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Pending</td>
+              <td data-label="Value" class="kpi-value">{{ pending }}</td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Compliance Rate</td>
+              <td data-label="Value" class="kpi-value">
+                <span class="badge badge-success">{{ compliance_rate }}%</span>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Overdue Rate</td>
+              <td data-label="Value" class="kpi-value">
+                <span class="badge badge-danger">{{ overdue_rate }}%</span>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Rejection Rate</td>
+              <td data-label="Value" class="kpi-value">
+                <span class="badge badge-warning">{{ rejection_rate }}%</span>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Governance Score</td>
+              <td data-label="Value" class="kpi-value">
+                <span class="badge badge-info" style="font-size: 0.9rem; padding: 4px 16px;">
+                  {{ governance_score }}%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="KPI" class="kpi-label">Risk Level</td>
+              <td data-label="Value" class="kpi-value">
+                <span class="badge
+                  {% if risk_level == 'LOW' %}
+                    badge-success
+                  {% elif risk_level == 'MEDIUM' %}
+                    badge-warning
+                  {% else %}
+                    badge-danger
+                  {% endif %}
+                " style="font-size: 0.9rem; padding: 4px 16px;">
+                  {{ risk_level }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
 </div>
 

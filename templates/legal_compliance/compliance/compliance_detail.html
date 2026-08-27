@@ -1,578 +1,801 @@
 {% extends 'base/base.html' %}
+{% load static %}
+{% load permission_tags %}
 
-{% block title %}
-{{ compliance.title }}
-{% endblock %}
-
-{% block page_title %}
-Compliance Requirement Details
-{% endblock %}
+{% block title %}{{ compliance.title }}{% endblock %}
 
 {% block breadcrumb %}
-
-<li class="breadcrumb-item">
-    <a href="{% url 'dashboards:home' %}">
-        Home
-    </a>
-</li>
-
-<li class="breadcrumb-item">
-    <a href="{% url 'legal_compliance:dashboard' %}">
-        Legal Compliance
-    </a>
-</li>
-
-<li class="breadcrumb-item">
-    <a href="{% url 'legal_compliance:compliance_list' %}">
-        Compliance Requirements
-    </a>
-</li>
-
-<li class="breadcrumb-item active">
-    Details
-</li>
-
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Legal Compliance</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:compliance_list' %}">Compliance Requirements</a></li>
+<li class="breadcrumb-item active">Details</li>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ===== COMPLIANCE REQUIREMENT DETAILS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* SUB CARD - Workflow Configuration                          */
+  /* ========================================================== */
+  .sub-card {
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  .sub-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+  }
+
+  .sub-card .card-header h5 {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .sub-card .card-header h5 i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .sub-card .card-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* DETAILS GRID                                               */
+  /* ========================================================== */
+  .detail-item {
+    margin-bottom: 12px;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-item .detail-label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .detail-item .detail-value {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+  }
+
+  .detail-item .detail-value.text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  .detail-description-box {
+    background: var(--bg-page);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .detail-description-box .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  hr {
+    border-color: var(--border-color);
+    margin: 16px 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 30px;
+  }
+
+  .btn-sm {
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    height: 26px;
+  }
+
+  .btn-warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+
+  .btn-warning:hover {
+    background: #b45309;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 12px rgba(217, 119, 6, 0.3);
+  }
+
+  .btn-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b91c1c;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn i {
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .badge-info {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+
+  .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+  }
+
+  .badge-sm {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    margin-bottom: 2px;
+    display: inline-block;
+  }
+
+  /* ========================================================== */
+  /* LINK                                                       */
+  /* ========================================================== */
+  .detail-link {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .detail-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.72rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.8rem;
+    }
+
+    .detail-description-box {
+      padding: 10px 12px;
+      font-size: 0.8rem;
+    }
+
+    .sub-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .btn {
+      font-size: 0.72rem;
+      height: 28px;
+      padding: 4px 12px;
+    }
+
+    .btn-sm {
+      font-size: 0.68rem;
+      height: 24px;
+      padding: 3px 8px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      padding: 2px 8px;
+    }
+
+    .badge-sm {
+      font-size: 0.55rem;
+      padding: 1px 6px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .detail-item {
+      margin-bottom: 8px;
+    }
+
+    .sub-card .card-body {
+      padding: 8px 10px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 
-<div class="row">
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ compliance.title }}</h1>
+        <p class="subtitle">Compliance Requirement Details</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ========================================================== -->
+  <div class="row">
 
     <!-- LEFT SECTION -->
-
     <div class="col-md-8">
 
-        <!-- COMPLIANCE DETAILS -->
-
-        <div class="ehs-card mb-4">
-
-            <div class="card-header d-flex justify-content-between align-items-center">
-
-                <h3 class="card-title">
-
-                    <i class="fas fa-clipboard-check"></i>
-                    {{ compliance.title }}
-
-                </h3>
-
-                <div>
-
-                    <a href="{% url 'legal_compliance:compliance_edit' compliance.pk %}"
-                       class="btn btn-warning btn-sm">
-
-                        <i class="fas fa-edit"></i>
-                        Edit
-
-                    </a>
-
-                    <a href="{% url 'legal_compliance:compliance_delete' compliance.pk %}"
-                       class="btn btn-danger btn-sm">
-
-                        <i class="fas fa-trash"></i>
-                        Delete
-
-                    </a>
-
-                </div>
-
+      <!-- COMPLIANCE DETAILS -->
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-clipboard-check"></i> {{ compliance.title }}
+          </h3>
+          {% if request.user|has_perm:'MANAGE_LEGAL_COMPLIANCE_CONFIGURATION' %}
+            <div>
+              <a href="{% url 'legal_compliance:compliance_edit' compliance.pk %}" class="btn btn-warning btn-sm">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+              <a href="{% url 'legal_compliance:compliance_delete' compliance.pk %}" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Delete
+              </a>
             </div>
-
-            <div class="card-body">
-
-                <!-- BASIC INFORMATION -->
-
-                <div class="row mb-4">
-
-                    <div class="col-md-3">
-
-                        <strong>Requirement Code</strong>
-
-                        <p class="text-muted">
-                            {{ compliance.requirement_code }}
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-3">
-
-                        <strong>Status</strong>
-
-                        <p>
-
-                            {% if compliance.is_active %}
-
-                            <span class="badge badge-success">
-                                Active
-                            </span>
-
-                            {% else %}
-
-                            <span class="badge badge-danger">
-                                Inactive
-                            </span>
-
-                            {% endif %}
-
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-3">
-
-                        <strong>Scheduled Date</strong>
-
-                        <p class="text-muted">
-
-                            {% if compliance.scheduled_date %}
-
-                                {{ compliance.scheduled_date|date:"d M Y" }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </p>
-
-                    </div>
-
-
-                    <div class="col-md-3">
-
-                        <strong>Due Date</strong>
-
-                        <p class="text-muted">
-
-                            {% if compliance.due_date %}
-
-                                {{ compliance.due_date|date:"d M Y" }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- LEGAL MAPPING -->
-
-                <div class="row mb-4">
-
-                    <div class="col-md-6">
-
-                        <strong>Linked Legal Act</strong>
-
-                        <p>
-
-                            <a href="{% url 'legal_compliance:act_detail' compliance.legal_act.pk %}">
-
-                                {{ compliance.legal_act.act_name }}
-
-                            </a>
-
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-3">
-
-                        <strong>Frequency</strong>
-
-                        <p>
-
-                            <span class="badge badge-primary">
-
-                                {{ compliance.get_frequency_display }}
-
-                            </span>
-
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-3">
-
-                        <strong>Criticality</strong>
-
-                        <p>
-
-                            {% if compliance.criticality == 'CRITICAL' %}
-
-                            <span class="badge badge-danger">
-
-                                {{ compliance.get_criticality_display }}
-
-                            </span>
-
-                            {% elif compliance.criticality == 'HIGH' %}
-
-                            <span class="badge badge-warning">
-
-                                {{ compliance.get_criticality_display }}
-
-                            </span>
-
-                            {% else %}
-
-                            <span class="badge badge-secondary">
-
-                                {{ compliance.get_criticality_display }}
-
-                            </span>
-
-                            {% endif %}
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- DESCRIPTION -->
-
-                <div class="mb-4">
-
-                    <strong>Description</strong>
-
-                    <div class="border rounded p-3 bg-light mt-2">
-
-                        {% if compliance.description %}
-
-                            {{ compliance.description|linebreaks }}
-
-                        {% else %}
-
-                            <span class="text-muted">
-
-                                No description available.
-
-                            </span>
-
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-
-                <!-- WORKFLOW SETTINGS -->
-
-                <div class="card mb-4">
-
-                    <div class="card-header bg-light">
-
-                        <h5 class="mb-0">
-
-                            <i class="fas fa-project-diagram"></i>
-                            Workflow Configuration
-
-                        </h5>
-
-                    </div>
-
-                    <div class="card-body">
-
-                        <div class="row">
-
-                            <div class="col-md-4">
-
-                                <strong>Due Days Before</strong>
-
-                                <p class="text-muted">
-                                    {{ compliance.due_days_before }}
-                                </p>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <strong>Reminder Days</strong>
-
-                                <p class="text-muted">
-                                    {{ compliance.reminder_days }}
-                                </p>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <strong>Escalation Days</strong>
-
-                                <p class="text-muted">
-                                    {{ compliance.escalation_days }}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <hr>
-
-                        <div class="row">
-
-                            <div class="col-md-4">
-
-                                <strong>Evidence Required</strong>
-
-                                <p>
-
-                                    {% if compliance.evidence_required %}
-
-                                    <span class="badge badge-success">
-                                        Yes
-                                    </span>
-
-                                    {% else %}
-
-                                    <span class="badge badge-secondary">
-                                        No
-                                    </span>
-
-                                    {% endif %}
-
-                                </p>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <strong>Approval Required</strong>
-
-                                <p>
-
-                                    {% if compliance.requires_approval %}
-
-                                    <span class="badge badge-success">
-                                        Yes
-                                    </span>
-
-                                    {% else %}
-
-                                    <span class="badge badge-secondary">
-                                        No
-                                    </span>
-
-                                    {% endif %}
-
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+          {% endif %}
         </div>
 
-    </div>
+        <div class="card-body">
 
+          <!-- Basic Information -->
+          <div class="row">
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Requirement Code</span>
+                <span class="detail-value"><strong>{{ compliance.requirement_code }}</strong></span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">
+                  {% if compliance.is_active %}
+                    <span class="badge badge-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-danger">Inactive</span>
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Scheduled Date</span>
+                <span class="detail-value text-muted">
+                  {% if compliance.scheduled_date %}
+                    {{ compliance.scheduled_date|date:"d M Y" }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Due Date</span>
+                <span class="detail-value text-muted">
+                  {% if compliance.due_date %}
+                    {{ compliance.due_date|date:"d M Y" }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Legal Mapping -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <span class="detail-label">Linked Legal Act</span>
+                <span class="detail-value">
+                  <a href="{% url 'legal_compliance:act_detail' compliance.legal_act.pk %}" class="detail-link">
+                    {{ compliance.legal_act.act_name }}
+                  </a>
+                </span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Frequency</span>
+                <span class="detail-value">
+                  <span class="badge badge-primary">{{ compliance.get_frequency_display }}</span>
+                </span>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-item">
+                <span class="detail-label">Criticality</span>
+                <span class="detail-value">
+                  {% if compliance.criticality == 'CRITICAL' %}
+                    <span class="badge badge-danger">{{ compliance.get_criticality_display }}</span>
+                  {% elif compliance.criticality == 'HIGH' %}
+                    <span class="badge badge-warning">{{ compliance.get_criticality_display }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary">{{ compliance.get_criticality_display }}</span>
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="detail-item">
+            <span class="detail-label">Description</span>
+            <div class="detail-description-box">
+              {% if compliance.description %}
+                {{ compliance.description|linebreaks }}
+              {% else %}
+                <span class="text-muted">No description available.</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Workflow Configuration -->
+          <div class="sub-card" style="margin-top: 16px;">
+            <div class="card-header">
+              <h5>
+                <i class="fas fa-project-diagram"></i> Workflow Configuration
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="detail-item">
+                    <span class="detail-label">Due Days Before</span>
+                    <span class="detail-value text-muted">{{ compliance.due_days_before }}</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="detail-item">
+                    <span class="detail-label">Reminder Days</span>
+                    <span class="detail-value text-muted">{{ compliance.reminder_days }}</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="detail-item">
+                    <span class="detail-label">Escalation Days</span>
+                    <span class="detail-value text-muted">{{ compliance.escalation_days }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <hr>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="detail-item">
+                    <span class="detail-label">Evidence Required</span>
+                    <span class="detail-value">
+                      {% if compliance.evidence_required %}
+                        <span class="badge badge-success">Yes</span>
+                      {% else %}
+                        <span class="badge badge-secondary">No</span>
+                      {% endif %}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="detail-item">
+                    <span class="detail-label">Approval Required</span>
+                    <span class="detail-value">
+                      {% if compliance.requires_approval %}
+                        <span class="badge badge-success">Yes</span>
+                      {% else %}
+                        <span class="badge badge-secondary">No</span>
+                      {% endif %}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
 
     <!-- RIGHT SECTION -->
-
     <div class="col-md-4">
 
-        <!-- RESPONSIBILITY MATRIX -->
-
-        <div class="ehs-card mb-4">
-
-            <div class="card-header">
-
-                <h3 class="card-title">
-
-                    <i class="fas fa-users"></i>
-                    Responsibility Matrix
-
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-                <div class="mb-4">
-
-                    <strong>
-                        Responsible Persons
-                    </strong>
-
-                    <div class="mt-2">
-
-                        {% for user in compliance.responsible_person.all %}
-
-                            <span class="badge badge-primary mb-1">
-
-                                {{ user.get_full_name }}
-
-                            </span>
-
-                        {% empty %}
-
-                            <p class="text-muted">
-
-                                No responsible persons assigned
-
-                            </p>
-
-                        {% endfor %}
-
-                    </div>
-
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Reviewers
-                    </strong>
-
-                    <div class="mt-2">
-
-                        {% for user in compliance.reviewer.all %}
-
-                            <span class="badge badge-success mb-1">
-
-                                {{ user.get_full_name }}
-
-                            </span>
-
-                        {% empty %}
-
-                            <p class="text-muted">
-
-                                No reviewers assigned
-
-                            </p>
-
-                        {% endfor %}
-
-                    </div>
-
-                </div>
-
-            </div>
-
+      <!-- Responsibility Matrix -->
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-users"></i> Responsibility Matrix
+          </h3>
         </div>
-
-
-        <!-- APPLICABILITY -->
-
-        <div class="ehs-card mb-4">
-
-            <div class="card-header">
-
-                <h3 class="card-title">
-
-                    <i class="fas fa-building"></i>
-                    Applicability
-
-                </h3>
-
+        <div class="card-body">
+          <div class="detail-item">
+            <span class="detail-label">Responsible Persons</span>
+            <div class="mt-2">
+              {% for user in compliance.responsible_person.all %}
+                <span class="badge badge-primary badge-sm">{{ user.get_full_name }}</span>
+              {% empty %}
+                <span class="text-muted">No responsible persons assigned</span>
+              {% endfor %}
             </div>
+          </div>
 
-            <div class="card-body">
-
-                <strong>Applicable Plants</strong>
-
-                <div class="mt-2 mb-4">
-
-                    {% for plant in compliance.applicable_plants.all %}
-
-                    <span class="badge badge-info mb-1">
-
-                        {{ plant.name }}
-
-                    </span>
-
-                    {% empty %}
-
-                    <p class="text-muted">
-                        No plants assigned
-                    </p>
-
-                    {% endfor %}
-
-                </div>
-
+          <div class="detail-item" style="margin-bottom: 0;">
+            <span class="detail-label">Reviewers</span>
+            <div class="mt-2">
+              {% for user in compliance.reviewer.all %}
+                <span class="badge badge-success badge-sm">{{ user.get_full_name }}</span>
+              {% empty %}
+                <span class="text-muted">No reviewers assigned</span>
+              {% endfor %}
             </div>
-
+          </div>
         </div>
+      </div>
 
-
-        <!-- AUDIT INFO -->
-
-        <div class="ehs-card">
-
-            <div class="card-header">
-
-                <h3 class="card-title">
-
-                    <i class="fas fa-history"></i>
-                    Audit Information
-
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-                <div class="mb-3">
-
-                    <strong>Created By</strong>
-
-                    <p class="text-muted">
-
-                        {% if compliance.created_by %}
-
-                            {{ compliance.created_by.get_full_name }}
-
-                        {% else %}
-
-                            -
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <strong>Created At</strong>
-
-                    <p class="text-muted">
-                        {{ compliance.created_at|date:"d M Y H:i" }}
-                    </p>
-
-                </div>
-
-                <div>
-
-                    <strong>Updated At</strong>
-
-                    <p class="text-muted">
-                        {{ compliance.updated_at|date:"d M Y H:i" }}
-                    </p>
-
-                </div>
-
-            </div>
-
+      <!-- Applicability -->
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-building"></i> Applicability
+          </h3>
         </div>
+        <div class="card-body">
+          <div class="detail-item" style="margin-bottom: 0;">
+            <span class="detail-label">Applicable Plants</span>
+            <div class="mt-2">
+              {% for plant in compliance.applicable_plants.all %}
+                <span class="badge badge-info badge-sm">{{ plant.name }}</span>
+              {% empty %}
+                <span class="text-muted">No plants assigned</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Information -->
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-history"></i> Audit Information
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="detail-item">
+            <span class="detail-label">Created By</span>
+            <span class="detail-value text-muted">
+              {% if compliance.created_by %}
+                {{ compliance.created_by.get_full_name }}
+              {% else %}
+                —
+              {% endif %}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Created At</span>
+            <span class="detail-value text-muted">{{ compliance.created_at|date:"d M Y H:i" }}</span>
+          </div>
+          <div class="detail-item" style="margin-bottom: 0;">
+            <span class="detail-label">Updated At</span>
+            <span class="detail-value text-muted">{{ compliance.updated_at|date:"d M Y H:i" }}</span>
+          </div>
+        </div>
+      </div>
 
     </div>
+
+  </div>
 
 </div>
 
