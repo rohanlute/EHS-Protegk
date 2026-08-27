@@ -1,7 +1,8 @@
+<!-- templates/emergency/submission_review.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Session Review{% endblock %}
-{% block page_title %}Emergency Session Review{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
@@ -9,103 +10,834 @@
 <li class="breadcrumb-item active">Review</li>
 {% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-end mb-2">
-  <a href="{{ cancel_url }}" class="btn btn-secondary">
-    <i class="fas fa-arrow-left mr-1"></i> Back
-  </a>
-</div>
-<div class="card mb-4 shadow-sm">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-      <div>
-        <h4 class="mb-1">{{ session.session_number }} - {{ session.topic.name }}</h4>
-        <p class="text-muted mb-0">{{ participant.employee.get_full_name }} | {{ participant.employee.department.name|default:"No Department" }}</p>
-      </div>
-      <div class="text-md-right mt-2 mt-md-0">
-        <div><strong>Score:</strong> {{ submission.compliance_score|default:0 }}%</div>
-        <div><strong>Status:</strong> {{ submission.get_review_status_display }}</div>
-        <small class="text-muted">Submitted by {{ submission.submitted_by.get_full_name }} on {{ submission.submitted_at|date:"d M Y, H:i" }}</small>
-      </div>
-    </div>
-    {% if submission.overall_remarks %}
-    <div class="alert alert-light border mt-3 mb-0">
-      <strong>Participant Remarks:</strong><br>{{ submission.overall_remarks|linebreaksbr }}
-    </div>
-    {% endif %}
-    {% if submission.reviewer_remarks or submission.reviewed_by %}
-    <div class="alert alert-secondary border mt-3 mb-0">
-      <strong>Overall Review:</strong><br>{{ submission.reviewer_remarks|default:"-"|linebreaksbr }}
-      {% if submission.reviewed_by %}
-      <div class="mt-2 text-muted small">
-        Reviewed by {{ submission.reviewed_by.get_full_name|default:submission.reviewed_by.username }}
-        {% if submission.reviewed_at %}on {{ submission.reviewed_at|date:"d M Y, H:i" }}{% endif %}
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-  </div>
-</div>
+{% block extra_css %}
+<style>
+    /* ===== SESSION REVIEW - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-{% for department, responses in responses_by_department.items %}
-<div class="card mb-3 shadow-sm">
-  <div class="card-header bg-light">
-    <h5 class="mb-0">{{ department.name }}</h5>
-  </div>
-  <div class="card-body">
-    {% for response in responses %}
-    <div class="card mb-3 border-{% if response.answer == 'Yes' or response.answer == '4' or response.answer == '5' %}success{% elif response.answer == 'No' or response.answer == '1' or response.answer == '2' %}danger{% else %}secondary{% endif %}">
-      <div class="card-body">
-        <p class="mb-2">
-          <strong class="text-primary">{{ response.question.question_code }}:</strong>
-          {{ response.question.question_text }}
-        </p>
-        {% if response.question.guidance_notes %}
-        <p class="mb-2 text-muted small">{{ response.question.guidance_notes }}</p>
-        {% endif %}
-        <p class="mb-2"><strong>Answer:</strong> {{ response.answer }}</p>
-        <p class="mb-2"><strong>Remarks:</strong> {{ response.remarks|default:"-" }}</p>
-        {% if response.photo %}
-        <p class="mb-0">
-          <a href="{{ response.photo.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-image mr-1"></i> View Photo
-          </a>
-        </p>
-        {% endif %}
-      </div>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .dash-page-header .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn-teal-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-sm:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal-sm i {
+        font-size: 12px;
+    }
+
+    .btn-secondary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--bg-page);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom i {
+        font-size: 12px;
+    }
+
+    .btn-success-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 24px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-green);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 40px;
+    }
+
+    .btn-success-custom:hover {
+        background: #15803d;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-danger-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 24px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-red);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 40px;
+    }
+
+    .btn-danger-custom:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Cards */
+    .ehs-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .ehs-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .ehs-card .card-header {
+        padding: 12px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h4,
+    .ehs-card .card-header h5 {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h4 i,
+    .ehs-card .card-header h5 i {
+        color: var(--primary-teal);
+    }
+
+    .ehs-card .card-body {
+        padding: 20px 24px;
+    }
+
+    /* Summary Card */
+    .summary-card .summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .summary-card .summary-header .session-info h4 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+    }
+
+    .summary-card .summary-header .session-info .meta {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .summary-card .summary-header .score-info {
+        text-align: right;
+    }
+
+    .summary-card .summary-header .score-info .score {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary-teal);
+    }
+
+    .summary-card .summary-header .score-info .status {
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .summary-card .summary-header .score-info .submitted-at {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+    }
+
+    .summary-card .remarks-box {
+        background: var(--bg-page);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        margin-top: 12px;
+    }
+
+    .summary-card .remarks-box strong {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .summary-card .remarks-box p {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .summary-card .remarks-box .reviewer-info {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+
+    /* Response Card */
+    .response-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .response-card:hover {
+        border-color: rgba(13, 148, 136, 0.3);
+    }
+
+    .response-card .response-body {
+        padding: 14px 18px;
+    }
+
+    .response-card .question-code {
+        font-weight: 700;
+        color: var(--primary-teal);
+        font-size: 13px;
+    }
+
+    .response-card .question-text {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 14px;
+        margin: 2px 0 4px 0;
+    }
+
+    .response-card .guidance-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+    }
+
+    .response-card .answer-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    .response-card .answer-row .label {
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .response-card .answer-row .answer-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .response-card .answer-row .answer-badge.pass {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .response-card .answer-row .answer-badge.fail {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .response-card .answer-row .answer-badge.na {
+        background: var(--bg-page);
+        color: var(--text-muted);
+    }
+
+    .response-card .photo-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        margin-top: 4px;
+    }
+
+    .response-card .photo-link:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .response-card .photo-link i {
+        font-size: 12px;
+    }
+
+    /* Department Section */
+    .department-section .department-header {
+        background: var(--primary-teal-light);
+        border-bottom: 2px solid var(--primary-teal);
+        padding: 10px 18px;
+    }
+
+    .department-section .department-header h5 {
+        font-weight: 700;
+        color: var(--primary-teal);
+        margin: 0;
+        font-size: 15px;
+    }
+
+    .department-section .department-body {
+        padding: 14px 18px;
+    }
+
+    /* Review Form */
+    .review-form .form-group {
+        margin-bottom: 16px;
+    }
+
+    .review-form .form-group label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .review-form .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .review-form .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .review-form .form-group textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .review-form .form-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .review-form .info-alert {
+        background: var(--primary-teal-light);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .review-form .info-alert i {
+        color: var(--primary-teal);
+        font-size: 16px;
+        margin-top: 1px;
+    }
+
+    .review-form .readonly-message {
+        color: var(--text-muted);
+        font-size: 13px;
+        padding: 8px 0;
+    }
+
+    /* Empty State */
+    .empty-state-sm {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-sm i {
+        font-size: 32px;
+        color: var(--border-color);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .empty-state-sm p {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    /* Badge Status */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-status i {
+        font-size: 8px;
+    }
+
+    .badge-status.approved {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .badge-status.rejected {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .badge-status.pending {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 14px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-page-header .header-actions {
+            width: 100%;
+        }
+
+        .dash-page-header .header-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .ehs-card .card-body {
+            padding: 16px 18px;
+        }
+
+        .summary-card .summary-header {
+            flex-direction: column;
+        }
+
+        .summary-card .summary-header .score-info {
+            text-align: left;
+            width: 100%;
+        }
+
+        .response-card .response-body {
+            padding: 12px 14px;
+        }
+
+        .response-card .answer-row {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .review-form .form-actions {
+            flex-direction: column;
+        }
+
+        .review-form .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .department-section .department-body {
+            padding: 10px 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 16px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+        }
+
+        .summary-card .summary-header .session-info h4 {
+            font-size: 16px;
+        }
+
+        .summary-card .summary-header .score-info .score {
+            font-size: 18px;
+        }
+
+        .response-card .question-text {
+            font-size: 13px;
+        }
+
+        .btn-success-custom,
+        .btn-danger-custom {
+            font-size: 13px;
+            padding: 6px 16px;
+            min-height: 36px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div>
+                <h1>Session Review</h1>
+                <p class="subtitle">Review participant responses for {{ session.session_number }}</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{{ cancel_url }}" class="btn-secondary-custom">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="ehs-card summary-card">
+        <div class="card-body">
+            <div class="summary-header">
+                <div class="session-info">
+                    <h4>{{ session.session_number }} - {{ session.topic.name }}</h4>
+                    <p class="meta">
+                        {{ participant.employee.get_full_name }} 
+                        {% if participant.employee.department %}
+                        | {{ participant.employee.department.name }}
+                        {% else %}
+                        | No Department
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="score-info">
+                    <div class="score">{{ submission.compliance_score|default:0 }}%</div>
+                    <div class="status">
+                        <span class="badge-status 
+                            {% if submission.review_status == 'APPROVED' %}approved
+                            {% elif submission.review_status == 'REJECTED' %}rejected
+                            {% else %}pending{% endif %}">
+                            <i class="fas fa-circle"></i>
+                            {{ submission.get_review_status_display }}
+                        </span>
+                    </div>
+                    <span class="submitted-at">
+                        Submitted by {{ submission.submitted_by.get_full_name }} on {{ submission.submitted_at|date:"d M Y, H:i" }}
+                    </span>
+                </div>
+            </div>
+
+            {% if submission.overall_remarks %}
+            <div class="remarks-box">
+                <strong>Participant Remarks</strong>
+                <p>{{ submission.overall_remarks|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+            {% if submission.reviewer_remarks or submission.reviewed_by %}
+            <div class="remarks-box" style="border-color: var(--primary-teal); background: var(--primary-teal-light);">
+                <strong style="color: var(--primary-teal);">Overall Review</strong>
+                <p>{{ submission.reviewer_remarks|default:"-"|linebreaksbr }}</p>
+                {% if submission.reviewed_by %}
+                <div class="reviewer-info">
+                    <i class="fas fa-user-check"></i>
+                    Reviewed by {{ submission.reviewed_by.get_full_name|default:submission.reviewed_by.username }}
+                    {% if submission.reviewed_at %}on {{ submission.reviewed_at|date:"d M Y, H:i" }}{% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Responses by Department -->
+    {% for department, responses in responses_by_department.items %}
+    <div class="ehs-card department-section">
+        <div class="department-header">
+            <h5><i class="fas fa-building"></i> {{ department.name }}</h5>
+        </div>
+        <div class="department-body">
+            {% for response in responses %}
+            <div class="response-card">
+                <div class="response-body">
+                    <div class="question-code">{{ response.question.question_code }}</div>
+                    <div class="question-text">{{ response.question.question_text }}</div>
+                    {% if response.question.guidance_notes %}
+                    <div class="guidance-text">
+                        <i class="fas fa-lightbulb" style="color: var(--primary-teal);"></i>
+                        {{ response.question.guidance_notes }}
+                    </div>
+                    {% endif %}
+                    <div class="answer-row">
+                        <span>
+                            <span class="label">Answer:</span>
+                            <span class="answer-badge 
+                                {% if response.answer == 'Yes' or response.answer == '4' or response.answer == '5' %}pass
+                                {% elif response.answer == 'No' or response.answer == '1' or response.answer == '2' %}fail
+                                {% else %}na{% endif %}">
+                                {{ response.answer }}
+                            </span>
+                        </span>
+                        <span>
+                            <span class="label">Remarks:</span>
+                            {{ response.remarks|default:"-" }}
+                        </span>
+                    </div>
+                    {% if response.photo %}
+                    <a href="{{ response.photo.url }}" target="_blank" class="photo-link">
+                        <i class="fas fa-image"></i> View Photo
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="ehs-card">
+        <div class="empty-state-sm">
+            <i class="fas fa-comment-slash"></i>
+            <p>No responses found for this submission.</p>
+        </div>
     </div>
     {% endfor %}
-  </div>
-</div>
-{% endfor %}
 
-{% if can_review %}
-<div class="card shadow-sm">
-  <div class="card-header">
-    <h5 class="mb-0"><i class="fas fa-user-check mr-2"></i>Session Review Decision</h5>
-  </div>
-  <div class="card-body">
-    {% if show_review_actions %}
-      <div class="alert alert-info">
-        Add the overall review for this performed session, then approve or reject it.
-      </div>
-      <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="id_reviewer_remarks" class="font-weight-bold">Overall Review for Session</label>
-          <textarea name="reviewer_remarks" id="id_reviewer_remarks" class="form-control" rows="4" placeholder="Add your overall review for this emergency session...">{{ submission.reviewer_remarks }}</textarea>
+    <!-- Review Form -->
+    {% if can_review %}
+    <div class="ehs-card review-form">
+        <div class="card-header">
+            <h5><i class="fas fa-user-check"></i> Session Review Decision</h5>
         </div>
-        <button type="submit" name="action" value="approve" class="btn btn-success mr-2">
-          <i class="fas fa-check mr-1"></i> Approve
-        </button>
-        <button type="submit" name="action" value="reject" class="btn btn-danger">
-          <i class="fas fa-times mr-1"></i> Reject
-        </button>
-      </form>
-    {% else %}
-      <p class="mb-0 text-muted">This submission is already {{ submission.get_review_status_display|lower }} and remains read-only.</p>
+        <div class="card-body">
+            {% if show_review_actions %}
+            <div class="info-alert">
+                <i class="fas fa-info-circle"></i>
+                <div>Add the overall review for this performed session, then approve or reject it.</div>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_reviewer_remarks">Overall Review for Session</label>
+                    <textarea name="reviewer_remarks" id="id_reviewer_remarks" rows="4" placeholder="Add your overall review for this emergency session...">{{ submission.reviewer_remarks }}</textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" name="action" value="approve" class="btn-success-custom">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn-danger-custom">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="readonly-message">
+                <i class="fas fa-lock" style="color: var(--text-muted);"></i>
+                This submission is already <strong>{{ submission.get_review_status_display|lower }}</strong> and remains read-only.
+            </div>
+            {% endif %}
+        </div>
+    </div>
     {% endif %}
-  </div>
+
 </div>
-{% endif %}
 {% endblock %}

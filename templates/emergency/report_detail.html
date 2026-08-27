@@ -1,298 +1,1038 @@
+<!-- templates/emergency/report_detail.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 {% load permission_tags %}
 
 {% block title %}Emergency Report Details{% endblock %}
-{% block page_title %}Emergency Report Details{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:report_list' %}">Emergency Reports</a></li>
 <li class="breadcrumb-item active">{{ report.report_number }}</li>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ===== EMERGENCY REPORT DETAILS - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Cards */
+    .ehs-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .ehs-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .ehs-card .card-header {
+        padding: 14px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .ehs-card .card-header h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h3 i {
+        color: var(--primary-teal);
+    }
+
+    .ehs-card .card-body {
+        padding: 20px 24px;
+    }
+
+    /* Buttons */
+    .btn-teal-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-sm:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal-sm i {
+        font-size: 12px;
+    }
+
+    .btn-teal-outline-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary-teal);
+        background: transparent;
+        color: var(--primary-teal);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-outline-sm:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--bg-page);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .btn-success-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-green);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-success-sm:hover {
+        background: #15803d;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-warning-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-gold);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-warning-sm:hover {
+        background: #b45309;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-info-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: #3b82f6;
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-info-sm:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-dark-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: #1e293b;
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-dark-sm:hover {
+        background: #0f172a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(30, 41, 59, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* Detail Labels */
+    .detail-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .detail-value .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-custom.critical { background: var(--secondary-red-light); color: var(--secondary-red); }
+    .badge-custom.high { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.medium { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.low { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .badge-custom.open { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.investigation { background: var(--primary-teal-light); color: var(--primary-teal); }
+    .badge-custom.closed { background: var(--secondary-green-light); color: var(--secondary-green); }
+
+    .badge-custom.completed { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .badge-custom.pending { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+
+    /* Sections */
+    .section-divider {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: 20px 0;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: var(--primary-teal);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px 20px;
+    }
+
+    /* Response Team Badges */
+    .team-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: white;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0 6px 6px 0;
+    }
+
+    .team-badge i {
+        color: var(--primary-teal);
+        font-size: 12px;
+    }
+
+    /* CAPA Table */
+    .table-custom {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 13px;
+    }
+
+    .table-custom thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-custom tbody td {
+        padding: 10px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .table-custom tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-custom tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .table-custom .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-status.closed { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .badge-status.in-progress { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-status.open { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+    /* Alert Boxes */
+    .alert-info-custom {
+        background: var(--primary-teal-light);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-info-custom i {
+        color: var(--primary-teal);
+        font-size: 16px;
+    }
+
+    .alert-success-custom {
+        background: var(--secondary-green-light);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-success-custom i {
+        color: var(--secondary-green);
+        font-size: 16px;
+    }
+
+    .alert-warning-custom {
+        background: var(--secondary-gold-light);
+        border: 1px solid rgba(217, 119, 6, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-warning-custom i {
+        color: var(--secondary-gold);
+        font-size: 16px;
+    }
+
+    /* Photos */
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .photo-grid .photo-item {
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+        aspect-ratio: 1;
+    }
+
+    .photo-grid .photo-item:hover {
+        border-color: var(--primary-teal);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .photo-grid .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-grid .photo-item a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .ehs-card .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .ehs-card .card-body {
+            padding: 16px 18px;
+        }
+
+        .action-buttons {
+            width: 100%;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table-custom thead {
+            display: none;
+        }
+
+        .table-custom tbody tr {
+            display: block;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table-custom tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-custom tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border: none;
+            align-items: center;
+        }
+
+        .table-custom tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .photo-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .ehs-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .ehs-card .card-header h3 {
+            font-size: 15px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+        }
+
+        .photo-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .detail-value {
+            font-size: 13px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="ehs-card">
-  <div class="card-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0"><i class="fas fa-bell mr-2"></i>{{ report.report_number }}</h3>
-      <div>
-        {% if user_can_complete_action %}
-        <a href="{% url 'emergency:action_item_complete' action_item.pk %}" class="btn btn-success mr-2">
-          <i class="fas fa-check-circle mr-1"></i>Mark Action Complete
-        </a>
-        {% endif %}
-        {% if can_investigate %}
-        <a href="{% url 'emergency:investigation_create' report.pk %}" class="btn btn-warning mr-2">
-          <i class="fas fa-search mr-1"></i>Start Investigation
-        </a>
-        {% endif %}
-        {% if investigation_report %}
-        <a href="{% url 'emergency:investigation_detail' investigation_report.pk %}" class="btn btn-info mr-2">
-          <i class="fas fa-eye mr-1"></i>View Investigation
-        </a>
-        {% endif %}
-        {% if can_create_capa %}
-        <a href="{% url 'emergency:capa_create' report.pk %}" class="btn btn-primary mr-2">
-          <i class="fas fa-tools mr-1"></i>{% if latest_capa and latest_capa.status == 'CLOSED' %}Create Another CAPA{% else %}Create CAPA{% endif %}
-        </a>
-        {% endif %}
-        {% if show_closure_action %}
-        <a href="{% url 'emergency:closure_check' report.pk %}" class="btn btn-dark mr-2">
-          <i class="fas fa-check-double mr-1"></i>{% if report.status == 'CLOSED' %}View Closure{% else %}Closure Check{% endif %}
-        </a>
-        {% endif %}
-        <a href="{{ cancel_url }}" class="btn btn-secondary"><i class="fas fa-arrow-left mr-1"></i>Back</a>
-      </div>
-    </div>
-  </div>
+<div class="container-fluid" style="padding: 0;">
 
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Emergency Title</label>
-        <p class="mb-0 font-weight-bold">{{ report.emergency_title }}</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Emergency Type</label>
-        <p class="mb-0">{{ report.get_emergency_type_display }}{% if report.other_emergency_type %} - {{ report.other_emergency_type }}{% endif %}</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Severity</label>
-        <p class="mb-0"><span class="badge {{ report.severity_badge_class }}">{{ report.get_severity_level_display }}</span></p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Incident Department</label>
-        <p class="mb-0">{{ report.incident_department.name|default:"-" }}</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Incident Date</label>
-        <p class="mb-0">{{ report.incident_date|date:"d M Y" }}</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Incident Time</label>
-        <p class="mb-0">{{ report.incident_time|time:"H:i" }}</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Status</label>
-        <p class="mb-0"><span class="badge {{ report.status_badge_class }}">{{ report.get_status_display }}</span></p>
-      </div>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div>
+                <h1>{{ report.report_number }}</h1>
+                <p class="subtitle">Emergency report details and action tracking</p>
+            </div>
+        </div>
     </div>
 
-    <hr>
+    <!-- Main Card -->
+    <div class="ehs-card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-bell"></i>
+                {{ report.report_number }}
+            </h3>
+            <div class="action-buttons">
+                {% if user_can_complete_action %}
+                <a href="{% url 'emergency:action_item_complete' action_item.pk %}" class="btn-success-sm">
+                    <i class="fas fa-check-circle"></i> Mark Action Complete
+                </a>
+                {% endif %}
+                {% if can_investigate %}
+                <a href="{% url 'emergency:investigation_create' report.pk %}" class="btn-warning-sm">
+                    <i class="fas fa-search"></i> Start Investigation
+                </a>
+                {% endif %}
+                {% if investigation_report %}
+                <a href="{% url 'emergency:investigation_detail' investigation_report.pk %}" class="btn-info-sm">
+                    <i class="fas fa-eye"></i> View Investigation
+                </a>
+                {% endif %}
+                {% if can_create_capa %}
+                <a href="{% url 'emergency:capa_create' report.pk %}" class="btn-teal-sm">
+                    <i class="fas fa-tools"></i> {% if latest_capa and latest_capa.status == 'CLOSED' %}Create Another CAPA{% else %}Create CAPA{% endif %}
+                </a>
+                {% endif %}
+                {% if show_closure_action %}
+                <a href="{% url 'emergency:closure_check' report.pk %}" class="btn-dark-sm">
+                    <i class="fas fa-check-double"></i> {% if report.status == 'CLOSED' %}View Closure{% else %}Closure Check{% endif %}
+                </a>
+                {% endif %}
+                <a href="{{ cancel_url }}" class="btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
 
-    <h5 class="mb-3">Location Information</h5>
-    <div class="row">
-      <div class="col-md-3 mb-3"><label class="text-muted">Plant</label><p class="mb-0">{{ report.plant.name }}</p></div>
-      <div class="col-md-3 mb-3"><label class="text-muted">Zone</label><p class="mb-0">{{ report.zone.name|default:"-" }}</p></div>
-      <div class="col-md-3 mb-3"><label class="text-muted">Location</label><p class="mb-0">{{ report.location.name }}</p></div>
-      <div class="col-md-3 mb-3"><label class="text-muted">Sub-Location</label><p class="mb-0">{{ report.sublocation.name|default:"-" }}</p></div>
-      <div class="col-md-12 mb-3"><label class="text-muted">Additional Location Details</label><p class="mb-0">{{ report.additional_location_details|default:"-"|linebreaks }}</p></div>
+        <div class="card-body">
+
+            <!-- Basic Information -->
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Emergency Title</span>
+                    <p class="detail-value">{{ report.emergency_title }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Emergency Type</span>
+                    <p class="detail-value">{{ report.get_emergency_type_display }}{% if report.other_emergency_type %} - {{ report.other_emergency_type }}{% endif %}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Severity</span>
+                    <p class="detail-value">
+                        <span class="badge-custom {{ report.severity_badge_class }}">{{ report.get_severity_level_display }}</span>
+                    </p>
+                </div>
+                <div>
+                    <span class="detail-label">Incident Department</span>
+                    <p class="detail-value">{{ report.incident_department.name|default:"-" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Incident Date</span>
+                    <p class="detail-value">{{ report.incident_date|date:"d M Y" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Incident Time</span>
+                    <p class="detail-value">{{ report.incident_time|time:"H:i" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Status</span>
+                    <p class="detail-value">
+                        <span class="badge-custom {{ report.status_badge_class }}">{{ report.get_status_display }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Location Information -->
+            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Location Information</div>
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Plant</span>
+                    <p class="detail-value">{{ report.plant.name }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Zone</span>
+                    <p class="detail-value">{{ report.zone.name|default:"-" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Location</span>
+                    <p class="detail-value">{{ report.location.name }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Sub-Location</span>
+                    <p class="detail-value">{{ report.sublocation.name|default:"-" }}</p>
+                </div>
+            </div>
+            {% if report.additional_location_details %}
+            <div class="mt-2">
+                <span class="detail-label">Additional Location Details</span>
+                <p class="detail-value">{{ report.additional_location_details|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            <hr class="section-divider">
+
+            <!-- Reporting Information -->
+            <div class="section-title"><i class="fas fa-user-edit"></i> Reporting Information</div>
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Reported By</span>
+                    <p class="detail-value">{{ report.reported_by.get_full_name|default:report.reported_by.username }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Reported Date</span>
+                    <p class="detail-value">{{ report.reported_date|date:"d M Y H:i" }}</p>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Incident Description -->
+            <div class="section-title"><i class="fas fa-file-alt"></i> Incident Description</div>
+            <div class="mb-3">
+                <span class="detail-label">Detailed Description</span>
+                <div class="detail-value">{{ report.description|linebreaks }}</div>
+            </div>
+            <div class="mb-3">
+                <span class="detail-label">Immediate Actions Taken</span>
+                <div class="detail-value">{{ report.immediate_actions_taken|default:"-"|linebreaks }}</div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Emergency Response Team -->
+            <div class="section-title"><i class="fas fa-users"></i> Emergency Response Team</div>
+            <div>
+                {% for member in report.response_team_members.all %}
+                <span class="team-badge"><i class="fas fa-user-circle"></i> {{ member.get_full_name|default:member.username }}</span>
+                {% empty %}
+                <p class="text-muted">No response team members selected.</p>
+                {% endfor %}
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Emergency Action Status -->
+            <div class="section-title"><i class="fas fa-tasks"></i> Emergency Action Status</div>
+            {% if action_item %}
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Action Description</span>
+                    <div class="detail-value">{{ action_item.action_description|linebreaks }}</div>
+                </div>
+                <div>
+                    <span class="detail-label">Action Status</span>
+                    <p class="detail-value">
+                        <span class="badge-custom {% if action_item.status == 'ACTION_PERFORMED' %}completed{% else %}pending{% endif %}">
+                            {{ action_item.get_status_display }}
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    <span class="detail-label">Completed By</span>
+                    <p class="detail-value">
+                        {% for member in action_item.completed_by_users.all %}
+                            {{ member.get_full_name|default:member.username }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </p>
+                </div>
+                <div>
+                    <span class="detail-label">Completion Date &amp; Time</span>
+                    <p class="detail-value">{{ action_item.completion_datetime|date:"d M Y H:i"|default:"-" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Completion Remarks</span>
+                    <div class="detail-value">{{ action_item.completion_remarks|default:"-"|linebreaks }}</div>
+                </div>
+            </div>
+            {% if action_item.attachment %}
+            <div class="mt-2">
+                <a href="{{ action_item.attachment.url }}" target="_blank" class="btn-teal-outline-sm">
+                    <i class="fas fa-paperclip"></i> View Completion Attachment
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="text-muted">No action item has been generated for this emergency report.</p>
+            {% endif %}
+
+            <!-- Investigation Summary -->
+            {% if investigation_report %}
+            <hr class="section-divider">
+            <div class="section-title"><i class="fas fa-search"></i> Investigation Summary</div>
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Investigation Date</span>
+                    <p class="detail-value">{{ investigation_report.investigation_date|date:"d M Y" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Investigator</span>
+                    <p class="detail-value">{{ investigation_report.investigator.get_full_name|default:investigation_report.investigator.username }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Completed Date</span>
+                    <p class="detail-value">{{ investigation_report.completed_date|date:"d M Y" }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <hr class="section-divider">
+
+            <!-- CAPA Tracking -->
+            <div class="section-title"><i class="fas fa-tools"></i> CAPA Tracking</div>
+            {% if report.status == 'INVESTIGATION_COMPLETED' and not can_create_capa and capa_message %}
+            <div class="alert-info-custom">
+                <i class="fas fa-info-circle"></i>
+                {{ capa_message }}
+            </div>
+            {% endif %}
+
+            {% if capas %}
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>CAPA No.</th>
+                            <th>Action Required</th>
+                            <th>Assigned To</th>
+                            <th>Target Date</th>
+                            <th>Status</th>
+                            <th>Action Taken</th>
+                            <th>Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for capa in capas %}
+                        <tr>
+                            <td data-label="CAPA No.">{{ capa.capa_number }}</td>
+                            <td data-label="Action Required">{{ capa.action_required|truncatechars:80 }}</td>
+                            <td data-label="Assigned To">{{ capa.assigned_to.get_full_name|default:capa.assigned_to.username }}</td>
+                            <td data-label="Target Date">{{ capa.target_date|date:"d M Y" }}</td>
+                            <td data-label="Status">
+                                <span class="badge-status {% if capa.status == 'CLOSED' %}closed{% elif capa.status == 'IN_PROGRESS' %}in-progress{% else %}open{% endif %}">
+                                    {{ capa.get_status_display }}
+                                </span>
+                            </td>
+                            <td data-label="Action Taken">{{ capa.action_taken|default:"-"|truncatechars:60 }}</td>
+                            <td data-label="Update">
+                                <a href="{% url 'emergency:capa_update' capa.pk %}" class="btn-teal-outline-sm">Update</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No CAPA has been created for this emergency yet.</p>
+            {% endif %}
+
+            {% if latest_capa and latest_capa.status == 'CLOSED' and report.status != 'CLOSED' %}
+            <div class="alert-info-custom">
+                <i class="fas fa-info-circle"></i>
+                The previous CAPA is closed. If a new root cause is identified, you can create another CAPA for this emergency.
+            </div>
+            {% elif capa_message and not can_create_capa %}
+            <div class="alert-warning-custom">
+                <i class="fas fa-exclamation-triangle"></i>
+                {{ capa_message }}
+            </div>
+            {% endif %}
+
+            <hr class="section-divider">
+
+            <!-- Closure Status -->
+            <div class="section-title"><i class="fas fa-check-double"></i> Closure Status</div>
+            {% if report.status == 'CLOSED' %}
+            <div class="detail-grid">
+                <div>
+                    <span class="detail-label">Closure Date</span>
+                    <p class="detail-value">{{ report.closure_date|date:"d M Y H:i" }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Closed By</span>
+                    <p class="detail-value">{{ report.closed_by.get_full_name|default:report.closed_by.username }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Days to Close</span>
+                    <p class="detail-value">{{ report.days_to_close }}</p>
+                </div>
+                <div>
+                    <span class="detail-label">Closure Remarks</span>
+                    <div class="detail-value">{{ report.closure_remarks|linebreaks }}</div>
+                </div>
+                <div>
+                    <span class="detail-label">Lessons Learned</span>
+                    <div class="detail-value">{{ report.lessons_learned|linebreaks }}</div>
+                </div>
+                <div>
+                    <span class="detail-label">Preventive Measures</span>
+                    <div class="detail-value">{{ report.preventive_measures|linebreaks }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="{% if can_close_report %}alert-success-custom{% else %}alert-warning-custom{% endif %}">
+                <i class="fas {% if can_close_report %}fa-check-circle{% else %}fa-clock{% endif %}"></i>
+                {% if can_close_report %}
+                This emergency is ready for closure.
+                {% else %}
+                {{ closure_message }}
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <hr class="section-divider">
+
+            <!-- Attachments -->
+            <div class="section-title"><i class="fas fa-camera"></i> Attachments</div>
+            {% if report.photos.all %}
+            <div class="photo-grid">
+                {% for photo in report.photos.all %}
+                <div class="photo-item">
+                    <a href="{{ photo.photo.url }}" target="_blank">
+                        <img src="{{ photo.photo.url }}" alt="Emergency attachment">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No attachments uploaded.</p>
+            {% endif %}
+
+        </div>
     </div>
 
-    <hr>
-
-    <h5 class="mb-3">Reporting Information</h5>
-    <div class="row">
-      <div class="col-md-6 mb-3"><label class="text-muted">Reported By</label><p class="mb-0">{{ report.reported_by.get_full_name|default:report.reported_by.username }}</p></div>
-      <div class="col-md-6 mb-3"><label class="text-muted">Reported Date</label><p class="mb-0">{{ report.reported_date|date:"d M Y H:i" }}</p></div>
-    </div>
-
-    <hr>
-
-    <h5 class="mb-3">Incident Description</h5>
-    <div class="mb-3">
-      <label class="text-muted">Detailed Description</label>
-      <div>{{ report.description|linebreaks }}</div>
-    </div>
-    <div class="mb-3">
-      <label class="text-muted">Immediate Actions Taken</label>
-      <div>{{ report.immediate_actions_taken|default:"-"|linebreaks }}</div>
-    </div>
-
-    <hr>
-
-    <h5 class="mb-3">Emergency Response Team</h5>
-    <div class="mb-3">
-      {% for member in report.response_team_members.all %}
-      <span class="badge badge-light border mr-1 mb-1">{{ member.get_full_name|default:member.username }}</span>
-      {% empty %}
-      <p class="text-muted mb-0">No response team members selected.</p>
-      {% endfor %}
-    </div>
-
-    <hr>
-
-    <h5 class="mb-3">Emergency Action Status</h5>
-    {% if action_item %}
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Action Description</label>
-        <div>{{ action_item.action_description|linebreaks }}</div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Action Status</label>
-        <p class="mb-0"><span class="badge {% if action_item.status == 'ACTION_PERFORMED' %}badge-success{% else %}badge-warning{% endif %}">{{ action_item.get_status_display }}</span></p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <label class="text-muted">Completed By</label>
-        <p class="mb-0">
-          {% for member in action_item.completed_by_users.all %}
-            {{ member.get_full_name|default:member.username }}{% if not forloop.last %}, {% endif %}
-          {% empty %}
-            -
-          {% endfor %}
-        </p>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Completion Date & Time</label>
-        <p class="mb-0">{{ action_item.completion_datetime|date:"d M Y H:i"|default:"-" }}</p>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Completion Remarks</label>
-        <div>{{ action_item.completion_remarks|default:"-"|linebreaks }}</div>
-      </div>
-      {% if action_item.attachment %}
-      <div class="col-md-12 mb-3">
-        <a href="{{ action_item.attachment.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
-          <i class="fas fa-paperclip mr-1"></i>View Completion Attachment
-        </a>
-      </div>
-      {% endif %}
-    </div>
-    {% else %}
-    <p class="text-muted mb-0">No action item has been generated for this emergency report.</p>
-    {% endif %}
-
-    {% if investigation_report %}
-    <hr>
-    <h5 class="mb-3">Investigation Summary</h5>
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Investigation Date</label>
-        <p class="mb-0">{{ investigation_report.investigation_date|date:"d M Y" }}</p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Investigator</label>
-        <p class="mb-0">{{ investigation_report.investigator.get_full_name|default:investigation_report.investigator.username }}</p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Completed Date</label>
-        <p class="mb-0">{{ investigation_report.completed_date|date:"d M Y" }}</p>
-      </div>
-    </div>
-    {% endif %}
-
-    <hr>
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">CAPA Tracking</h5>
-      {% if report.status == 'INVESTIGATION_COMPLETED' and not can_create_capa and capa_message %}
-      <span class="text-muted small">{{ capa_message }}</span>
-      {% endif %}
-    </div>
-
-    {% if capas %}
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead class="thead-light">
-          <tr>
-            <th>CAPA No.</th>
-            <th>Action Required</th>
-            <th>Assigned To</th>
-            <th>Target Date</th>
-            <th>Status</th>
-            <th>Action Taken</th>
-            <th>Update</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for capa in capas %}
-          <tr>
-            <td>{{ capa.capa_number }}</td>
-            <td>{{ capa.action_required|truncatechars:80 }}</td>
-            <td>{{ capa.assigned_to.get_full_name|default:capa.assigned_to.username }}</td>
-            <td>{{ capa.target_date|date:"d M Y" }}</td>
-            <td>
-              <span class="badge {% if capa.status == 'CLOSED' %}badge-success{% elif capa.status == 'IN_PROGRESS' %}badge-warning{% else %}badge-info{% endif %}">
-                {{ capa.get_status_display }}
-              </span>
-            </td>
-            <td>{{ capa.action_taken|default:"-"|truncatechars:60 }}</td>
-            <td>
-              <a href="{% url 'emergency:capa_update' capa.pk %}" class="btn btn-sm btn-outline-primary">Update</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="text-muted mb-0">No CAPA has been created for this emergency yet.</p>
-    {% endif %}
-
-    {% if latest_capa and latest_capa.status == 'CLOSED' and report.status != 'CLOSED' %}
-    <div class="alert alert-info mt-3 mb-0">
-      The previous CAPA is closed. If a new root cause is identified, you can create another CAPA for this emergency.
-    </div>
-    {% elif capa_message and not can_create_capa %}
-    <div class="alert alert-warning mt-3 mb-0">
-      {{ capa_message }}
-    </div>
-    {% endif %}
-
-    <hr>
-
-    <h5 class="mb-3">Closure Status</h5>
-    {% if report.status == 'CLOSED' %}
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Closure Date</label>
-        <p class="mb-0">{{ report.closure_date|date:"d M Y H:i" }}</p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Closed By</label>
-        <p class="mb-0">{{ report.closed_by.get_full_name|default:report.closed_by.username }}</p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Days to Close</label>
-        <p class="mb-0">{{ report.days_to_close }}</p>
-      </div>
-      <div class="col-md-12 mb-3">
-        <label class="text-muted">Closure Remarks</label>
-        <div>{{ report.closure_remarks|linebreaks }}</div>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Lessons Learned</label>
-        <div>{{ report.lessons_learned|linebreaks }}</div>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="text-muted">Preventive Measures</label>
-        <div>{{ report.preventive_measures|linebreaks }}</div>
-      </div>
-    </div>
-    {% else %}
-    <div class="alert {% if can_close_report %}alert-success{% else %}alert-warning{% endif %} mb-0">
-      {% if can_close_report %}
-      This emergency is ready for closure.
-      {% else %}
-      {{ closure_message }}
-      {% endif %}
-    </div>
-    {% endif %}
-
-    <hr>
-
-    <h5 class="mb-3">Attachments</h5>
-    <div class="row">
-      {% for photo in report.photos.all %}
-      <div class="col-md-3 mb-3">
-        <a href="{{ photo.photo.url }}" target="_blank">
-          <img src="{{ photo.photo.url }}" alt="Emergency attachment" class="img-fluid rounded border">
-        </a>
-      </div>
-      {% empty %}
-      <div class="col-12 text-muted">No attachments uploaded.</div>
-      {% endfor %}
-    </div>
-  </div>
 </div>
 {% endblock %}

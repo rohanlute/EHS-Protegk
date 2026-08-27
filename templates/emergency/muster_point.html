@@ -1,7 +1,8 @@
+<!-- templates/emergency/muster_point.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Muster Point{% endblock %}
-{% block page_title %}Muster Point{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
@@ -10,752 +11,1053 @@
 
 {% block extra_css %}
 <style>
-  .muster-shell {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .muster-card,
-  .muster-status,
-  .muster-stat {
-    background: #fff;
-    border: 1px solid #dde6ef;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-  }
-
-  .muster-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.15rem;
-    background: #f3fbf7;
-    border-color: #bfe7d0;
-  }
-
-  .muster-status-main {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .status-shield {
-    width: 48px;
-    height: 48px;
-    border-radius: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: #16a34a;
-    font-size: 1.4rem;
-  }
-
-  .status-title {
-    margin: 0;
-    color: #111827;
-    font-size: 1.05rem;
-    font-weight: 800;
-  }
-
-  .status-copy {
-    margin: 0.15rem 0 0;
-    color: #334155;
-    font-size: 0.9rem;
-  }
-
-  .status-updated {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #334155;
-    font-size: 0.82rem;
-    white-space: nowrap;
-  }
-
-  .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .muster-stat {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-height: 120px;
-    padding: 1.2rem;
-  }
-
-  .stat-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 64px;
-    font-size: 1.7rem;
-  }
-
-  .tone-green,
-  .tone-success {
-    color: #16a34a;
-    background: #dcfce7;
-  }
-
-  .tone-warning {
-    color: #f59e0b;
-    background: #fef3c7;
-  }
-
-  .tone-blue {
-    color: #1976d2;
-    background: #e3f2fd;
-  }
-
-  .tone-danger {
-    color: #dc2626;
-    background: #fee2e2;
-  }
-
-  .tone-purple {
-    color: #6d28d9;
-    background: #ede9fe;
-  }
-
-  .tone-orange {
-    color: #f97316;
-    background: #ffedd5;
-  }
-
-  .stat-label {
-    margin: 0;
-    color: #111827;
-    font-size: 0.9rem;
-    font-weight: 800;
-  }
-
-  .stat-value {
-    margin: 0.35rem 0 0;
-    color: #020617;
-    font-size: 1.95rem;
-    line-height: 1;
-    font-weight: 900;
-  }
-
-  .stat-meta {
-    margin: 0.35rem 0 0;
-    color: #16a34a;
-    font-size: 0.86rem;
-    font-weight: 800;
-  }
-
-  .muster-dashboard {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.95fr);
-    gap: 1rem;
-  }
-
-  .muster-bottom {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.95fr);
-    gap: 1rem;
-  }
-
-  .muster-card {
-    padding: 1rem;
-  }
-
-  .muster-card-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .muster-card-title h3 {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    margin: 0;
-    color: #111827;
-    font-size: 1.05rem;
-    font-weight: 900;
-  }
-
-  .muster-card-title a {
-    color: #166534;
-    font-size: 0.86rem;
-    font-weight: 800;
-  }
-
-  .overview-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.85fr);
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .muster-map {
-    position: relative;
-    min-height: 270px;
-    overflow: hidden;
-    border-radius: 8px;
-    border: 1px solid #dbe7d6;
-    background:
-      linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
-      repeating-linear-gradient(90deg, #dff0dc 0 34px, #eef7eb 34px 68px);
-  }
-
-  .map-road,
-  .map-block,
-  .map-lawn {
-    position: absolute;
-    border-radius: 6px;
-  }
-
-  .map-road {
-    background: #d8dee6;
-    border: 4px solid #f8fafc;
-  }
-
-  .road-main {
-    left: 10%;
-    right: 8%;
-    top: 43%;
-    height: 42px;
-    transform: rotate(22deg);
-  }
-
-  .road-vertical {
-    left: 36%;
-    top: 8%;
-    bottom: 8%;
-    width: 42px;
-  }
-
-  .road-loop {
-    right: 6%;
-    top: 47%;
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    background: transparent;
-    border: 18px solid #d8dee6;
-  }
-
-  .map-block {
-    background: #f8fafc;
-    border: 2px solid #ccd6df;
-  }
-
-  .block-one {
-    left: 36%;
-    top: 12%;
-    width: 18%;
-    height: 26%;
-  }
-
-  .block-two {
-    left: 57%;
-    top: 10%;
-    width: 18%;
-    height: 37%;
-  }
-
-  .block-three {
-    left: 48%;
-    bottom: 13%;
-    width: 29%;
-    height: 19%;
-  }
-
-  .map-lawn {
-    width: 12px;
-    height: 12px;
-    background: #9bd18e;
-    box-shadow:
-      24px 8px 0 #a7d99d,
-      52px 2px 0 #9bd18e,
-      86px 14px 0 #b7e3ad,
-      124px 2px 0 #9bd18e,
-      170px 14px 0 #a7d99d,
-      220px 5px 0 #9bd18e,
-      265px 18px 0 #a7d99d,
-      310px 8px 0 #b7e3ad;
-  }
-
-  .lawn-top {
-    left: 6%;
-    top: 8%;
-  }
-
-  .lawn-bottom {
-    left: 7%;
-    bottom: 13%;
-  }
-
-  .helipad {
-    position: absolute;
-    right: 11%;
-    top: 53%;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #8fbf87;
-    border: 2px solid #b7d8ae;
-    background: rgba(255, 255, 255, 0.7);
-    font-weight: 900;
-  }
-
-  .muster-pin {
-    position: absolute;
-    display: grid;
-    gap: 0.25rem;
-    justify-items: center;
-  }
-
-  .muster-pin i {
-    width: 44px;
-    height: 44px;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: #16a34a;
-    box-shadow: 0 10px 20px rgba(22, 163, 74, 0.25);
-  }
-
-  .muster-pin i:before {
-    transform: rotate(45deg);
-  }
-
-  .muster-pin span {
-    padding: 0.25rem 0.55rem;
-    border-radius: 4px;
-    color: #111827;
-    background: #fff;
-    border: 1px solid #d7e2dc;
-    font-weight: 800;
-    font-size: 0.8rem;
-  }
-
-  .pin-a {
-    left: 14%;
-    top: 23%;
-  }
-
-  .pin-b {
-    right: 13%;
-    top: 16%;
-  }
-
-  .pin-c {
-    right: 22%;
-    bottom: 10%;
-  }
-
-  .zone-list {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .zone-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 72px;
-    padding: 0.85rem;
-    border: 1px solid #dce5ec;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  .zone-name {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin: 0;
-    color: #111827;
-    font-size: 0.9rem;
-    font-weight: 900;
-  }
-
-  .zone-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #16a34a;
-  }
-
-  .zone-area,
-  .zone-percent {
-    margin: 0.2rem 0 0;
-    font-size: 0.78rem;
-  }
-
-  .zone-area {
-    color: #334155;
-  }
-
-  .zone-count {
-    color: #111827;
-    font-size: 0.95rem;
-    font-weight: 900;
-    text-align: right;
-  }
-
-  .zone-percent {
-    color: #16a34a;
-    font-weight: 800;
-  }
-
-  .zone-button {
-    justify-self: end;
-    min-width: 170px;
-    margin-top: 0.4rem;
-    color: #166534;
-    border-color: #d4e6d8;
-    background: #fff;
-    font-weight: 800;
-  }
-
-  .alert-list,
-  .contact-list {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .alert-item {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.8rem;
-    align-items: start;
-    min-height: 72px;
-    padding: 0.85rem;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-  }
-
-  .alert-item.danger {
-    background: #fff1f2;
-    border-color: #fecdd3;
-  }
-
-  .alert-item.warning {
-    background: #fffbeb;
-    border-color: #fde68a;
-  }
-
-  .alert-item.info {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-  }
-
-  .alert-icon {
-    margin-top: 0.1rem;
-    font-size: 1rem;
-  }
-
-  .alert-title {
-    margin: 0;
-    color: #111827;
-    font-size: 0.9rem;
-    font-weight: 900;
-  }
-
-  .alert-copy,
-  .alert-time {
-    margin: 0.2rem 0 0;
-    color: #1f2937;
-    font-size: 0.82rem;
-  }
-
-  .alert-time {
-    margin: 0;
-    white-space: nowrap;
-  }
-
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(95px, 1fr));
-    gap: 1.35rem;
-  }
-
-  .quick-action {
-    min-height: 110px;
-    padding: 0.8rem;
-    border: 1px solid #dbe5ef;
-    border-radius: 8px;
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 0.5rem;
-    text-align: center;
-    color: #111827;
-    background: #fff;
-    font-size: 0.86rem;
-    font-weight: 800;
-  }
-
-  .quick-action:hover {
-    color: #111827;
-    text-decoration: none;
-    transform: translateY(-1px);
-  }
-
-  .quick-action i {
-    font-size: 2rem;
-  }
-
-  .quick-note {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 1rem 0 0;
-    color: #475569;
-    font-size: 0.82rem;
-  }
-
-  .contact-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 0.8rem;
-    align-items: center;
-    padding: 0.65rem 0.75rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    min-height: 52px;
-  }
-
-  .contact-row i {
-    font-size: 1.05rem;
-  }
-
-  .contact-name {
-    margin: 0;
-    color: #111827;
-    font-size: 0.86rem;
-    font-weight: 900;
-  }
-
-  .contact-meta {
-    margin: 0.12rem 0 0;
-    color: #64748b;
-    font-size: 0.76rem;
-  }
-
-  .contact-phone {
-    color: #111827;
-    font-size: 0.82rem;
-    white-space: nowrap;
-  }
-
-  .call-button {
-    width: 36px;
-    height: 32px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #15803d;
-    border: 1px solid #bfe7d0;
-    background: #fff;
-  }
-
-  @media (max-width: 1199px) {
-    .metric-grid,
-    .quick-actions {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* ===== MUSTER POINT - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
     }
 
-    .muster-dashboard,
-    .muster-bottom,
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Muster Shell */
+    .muster-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Status Card */
+    .status-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--secondary-green);
+    }
+
+    .status-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .status-card .status-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .status-card .status-left .status-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+        font-size: 22px;
+    }
+
+    .status-card .status-left .status-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .status-card .status-left .status-copy {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin: 2px 0 0 0;
+    }
+
+    .status-card .status-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .status-card .status-right i {
+        color: var(--primary-teal);
+        cursor: pointer;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        min-height: 100px;
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-2px);
+    }
+
+    .stat-card .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .stat-card .stat-icon.teal { background: var(--primary-teal-light); color: var(--primary-teal); }
+    .stat-card .stat-icon.green { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .stat-card .stat-icon.gold { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .stat-card .stat-icon.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .stat-card .stat-icon.red { background: var(--secondary-red-light); color: var(--secondary-red); }
+    .stat-card .stat-icon.purple { background: rgba(109, 40, 217, 0.1); color: #6d28d9; }
+
+    .stat-card .stat-info .stat-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .stat-card .stat-info .stat-value {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 2px 0 0 0;
+        line-height: 1.2;
+    }
+
+    .stat-card .stat-info .stat-meta {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--secondary-green);
+        margin: 2px 0 0 0;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 20px;
+    }
+
+    .dashboard-grid .muster-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 20px 24px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-grid .muster-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .muster-card .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .muster-card .card-header-custom h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .muster-card .card-header-custom h3 i {
+        color: var(--primary-teal);
+    }
+
+    .muster-card .card-header-custom a {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .muster-card .card-header-custom a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+
+    /* Overview Grid */
     .overview-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .muster-status,
-    .muster-stat,
-    .contact-row {
-      align-items: flex-start;
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr;
+        gap: 16px;
     }
 
-    .muster-status {
-      flex-direction: column;
+    /* Muster Map */
+    .muster-map {
+        position: relative;
+        min-height: 280px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+                    repeating-linear-gradient(90deg, #e8f5e9 0 34px, #f1f8f0 34px 68px);
+        overflow: hidden;
     }
 
-    .metric-grid,
+    .map-road {
+        position: absolute;
+        background: #d8dee6;
+        border: 4px solid #f8fafc;
+        border-radius: 6px;
+    }
+
+    .road-main {
+        left: 10%;
+        right: 8%;
+        top: 43%;
+        height: 42px;
+        transform: rotate(22deg);
+    }
+
+    .road-vertical {
+        left: 36%;
+        top: 8%;
+        bottom: 8%;
+        width: 42px;
+    }
+
+    .road-loop {
+        right: 6%;
+        top: 47%;
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: transparent;
+        border: 18px solid #d8dee6;
+    }
+
+    .map-block {
+        position: absolute;
+        background: #f8fafc;
+        border: 2px solid #ccd6df;
+        border-radius: 6px;
+    }
+
+    .block-one { left: 36%; top: 12%; width: 18%; height: 26%; }
+    .block-two { left: 57%; top: 10%; width: 18%; height: 37%; }
+    .block-three { left: 48%; bottom: 13%; width: 29%; height: 19%; }
+
+    .map-lawn {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #a7d99d;
+        border-radius: 2px;
+        box-shadow: 24px 8px 0 #b7e3ad, 52px 2px 0 #a7d99d, 86px 14px 0 #c5e8bc,
+                    124px 2px 0 #a7d99d, 170px 14px 0 #b7e3ad, 220px 5px 0 #a7d99d,
+                    265px 18px 0 #b7e3ad, 310px 8px 0 #c5e8bc;
+    }
+
+    .lawn-top { left: 6%; top: 8%; }
+    .lawn-bottom { left: 7%; bottom: 13%; }
+
+    .helipad {
+        position: absolute;
+        right: 11%;
+        top: 53%;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8fbf87;
+        border: 2px solid #b7d8ae;
+        background: rgba(255, 255, 255, 0.7);
+        font-weight: 900;
+        font-size: 20px;
+    }
+
+    .muster-pin {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .muster-pin .pin-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-teal);
+        color: white;
+        box-shadow: 0 8px 16px rgba(13, 148, 136, 0.25);
+    }
+
+    .muster-pin .pin-icon i {
+        transform: rotate(45deg);
+        font-size: 16px;
+    }
+
+    .muster-pin .pin-label {
+        padding: 2px 10px;
+        border-radius: 4px;
+        background: white;
+        border: 1px solid var(--border-color);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .pin-a { left: 14%; top: 23%; }
+    .pin-b { right: 13%; top: 16%; }
+    .pin-c { right: 22%; bottom: 10%; }
+
+    /* Zone List */
+    .zone-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .zone-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: white;
+        transition: all 0.2s;
+        min-height: 60px;
+    }
+
+    .zone-item:hover {
+        border-color: var(--primary-teal);
+        background: var(--primary-teal-light);
+    }
+
+    .zone-item .zone-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .zone-item .zone-left .zone-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-teal);
+        flex-shrink: 0;
+    }
+
+    .zone-item .zone-left .zone-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .zone-item .zone-left .zone-area {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .zone-item .zone-right {
+        text-align: right;
+    }
+
+    .zone-item .zone-right .zone-count {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .zone-item .zone-right .zone-percent {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--secondary-green);
+        margin: 0;
+    }
+
+    .zone-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--primary-teal);
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-top: 4px;
+        width: 100%;
+    }
+
+    .zone-button:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    /* Alert List */
+    .alert-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .alert-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: start;
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .alert-item:hover {
+        border-color: var(--primary-teal);
+    }
+
+    .alert-item.danger { background: var(--secondary-red-light); border-color: rgba(220, 38, 38, 0.2); }
+    .alert-item.warning { background: var(--secondary-gold-light); border-color: rgba(217, 119, 6, 0.2); }
+    .alert-item.info { background: var(--primary-teal-light); border-color: rgba(13, 148, 136, 0.2); }
+
+    .alert-item .alert-icon {
+        font-size: 18px;
+        margin-top: 2px;
+    }
+
+    .alert-item .alert-icon.text-danger { color: var(--secondary-red); }
+    .alert-item .alert-icon.text-warning { color: var(--secondary-gold); }
+    .alert-item .alert-icon.text-info { color: var(--primary-teal); }
+
+    .alert-item .alert-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .alert-item .alert-copy {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 2px 0 0 0;
+    }
+
+    .alert-item .alert-time {
+        font-size: 12px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    /* Quick Actions */
     .quick-actions {
-      grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+    }
+
+    .quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: white;
+        color: var(--text-secondary);
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.25s;
+        min-height: 100px;
+    }
+
+    .quick-action:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary-teal);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .quick-action i {
+        font-size: 28px;
+        color: var(--primary-teal);
+    }
+
+    .quick-action span {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .quick-note {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .quick-note i {
+        color: var(--primary-teal);
+    }
+
+    /* Contact List */
+    .contact-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .contact-row {
-      grid-template-columns: auto 1fr;
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: white;
+        transition: all 0.2s;
+        min-height: 52px;
     }
 
-    .contact-phone,
-    .call-button {
-      grid-column: 2;
+    .contact-row:hover {
+        border-color: var(--primary-teal);
+        background: var(--primary-teal-light);
     }
-  }
+
+    .contact-row .contact-icon {
+        font-size: 18px;
+        color: var(--primary-teal);
+    }
+
+    .contact-row .contact-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .contact-row .contact-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .contact-row .contact-phone {
+        font-size: 13px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+    }
+
+    .contact-row .call-btn {
+        width: 36px;
+        height: 34px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--secondary-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .contact-row .call-btn:hover {
+        background: var(--secondary-green-light);
+        border-color: var(--secondary-green);
+        color: var(--secondary-green);
+    }
+
+    .contact-row .call-btn i {
+        font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-actions {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .overview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .muster-map {
+            min-height: 220px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .status-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 14px 18px;
+        }
+
+        .status-card .status-right {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            padding: 12px 16px;
+            min-height: 80px;
+        }
+
+        .stat-card .stat-info .stat-value {
+            font-size: 20px;
+        }
+
+        .stat-card .stat-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 18px;
+        }
+
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-action {
+            min-height: 80px;
+            padding: 12px;
+        }
+
+        .quick-action i {
+            font-size: 22px;
+        }
+
+        .contact-row {
+            grid-template-columns: auto 1fr;
+        }
+
+        .contact-row .contact-phone,
+        .contact-row .call-btn {
+            grid-column: 2;
+        }
+
+        .muster-card .card-header-custom {
+            flex-wrap: wrap;
+        }
+
+        .alert-item {
+            grid-template-columns: auto 1fr;
+        }
+
+        .alert-item .alert-time {
+            grid-column: 2;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .muster-card {
+            padding: 14px 16px;
+        }
+
+        .dashboard-grid .muster-card {
+            padding: 14px 16px;
+        }
+
+        .zone-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .zone-item .zone-right {
+            text-align: left;
+            width: 100%;
+        }
+
+        .status-card .status-left .status-title {
+            font-size: 16px;
+        }
+
+        .status-card .status-left .status-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="muster-shell">
-  <section class="muster-status">
-    <div class="muster-status-main">
-      <span class="status-shield"><i class="fas fa-check"></i></span>
-      <div>
-        <h2 class="status-title">All Clear</h2>
-        <p class="status-copy">There is no active emergency at this time.</p>
-      </div>
-    </div>
-    <div class="status-updated">
-      <span>Last updated: {{ last_updated|date:"h:i A, d M Y" }}</span>
-      <i class="fas fa-sync-alt"></i>
-    </div>
-  </section>
+<div class="container-fluid" style="padding: 0;">
 
-  <section class="metric-grid">
-    {% for stat in muster_stats %}
-    <article class="muster-stat">
-      <span class="stat-icon tone-{{ stat.tone }}"><i class="{{ stat.icon }}"></i></span>
-      <div>
-        <p class="stat-label">{{ stat.label }}</p>
-        <p class="stat-value">{{ stat.value }}</p>
-        <p class="stat-meta">{{ stat.meta }}</p>
-      </div>
-    </article>
-    {% endfor %}
-  </section>
-
-  <section class="muster-dashboard">
-    <div class="muster-card">
-      <div class="muster-card-title">
-        <h3><i class="fas fa-map-marker-alt text-success"></i>Muster Point Overview</h3>
-      </div>
-      <div class="overview-grid">
-        <div class="muster-map" aria-label="Muster point map">
-          <span class="map-lawn lawn-top"></span>
-          <span class="map-lawn lawn-bottom"></span>
-          <span class="map-road road-main"></span>
-          <span class="map-road road-vertical"></span>
-          <span class="map-road road-loop"></span>
-          <span class="map-block block-one"></span>
-          <span class="map-block block-two"></span>
-          <span class="map-block block-three"></span>
-          <span class="helipad">H</span>
-          <span class="muster-pin pin-a"><i class="fas fa-users"></i><span>Zone A</span></span>
-          <span class="muster-pin pin-b"><i class="fas fa-users"></i><span>Zone B</span></span>
-          <span class="muster-pin pin-c"><i class="fas fa-users"></i><span>Zone C</span></span>
-        </div>
-
-        <div class="zone-list">
-          {% for zone in muster_zones %}
-          <div class="zone-item">
-            <div>
-              <p class="zone-name"><span class="zone-dot"></span>{{ zone.name }}</p>
-              <p class="zone-area">{{ zone.area }}</p>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-map-marked-alt"></i>
             </div>
             <div>
-              <div class="zone-count">{{ zone.count }}</div>
-              <p class="zone-percent">{{ zone.percent }}</p>
+                <h1>Muster Point</h1>
+                <p class="subtitle">Emergency assembly points and real-time status monitoring</p>
             </div>
-          </div>
-          {% endfor %}
-          <a href="{% url 'emergency:muster_point' %}" class="btn zone-button">
-            View Zone Details <i class="fas fa-arrow-right ml-3"></i>
-          </a>
         </div>
-      </div>
     </div>
 
-    <div class="muster-card">
-      <div class="muster-card-title">
-        <h3><i class="fas fa-exclamation-triangle text-danger"></i>Active Alerts</h3>
-        <a href="{% url 'emergency:report_list' %}">View All</a>
-      </div>
-      <div class="alert-list">
-        {% for alert in muster_alerts %}
-        <div class="alert-item {{ alert.tone }}">
-          <i class="alert-icon {{ alert.icon }} text-{{ alert.tone }}"></i>
-          <div>
-            <p class="alert-title">{{ alert.title }}</p>
-            <p class="alert-copy">{{ alert.message }}</p>
-          </div>
-          <p class="alert-time">{{ alert.time }}</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
+    <!-- Muster Shell -->
+    <div class="muster-shell">
 
-  <section class="muster-bottom">
-    <div class="muster-card">
-      <div class="muster-card-title">
-        <h3><i class="fas fa-bolt text-success"></i>Quick Actions</h3>
-      </div>
-      <div class="quick-actions">
-        {% for action in quick_actions %}
-        <a href="{% url action.url_name %}" class="quick-action tone-{{ action.tone }}">
-          <i class="{{ action.icon }}"></i>
-          <span>{{ action.label }}</span>
-        </a>
-        {% endfor %}
-      </div>
-      <p class="quick-note"><i class="fas fa-info-circle"></i>Use these actions only in case of an emergency.</p>
-    </div>
-
-    <div class="muster-card">
-      <div class="muster-card-title">
-        <h3><i class="fas fa-phone-alt text-success"></i>Emergency Contacts</h3>
-      </div>
-      <div class="contact-list">
-        {% if safety_managers %}
-          {% for manager in safety_managers|slice:":4" %}
-          <div class="contact-row">
-            <i class="fas fa-user-shield text-success"></i>
-            <div>
-              <p class="contact-name">{{ manager.get_full_name|default:manager.username }}</p>
-              <p class="contact-meta">{{ manager.job_title|default:"Site Emergency Coordinator" }}</p>
+        <!-- Status Card -->
+        <div class="status-card">
+            <div class="status-left">
+                <div class="status-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div>
+                    <h2 class="status-title">All Clear</h2>
+                    <p class="status-copy">There is no active emergency at this time.</p>
+                </div>
             </div>
-            <span class="contact-phone">{{ manager.phone|default:"Phone not available" }}</span>
-            {% if manager.phone %}
-            <a href="tel:{{ manager.phone }}" class="call-button" title="Call {{ manager.get_full_name|default:manager.username }}">
-              <i class="fas fa-phone-alt"></i>
-            </a>
-            {% else %}
-            <span class="call-button" title="Phone not available"><i class="fas fa-phone-alt"></i></span>
-            {% endif %}
-          </div>
-          {% endfor %}
-        {% else %}
-          {% for contact in default_emergency_contacts %}
-          <div class="contact-row">
-            <i class="{{ contact.icon }} text-{{ contact.tone }}"></i>
-            <p class="contact-name">{{ contact.name }}</p>
-            <span class="contact-phone">{{ contact.phone }}</span>
-            <a href="tel:{{ contact.phone }}" class="call-button" title="Call {{ contact.name }}">
-              <i class="fas fa-phone-alt"></i>
-            </a>
-          </div>
-          {% endfor %}
-        {% endif %}
-      </div>
+            <div class="status-right">
+                <span>Last updated: {{ last_updated|date:"h:i A, d M Y" }}</span>
+                <i class="fas fa-sync-alt" title="Refresh"></i>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            {% for stat in muster_stats %}
+            <div class="stat-card">
+                <div class="stat-icon {{ stat.tone }}">
+                    <i class="{{ stat.icon }}"></i>
+                </div>
+                <div class="stat-info">
+                    <p class="stat-label">{{ stat.label }}</p>
+                    <p class="stat-value">{{ stat.value }}</p>
+                    <p class="stat-meta">{{ stat.meta }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Muster Point Overview -->
+            <div class="muster-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-map-marker-alt"></i> Muster Point Overview</h3>
+                </div>
+                <div class="overview-grid">
+                    <div class="muster-map" aria-label="Muster point map">
+                        <span class="map-lawn lawn-top"></span>
+                        <span class="map-lawn lawn-bottom"></span>
+                        <span class="map-road road-main"></span>
+                        <span class="map-road road-vertical"></span>
+                        <span class="map-road road-loop"></span>
+                        <span class="map-block block-one"></span>
+                        <span class="map-block block-two"></span>
+                        <span class="map-block block-three"></span>
+                        <span class="helipad">H</span>
+                        <div class="muster-pin pin-a">
+                            <span class="pin-icon"><i class="fas fa-users"></i></span>
+                            <span class="pin-label">Zone A</span>
+                        </div>
+                        <div class="muster-pin pin-b">
+                            <span class="pin-icon"><i class="fas fa-users"></i></span>
+                            <span class="pin-label">Zone B</span>
+                        </div>
+                        <div class="muster-pin pin-c">
+                            <span class="pin-icon"><i class="fas fa-users"></i></span>
+                            <span class="pin-label">Zone C</span>
+                        </div>
+                    </div>
+
+                    <div class="zone-list">
+                        {% for zone in muster_zones %}
+                        <div class="zone-item">
+                            <div class="zone-left">
+                                <span class="zone-dot"></span>
+                                <div>
+                                    <p class="zone-name">{{ zone.name }}</p>
+                                    <p class="zone-area">{{ zone.area }}</p>
+                                </div>
+                            </div>
+                            <div class="zone-right">
+                                <div class="zone-count">{{ zone.count }}</div>
+                                <p class="zone-percent">{{ zone.percent }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <a href="{% url 'emergency:muster_point' %}" class="zone-button">
+                            View Zone Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Alerts -->
+            <div class="muster-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Active Alerts</h3>
+                    <a href="{% url 'emergency:report_list' %}">View All</a>
+                </div>
+                <div class="alert-list">
+                    {% for alert in muster_alerts %}
+                    <div class="alert-item {{ alert.tone }}">
+                        <i class="alert-icon {{ alert.icon }} text-{{ alert.tone }}"></i>
+                        <div>
+                            <p class="alert-title">{{ alert.title }}</p>
+                            <p class="alert-copy">{{ alert.message }}</p>
+                        </div>
+                        <p class="alert-time">{{ alert.time }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="dashboard-grid">
+
+            <!-- Quick Actions -->
+            <div class="muster-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                </div>
+                <div class="quick-actions">
+                    {% for action in quick_actions %}
+                    <a href="{% url action.url_name %}" class="quick-action">
+                        <i class="{{ action.icon }}"></i>
+                        <span>{{ action.label }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <p class="quick-note"><i class="fas fa-info-circle"></i> Use these actions only in case of an emergency.</p>
+            </div>
+
+            <!-- Emergency Contacts -->
+            <div class="muster-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-phone-alt"></i> Emergency Contacts</h3>
+                </div>
+                <div class="contact-list">
+                    {% if safety_managers %}
+                        {% for manager in safety_managers|slice:":4" %}
+                        <div class="contact-row">
+                            <i class="contact-icon fas fa-user-shield"></i>
+                            <div>
+                                <p class="contact-name">{{ manager.get_full_name|default:manager.username }}</p>
+                                <p class="contact-meta">{{ manager.job_title|default:"Site Emergency Coordinator" }}</p>
+                            </div>
+                            <span class="contact-phone">{{ manager.phone|default:"Phone not available" }}</span>
+                            {% if manager.phone %}
+                            <a href="tel:{{ manager.phone }}" class="call-btn" title="Call {{ manager.get_full_name|default:manager.username }}">
+                                <i class="fas fa-phone-alt"></i>
+                            </a>
+                            {% else %}
+                            <span class="call-btn" style="opacity: 0.4; cursor: not-allowed;" title="Phone not available">
+                                <i class="fas fa-phone-alt"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        {% for contact in default_emergency_contacts %}
+                        <div class="contact-row">
+                            <i class="contact-icon {{ contact.icon }}"></i>
+                            <div>
+                                <p class="contact-name">{{ contact.name }}</p>
+                                <p class="contact-meta">{{ contact.role|default:"Emergency Contact" }}</p>
+                            </div>
+                            <span class="contact-phone">{{ contact.phone }}</span>
+                            <a href="tel:{{ contact.phone }}" class="call-btn" title="Call {{ contact.name }}">
+                                <i class="fas fa-phone-alt"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
     </div>
-  </section>
 </div>
 {% endblock %}

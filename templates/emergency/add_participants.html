@@ -1,96 +1,749 @@
+<!-- templates/emergency/add_participants.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Add Participants{% endblock %}
-{% block page_title %}Add Emergency Session Participants{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:session_list' %}">Sessions</a></li>
 <li class="breadcrumb-item"><a href="{% url 'emergency:session_detail' session.pk %}">{{ session.session_number }}</a></li>
 <li class="breadcrumb-item active">Add Participants</li>
 {% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== ADD PARTICIPANTS - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Main Layout */
+    .participants-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+    }
+
+    /* Cards */
+    .ehs-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .ehs-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .ehs-card .card-header {
+        padding: 14px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        position: relative;
+    }
+
+    .ehs-card .card-header h5 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h5 i {
+        color: var(--primary-teal);
+    }
+
+    .ehs-card .card-header .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 12px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .ehs-card .card-header .back-btn:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .ehs-card .card-body {
+        padding: 20px 24px;
+    }
+
+    /* Search Form */
+    .search-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .search-form .form-control {
+        padding: 9px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 40px;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .search-form .form-control:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .search-form .btn-search {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 18px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 40px;
+    }
+
+    .search-form .btn-search:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .search-form .btn-search i {
+        font-size: 12px;
+    }
+
+    .search-form .btn-reset {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 40px;
+    }
+
+    .search-form .btn-reset:hover {
+        background: var(--bg-page);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    /* Table */
+    .participants-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .participants-table thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .participants-table tbody td {
+        padding: 10px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .participants-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .participants-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .participants-table .employee-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .participants-table .employee-id {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+    }
+
+    .participants-table .checkbox-custom {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary-teal);
+        cursor: pointer;
+        margin: 0;
+    }
+
+    /* Table Actions */
+    .table-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    .btn-primary-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 24px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 44px;
+    }
+
+    .btn-primary-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-primary-teal i {
+        font-size: 14px;
+    }
+
+    .btn-secondary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 22px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 44px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    /* Alert */
+    .alert-info-custom {
+        background: var(--primary-teal-light);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .alert-info-custom i {
+        color: var(--primary-teal);
+        margin-right: 8px;
+    }
+
+    /* Sidebar - Current Participants */
+    .participant-count {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .participant-count .count-number {
+        color: var(--primary-teal);
+        font-size: 18px;
+    }
+
+    .participant-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .participant-list .participant-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+
+    .participant-list .participant-item:last-child {
+        border-bottom: none;
+    }
+
+    .participant-list .participant-item:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .participant-list .participant-info .name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+
+    .participant-list .participant-info .q-count {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+    }
+
+    .participant-list .participant-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .participant-list .participant-status.assigned {
+        background: var(--bg-page);
+        color: var(--text-muted);
+    }
+
+    .participant-list .participant-status.in-progress {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    .participant-list .participant-status.completed {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .participant-list .participant-status.approved {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .participant-list .participant-status.rejected {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .empty-participants {
+        color: var(--text-muted);
+        font-size: 13px;
+        padding: 8px 0;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .participants-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .ehs-card .card-body {
+            padding: 16px 18px;
+        }
+
+        .ehs-card .card-header {
+            padding: 12px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .search-form {
+            flex-direction: column;
+        }
+
+        .search-form .form-control {
+            width: 100%;
+            min-width: unset;
+        }
+
+        .participants-table thead {
+            display: none;
+        }
+
+        .participants-table tbody tr {
+            display: block;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .participants-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .participants-table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border: none;
+            align-items: center;
+        }
+
+        .participants-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .participants-table tbody td:first-child:before {
+            content: "Select";
+        }
+
+        .participants-table tbody td:last-child:before {
+            display: none;
+        }
+
+        .table-actions {
+            flex-direction: column;
+        }
+
+        .table-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .participant-list .participant-item {
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .ehs-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .participants-table tbody tr {
+            padding: 8px 12px;
+        }
+
+        .participants-table tbody td {
+            font-size: 12px;
+            padding: 3px 0;
+        }
+
+        .btn-primary-teal,
+        .btn-secondary-custom {
+            font-size: 13px;
+            padding: 8px 16px;
+            min-height: 38px;
+        }
+
+        .search-form .btn-search,
+        .search-form .btn-reset {
+            font-size: 12px;
+            padding: 5px 14px;
+            min-height: 36px;
+        }
+
+        .participant-list .participant-info .name {
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-  <div class="col-lg-8">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-user-plus mr-2"></i>Select Participants</h5>
-        <a href="{% url 'emergency:session_detail' session.pk %}" class="btn btn-sm btn-outline-secondary" style="position:absolute; top:10px; right:10px;">
-          <i class="fas fa-arrow-left mr-1"></i> Back
-        </a>
-      </div>
-      <div class="card-body">
-        <form method="get" class="form-inline mb-3">
-          <input type="text" name="search" value="{{ search_query }}" class="form-control mr-2" placeholder="Search employee name or ID">
-          <button type="submit" class="btn btn-outline-primary">Search</button>
-          <a href="{% url 'emergency:add_participants' session.pk %}" class="form-control ml-2">Reset</a>
-        </form>
+<div class="container-fluid" style="padding: 0;">
 
-        <form method="post">
-          {% csrf_token %}
-          {% if available_employees %}
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead class="thead-light">
-                <tr>
-                  <th style="width:50px"></th>
-                  <th>Employee</th>
-                  <th>Department</th>
-                  <th>Designation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for employee in available_employees %}
-                <tr>
-                  <td><input type="checkbox" name="employee_ids" value="{{ employee.id }}"></td>
-                  <td>
-                    <strong>{{ employee.get_full_name }}</strong><br>
-                    <small class="text-muted">{{ employee.employee_id|default:employee.username }}</small>
-                  </td>
-                  <td>{{ employee.department.name|default:"-" }}</td>
-                  <td>{{ employee.job_title|default:"-" }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save mr-1"></i> Add Selected Participants
-            </button>
-            <a href="{% url 'emergency:session_detail' session.pk %}" class="btn btn-secondary">Back</a>
-          </div>
-          {% else %}
-          <div class="alert alert-info mb-0">No available employees found for this session plant.</div>
-          {% endif %}
-        </form>
-      </div>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <h1>Add Participants</h1>
+                <p class="subtitle">Add participants to session {{ session.session_number }}</p>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="col-lg-4">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-users mr-2"></i>Current Participants</h5>
-      </div>
-      <div class="card-body">
-        <p><strong>{{ current_participants.count }} / {{ session.max_participants }}</strong> added</p>
-        {% if current_participants %}
-        <ul class="list-group">
-          {% for participant in current_participants %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>
-              {{ participant.employee.get_full_name }}<br>
-              <small class="text-muted">{{ participant.question_assignments.count }} questions</small>
-            </span>
-            <span class="badge badge-secondary">{{ participant.get_status_display }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-muted mb-0">No participants added yet.</p>
-        {% endif %}
-      </div>
+    <!-- Main Layout -->
+    <div class="participants-layout">
+
+        <!-- Left Column - Add Participants -->
+        <div class="ehs-card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-plus"></i> Select Participants</h5>
+                <a href="{% url 'emergency:session_detail' session.pk %}" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+            <div class="card-body">
+
+                <!-- Search Form -->
+                <form method="get" class="search-form">
+                    <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search employee name or ID">
+                    <button type="submit" class="btn-search">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'emergency:add_participants' session.pk %}" class="btn-reset">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </form>
+
+                <!-- Employee List -->
+                <form method="post">
+                    {% csrf_token %}
+                    {% if available_employees %}
+                    <div class="table-responsive">
+                        <table class="participants-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">Select</th>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in available_employees %}
+                                <tr>
+                                    <td data-label="Select">
+                                        <input type="checkbox" name="employee_ids" value="{{ employee.id }}" class="checkbox-custom">
+                                    </td>
+                                    <td data-label="Employee">
+                                        <span class="employee-name">{{ employee.get_full_name }}</span>
+                                        <span class="employee-id">{{ employee.employee_id|default:employee.username }}</span>
+                                    </td>
+                                    <td data-label="Department">{{ employee.department.name|default:"-" }}</td>
+                                    <td data-label="Designation">{{ employee.job_title|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="table-actions">
+                        <button type="submit" class="btn-primary-teal">
+                            <i class="fas fa-save"></i> Add Selected Participants
+                        </button>
+                        <a href="{% url 'emergency:session_detail' session.pk %}" class="btn-secondary-custom">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert-info-custom">
+                        <i class="fas fa-info-circle"></i>
+                        No available employees found for this session plant.
+                    </div>
+                    {% endif %}
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Right Column - Current Participants -->
+        <div class="ehs-card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Current Participants</h5>
+            </div>
+            <div class="card-body">
+                <div class="participant-count">
+                    <span class="count-number">{{ current_participants.count }}</span> / {{ session.max_participants }} added
+                </div>
+
+                {% if current_participants %}
+                <ul class="participant-list">
+                    {% for participant in current_participants %}
+                    <li class="participant-item">
+                        <div class="participant-info">
+                            <span class="name">{{ participant.employee.get_full_name }}</span>
+                            <span class="q-count">{{ participant.question_assignments.count }} questions</span>
+                        </div>
+                        <span class="participant-status {{ participant.status|lower }}">
+                            {{ participant.get_status_display }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-participants">No participants added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
-  </div>
+
 </div>
 {% endblock %}

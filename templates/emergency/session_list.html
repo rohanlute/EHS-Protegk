@@ -1,209 +1,950 @@
+<!-- templates/emergency/session_list.html -->
 {% extends 'base/base.html' %}
 {% load permission_tags %}
+{% load static %}
 
 {% block title %}Emergency Sessions{% endblock %}
-{% block page_title %}Emergency Sessions{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
+<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response</a></li>
 <li class="breadcrumb-item active">All Sessions</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.ehs-card { border-radius: 10px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-.table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.table tbody tr:hover { background-color: #f8f9fa; }
-.badge { font-size: 0.7rem; padding: 5px 8px; }
-.page-header { background: #fff; padding: 12px 18px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    /* ===== EMERGENCY SESSIONS - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .dash-page-header .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal i {
+        font-size: 14px;
+    }
+
+    .btn-teal-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary-teal);
+        background: transparent;
+        color: var(--primary-teal);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-teal-outline:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .filter-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .filter-card .card-body {
+        padding: 18px 24px;
+    }
+
+    .filter-card .form-label {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+        width: 100%;
+        padding: 8px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 40px;
+    }
+
+    .filter-card .form-control:focus,
+    .filter-card .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .filter-card .form-control-sm {
+        font-size: 13px;
+        padding: 6px 12px;
+        min-height: 36px;
+    }
+
+    .filter-card .btn-filter {
+        padding: 8px 14px;
+        min-height: 40px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .filter-card .btn-filter:hover {
+        background: var(--primary-teal-dark);
+    }
+
+    .filter-card .btn-clear {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .filter-card .btn-clear:hover {
+        background: var(--bg-page);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    /* Table Card */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .table-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .table-card .card-body {
+        padding: 0;
+    }
+
+    /* Table */
+    .sessions-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .sessions-table thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 12px 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .sessions-table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .sessions-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sessions-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .sessions-table .session-number {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .sessions-table .session-number a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .sessions-table .session-number a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+
+    .sessions-table .topic-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .sessions-table .topic-category {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+    }
+
+    .sessions-table .drill-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .sessions-table .drill-category {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+    }
+
+    .sessions-table .date-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sessions-table .date-info .date {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .sessions-table .date-info .time {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .sessions-table .date-info .overdue {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+        margin-top: 2px;
+    }
+
+    .sessions-table .location-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sessions-table .location-info .plant {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .sessions-table .location-info .location {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .sessions-table .trainer-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .sessions-table .trainer-list .trainer {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .sessions-table .trainer-list .trainer-department {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-status i {
+        font-size: 8px;
+    }
+
+    .badge-status.scheduled {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    .badge-status.completed {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .badge-status.cancelled {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .badge-status.in-progress {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .action-btn i {
+        font-size: 14px;
+    }
+
+    /* Pagination */
+    .table-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-page);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-footer .page-info {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .table-footer .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .table-footer .page-btn:hover {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+    }
+
+    .table-footer .page-btn.active {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+        cursor: default;
+    }
+
+    .table-footer .page-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .empty-state h5 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .filter-card .btn-filter {
+            margin-top: 4px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-page-header .header-actions {
+            width: 100%;
+        }
+
+        .dash-page-header .header-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .filter-card .card-body {
+            padding: 14px 16px;
+        }
+
+        .filter-card .form-label {
+            font-size: 11px;
+        }
+
+        .sessions-table thead {
+            display: none;
+        }
+
+        .sessions-table tbody tr {
+            display: block;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+            background: white;
+        }
+
+        .sessions-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .sessions-table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border: none;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sessions-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .sessions-table tbody td:last-child {
+            justify-content: center;
+        }
+
+        .sessions-table tbody td:last-child:before {
+            display: none;
+        }
+
+        .table-footer {
+            flex-direction: column;
+            padding: 12px 16px;
+        }
+
+        .table-footer .page-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .filter-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .sessions-table tbody tr {
+            padding: 10px 14px;
+        }
+
+        .sessions-table tbody td {
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .badge-status {
+            font-size: 11px;
+            padding: 3px 10px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+        }
+
+        .action-btn i {
+            font-size: 12px;
+        }
+
+        .btn-teal {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-  <div class="col-12 d-flex justify-content-between align-items-center page-header">
-    <div>
-      <h5 class="mb-0">All Emergency Sessions</h5>
-      <small class="text-muted">Track every scheduled emergency drill session</small>
-    </div>
-    <a href="{% url 'emergency:session_create' %}" class="btn btn-danger shadow-sm">
-      <i class="fas fa-plus mr-1"></i> Add Session
-    </a>
-  </div>
-</div>
+<div class="container-fluid" style="padding: 0;">
 
-<div class="ehs-card mb-3">
-  <div class="card-body">
-    <form method="GET">
-      <div class="row">
-        <div class="col-md-3 mb-2">
-          <input type="text" name="search" class="form-control form-control-sm" placeholder="Search session, topic, trainer..." value="{{ search_query }}">
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <h1>Emergency Sessions</h1>
+                <p class="subtitle">Track every scheduled emergency drill session</p>
+            </div>
         </div>
-        <div class="col-md-2 mb-2">
-          <select name="status" class="form-control form-control-sm">
-            <option value="">All Status</option>
-            {% for val, label in status_choices %}
-            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-2 mb-2">
-          <select name="topic" class="form-control form-control-sm">
-            <option value="">All Topics</option>
-            {% for topic in topics %}
-            <option value="{{ topic.id }}" {% if selected_topic == topic.id|stringformat:"s" %}selected{% endif %}>{{ topic.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-2 mb-2">
-          <select name="plant" class="form-control form-control-sm">
-            <option value="">All Plants</option>
-            {% for plant in plants %}
-            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-2 mb-2">
-          <select name="drill_type" class="form-control form-control-sm">
-            <option value="">All Drill Types</option>
-            {% for val, label in drill_type_choices %}
-            <option value="{{ val }}" {% if selected_drill_type == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-1 mb-2">
-          <button type="submit" class="btn btn-sm btn-danger w-100"><i class="fas fa-filter"></i></button>
-        </div>
-      </div>
-      <div class="row mt-1">
-        <div class="col-md-3 mb-2">
-          <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request.GET.date_from }}">
-        </div>
-        <div class="col-md-3 mb-2">
-          <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request.GET.date_to }}">
-        </div>
-        <div class="col-md-2">
-          <a href="{% url 'emergency:session_list' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="ehs-card">
-  <div class="card-body p-0">
-    {% if sessions %}
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead class="thead-light">
-          <tr>
-            <th>Session #</th>
-            <th>Topic</th>
-            <th>Drill Type</th>
-            <th>Scheduled Date</th>
-            <th>Plant / Location</th>
-            <th>Trainer(s)</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for session in sessions %}
-          <tr>
-            <td>
-              <a href="{% url 'emergency:session_detail' session.pk %}">
-                <strong>{{ session.session_number }}</strong>
-              </a>
-            </td>
-            <td>
-              {{ session.topic.name }}<br>
-              <small class="text-muted">{{ session.topic.get_category_display }}</small>
-            </td>
-            <td>
-              <span class="badge badge-info">{{ session.get_drill_type_display }}</span><br>
-              <small class="text-muted">{{ session.drill_category }}</small>
-            </td>
-            <td>
-              {{ session.scheduled_date|date:"d M Y" }}<br>
-              <small class="text-muted">{{ session.scheduled_time|time:"H:i" }}</small>
-              {% if session.is_overdue %}<br><span class="badge badge-danger">Overdue</span>{% endif %}
-            </td>
-            <td>
-              {{ session.plant.name }}<br>
-              <small class="text-muted">{{ session.location.name }}{% if session.sublocation %} / {{ session.sublocation.name }}{% endif %}</small>
-            </td>
-            <td>
-              {% for trainer in session.trainers.all %}
-              <div class="mb-1">
-                {{ trainer.display_name }}
-                {% if trainer.display_department %}
-                <br><small class="text-muted">{{ trainer.display_department.name }}</small>
-                {% endif %}
-              </div>
-              {% endfor %}
-            </td>
-            <td>
-              {% if session.status == 'SCHEDULED' %}
-              <span class="badge badge-warning">Scheduled</span>
-              {% elif session.status == 'COMPLETED' %}
-              <span class="badge badge-success">Completed</span>
-              {% elif session.status == 'CANCELLED' %}
-              <span class="badge badge-danger">Cancelled</span>
-              {% else %}
-              <span class="badge badge-info">{{ session.get_status_display }}</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if request.user|has_perm:'VIEW_EMERGENCY_DRILL' %}
-              <div class="btn-group" role="group">
-                <a href="{% url 'emergency:session_detail' session.pk %}" class="btn btn-sm btn-outline-info">
-                  <i class="fas fa-eye"></i>
-                </a>
-              </div>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    {% if is_paginated %}
-    <div class="card-footer">
-      <nav>
-        <ul class="pagination pagination-sm mb-0 justify-content-center">
-          {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
-              <i class="fas fa-chevron-left"></i>
+        <div class="header-actions">
+            <a href="{% url 'emergency:session_create' %}" class="btn-teal">
+                <i class="fas fa-plus"></i> Add Session
             </a>
-          </li>
-          {% endif %}
-          <li class="page-item active">
-            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-          </li>
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
-              <i class="fas fa-chevron-right"></i>
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
+        </div>
     </div>
-    {% endif %}
-    {% else %}
-    <div class="text-center py-5 text-muted">
-      <i class="fas fa-broadcast-tower fa-3x mb-3"></i>
-      <h5>No emergency sessions found</h5>
-      <p>Try adjusting your filters or schedule a new session.</p>
-      <a href="{% url 'emergency:session_create' %}" class="btn btn-danger">
-        <i class="fas fa-plus mr-1"></i> Add Session
-      </a>
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <div class="card-body">
+            <form method="GET">
+                <div class="row g-2">
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search session, topic, trainer..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All Status</option>
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Topic</label>
+                        <select name="topic" class="form-select form-select-sm">
+                            <option value="">All Topics</option>
+                            {% for topic in topics %}
+                            <option value="{{ topic.id }}" {% if selected_topic == topic.id|stringformat:"s" %}selected{% endif %}>{{ topic.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Plant</label>
+                        <select name="plant" class="form-select form-select-sm">
+                            <option value="">All Plants</option>
+                            {% for plant in plants %}
+                            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Drill Type</label>
+                        <select name="drill_type" class="form-select form-select-sm">
+                            <option value="">All Drill Types</option>
+                            {% for val, label in drill_type_choices %}
+                            <option value="{{ val }}" {% if selected_drill_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 col-sm-6">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Date From</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Date To</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">&nbsp;</label>
+                        <a href="{% url 'emergency:session_list' %}" class="btn-clear">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-    {% endif %}
-  </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="card-body">
+            {% if sessions %}
+            <div class="table-responsive">
+                <table class="sessions-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Session #</th>
+                            <th style="width: 15%;">Topic</th>
+                            <th style="width: 12%;">Drill Type</th>
+                            <th style="width: 12%;">Scheduled Date</th>
+                            <th style="width: 15%;">Plant / Location</th>
+                            <th style="width: 16%;">Trainer(s)</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 10%;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td data-label="Session #">
+                                <span class="session-number">
+                                    <a href="{% url 'emergency:session_detail' session.pk %}">
+                                        {{ session.session_number }}
+                                    </a>
+                                </span>
+                            </td>
+                            <td data-label="Topic">
+                                <span class="topic-name">{{ session.topic.name }}</span>
+                                <span class="topic-category">{{ session.topic.get_category_display }}</span>
+                            </td>
+                            <td data-label="Drill Type">
+                                <span class="drill-type-badge">{{ session.get_drill_type_display }}</span>
+                                <span class="drill-category">{{ session.drill_category }}</span>
+                            </td>
+                            <td data-label="Scheduled Date">
+                                <div class="date-info">
+                                    <span class="date">{{ session.scheduled_date|date:"d M Y" }}</span>
+                                    <span class="time">{{ session.scheduled_time|time:"H:i" }}</span>
+                                    {% if session.is_overdue %}
+                                    <span class="overdue"><i class="fas fa-exclamation-circle"></i> Overdue</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td data-label="Plant / Location">
+                                <div class="location-info">
+                                    <span class="plant">{{ session.plant.name }}</span>
+                                    <span class="location">{{ session.location.name }}{% if session.sublocation %} / {{ session.sublocation.name }}{% endif %}</span>
+                                </div>
+                            </td>
+                            <td data-label="Trainer(s)">
+                                <div class="trainer-list">
+                                    {% for trainer in session.trainers.all %}
+                                    <div>
+                                        <span class="trainer">{{ trainer.display_name }}</span>
+                                        {% if trainer.display_department %}
+                                        <span class="trainer-department">{{ trainer.display_department.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td data-label="Status">
+                                {% if session.status == 'SCHEDULED' %}
+                                <span class="badge-status scheduled">
+                                    <i class="fas fa-circle"></i> Scheduled
+                                </span>
+                                {% elif session.status == 'COMPLETED' %}
+                                <span class="badge-status completed">
+                                    <i class="fas fa-circle"></i> Completed
+                                </span>
+                                {% elif session.status == 'CANCELLED' %}
+                                <span class="badge-status cancelled">
+                                    <i class="fas fa-circle"></i> Cancelled
+                                </span>
+                                {% else %}
+                                <span class="badge-status in-progress">
+                                    <i class="fas fa-circle"></i> {{ session.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Actions" class="text-center">
+                                {% if request.user|has_perm:'VIEW_EMERGENCY_DRILL' %}
+                                <a href="{% url 'emergency:session_detail' session.pk %}" class="action-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="table-footer">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination-custom" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin: 0; padding: 0; list-style: none;">
+                        {% if page_obj.has_previous %}
+                        <li>
+                            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <span class="page-btn disabled">
+                                <i class="fas fa-chevron-left"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+
+                        <li>
+                            <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li>
+                            <a class="page-btn" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <span class="page-btn disabled">
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fas fa-calendar-alt"></i>
+                <h5>No Emergency Sessions Found</h5>
+                <p>Try adjusting your filters or schedule a new session.</p>
+                {% comment %} <a href="{% url 'emergency:session_create' %}" class="btn-teal-sm">
+                    <i class="fas fa-plus"></i> Add Session
+                </a> {% endcomment %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}

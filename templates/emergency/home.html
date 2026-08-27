@@ -1,7 +1,8 @@
+<!-- templates/emergency/command_dashboard.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Emergency Command Dashboard{% endblock %}
-{% block page_title %}Emergency Command Dashboard{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
@@ -10,765 +11,1114 @@
 
 {% block extra_css %}
 <style>
-  .command-shell {
-    display: grid;
-    gap: 0.9rem;
-    color: #111827;
-  }
-
-  .command-alert {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 0.85rem;
-    align-items: center;
-    padding: 0.85rem 1rem;
-    border-radius: 8px;
-    background: #ef4444;
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.18);
-  }
-
-  .alert-badge {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-  }
-
-  .incident-label {
-    margin: 0;
-    font-size: 0.66rem;
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .incident-label span {
-    margin-left: 0.8rem;
-    opacity: 0.9;
-  }
-
-  .incident-title {
-    margin: 0.25rem 0 0;
-    font-size: 1rem;
-    font-weight: 900;
-  }
-
-  .command-alert .btn {
-    border-radius: 6px;
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .command-alert .btn-outline-light {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.65);
-  }
-
-  .command-heading {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 1rem;
-    align-items: end;
-  }
-
-  .command-heading h2 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 900;
-  }
-
-  .command-heading p {
-    margin: 0.15rem 0 0;
-    color: #64748b;
-    font-size: 0.84rem;
-  }
-
-  .clock-panel {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .clock-label {
-    margin: 0;
-    color: #64748b;
-    font-size: 0.62rem;
-    font-weight: 900;
-    text-transform: uppercase;
-  }
-
-  .clock-value {
-    margin: 0;
-    color: #0f172a;
-    font-size: 0.9rem;
-    font-weight: 900;
-  }
-
-  .new-incident-btn {
-    border: 0;
-    border-radius: 7px;
-    background: #06b6d4;
-    color: #fff;
-    font-size: 0.78rem;
-    font-weight: 900;
-    padding: 0.55rem 0.9rem;
-  }
-
-  .action-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .action-card {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-    align-items: center;
-    min-height: 72px;
-    padding: 0.75rem;
-    border: 1px solid #dce8f3;
-    border-left: 4px solid #22d3ee;
-    border-radius: 8px;
-    background: #fff;
-    color: #111827;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
-  }
-
-  .action-card:hover {
-    color: #111827;
-    text-decoration: none;
-    transform: translateY(-1px);
-  }
-
-  .action-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #06b6d4;
-    background: #ecfeff;
-  }
-
-  .action-title {
-    margin: 0;
-    font-size: 0.82rem;
-    font-weight: 900;
-  }
-
-  .action-copy {
-    margin: 0.15rem 0 0;
-    color: #64748b;
-    font-size: 0.7rem;
-  }
-
-  .command-main {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(320px, 0.95fr);
-    gap: 0.9rem;
-  }
-
-  .command-card {
-    border: 1px solid #dce4ee;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
-  }
-
-  .command-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.8rem 0.9rem 0;
-  }
-
-  .command-card-title {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin: 0;
-    color: #0f172a;
-    font-size: 0.95rem;
-    font-weight: 900;
-  }
-
-  .status-pills {
-    display: flex;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-  }
-
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 0.25rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 900;
-  }
-
-  .pill-clear {
-    color: #15803d;
-    background: #dcfce7;
-  }
-
-  .pill-active {
-    color: #dc2626;
-    background: #fee2e2;
-  }
-
-  .tactical-map {
-    position: relative;
-    height: 515px;
-    margin: 0.75rem;
-    overflow: hidden;
-    border: 3px solid #8b5cf6;
-    border-radius: 6px;
-    background:
-      radial-gradient(circle at 62% 46%, rgba(255,255,255,0.28), transparent 21%),
-      linear-gradient(135deg, rgba(15, 23, 42, 0.25), rgba(22, 101, 52, 0.1)),
-      #5b755f;
-  }
-
-  .site-platform {
-    position: absolute;
-    left: 11%;
-    top: 15%;
-    width: 72%;
-    height: 62%;
-    transform: rotate(-17deg);
-    border-radius: 16px;
-    background: #d8dee7;
-    border: 10px solid #f8fafc;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.34);
-  }
-
-  .site-road {
-    position: absolute;
-    border-radius: 999px;
-    background: #7c8794;
-    border: 5px solid #f8fafc;
-  }
-
-  .road-one {
-    left: 10%;
-    right: 10%;
-    top: 45%;
-    height: 34px;
-  }
-
-  .road-two {
-    left: 45%;
-    top: 8%;
-    bottom: 9%;
-    width: 34px;
-  }
-
-  .site-building,
-  .site-tank {
-    position: absolute;
-    background: #e9eef5;
-    border: 3px solid #aeb8c5;
-    box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.5);
-  }
-
-  .site-building {
-    border-radius: 6px;
-  }
-
-  .building-a {
-    left: 11%;
-    top: 13%;
-    width: 30%;
-    height: 22%;
-  }
-
-  .building-b {
-    right: 9%;
-    top: 13%;
-    width: 31%;
-    height: 22%;
-  }
-
-  .building-c {
-    left: 40%;
-    bottom: 12%;
-    width: 25%;
-    height: 20%;
-  }
-
-  .site-tank {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-  }
-
-  .tank-a {
-    left: 13%;
-    bottom: 14%;
-  }
-
-  .tank-b {
-    left: 25%;
-    bottom: 8%;
-  }
-
-  .tank-c {
-    right: 20%;
-    bottom: 16%;
-  }
-
-  .incident-marker {
-    position: absolute;
-    left: 49%;
-    top: 24%;
-    color: #ef4444;
-    font-size: 2rem;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  }
-
-  .muster-marker {
-    position: absolute;
-    right: 21%;
-    bottom: 26%;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.55rem;
-    border-radius: 6px;
-    color: #fff;
-    background: #0891b2;
-    border: 2px solid #22d3ee;
-    font-size: 0.72rem;
-    font-weight: 900;
-  }
-
-  .map-zoom {
-    position: absolute;
-    left: 14px;
-    bottom: 14px;
-    display: grid;
-    width: 34px;
-    overflow: hidden;
-    border-radius: 5px;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
-  }
-
-  .map-zoom span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 34px;
-    background: #fff;
-    color: #0f172a;
-    font-weight: 900;
-  }
-
-  .map-zoom span + span {
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .incident-list {
-    display: grid;
-    padding: 0.2rem 0;
-  }
-
-  .incident-item {
-    display: block;
-    padding: 0.85rem 0.9rem;
-    color: #111827;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .incident-item:hover {
-    color: #111827;
-    text-decoration: none;
-    background: #f8fafc;
-  }
-
-  .incident-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-bottom: 0.4rem;
-    color: #334155;
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-
-  .severity-chip {
-    padding: 0.15rem 0.45rem;
-    border-radius: 999px;
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 900;
-  }
-
-  .severity-critical {
-    background: #ef4444;
-  }
-
-  .severity-high {
-    background: #64748b;
-  }
-
-  .severity-medium {
-    background: #3b82f6;
-  }
-
-  .severity-low {
-    background: #22c55e;
-  }
-
-  .incident-name {
-    margin: 0;
-    color: #111827;
-    font-size: 0.82rem;
-    font-weight: 900;
-  }
-
-  .incident-detail-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
-    margin-top: 0.35rem;
-    color: #64748b;
-    font-size: 0.68rem;
-  }
-
-  .command-footer-grid {
-    display: grid;
-    grid-template-columns: 1.05fr 1.1fr 1.1fr 1fr;
-    gap: 0.9rem;
-  }
-
-  .mini-card {
-    padding: 0.85rem;
-  }
-
-  .mini-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .mini-title {
-    margin: 0;
-    color: #0f172a;
-    font-size: 0.82rem;
-    font-weight: 900;
-  }
-
-  .health-row {
-    display: grid;
-    gap: 0.35rem;
-    margin-bottom: 0.85rem;
-  }
-
-  .health-label {
-    display: flex;
-    justify-content: space-between;
-    color: #334155;
-    font-size: 0.76rem;
-    font-weight: 800;
-  }
-
-  .progress {
-    height: 7px;
-    border-radius: 999px;
-    background: #e2e8f0;
-  }
-
-  .progress-bar {
-    border-radius: 999px;
-  }
-
-  .data-link {
-    color: #0891b2;
-    font-size: 0.72rem;
-    font-weight: 900;
-  }
-
-  .schedule-list,
-  .log-list {
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .schedule-item {
-    padding: 0.55rem 0.65rem;
-    border-radius: 6px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-  }
-
-  .schedule-date {
-    margin: 0;
-    color: #06b6d4;
-    font-size: 0.66rem;
-    font-weight: 900;
-  }
-
-  .schedule-title {
-    margin: 0.15rem 0 0;
-    color: #111827;
-    font-size: 0.75rem;
-    font-weight: 800;
-  }
-
-  .log-item {
-    display: grid;
-    grid-template-columns: 36px 1fr;
-    gap: 0.55rem;
-    align-items: start;
-    color: #334155;
-    font-size: 0.72rem;
-  }
-
-  .log-time {
-    color: #64748b;
-    font-weight: 900;
-  }
-
-  .responder-stack {
-    display: flex;
-    align-items: center;
-    min-height: 38px;
-  }
-
-  .responder-avatar {
-    width: 34px;
-    height: 34px;
-    margin-right: -8px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: #06b6d4;
-    border: 2px solid #fff;
-    font-size: 0.72rem;
-    font-weight: 900;
-  }
-
-  .response-time {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin: 0.7rem 0;
-    color: #64748b;
-    font-size: 0.72rem;
-  }
-
-  .response-time strong {
-    color: #111827;
-  }
-
-  @media (max-width: 1199px) {
-    .action-grid,
-    .command-footer-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* ===== EMERGENCY COMMAND DASHBOARD - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
     }
 
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Command Shell */
+    .command-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 20px;
+        border-radius: var(--radius-card);
+        background: var(--secondary-red);
+        color: white;
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.2);
+    }
+
+    .alert-banner .alert-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .alert-banner .alert-content .alert-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.85;
+        margin: 0;
+    }
+
+    .alert-banner .alert-content .alert-title {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 2px 0 0 0;
+    }
+
+    .alert-banner .alert-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 18px;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-weight: 700;
+        font-size: 12px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .alert-banner .alert-action:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Command Heading */
+    .command-heading {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: end;
+    }
+
+    .command-heading h2 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .command-heading p {
+        margin: 4px 0 0 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .command-heading .clock-panel {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .command-heading .clock-panel .clock-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .command-heading .clock-panel .clock-value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .btn-new-incident {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 20px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 700;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .btn-new-incident:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-new-incident i {
+        font-size: 12px;
+    }
+
+    /* Action Grid */
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .action-card {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 18px;
+        border: 1px solid var(--border-color);
+        border-left: 4px solid var(--primary-teal);
+        border-radius: var(--radius-sm);
+        background: white;
+        color: var(--text-primary);
+        box-shadow: var(--shadow-card);
+        transition: all 0.25s ease;
+        text-decoration: none;
+        min-height: 68px;
+    }
+
+    .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary-teal);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .action-card .action-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .action-card .action-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: block;
+    }
+
+    .action-card .action-copy {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+    }
+
+    /* Main Grid */
     .command-main {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .command-alert,
-    .command-heading,
-    .action-grid,
-    .command-footer-grid {
-      grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
     }
 
-    .clock-panel {
-      align-items: stretch;
-      flex-direction: column;
+    /* Cards */
+    .command-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
     }
 
+    .command-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .command-card .card-header-custom {
+        padding: 14px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .command-card .card-header-custom h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .command-card .card-header-custom h3 i {
+        color: var(--primary-teal);
+    }
+
+    .command-card .card-header-custom .status-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .status-pill.clear {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .status-pill.active {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .data-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .data-link:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+
+    /* Tactical Map */
     .tactical-map {
-      height: 360px;
+        position: relative;
+        height: 480px;
+        margin: 16px;
+        overflow: hidden;
+        border: 3px solid var(--primary-teal);
+        border-radius: var(--radius-sm);
+        background: radial-gradient(circle at 62% 46%, rgba(255,255,255,0.2), transparent 21%),
+                    linear-gradient(135deg, rgba(15, 23, 42, 0.2), rgba(13, 148, 136, 0.1)),
+                    #5b755f;
     }
-  }
+
+    .site-platform {
+        position: absolute;
+        left: 11%;
+        top: 15%;
+        width: 72%;
+        height: 62%;
+        transform: rotate(-17deg);
+        border-radius: 12px;
+        background: #d8dee7;
+        border: 10px solid #f8fafc;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.34);
+    }
+
+    .site-road {
+        position: absolute;
+        border-radius: 999px;
+        background: #7c8794;
+        border: 5px solid #f8fafc;
+    }
+
+    .road-one {
+        left: 10%;
+        right: 10%;
+        top: 45%;
+        height: 34px;
+    }
+
+    .road-two {
+        left: 45%;
+        top: 8%;
+        bottom: 9%;
+        width: 34px;
+    }
+
+    .site-building,
+    .site-tank {
+        position: absolute;
+        background: #e9eef5;
+        border: 3px solid #aeb8c5;
+        box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .site-building {
+        border-radius: 6px;
+    }
+
+    .building-a { left: 11%; top: 13%; width: 30%; height: 22%; }
+    .building-b { right: 9%; top: 13%; width: 31%; height: 22%; }
+    .building-c { left: 40%; bottom: 12%; width: 25%; height: 20%; }
+
+    .site-tank {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+    }
+
+    .tank-a { left: 13%; bottom: 14%; }
+    .tank-b { left: 25%; bottom: 8%; }
+    .tank-c { right: 20%; bottom: 16%; }
+
+    .incident-marker {
+        position: absolute;
+        left: 49%;
+        top: 24%;
+        color: var(--secondary-red);
+        font-size: 32px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .muster-marker {
+        position: absolute;
+        right: 21%;
+        bottom: 26%;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: white;
+        background: var(--primary-teal);
+        border: 2px solid var(--primary-teal-light);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .map-zoom {
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        display: grid;
+        width: 34px;
+        overflow: hidden;
+        border-radius: 6px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+    }
+
+    .map-zoom span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 34px;
+        background: white;
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .map-zoom span + span {
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Incident List */
+    .incident-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .incident-item {
+        display: block;
+        padding: 12px 18px;
+        color: var(--text-primary);
+        border-top: 1px solid var(--border-color);
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .incident-item:hover {
+        background: var(--primary-teal-light);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .incident-item:first-child {
+        border-top: none;
+    }
+
+    .incident-item .incident-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+
+    .incident-item .incident-meta .severity-chip {
+        padding: 2px 10px;
+        border-radius: 12px;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .severity-chip.critical { background: var(--secondary-red); }
+    .severity-chip.high { background: var(--secondary-gold); }
+    .severity-chip.medium { background: #3b82f6; }
+    .severity-chip.low { background: var(--secondary-green); }
+
+    .incident-item .incident-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .incident-item .incident-detail-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 16px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    /* Footer Grid */
+    .command-footer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 20px;
+    }
+
+    .mini-card {
+        padding: 16px 18px;
+    }
+
+    .mini-card .mini-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .mini-card .mini-head .mini-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mini-card .mini-head .mini-title i {
+        color: var(--primary-teal);
+    }
+
+    .mini-card .mini-head .mini-icon {
+        color: var(--text-muted);
+        font-size: 16px;
+    }
+
+    /* Health Rows */
+    .health-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 10px;
+    }
+
+    .health-row .health-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .health-row .progress {
+        height: 6px;
+        border-radius: 10px;
+        background: var(--bg-page);
+        overflow: hidden;
+    }
+
+    .health-row .progress .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+    }
+
+    .progress-bar.success { background: var(--secondary-green); }
+    .progress-bar.warning { background: var(--secondary-gold); }
+    .progress-bar.danger { background: var(--secondary-red); }
+    .progress-bar.teal { background: var(--primary-teal); }
+
+    /* Schedule List */
+    .schedule-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .schedule-item {
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        background: var(--bg-page);
+        border: 1px solid var(--border-color);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .schedule-item:hover {
+        border-color: var(--primary-teal);
+        background: var(--primary-teal-light);
+        text-decoration: none;
+    }
+
+    .schedule-item .schedule-date {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--primary-teal);
+        margin: 0;
+    }
+
+    .schedule-item .schedule-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 2px 0 0 0;
+    }
+
+    /* Log List */
+    .log-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .log-item {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 10px;
+        align-items: start;
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: 4px 0;
+        transition: color 0.2s;
+    }
+
+    .log-item:hover {
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .log-item .log-time {
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 11px;
+    }
+
+    /* Responders */
+    .responder-stack {
+        display: flex;
+        align-items: center;
+        min-height: 38px;
+        flex-wrap: wrap;
+    }
+
+    .responder-avatar {
+        width: 34px;
+        height: 34px;
+        margin-right: -8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        background: var(--primary-teal);
+        border: 2px solid white;
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .responder-avatar:nth-child(2) { background: #8b5cf6; }
+    .responder-avatar:nth-child(3) { background: var(--secondary-green); }
+    .responder-avatar:nth-child(4) { background: #f97316; }
+
+    .response-time {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0 12px 0;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .response-time strong {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+
+    .btn-outline-teal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .btn-outline-teal:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .mt-2 { margin-top: 8px; }
+    .d-inline-block { display: inline-block; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .action-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .command-footer-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .command-main {
+            grid-template-columns: 1fr;
+        }
+
+        .tactical-map {
+            height: 360px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .alert-banner {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding: 16px 18px;
+        }
+
+        .alert-banner .alert-action {
+            justify-content: center;
+        }
+
+        .command-heading {
+            grid-template-columns: 1fr;
+        }
+
+        .command-heading .clock-panel {
+            flex-wrap: wrap;
+        }
+
+        .action-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .command-footer-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .command-card .card-header-custom {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .tactical-map {
+            height: 300px;
+        }
+
+        .incident-item .incident-detail-row {
+            grid-template-columns: 1fr;
+        }
+
+        .responder-stack {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .alert-banner .alert-content .alert-title {
+            font-size: 14px;
+        }
+
+        .command-heading h2 {
+            font-size: 18px;
+        }
+
+        .action-card {
+            padding: 12px 14px;
+        }
+
+        .action-card .action-title {
+            font-size: 13px;
+        }
+
+        .tactical-map {
+            height: 240px;
+        }
+
+        .site-tank {
+            width: 30px;
+            height: 30px;
+        }
+
+        .incident-marker {
+            font-size: 24px;
+        }
+
+        .muster-marker {
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="command-shell">
-  <section class="command-alert">
-    <span class="alert-badge"><i class="fas fa-shield-alt"></i></span>
-    <div>
-      <p class="incident-label">Critical Incident <span>{{ command_alert_ref }}</span></p>
-      <h2 class="incident-title">{{ command_alert_title }}</h2>
-    </div>
-    <a href="{% url 'emergency:sos_control_panel' %}" class="btn btn-sm btn-light text-danger">Declare Major Response</a>
-  </section>
+<div class="container-fluid" style="padding: 0;">
 
-  <section class="command-heading">
-    <div>
-      <h2>Emergency Command Dashboard</h2>
-      <p>Real-time operational overview for {{ command_site }}.</p>
-    </div>
-    <div class="clock-panel">
-      <div>
-        <p class="clock-label">System Clock</p>
-        <p class="clock-value">{{ command_clock|date:"H:i:s" }} UTC</p>
-      </div>
-      <a href="{% url 'emergency:report_create' %}" class="new-incident-btn">
-        <i class="fas fa-plus-circle mr-1"></i> New Incident Report
-      </a>
-    </div>
-  </section>
-
-  <section class="action-grid">
-    {% for action in command_actions %}
-    <a href="{% url action.url_name %}" class="action-card">
-      <span class="action-icon"><i class="{{ action.icon }}"></i></span>
-      <span>
-        <span class="action-title">{{ action.label }}</span>
-        <span class="action-copy">{{ action.description }}</span>
-      </span>
-    </a>
-    {% endfor %}
-  </section>
-
-  <section class="command-main">
-    <div class="command-card">
-      <div class="command-card-header">
-        <h3 class="command-card-title"><i class="fas fa-map-marked-alt text-info"></i>Site Tactical Map</h3>
-        <div class="status-pills">
-          <span class="status-pill pill-clear">Muster Points: CLEAR</span>
-          <span class="status-pill pill-active">Incidents: {{ command_active_incident_count }} Active</span>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-command"></i>
+            </div>
+            <div>
+                <h1>Emergency Command Dashboard</h1>
+                <p class="subtitle">Real-time operational overview for {{ command_site }}</p>
+            </div>
         </div>
-      </div>
-      <div class="tactical-map">
-        <div class="site-platform">
-          <span class="site-road road-one"></span>
-          <span class="site-road road-two"></span>
-          <span class="site-building building-a"></span>
-          <span class="site-building building-b"></span>
-          <span class="site-building building-c"></span>
-          <span class="site-tank tank-a"></span>
-          <span class="site-tank tank-b"></span>
-          <span class="site-tank tank-c"></span>
-          <i class="fas fa-exclamation-triangle incident-marker"></i>
-          <span class="muster-marker"><i class="fas fa-users"></i> MUSTER POINT C</span>
-        </div>
-        <span class="map-zoom"><span>+</span><span>-</span></span>
-      </div>
     </div>
 
-    <div class="command-card">
-      <div class="command-card-header">
-        <h3 class="command-card-title">Active Incidents</h3>
-        <a href="{% url 'emergency:report_list' %}" class="data-link">View All</a>
-      </div>
-      <div class="incident-list">
-        {% for incident in command_active_incidents %}
-        <a href="{{ incident.url|default:'#' }}" class="incident-item">
-          <div class="incident-meta">
-            <span>{{ incident.number }}</span>
-            <span class="severity-chip severity-{{ incident.badge }}">{{ incident.severity }}</span>
-          </div>
-          <p class="incident-name">{{ incident.title }}</p>
-          <div class="incident-detail-row">
-            <span><i class="fas fa-location-arrow mr-1"></i>{{ incident.status }}</span>
-            <span><i class="fas fa-clock mr-1"></i>{{ incident.eta }}</span>
-            <span><i class="fas fa-user mr-1"></i>{{ incident.location }}</span>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
+    <!-- Command Shell -->
+    <div class="command-shell">
 
-  <section class="command-footer-grid">
-    <div class="command-card mini-card">
-      <div class="mini-head">
-        <h3 class="mini-title">Resources Health</h3>
-        <i class="fas fa-cog text-muted"></i>
-      </div>
-      <div class="health-row">
-        <div class="health-label"><span>Fire Assets</span><strong>{{ command_resource_fire }}</strong></div>
-        <div class="progress"><div class="progress-bar bg-success" style="width: 98%"></div></div>
-      </div>
-      <div class="health-row">
-        <div class="health-label"><span>Medical PPE</span><strong>{{ command_resource_medical }}</strong></div>
-        <div class="progress"><div class="progress-bar bg-warning" style="width: 84%"></div></div>
-      </div>
-      <a href="#" class="data-link">Inventory Manager <i class="fas fa-external-link-alt ml-1"></i></a>
+        <!-- Alert Banner -->
+        <section class="alert-banner">
+            <span class="alert-icon"><i class="fas fa-shield-alt"></i></span>
+            <div class="alert-content">
+                <p class="alert-label">Critical Incident <span>{{ command_alert_ref }}</span></p>
+                <h2 class="alert-title">{{ command_alert_title }}</h2>
+            </div>
+            <a href="{% url 'emergency:sos_control_panel' %}" class="alert-action">
+                <i class="fas fa-exclamation-triangle"></i> Declare Major Response
+            </a>
+        </section>
+
+        <!-- Command Heading -->
+        <section class="command-heading">
+            <div>
+                <h2>Emergency Command Dashboard</h2>
+                <p>Real-time operational overview for {{ command_site }}.</p>
+            </div>
+            <div class="clock-panel">
+                <div>
+                    <p class="clock-label">System Clock</p>
+                    <p class="clock-value">{{ command_clock|date:"H:i:s" }} UTC</p>
+                </div>
+                <a href="{% url 'emergency:report_create' %}" class="btn-new-incident">
+                    <i class="fas fa-plus-circle"></i> New Incident Report
+                </a>
+            </div>
+        </section>
+
+        <!-- Action Grid -->
+        <section class="action-grid">
+            {% for action in command_actions %}
+            <a href="{% url action.url_name %}" class="action-card">
+                <span class="action-icon"><i class="{{ action.icon }}"></i></span>
+                <span>
+                    <span class="action-title">{{ action.label }}</span>
+                    <span class="action-copy">{{ action.description }}</span>
+                </span>
+            </a>
+            {% endfor %}
+        </section>
+
+        <!-- Main Grid -->
+        <section class="command-main">
+
+            <!-- Tactical Map -->
+            <div class="command-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-map-marked-alt"></i> Site Tactical Map</h3>
+                    <div class="status-pills">
+                        <span class="status-pill clear">Muster Points: CLEAR</span>
+                        <span class="status-pill active">Incidents: {{ command_active_incident_count }} Active</span>
+                    </div>
+                </div>
+                <div class="tactical-map">
+                    <div class="site-platform">
+                        <span class="site-road road-one"></span>
+                        <span class="site-road road-two"></span>
+                        <span class="site-building building-a"></span>
+                        <span class="site-building building-b"></span>
+                        <span class="site-building building-c"></span>
+                        <span class="site-tank tank-a"></span>
+                        <span class="site-tank tank-b"></span>
+                        <span class="site-tank tank-c"></span>
+                        <i class="fas fa-exclamation-triangle incident-marker"></i>
+                        <span class="muster-marker"><i class="fas fa-users"></i> MUSTER POINT C</span>
+                    </div>
+                    <div class="map-zoom"><span>+</span><span>-</span></div>
+                </div>
+            </div>
+
+            <!-- Active Incidents -->
+            <div class="command-card">
+                <div class="card-header-custom">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Active Incidents</h3>
+                    <a href="{% url 'emergency:report_list' %}" class="data-link">View All</a>
+                </div>
+                <div class="incident-list">
+                    {% for incident in command_active_incidents %}
+                    <a href="{{ incident.url|default:'#' }}" class="incident-item">
+                        <div class="incident-meta">
+                            <span>{{ incident.number }}</span>
+                            <span class="severity-chip severity-{{ incident.badge }}">{{ incident.severity }}</span>
+                        </div>
+                        <p class="incident-name">{{ incident.title }}</p>
+                        <div class="incident-detail-row">
+                            <span><i class="fas fa-location-arrow"></i> {{ incident.status }}</span>
+                            <span><i class="fas fa-clock"></i> {{ incident.eta }}</span>
+                            <span><i class="fas fa-user"></i> {{ incident.location }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer Grid -->
+        <section class="command-footer-grid">
+
+            <!-- Resources Health -->
+            <div class="command-card mini-card">
+                <div class="mini-head">
+                    <h4 class="mini-title"><i class="fas fa-cog"></i> Resources Health</h4>
+                    <i class="mini-icon fas fa-ellipsis-v"></i>
+                </div>
+                <div class="health-row">
+                    <div class="health-label"><span>Fire Assets</span><strong>{{ command_resource_fire }}</strong></div>
+                    <div class="progress"><div class="progress-bar success" style="width: 98%"></div></div>
+                </div>
+                <div class="health-row">
+                    <div class="health-label"><span>Medical PPE</span><strong>{{ command_resource_medical }}</strong></div>
+                    <div class="progress"><div class="progress-bar warning" style="width: 84%"></div></div>
+                </div>
+                <a href="#" class="data-link">Inventory Manager <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <!-- Upcoming Drills -->
+            <div class="command-card mini-card">
+                <div class="mini-head">
+                    <h4 class="mini-title"><i class="far fa-calendar"></i> Upcoming Drills</h4>
+                    <i class="mini-icon far fa-calendar-alt"></i>
+                </div>
+                <div class="schedule-list">
+                    {% for drill in command_upcoming_drills %}
+                    <a href="{{ drill.url|default:'#' }}" class="schedule-item">
+                        <p class="schedule-date">{{ drill.date }}</p>
+                        <p class="schedule-title">{{ drill.title }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'emergency:session_list' %}" class="data-link mt-2 d-inline-block">Full Schedule <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <!-- System Audit Logs -->
+            <div class="command-card mini-card">
+                <div class="mini-head">
+                    <h4 class="mini-title"><i class="fas fa-history"></i> System Audit Logs</h4>
+                    <span class="text-muted small">INC-001</span>
+                </div>
+                <div class="log-list">
+                    {% for log in command_system_logs %}
+                    <a href="{{ log.url|default:'#' }}" class="log-item">
+                        <span class="log-time">{{ log.time }}</span>
+                        <span>{{ log.message }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'emergency:report_list' %}" class="data-link mt-2 d-inline-block">View Detailed Log <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <!-- Ready Responders -->
+            <div class="command-card mini-card">
+                <div class="mini-head">
+                    <h4 class="mini-title"><i class="fas fa-users"></i> Ready Responders</h4>
+                    <i class="mini-icon far fa-check-circle"></i>
+                </div>
+                <div class="responder-stack">
+                    {% if command_ready_responders %}
+                        {% for responder in command_ready_responders %}
+                        <span class="responder-avatar" title="{{ responder.get_full_name|default:responder.username }}">
+                            {{ responder.first_name|default:responder.username|slice:":1"|upper }}{{ responder.last_name|slice:":1"|upper }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="responder-avatar">SC</span>
+                        <span class="responder-avatar" style="background:#8b5cf6;">MV</span>
+                        <span class="responder-avatar" style="background:var(--secondary-green);">DR</span>
+                        <span class="responder-avatar" style="background:#f97316;">EG</span>
+                    {% endif %}
+                </div>
+                <div class="response-time">
+                    <span><i class="fas fa-stopwatch"></i> Average Response Time:</span>
+                    <strong>{{ command_average_response }}</strong>
+                </div>
+                <a href="{% url 'emergency:contact_directory' %}" class="btn-outline-teal">Open Contacts</a>
+            </div>
+
+        </section>
+
     </div>
 
-    <div class="command-card mini-card">
-      <div class="mini-head">
-        <h3 class="mini-title">Upcoming Drills</h3>
-        <i class="far fa-calendar text-muted"></i>
-      </div>
-      <div class="schedule-list">
-        {% for drill in command_upcoming_drills %}
-        <a href="{{ drill.url|default:'#' }}" class="schedule-item">
-          <p class="schedule-date">{{ drill.date }}</p>
-          <p class="schedule-title">{{ drill.title }}</p>
-        </a>
-        {% endfor %}
-      </div>
-      <a href="{% url 'emergency:session_list' %}" class="data-link mt-2 d-inline-block">Full Schedule <i class="fas fa-external-link-alt ml-1"></i></a>
-    </div>
-
-    <div class="command-card mini-card">
-      <div class="mini-head">
-        <h3 class="mini-title">System Audit Logs</h3>
-        <span class="text-muted small">INC-001</span>
-      </div>
-      <div class="log-list">
-        {% for log in command_system_logs %}
-        <a href="{{ log.url|default:'#' }}" class="log-item">
-          <span class="log-time">{{ log.time }}</span>
-          <span>{{ log.message }}</span>
-        </a>
-        {% endfor %}
-      </div>
-      <a href="{% url 'emergency:report_list' %}" class="data-link mt-2 d-inline-block">View Detailed Log <i class="fas fa-external-link-alt ml-1"></i></a>
-    </div>
-
-    <div class="command-card mini-card">
-      <div class="mini-head">
-        <h3 class="mini-title">Ready Responders</h3>
-        <i class="far fa-check-circle text-muted"></i>
-      </div>
-      <div class="responder-stack">
-        {% if command_ready_responders %}
-          {% for responder in command_ready_responders %}
-          <span class="responder-avatar" title="{{ responder.get_full_name|default:responder.username }}">
-            {{ responder.first_name|default:responder.username|slice:":1"|upper }}{{ responder.last_name|slice:":1"|upper }}
-          </span>
-          {% endfor %}
-        {% else %}
-          <span class="responder-avatar">SC</span>
-          <span class="responder-avatar" style="background:#8b5cf6;">MV</span>
-          <span class="responder-avatar" style="background:#22c55e;">DR</span>
-          <span class="responder-avatar" style="background:#f97316;">EG</span>
-        {% endif %}
-      </div>
-      <div class="response-time">
-        <span><i class="fas fa-stopwatch mr-1"></i>Average Response Time:</span>
-        <strong>{{ command_average_response }}</strong>
-      </div>
-      <a href="{% url 'emergency:contact_directory' %}" class="btn btn-sm btn-outline-secondary btn-block">Open Contacts</a>
-    </div>
-  </section>
 </div>
 {% endblock %}

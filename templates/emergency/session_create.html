@@ -1,498 +1,1137 @@
+<!-- templates/emergency/session_form.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Schedule Emergency Session{% endblock %}
-{% block page_title %}Schedule Emergency Session{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
+<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response</a></li>
 <li class="breadcrumb-item"><a href="{% url 'emergency:session_list' %}">All Sessions</a></li>
 <li class="breadcrumb-item active">Schedule Session</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-  .readonly-field { background-color: #e9ecef; cursor: not-allowed; }
-  .section-divider { border-left: 4px solid #dc3545; padding-left: 12px; margin-bottom: 20px; font-weight: 600; color: #343a40; }
-  .trainer-card { border: 1px solid #e9ecef; border-radius: 12px; padding: 16px; margin-bottom: 14px; background: #fff; }
-  .trainer-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .remove-trainer { white-space: nowrap; }
+    /* ===== SCHEDULE EMERGENCY SESSION - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Form Container */
+    .form-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+
+    /* Form Card */
+    .form-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .form-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .form-card .card-header-custom {
+        padding: 16px 28px;
+        background: var(--primary-teal);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-card .card-header-custom h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-card .card-header-custom h3 i {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-card .card-body-custom {
+        padding: 28px 32px;
+    }
+
+    .form-card .card-footer-custom {
+        padding: 16px 28px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-page);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    /* Section Divider */
+    .section-divider {
+        border-left: 4px solid var(--primary-teal);
+        padding-left: 14px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-divider i {
+        color: var(--primary-teal);
+        font-size: 16px;
+    }
+
+    /* Form Groups */
+    .form-group-custom {
+        margin-bottom: 18px;
+    }
+
+    .form-group-custom label {
+        display: block;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+    }
+
+    .form-group-custom label .required {
+        color: var(--secondary-red);
+        margin-left: 2px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+        width: 100%;
+        padding: 10px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 46px;
+    }
+
+    .form-group-custom .form-control:focus,
+    .form-group-custom .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .form-group-custom .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-group-custom textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+        padding: 10px 16px;
+    }
+
+    .form-group-custom .form-select {
+        padding: 10px 16px;
+        min-height: 46px;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 12px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .form-group-custom .form-select:hover {
+        cursor: pointer;
+    }
+
+    .form-group-custom .readonly-field {
+        background-color: var(--bg-page);
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .form-group-custom .help-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: block;
+    }
+
+    .form-group-custom .help-text i {
+        margin-right: 4px;
+    }
+
+    .form-group-custom .error-text {
+        color: var(--secondary-red);
+        font-size: 13px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Alert Boxes */
+    .alert-info-custom {
+        background: var(--primary-teal-light);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+    .alert-info-custom i {
+        color: var(--primary-teal);
+        font-size: 18px;
+        margin-top: 1px;
+    }
+
+    .alert-danger-custom {
+        background: var(--secondary-red-light);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        margin-bottom: 20px;
+    }
+
+    .alert-danger-custom h6 {
+        color: var(--secondary-red);
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .alert-danger-custom ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .alert-danger-custom ul li strong {
+        color: var(--text-primary);
+    }
+
+    /* Trainer Card */
+    .trainer-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        margin-bottom: 14px;
+        background: white;
+        transition: all 0.2s ease;
+    }
+
+    .trainer-card:hover {
+        border-color: rgba(13, 148, 136, 0.3);
+        box-shadow: var(--shadow-card);
+    }
+
+    .trainer-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .trainer-actions strong {
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .trainer-actions .btn-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 14px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--secondary-red);
+        background: transparent;
+        color: var(--secondary-red);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .trainer-actions .btn-remove:hover {
+        background: var(--secondary-red-light);
+    }
+
+    .trainer-actions .btn-remove i {
+        font-size: 12px;
+    }
+
+    /* Buttons */
+    .btn-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 30px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal i {
+        font-size: 14px;
+    }
+
+    .btn-teal-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary-teal);
+        background: transparent;
+        color: var(--primary-teal);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 42px;
+    }
+
+    .btn-teal-outline:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    .btn-teal-outline i {
+        font-size: 13px;
+    }
+
+    .btn-cancel-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 24px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-cancel-custom:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .form-container {
+            max-width: 100%;
+            padding: 0 16px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-card .card-body-custom {
+            padding: 20px 18px;
+        }
+
+        .form-card .card-header-custom {
+            padding: 14px 18px;
+        }
+
+        .form-card .card-header-custom h3 {
+            font-size: 15px;
+        }
+
+        .form-card .card-footer-custom {
+            padding: 14px 18px;
+            flex-direction: column-reverse;
+        }
+
+        .form-card .card-footer-custom .btn-teal,
+        .form-card .card-footer-custom .btn-cancel-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .trainer-card {
+            padding: 14px 16px;
+        }
+
+        .trainer-actions {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-divider {
+            font-size: 14px;
+        }
+
+        .form-group-custom .form-control,
+        .form-group-custom .form-select {
+            min-height: 42px;
+            padding: 9px 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .form-card .card-body-custom {
+            padding: 16px 14px;
+        }
+
+        .form-card .card-footer-custom {
+            padding: 12px 14px;
+        }
+
+        .form-group-custom .form-control,
+        .form-group-custom .form-select {
+            font-size: 13px;
+            padding: 8px 12px;
+            min-height: 38px;
+        }
+
+        .form-group-custom textarea.form-control {
+            min-height: 60px;
+        }
+
+        .form-group-custom label {
+            font-size: 12px;
+        }
+
+        .btn-teal,
+        .btn-cancel-custom {
+            font-size: 13px;
+            padding: 9px 16px;
+            min-height: 40px;
+        }
+
+        .btn-teal-outline {
+            font-size: 12px;
+            padding: 7px 14px;
+            min-height: 36px;
+        }
+
+        .trainer-card {
+            padding: 12px 14px;
+        }
+
+        .section-divider {
+            font-size: 13px;
+            padding-left: 10px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-10 offset-md-1">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-broadcast-tower mr-2"></i>Schedule Emergency Session
-        </h3>
-      </div>
+<div class="container-fluid" style="padding: 0;">
 
-      <form method="POST" id="sessionForm" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="card-body">
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle mr-2"></i>
-            Use this form to schedule emergency drills and assign one or more trainers.
-          </div>
-
-          {% if form.errors or trainer_formset.non_form_errors %}
-          <div class="alert alert-danger alert-dismissible fade show">
-            <h6><i class="fas fa-exclamation-triangle mr-2"></i>Please fix the errors below:</h6>
-            <ul class="mb-0">
-              {% for field in form %}
-                {% for error in field.errors %}
-                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                {% endfor %}
-              {% endfor %}
-              {% for error in form.non_field_errors %}
-              <li>{{ error }}</li>
-              {% endfor %}
-              {% for error in trainer_formset.non_form_errors %}
-              <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-          </div>
-          {% endif %}
-
-          <h5 class="section-divider"><i class="fas fa-book mr-2"></i>Emergency Information</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="id_topic">Emergency Topic <span class="text-danger">*</span></label>
-              <select name="topic" id="id_topic" class="form-control" required>
-                <option value="">-- Select Emergency Topic --</option>
-                {% for topic in active_topics %}
-                <option value="{{ topic.id }}" data-validity="{{ topic.validity_period_days }}" data-mandatory="{{ topic.is_mandatory }}" {% if form.topic.value == topic.id|stringformat:"s" %}selected{% endif %}>
-                  {{ topic.name }} ({{ topic.code }})
-                </option>
-                {% endfor %}
-              </select>
-              {% if form.topic.errors %}<div class="text-danger small">{{ form.topic.errors }}</div>{% endif %}
-              <small class="form-text text-muted"><span id="topicValidity"></span></small>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-calendar-plus"></i>
             </div>
-            <div class="col-md-6 mb-3">
-              <label for="id_drill_type">Drill Type <span class="text-danger">*</span></label>
-              <select name="drill_type" id="id_drill_type" class="form-control" required>
-                <option value="">-- Select Drill Type --</option>
-                {% for drill in drill_type_choices %}
-                <option value="{{ drill.value }}" data-category="{{ drill.category }}" {% if form.drill_type.value == drill.value %}selected{% endif %}>
-                  {{ drill.label }}
-                </option>
-                {% endfor %}
-              </select>
-              {% if form.drill_type.errors %}<div class="text-danger small">{{ form.drill_type.errors }}</div>{% endif %}
-              <small class="form-text text-muted"><span id="drillCategoryText"></span></small>
+            <div>
+                <h1>Schedule Emergency Session</h1>
+                <p class="subtitle">Schedule emergency drills and assign trainers for your organization</p>
             </div>
-          </div>
-
-          <hr>
-          <h5 class="section-divider"><i class="fas fa-calendar-alt mr-2"></i>Schedule</h5>
-          <div class="row">
-            <div class="col-md-3 mb-3">
-              <label for="id_scheduled_date">Scheduled Date <span class="text-danger">*</span></label>
-              {{ form.scheduled_date }}
-              {% if form.scheduled_date.errors %}<div class="text-danger small">{{ form.scheduled_date.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_scheduled_time">Start Time <span class="text-danger">*</span></label>
-              {{ form.scheduled_time }}
-              {% if form.scheduled_time.errors %}<div class="text-danger small">{{ form.scheduled_time.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_end_time">End Time</label>
-              {{ form.end_time }}
-              {% if form.end_time.errors %}<div class="text-danger small">{{ form.end_time.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_max_participants">Max Participants</label>
-              {{ form.max_participants }}
-              {% if form.max_participants.errors %}<div class="text-danger small">{{ form.max_participants.errors }}</div>{% endif %}
-            </div>
-          </div>
-
-          <hr>
-          <h5 class="section-divider"><i class="fas fa-map-marker-alt mr-2"></i>Location Information</h5>
-          <div class="row">
-            <div class="col-md-3 mb-3">
-              <label for="id_plant">Plant <span class="text-danger">*</span></label>
-              {% if user_assigned_plants.count == 1 %}
-              <input type="text" class="form-control readonly-field" value="{{ user_assigned_plants.first.name }} ({{ user_assigned_plants.first.code }})" readonly>
-              <input type="hidden" name="plant" id="id_plant" value="{{ user_assigned_plants.first.id }}">
-              {% else %}
-              {{ form.plant }}
-              {% endif %}
-              {% if form.plant.errors %}<div class="text-danger small">{{ form.plant.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_zone">Zone</label>
-              {% if user_assigned_zones.count == 1 %}
-              <input type="text" class="form-control readonly-field" value="{{ user_assigned_zones.first.name }} ({{ user_assigned_zones.first.code }})" readonly>
-              <input type="hidden" name="zone" id="id_zone" value="{{ user_assigned_zones.first.id }}">
-              {% else %}
-              {{ form.zone }}
-              {% endif %}
-              {% if form.zone.errors %}<div class="text-danger small">{{ form.zone.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_location">Location <span class="text-danger">*</span></label>
-              {% if user_assigned_locations.count == 1 %}
-              <input type="text" class="form-control readonly-field" value="{{ user_assigned_locations.first.name }} ({{ user_assigned_locations.first.code }})" readonly>
-              <input type="hidden" name="location" id="id_location" value="{{ user_assigned_locations.first.id }}">
-              {% else %}
-              {{ form.location }}
-              {% endif %}
-              {% if form.location.errors %}<div class="text-danger small">{{ form.location.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="id_sublocation">Sub-Location</label>
-              {% if user_assigned_sublocations.count == 1 %}
-              <input type="text" class="form-control readonly-field" value="{{ user_assigned_sublocations.first.name }}" readonly>
-              <input type="hidden" name="sublocation" id="id_sublocation" value="{{ user_assigned_sublocations.first.id }}">
-              {% else %}
-              {{ form.sublocation }}
-              {% endif %}
-              {% if form.sublocation.errors %}<div class="text-danger small">{{ form.sublocation.errors }}</div>{% endif %}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="id_duration_hours">Duration (Hours)</label>
-              {{ form.duration_hours }}
-              {% if form.duration_hours.errors %}<div class="text-danger small">{{ form.duration_hours.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="id_venue_details">Venue Details</label>
-              {{ form.venue_details }}
-              {% if form.venue_details.errors %}<div class="text-danger small">{{ form.venue_details.errors }}</div>{% endif %}
-            </div>
-          </div>
-
-          <hr>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="section-divider mb-0"><i class="fas fa-user-tie mr-2"></i>Trainer Information</h5>
-            <button type="button" class="btn btn-outline-danger btn-sm" id="addTrainerBtn">
-              <i class="fas fa-plus mr-1"></i> Add More
-            </button>
-          </div>
-
-          {{ trainer_formset.management_form }}
-          <div id="trainerFormContainer">
-            {% for trainer_form in trainer_formset %}
-            <div class="trainer-card trainer-form-item">
-              <div class="trainer-actions">
-                <strong>Trainer {{ forloop.counter }}</strong>
-                <button type="button" class="btn btn-outline-secondary btn-sm remove-trainer">Remove</button>
-              </div>
-              {% for hidden in trainer_form.hidden_fields %}{{ hidden }}{% endfor %}
-              <div class="row">
-                <div class="col-md-5 mb-3">
-                  <label>{{ trainer_form.trainer_department.label }}</label>
-                  {{ trainer_form.trainer_department }}
-                  {% if trainer_form.trainer_department.errors %}<div class="text-danger small">{{ trainer_form.trainer_department.errors }}</div>{% endif %}
-                  <small class="form-text text-muted">Choose a department to filter trainers.</small>
-                </div>
-                <div class="col-md-7 mb-3">
-                  <label>{{ trainer_form.trainer_user.label }} <span class="text-danger">*</span></label>
-                  {{ trainer_form.trainer_user }}
-                  {% if trainer_form.trainer_user.errors %}<div class="text-danger small">{{ trainer_form.trainer_user.errors }}</div>{% endif %}
-                  <small class="form-text text-muted">Trainer names are loaded from active user accounts.</small>
-                </div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-
-          <template id="emptyTrainerTemplate">
-            <div class="trainer-card trainer-form-item">
-              <div class="trainer-actions">
-                <strong>Trainer __number__</strong>
-                <button type="button" class="btn btn-outline-secondary btn-sm remove-trainer">Remove</button>
-              </div>
-              {% with trainer_form=trainer_formset.empty_form %}
-              {% for hidden in trainer_form.hidden_fields %}{{ hidden }}{% endfor %}
-              <div class="row">
-                <div class="col-md-5 mb-3">
-                  <label>{{ trainer_form.trainer_department.label }}</label>
-                  {{ trainer_form.trainer_department }}
-                </div>
-                <div class="col-md-7 mb-3">
-                  <label>{{ trainer_form.trainer_user.label }} <span class="text-danger">*</span></label>
-                  {{ trainer_form.trainer_user }}
-                </div>
-              </div>
-              {% endwith %}
-            </div>
-          </template>
-
-          <hr>
-          <h5 class="section-divider"><i class="fas fa-file-alt mr-2"></i>Session Details</h5>
-          <div class="row">
-            <div class="col-md-12 mb-3">
-              <label for="id_agenda">Agenda / Drill Plan</label>
-              {{ form.agenda }}
-              {% if form.agenda.errors %}<div class="text-danger small">{{ form.agenda.errors }}</div>{% endif %}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="id_attachment">Reference Material</label>
-              {{ form.attachment }}
-              {% if form.attachment.errors %}<div class="text-danger small">{{ form.attachment.errors }}</div>{% endif %}
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="id_remarks">Additional Remarks</label>
-              {{ form.remarks }}
-              {% if form.remarks.errors %}<div class="text-danger small">{{ form.remarks.errors }}</div>{% endif %}
-            </div>
-          </div>
         </div>
-
-        <div class="card-footer">
-          <button type="submit" class="btn btn-danger btn-lg" id="submitBtn">
-            <i class="fas fa-calendar-plus mr-2"></i>Schedule Emergency Session
-          </button>
-          <a href="{{ cancel_url }}" class="btn btn-secondary btn-lg ml-2">
-            <i class="fas fa-times mr-2"></i>Cancel
-          </a>
-        </div>
-      </form>
     </div>
-  </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
+    <!-- Form -->
+    <div class="form-container">
+        <div class="form-card">
+
+            <!-- Card Header -->
+            <div class="card-header-custom">
+                <h3>
+                    <i class="fas fa-broadcast-tower"></i>
+                    Schedule Emergency Session
+                </h3>
+            </div>
+
+            <form method="POST" id="sessionForm" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Card Body -->
+                <div class="card-body-custom">
+
+                    <!-- Info Alert -->
+                    <div class="alert-info-custom">
+                        <i class="fas fa-info-circle"></i>
+                        <div>Use this form to schedule emergency drills and assign one or more trainers.</div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.errors or trainer_formset.non_form_errors %}
+                    <div class="alert-danger-custom">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Please fix the errors below:</h6>
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                            {% for error in trainer_formset.non_form_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Emergency Information -->
+                    <h5 class="section-divider"><i class="fas fa-book"></i> Emergency Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_topic">Emergency Topic <span class="required">*</span></label>
+                                <select name="topic" id="id_topic" class="form-select" required>
+                                    <option value="">-- Select Emergency Topic --</option>
+                                    {% for topic in active_topics %}
+                                    <option value="{{ topic.id }}" data-validity="{{ topic.validity_period_days }}" data-mandatory="{{ topic.is_mandatory }}" {% if form.topic.value == topic.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ topic.name }} ({{ topic.code }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.topic.errors %}<span class="error-text">{{ form.topic.errors.0 }}</span>{% endif %}
+                                <span class="help-text"><span id="topicValidity"></span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_drill_type">Drill Type <span class="required">*</span></label>
+                                <select name="drill_type" id="id_drill_type" class="form-select" required>
+                                    <option value="">-- Select Drill Type --</option>
+                                    {% for drill in drill_type_choices %}
+                                    <option value="{{ drill.value }}" data-category="{{ drill.category }}" {% if form.drill_type.value == drill.value %}selected{% endif %}>
+                                        {{ drill.label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.drill_type.errors %}<span class="error-text">{{ form.drill_type.errors.0 }}</span>{% endif %}
+                                <span class="help-text"><span id="drillCategoryText"></span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule -->
+                    <h5 class="section-divider"><i class="fas fa-calendar-alt"></i> Schedule</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_scheduled_date">Scheduled Date <span class="required">*</span></label>
+                                {{ form.scheduled_date }}
+                                {% if form.scheduled_date.errors %}<span class="error-text">{{ form.scheduled_date.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_scheduled_time">Start Time <span class="required">*</span></label>
+                                {{ form.scheduled_time }}
+                                {% if form.scheduled_time.errors %}<span class="error-text">{{ form.scheduled_time.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_end_time">End Time</label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}<span class="error-text">{{ form.end_time.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_max_participants">Max Participants</label>
+                                {{ form.max_participants }}
+                                {% if form.max_participants.errors %}<span class="error-text">{{ form.max_participants.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Information -->
+                    <h5 class="section-divider"><i class="fas fa-map-marker-alt"></i> Location Information</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_plant">Plant <span class="required">*</span></label>
+                                {% if user_assigned_plants.count == 1 %}
+                                <input type="text" class="form-control readonly-field" value="{{ user_assigned_plants.first.name }} ({{ user_assigned_plants.first.code }})" readonly>
+                                <input type="hidden" name="plant" id="id_plant" value="{{ user_assigned_plants.first.id }}">
+                                {% else %}
+                                {{ form.plant }}
+                                {% endif %}
+                                {% if form.plant.errors %}<span class="error-text">{{ form.plant.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_zone">Zone</label>
+                                {% if user_assigned_zones.count == 1 %}
+                                <input type="text" class="form-control readonly-field" value="{{ user_assigned_zones.first.name }} ({{ user_assigned_zones.first.code }})" readonly>
+                                <input type="hidden" name="zone" id="id_zone" value="{{ user_assigned_zones.first.id }}">
+                                {% else %}
+                                {{ form.zone }}
+                                {% endif %}
+                                {% if form.zone.errors %}<span class="error-text">{{ form.zone.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_location">Location <span class="required">*</span></label>
+                                {% if user_assigned_locations.count == 1 %}
+                                <input type="text" class="form-control readonly-field" value="{{ user_assigned_locations.first.name }} ({{ user_assigned_locations.first.code }})" readonly>
+                                <input type="hidden" name="location" id="id_location" value="{{ user_assigned_locations.first.id }}">
+                                {% else %}
+                                {{ form.location }}
+                                {% endif %}
+                                {% if form.location.errors %}<span class="error-text">{{ form.location.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group-custom">
+                                <label for="id_sublocation">Sub-Location</label>
+                                {% if user_assigned_sublocations.count == 1 %}
+                                <input type="text" class="form-control readonly-field" value="{{ user_assigned_sublocations.first.name }}" readonly>
+                                <input type="hidden" name="sublocation" id="id_sublocation" value="{{ user_assigned_sublocations.first.id }}">
+                                {% else %}
+                                {{ form.sublocation }}
+                                {% endif %}
+                                {% if form.sublocation.errors %}<span class="error-text">{{ form.sublocation.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_duration_hours">Duration (Hours)</label>
+                                {{ form.duration_hours }}
+                                {% if form.duration_hours.errors %}<span class="error-text">{{ form.duration_hours.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_venue_details">Venue Details</label>
+                                {{ form.venue_details }}
+                                {% if form.venue_details.errors %}<span class="error-text">{{ form.venue_details.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trainer Information -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-divider mb-0"><i class="fas fa-user-tie"></i> Trainer Information</h5>
+                        <button type="button" class="btn-teal-outline" id="addTrainerBtn">
+                            <i class="fas fa-plus"></i> Add More
+                        </button>
+                    </div>
+
+                    {{ trainer_formset.management_form }}
+                    <div id="trainerFormContainer">
+                        {% for trainer_form in trainer_formset %}
+                        <div class="trainer-card trainer-form-item">
+                            <div class="trainer-actions">
+                                <strong>Trainer {{ forloop.counter }}</strong>
+                                <button type="button" class="btn-remove remove-trainer">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                            {% for hidden in trainer_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group-custom" style="margin-bottom: 0;">
+                                        <label>{{ trainer_form.trainer_department.label }}</label>
+                                        {{ trainer_form.trainer_department }}
+                                        {% if trainer_form.trainer_department.errors %}<span class="error-text">{{ trainer_form.trainer_department.errors.0 }}</span>{% endif %}
+                                        <span class="help-text">Choose a department to filter trainers.</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group-custom" style="margin-bottom: 0;">
+                                        <label>{{ trainer_form.trainer_user.label }} <span class="required">*</span></label>
+                                        {{ trainer_form.trainer_user }}
+                                        {% if trainer_form.trainer_user.errors %}<span class="error-text">{{ trainer_form.trainer_user.errors.0 }}</span>{% endif %}
+                                        <span class="help-text">Trainer names are loaded from active user accounts.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <template id="emptyTrainerTemplate">
+                        <div class="trainer-card trainer-form-item">
+                            <div class="trainer-actions">
+                                <strong>Trainer __number__</strong>
+                                <button type="button" class="btn-remove remove-trainer">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                            {% with trainer_form=trainer_formset.empty_form %}
+                            {% for hidden in trainer_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group-custom" style="margin-bottom: 0;">
+                                        <label>{{ trainer_form.trainer_department.label }}</label>
+                                        {{ trainer_form.trainer_department }}
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group-custom" style="margin-bottom: 0;">
+                                        <label>{{ trainer_form.trainer_user.label }} <span class="required">*</span></label>
+                                        {{ trainer_form.trainer_user }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        </div>
+                    </template>
+
+                    <!-- Session Details -->
+                    <h5 class="section-divider"><i class="fas fa-file-alt"></i> Session Details</h5>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group-custom">
+                                <label for="id_agenda">Agenda / Drill Plan</label>
+                                {{ form.agenda }}
+                                {% if form.agenda.errors %}<span class="error-text">{{ form.agenda.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_attachment">Reference Material</label>
+                                {{ form.attachment }}
+                                {% if form.attachment.errors %}<span class="error-text">{{ form.attachment.errors.0 }}</span>{% endif %}
+                                <span class="help-text">Upload any reference documents or materials.</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="id_remarks">Additional Remarks</label>
+                                {{ form.remarks }}
+                                {% if form.remarks.errors %}<span class="error-text">{{ form.remarks.errors.0 }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer-custom">
+                    <a href="{{ cancel_url }}" class="btn-cancel-custom">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-teal" id="submitBtn">
+                        <i class="fas fa-calendar-plus"></i> Schedule Emergency Session
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById('sessionForm');
-  const topicSelect = document.getElementById('id_topic');
-  const topicValidity = document.getElementById('topicValidity');
-  const drillTypeSelect = document.getElementById('id_drill_type');
-  const drillCategoryText = document.getElementById('drillCategoryText');
-  const dateInput = document.getElementById('id_scheduled_date');
-  const plantSelect = document.getElementById('id_plant');
-  const zoneSelect = document.getElementById('id_zone');
-  const locationSelect = document.getElementById('id_location');
-  const sublocationSelect = document.getElementById('id_sublocation');
-  const totalForms = document.getElementById('id_trainers-TOTAL_FORMS');
-  const trainerContainer = document.getElementById('trainerFormContainer');
-  const emptyTrainerTemplate = document.getElementById('emptyTrainerTemplate');
-  const addTrainerBtn = document.getElementById('addTrainerBtn');
-  let isSubmitting = false;
+    const form = document.getElementById('sessionForm');
+    const topicSelect = document.getElementById('id_topic');
+    const topicValidity = document.getElementById('topicValidity');
+    const drillTypeSelect = document.getElementById('id_drill_type');
+    const drillCategoryText = document.getElementById('drillCategoryText');
+    const dateInput = document.getElementById('id_scheduled_date');
+    const plantSelect = document.getElementById('id_plant');
+    const zoneSelect = document.getElementById('id_zone');
+    const locationSelect = document.getElementById('id_location');
+    const sublocationSelect = document.getElementById('id_sublocation');
+    const totalForms = document.getElementById('id_trainers-TOTAL_FORMS');
+    const trainerContainer = document.getElementById('trainerFormContainer');
+    const emptyTrainerTemplate = document.getElementById('emptyTrainerTemplate');
+    const addTrainerBtn = document.getElementById('addTrainerBtn');
+    let isSubmitting = false;
 
-  function updateTopicInfo() {
-    const option = topicSelect.options[topicSelect.selectedIndex];
-    if (option && option.value) {
-      const days = option.getAttribute('data-validity');
-      const mandatory = option.getAttribute('data-mandatory');
-      topicValidity.innerHTML = `Validity: <strong>${days} days</strong>` + (mandatory === 'True' ? ' | <span class="badge badge-danger">Mandatory</span>' : '');
-    } else {
-      topicValidity.innerHTML = '';
-    }
-  }
-
-  function updateDrillInfo() {
-    const option = drillTypeSelect.options[drillTypeSelect.selectedIndex];
-    drillCategoryText.textContent = option && option.value ? `Category: ${option.getAttribute('data-category')}` : '';
-  }
-
-  function resetSelect(el, text) {
-    if (el) {
-      el.innerHTML = `<option value="">-- ${text} --</option>`;
-    }
-  }
-
-  function getTrainerFields(scope) {
-    return {
-      departmentSelect: scope.querySelector('select[name$="trainer_department"]'),
-      trainerSelect: scope.querySelector('select[name$="trainer_user"]')
-    };
-  }
-
-  function renderTrainerOptions(select, users, selectedValue) {
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Select Trainer --</option>';
-    users.forEach((user) => {
-      const labelParts = [user.name];
-      if (user.employee_id) {
-        labelParts.push(`(${user.employee_id})`);
-      }
-      const option = new Option(labelParts.join(' '), user.id);
-      option.dataset.departmentId = user.department_id || '';
-      option.dataset.departmentName = user.department_name || '';
-      if (selectedValue && String(user.id) === String(selectedValue)) {
-        option.selected = true;
-      }
-      select.add(option);
-    });
-    select.disabled = users.length === 0;
-  }
-
-  function loadTrainersForDepartment(scope, preserveSelection = true) {
-    const { departmentSelect, trainerSelect } = getTrainerFields(scope);
-    if (!departmentSelect || !trainerSelect) return;
-
-    const departmentId = departmentSelect.value;
-    const plantId = plantSelect ? plantSelect.value : '';
-    const selectedValue = preserveSelection ? trainerSelect.value : '';
-
-    if (!departmentId) {
-      renderTrainerOptions(trainerSelect, [], '');
-      trainerSelect.disabled = true;
-      return;
+    function updateTopicInfo() {
+        const option = topicSelect.options[topicSelect.selectedIndex];
+        if (option && option.value) {
+            const days = option.getAttribute('data-validity');
+            const mandatory = option.getAttribute('data-mandatory');
+            let html = `Validity: <strong>${days} days</strong>`;
+            if (mandatory === 'True') {
+                html += ' | <span class="badge-custom badge-mandatory-yes" style="padding: 2px 10px; border-radius: 4px; font-size: 12px; background: var(--secondary-red-light); color: var(--secondary-red);">Mandatory</span>';
+            }
+            topicValidity.innerHTML = html;
+        } else {
+            topicValidity.innerHTML = '';
+        }
     }
 
-    trainerSelect.disabled = true;
-    trainerSelect.innerHTML = '<option value="">Loading trainers...</option>';
-
-    const params = new URLSearchParams({ department_id: departmentId });
-    if (plantId) {
-      params.append('plant_id', plantId);
+    function updateDrillInfo() {
+        const option = drillTypeSelect.options[drillTypeSelect.selectedIndex];
+        drillCategoryText.textContent = option && option.value ? `Category: ${option.getAttribute('data-category')}` : '';
     }
 
-    fetch(`{% url 'emergency:ajax_department_users' %}?${params.toString()}`)
-      .then(response => response.json())
-      .then(data => renderTrainerOptions(trainerSelect, data, selectedValue))
-      .catch(() => {
-        trainerSelect.innerHTML = '<option value="">Unable to load trainers</option>';
+    function resetSelect(el, text) {
+        if (el) {
+            el.innerHTML = `<option value="">-- ${text} --</option>`;
+        }
+    }
+
+    function getTrainerFields(scope) {
+        return {
+            departmentSelect: scope.querySelector('select[name$="trainer_department"]'),
+            trainerSelect: scope.querySelector('select[name$="trainer_user"]')
+        };
+    }
+
+    function renderTrainerOptions(select, users, selectedValue) {
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Select Trainer --</option>';
+        users.forEach((user) => {
+            const labelParts = [user.name];
+            if (user.employee_id) {
+                labelParts.push(`(${user.employee_id})`);
+            }
+            const option = new Option(labelParts.join(' '), user.id);
+            option.dataset.departmentId = user.department_id || '';
+            option.dataset.departmentName = user.department_name || '';
+            if (selectedValue && String(user.id) === String(selectedValue)) {
+                option.selected = true;
+            }
+            select.add(option);
+        });
+        select.disabled = users.length === 0;
+    }
+
+    function loadTrainersForDepartment(scope, preserveSelection = true) {
+        const { departmentSelect, trainerSelect } = getTrainerFields(scope);
+        if (!departmentSelect || !trainerSelect) return;
+
+        const departmentId = departmentSelect.value;
+        const plantId = plantSelect ? plantSelect.value : '';
+        const selectedValue = preserveSelection ? trainerSelect.value : '';
+
+        if (!departmentId) {
+            renderTrainerOptions(trainerSelect, [], '');
+            trainerSelect.disabled = true;
+            return;
+        }
+
         trainerSelect.disabled = true;
-      });
-  }
+        trainerSelect.innerHTML = '<option value="">Loading trainers...</option>';
 
-  function setupTrainerSelectors(scope) {
-    const { departmentSelect, trainerSelect } = getTrainerFields(scope);
-    if (!departmentSelect || !trainerSelect) return;
+        const params = new URLSearchParams({ department_id: departmentId });
+        if (plantId) {
+            params.append('plant_id', plantId);
+        }
 
-    departmentSelect.addEventListener('change', function () {
-      loadTrainersForDepartment(scope, false);
-    });
-
-    trainerSelect.addEventListener('change', function () {
-      const selectedOption = trainerSelect.options[trainerSelect.selectedIndex];
-      const departmentId = selectedOption ? selectedOption.dataset.departmentId : '';
-      if (departmentId && departmentSelect.value !== departmentId) {
-        departmentSelect.value = departmentId;
-      }
-    });
-
-    const hasDepartment = Boolean(departmentSelect.value);
-    const hasTrainer = Boolean(trainerSelect.value);
-    if (hasDepartment || hasTrainer) {
-      loadTrainersForDepartment(scope, true);
-    } else {
-      trainerSelect.disabled = true;
+        fetch(`{% url 'emergency:ajax_department_users' %}?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => renderTrainerOptions(trainerSelect, data, selectedValue))
+            .catch(() => {
+                trainerSelect.innerHTML = '<option value="">Unable to load trainers</option>';
+                trainerSelect.disabled = true;
+            });
     }
-  }
 
-  function renumberTrainerForms() {
-    const cards = trainerContainer.querySelectorAll('.trainer-form-item');
-    cards.forEach((card, index) => {
-      const title = card.querySelector('.trainer-actions strong');
-      if (title) title.textContent = `Trainer ${index + 1}`;
-      card.querySelectorAll('input, select, textarea, label').forEach((el) => {
-        if (el.name) el.name = el.name.replace(/trainers-\d+-/g, `trainers-${index}-`);
-        if (el.id) el.id = el.id.replace(/trainers-\d+-/g, `trainers-${index}-`);
-        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/trainers-\d+-/g, `trainers-${index}-`);
-      });
-    });
-    totalForms.value = cards.length;
-  }
+    function setupTrainerSelectors(scope) {
+        const { departmentSelect, trainerSelect } = getTrainerFields(scope);
+        if (!departmentSelect || !trainerSelect) return;
 
-  function addTrainerForm() {
-    const index = parseInt(totalForms.value, 10);
-    const html = emptyTrainerTemplate.innerHTML
-      .replace(/__prefix__/g, index)
-      .replace(/__number__/g, index + 1);
-    trainerContainer.insertAdjacentHTML('beforeend', html);
-    const newCard = trainerContainer.lastElementChild;
-    setupTrainerSelectors(newCard);
-    renumberTrainerForms();
-  }
+        departmentSelect.addEventListener('change', function () {
+            loadTrainersForDepartment(scope, false);
+        });
 
-  trainerContainer.querySelectorAll('.trainer-form-item').forEach(setupTrainerSelectors);
+        trainerSelect.addEventListener('change', function () {
+            const selectedOption = trainerSelect.options[trainerSelect.selectedIndex];
+            const departmentId = selectedOption ? selectedOption.dataset.departmentId : '';
+            if (departmentId && departmentSelect.value !== departmentId) {
+                departmentSelect.value = departmentId;
+            }
+        });
 
-  addTrainerBtn.addEventListener('click', addTrainerForm);
-
-  trainerContainer.addEventListener('click', function (event) {
-    if (!event.target.classList.contains('remove-trainer')) return;
-    const cards = trainerContainer.querySelectorAll('.trainer-form-item');
-    if (cards.length === 1) return;
-    event.target.closest('.trainer-form-item').remove();
-    renumberTrainerForms();
-  });
-
-  if (topicSelect) {
-    topicSelect.addEventListener('change', updateTopicInfo);
-    updateTopicInfo();
-  }
-
-  if (drillTypeSelect) {
-    drillTypeSelect.addEventListener('change', updateDrillInfo);
-    updateDrillInfo();
-  }
-
-  if (dateInput) {
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.setAttribute('min', today);
-    if (!dateInput.value) dateInput.value = today;
-  }
-
-  if (plantSelect) {
-    plantSelect.addEventListener('change', function () {
-      const plantId = this.value;
-      resetSelect(zoneSelect, 'Select Zone');
-      resetSelect(locationSelect, 'Select Zone First');
-      resetSelect(sublocationSelect, 'Select Location First');
-      trainerContainer.querySelectorAll('.trainer-form-item').forEach((card) => {
-        loadTrainersForDepartment(card, false);
-      });
-      if (plantId) {
-        fetch(`{% url 'emergency:ajax_get_zones' %}?plant_id=${plantId}`)
-          .then(r => r.json())
-          .then(data => data.forEach(z => zoneSelect.add(new Option(`${z.name} (${z.code})`, z.id))));
-      }
-    });
-  }
-
-  if (zoneSelect) {
-    zoneSelect.addEventListener('change', function () {
-      const zoneId = this.value;
-      resetSelect(locationSelect, 'Select Location');
-      resetSelect(sublocationSelect, 'Select Location First');
-      if (zoneId) {
-        fetch(`{% url 'emergency:ajax_get_locations' %}?zone_id=${zoneId}`)
-          .then(r => r.json())
-          .then(data => data.forEach(l => locationSelect.add(new Option(`${l.name} (${l.code})`, l.id))));
-      }
-    });
-  }
-
-  if (locationSelect) {
-    locationSelect.addEventListener('change', function () {
-      const locationId = this.value;
-      resetSelect(sublocationSelect, 'Select Sub-Location');
-      if (locationId) {
-        fetch(`{% url 'emergency:ajax_get_sublocations' %}?location_id=${locationId}`)
-          .then(r => r.json())
-          .then(data => data.forEach(s => sublocationSelect.add(new Option(s.code ? `${s.name} (${s.code})` : s.name, s.id))));
-      }
-    });
-  }
-
-  form.addEventListener('submit', function (e) {
-    if (isSubmitting) {
-      e.preventDefault();
-      return false;
+        const hasDepartment = Boolean(departmentSelect.value);
+        const hasTrainer = Boolean(trainerSelect.value);
+        if (hasDepartment || hasTrainer) {
+            loadTrainersForDepartment(scope, true);
+        } else {
+            trainerSelect.disabled = true;
+        }
     }
-    isSubmitting = true;
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scheduling...';
-  });
+
+    function renumberTrainerForms() {
+        const cards = trainerContainer.querySelectorAll('.trainer-form-item');
+        cards.forEach((card, index) => {
+            const title = card.querySelector('.trainer-actions strong');
+            if (title) title.textContent = `Trainer ${index + 1}`;
+            card.querySelectorAll('input, select, textarea, label').forEach((el) => {
+                if (el.name) el.name = el.name.replace(/trainers-\d+-/g, `trainers-${index}-`);
+                if (el.id) el.id = el.id.replace(/trainers-\d+-/g, `trainers-${index}-`);
+                if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/trainers-\d+-/g, `trainers-${index}-`);
+            });
+        });
+        totalForms.value = cards.length;
+    }
+
+    function addTrainerForm() {
+        const index = parseInt(totalForms.value, 10);
+        const html = emptyTrainerTemplate.innerHTML
+            .replace(/__prefix__/g, index)
+            .replace(/__number__/g, index + 1);
+        trainerContainer.insertAdjacentHTML('beforeend', html);
+        const newCard = trainerContainer.lastElementChild;
+        setupTrainerSelectors(newCard);
+        renumberTrainerForms();
+    }
+
+    trainerContainer.querySelectorAll('.trainer-form-item').forEach(setupTrainerSelectors);
+
+    addTrainerBtn.addEventListener('click', addTrainerForm);
+
+    trainerContainer.addEventListener('click', function (event) {
+        if (!event.target.classList.contains('remove-trainer') && !event.target.closest('.remove-trainer')) return;
+        const button = event.target.closest('.remove-trainer');
+        if (!button) return;
+        const cards = trainerContainer.querySelectorAll('.trainer-form-item');
+        if (cards.length === 1) return;
+        button.closest('.trainer-form-item').remove();
+        renumberTrainerForms();
+    });
+
+    if (topicSelect) {
+        topicSelect.addEventListener('change', updateTopicInfo);
+        updateTopicInfo();
+    }
+
+    if (drillTypeSelect) {
+        drillTypeSelect.addEventListener('change', updateDrillInfo);
+        updateDrillInfo();
+    }
+
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+        if (!dateInput.value) dateInput.value = today;
+    }
+
+    if (plantSelect) {
+        plantSelect.addEventListener('change', function () {
+            const plantId = this.value;
+            resetSelect(zoneSelect, 'Select Zone');
+            resetSelect(locationSelect, 'Select Zone First');
+            resetSelect(sublocationSelect, 'Select Location First');
+            trainerContainer.querySelectorAll('.trainer-form-item').forEach((card) => {
+                loadTrainersForDepartment(card, false);
+            });
+            if (plantId) {
+                fetch(`{% url 'emergency:ajax_get_zones' %}?plant_id=${plantId}`)
+                    .then(r => r.json())
+                    .then(data => data.forEach(z => zoneSelect.add(new Option(`${z.name} (${z.code})`, z.id))));
+            }
+        });
+    }
+
+    if (zoneSelect) {
+        zoneSelect.addEventListener('change', function () {
+            const zoneId = this.value;
+            resetSelect(locationSelect, 'Select Location');
+            resetSelect(sublocationSelect, 'Select Location First');
+            if (zoneId) {
+                fetch(`{% url 'emergency:ajax_get_locations' %}?zone_id=${zoneId}`)
+                    .then(r => r.json())
+                    .then(data => data.forEach(l => locationSelect.add(new Option(`${l.name} (${l.code})`, l.id))));
+            }
+        });
+    }
+
+    if (locationSelect) {
+        locationSelect.addEventListener('change', function () {
+            const locationId = this.value;
+            resetSelect(sublocationSelect, 'Select Sub-Location');
+            if (locationId) {
+                fetch(`{% url 'emergency:ajax_get_sublocations' %}?location_id=${locationId}`)
+                    .then(r => r.json())
+                    .then(data => data.forEach(s => sublocationSelect.add(new Option(s.code ? `${s.name} (${s.code})` : s.name, s.id))));
+            }
+        });
+    }
+
+    form.addEventListener('submit', function (e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scheduling...';
+    });
 });
 </script>
+
 {% endblock %}

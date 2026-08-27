@@ -1,192 +1,912 @@
+<!-- templates/emergency/question_form.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
+<li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response</a></li>
 <li class="breadcrumb-item"><a href="{% url 'emergency:question_list' %}">Department Questions</a></li>
 <li class="breadcrumb-item active">{{ action }}</li>
 {% endblock %}
 
-{% block content %}
-<div class="row">
-  <div class="col-md-10 mx-auto">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-question-circle"></i> {{ title }}
-        </h3>
-      </div>
-      <div class="card-body">
-        <form method="post" novalidate>
-          {% csrf_token %}
-          <input type="hidden" name="action_type" id="action_type">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.department.id_for_label }}">Department <span class="text-danger">*</span></label>
-                {{ form.department }}
-                {% if form.department.errors %}<div class="text-danger small">{{ form.department.errors }}</div>{% endif %}
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.question_type.id_for_label }}">Question Type <span class="text-danger">*</span></label>
-                {{ form.question_type }}
-                {% if form.question_type.errors %}<div class="text-danger small">{{ form.question_type.errors }}</div>{% endif %}
-              </div>
-            </div>
-          </div>
+{% block extra_css %}
+<style>
+    /* ===== ERT DEPARTMENT QUESTION FORM - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-          <div class="form-group">
-            <label for="{{ form.topics.id_for_label }}">Applicable Topics</label>
-            {{ form.topics }}
-            {% if form.topics.errors %}<div class="text-danger small">{{ form.topics.errors }}</div>{% endif %}
-            <small class="form-text text-muted">These are the emergency topics for which this question will be assigned.</small>
-          </div>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
 
-          <div class="form-group">
-            <label for="{{ form.question_text.id_for_label }}">Question Text <span class="text-danger">*</span></label>
-            {{ form.question_text }}
-            {% if form.question_text.errors %}<div class="text-danger small">{{ form.question_text.errors }}</div>{% endif %}
-            <small class="form-text text-muted">Enter the ERT question that will be asked department-wise.</small>
-          </div>
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
 
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.weightage.id_for_label }}">Weightage</label>
-                {{ form.weightage }}
-                <small class="form-text text-muted">Weight for compliance scoring (0-100)</small>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.reference_standard.id_for_label }}">Reference Standard</label>
-                {{ form.reference_standard }}
-              </div>
-            </div>
-          </div>
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
 
-          <div class="form-group">
-            <label for="{{ form.guidance_notes.id_for_label }}">Guidance Notes</label>
-            {{ form.guidance_notes }}
-            <small class="form-text text-muted">Additional guidance for reviewers on how to answer this question.</small>
-          </div>
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
 
-          <div class="card mb-3">
-            <div class="card-header bg-light">
-              <h6 class="mb-0"><i class="fas fa-cogs"></i> Configuration Flags</h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6 col-lg-3 mb-3">
-                  <div class="border rounded p-3 h-100">
-                    <div class="custom-control custom-checkbox">
-                      {{ form.is_remarks_mandatory }}
-                      <label class="font-weight-semibold" for="{{ form.is_remarks_mandatory.id_for_label }}">
-                        <i class="fas fa-comment text-info mr-1"></i> Remarks Mandatory
-                      </label>
-                    </div>
-                    <small class="text-muted d-block mt-2">Require remarks for this question</small>
-                  </div>
-                </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                  <div class="border rounded p-3 h-100">
-                    <div class="custom-control custom-checkbox">
-                      {{ form.is_photo_required }}
-                      <label class="font-weight-semibold" for="{{ form.is_photo_required.id_for_label }}">
-                        <i class="fas fa-camera text-warning mr-1"></i> Photo Required
-                      </label>
-                    </div>
-                    <small class="text-muted d-block mt-2">Require photo evidence</small>
-                  </div>
-                </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                  <div class="border rounded p-3 h-100">
-                    <div class="custom-control custom-checkbox">
-                      {{ form.is_critical }}
-                      <label class="font-weight-semibold" for="{{ form.is_critical.id_for_label }}">
-                        <i class="fas fa-exclamation-triangle text-danger mr-1"></i> Critical Question
-                      </label>
-                    </div>
-                    <small class="text-muted d-block mt-2">Mark as high-priority</small>
-                  </div>
-                </div>
-                <div class="col-md-6 col-lg-3 mb-3">
-                  <div class="border rounded p-3 h-100">
-                    <div class="custom-control custom-checkbox">
-                      {{ form.auto_generate_finding }}
-                      <label class="font-weight-semibold" for="{{ form.auto_generate_finding.id_for_label }}">
-                        <i class="fas fa-bolt text-primary mr-1"></i> Auto-Generate Finding
-                      </label>
-                    </div>
-                    <small class="text-muted d-block mt-2">Create finding if "No"</small>
-                  </div>
-                </div>
-              </div>
-            </div>
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
 
-            <div class="mt-3">
-              <div class="border rounded p-3">
-                <div class="custom-control">
-                  {{ form.is_active }}
-                  <label class="font-weight-bold" for="{{ form.is_active.id_for_label }}">Active</label>
-                </div>
-                <small class="text-muted d-block mt-2">Only active questions can be used later.</small>
-              </div>
-            </div>
-          </div>
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
 
-          <hr>
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
 
-          <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'emergency:question_list' %}" class="btn btn-secondary">
-              <i class="fas fa-times"></i> Cancel
-            </a>
-            <div>
-              {% if action == 'Create' %}
-              <button type="submit" onclick="setAction('save_and_add')" class="btn btn-info">
-                <i class="fas fa-plus"></i> Save & Add Another
-              </button>
-              {% endif %}
-              <button type="submit" onclick="setAction('save')" class="btn btn-primary">
-                <i class="fas fa-save"></i> {{ action }} Question
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Form Container */
+    .form-container {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+
+    /* Form Card */
+    .form-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .form-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .form-card .card-header-custom {
+        padding: 16px 28px;
+        background: var(--primary-teal);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-card .card-header-custom h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-card .card-header-custom h3 i {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-card .card-body-custom {
+        padding: 32px 36px;
+    }
+
+    /* Form Groups */
+    .form-group-custom {
+        margin-bottom: 20px;
+    }
+
+    .form-group-custom label {
+        display: block;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+    }
+
+    .form-group-custom label .required {
+        color: var(--secondary-red);
+        margin-left: 2px;
+    }
+
+    .form-group-custom .form-control,
+    .form-group-custom .form-select {
+        width: 100%;
+        padding: 11px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 48px;
+    }
+
+    .form-group-custom .form-control:focus,
+    .form-group-custom .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .form-group-custom .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-group-custom textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+        padding: 11px 16px;
+    }
+
+    .form-group-custom .form-select {
+        padding: 11px 16px;
+        min-height: 48px;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 12px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .form-group-custom .form-select:hover {
+        cursor: pointer;
+    }
+
+    .form-group-custom .help-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: block;
+        margin-left: 8px;
+    }
+
+    .form-group-custom .help-text i {
+        margin-right: 4px;
+        color: var(--primary-teal);
+    }
+
+    .form-group-custom .error-text {
+        color: var(--secondary-red);
+        font-size: 13px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Error Alert */
+    .error-alert {
+        background: var(--secondary-red-light);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        margin-bottom: 20px;
+    }
+
+    .error-alert strong {
+        color: var(--secondary-red);
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .error-alert ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .error-alert ul li b {
+        color: var(--text-primary);
+    }
+
+    /* Configuration Flags */
+    .flags-container {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .flags-container .flags-header {
+        padding: 12px 18px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .flags-container .flags-header h6 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .flags-container .flags-header i {
+        color: var(--primary-teal);
+    }
+
+    .flags-container .flags-body {
+        padding: 18px 20px;
+    }
+
+    .flag-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        height: 100%;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .flag-card:hover {
+        border-color: var(--primary-teal);
+        background: var(--primary-teal-light);
+    }
+
+    .flag-card .flag-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .flag-card .flag-check input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary-teal);
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .flag-card .flag-check label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-primary);
+        cursor: pointer;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .flag-card .flag-check label i {
+        margin-right: 6px;
+    }
+
+    .flag-card .flag-check label i.text-info { color: #3b82f6; }
+    .flag-card .flag-check label i.text-warning { color: var(--secondary-gold); }
+    .flag-card .flag-check label i.text-danger { color: var(--secondary-red); }
+    .flag-card .flag-check label i.text-primary { color: var(--primary-teal); }
+
+    .flag-card .flag-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 4px;
+        padding-left: 28px;
+    }
+
+    /* Active Status Card - Fixed Alignment */
+    .status-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        background: white;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: nowrap;
+    }
+
+    .status-card:hover {
+        border-color: var(--primary-teal);
+        background: var(--primary-teal-light);
+    }
+
+    .status-card input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary-teal);
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .status-card .status-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .status-card .status-content .status-label {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin: 0;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .status-card .status-content .status-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+        font-weight: 400;
+    }
+
+    /* Buttons */
+    .btn-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 30px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal i {
+        font-size: 14px;
+    }
+
+    .btn-teal-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 24px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary-teal);
+        background: transparent;
+        color: var(--primary-teal);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-teal-outline:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    .btn-teal-outline i {
+        font-size: 14px;
+    }
+
+    .btn-cancel-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 24px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-cancel-custom:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-color);
+        margin-top: 24px;
+        padding-top: 20px;
+    }
+
+    .form-actions .action-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .form-container {
+            max-width: 100%;
+            padding: 0 16px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-card .card-body-custom {
+            padding: 20px 18px;
+        }
+
+        .form-card .card-header-custom {
+            padding: 14px 18px;
+        }
+
+        .form-card .card-header-custom h3 {
+            font-size: 15px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .form-actions .action-group {
+            flex-direction: column;
+        }
+
+        .form-actions .btn-teal,
+        .form-actions .btn-teal-outline,
+        .form-actions .btn-cancel-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .flags-container .flags-body .flag-card {
+            height: auto;
+        }
+
+        .status-card {
+            flex-wrap: wrap;
+        }
+
+        .form-group-custom .form-control,
+        .form-group-custom .form-select {
+            min-height: 44px;
+            padding: 10px 14px;
+        }
+
+        .form-group-custom .help-text {
+            margin-left: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .form-card .card-body-custom {
+            padding: 16px 14px;
+        }
+
+        .form-group-custom .form-control,
+        .form-group-custom .form-select {
+            font-size: 13px;
+            padding: 9px 12px;
+            min-height: 40px;
+        }
+
+        .form-group-custom label {
+            font-size: 12px;
+        }
+
+        .form-group-custom textarea.form-control {
+            min-height: 60px;
+        }
+
+        .form-group-custom .help-text {
+            margin-left: 0;
+        }
+
+        .error-alert {
+            padding: 12px 14px;
+            font-size: 13px;
+        }
+
+        .flag-card {
+            padding: 10px 12px;
+        }
+
+        .btn-teal,
+        .btn-teal-outline,
+        .btn-cancel-custom {
+            font-size: 13px;
+            padding: 9px 16px;
+            min-height: 40px;
+        }
+
+        .status-card {
+            padding: 12px 14px;
+        }
+    }
+</style>
 {% endblock %}
 
-{% block extra_js %}
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div>
+                <h1>{{ title }}</h1>
+                <p class="subtitle">
+                    {% if action == 'Create' %}
+                        Add a new department question for ERT
+                    {% else %}
+                        Update existing department question details
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+        <div class="form-card">
+
+            <!-- Card Header -->
+            <div class="card-header-custom">
+                <h3>
+                    <i class="fas fa-{% if action == 'Create' %}plus-circle{% else %}edit{% endif %}"></i>
+                    {{ title }}
+                </h3>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action_type" id="action_type">
+
+                <!-- Card Body -->
+                <div class="card-body-custom">
+
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                    <div class="error-alert">
+                        <strong>
+                            <i class="fas fa-exclamation-circle"></i> Please fix the following errors:
+                        </strong>
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                <li><b>{{ field.label }}:</b> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Department & Question Type Row -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="{{ form.department.id_for_label }}">
+                                    Department <span class="required">*</span>
+                                </label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                <span class="error-text">{{ form.department.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="{{ form.question_type.id_for_label }}">
+                                    Question Type <span class="required">*</span>
+                                </label>
+                                {{ form.question_type }}
+                                {% if form.question_type.errors %}
+                                <span class="error-text">{{ form.question_type.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Applicable Topics -->
+                    <div class="form-group-custom">
+                        <label for="{{ form.topics.id_for_label }}">Applicable Topics</label>
+                        {{ form.topics }}
+                        {% if form.topics.errors %}
+                        <span class="error-text">{{ form.topics.errors.0 }}</span>
+                        {% endif %}
+                        <span class="help-text">
+                            <i class="fas fa-info-circle"></i> These are the emergency topics for which this question will be assigned.
+                        </span>
+                    </div>
+
+                    <!-- Question Text -->
+                    <div class="form-group-custom">
+                        <label for="{{ form.question_text.id_for_label }}">
+                            Question Text <span class="required">*</span>
+                        </label>
+                        {{ form.question_text }}
+                        {% if form.question_text.errors %}
+                        <span class="error-text">{{ form.question_text.errors.0 }}</span>
+                        {% endif %}
+                        <span class="help-text">
+                            <i class="fas fa-pencil-alt"></i> Enter the ERT question that will be asked department-wise.
+                        </span>
+                    </div>
+
+                    <!-- Weightage & Reference Standard -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="{{ form.weightage.id_for_label }}">Weightage</label>
+                                {{ form.weightage }}
+                                {% if form.weightage.errors %}
+                                <span class="error-text">{{ form.weightage.errors.0 }}</span>
+                                {% endif %}
+                                <span class="help-text">
+                                    <i class="fas fa-weight-hanging"></i> Weight for compliance scoring (0-100)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group-custom">
+                                <label for="{{ form.reference_standard.id_for_label }}">Reference Standard</label>
+                                {{ form.reference_standard }}
+                                {% if form.reference_standard.errors %}
+                                <span class="error-text">{{ form.reference_standard.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guidance Notes -->
+                    <div class="form-group-custom">
+                        <label for="{{ form.guidance_notes.id_for_label }}">Guidance Notes</label>
+                        {{ form.guidance_notes }}
+                        {% if form.guidance_notes.errors %}
+                        <span class="error-text">{{ form.guidance_notes.errors.0 }}</span>
+                        {% endif %}
+                        <span class="help-text">
+                            <i class="fas fa-lightbulb"></i> Additional guidance for reviewers on how to answer this question.
+                        </span>
+                    </div>
+
+                    <!-- Configuration Flags -->
+                    <div class="flags-container">
+                        <div class="flags-header">
+                            <i class="fas fa-cogs"></i>
+                            <h6>Configuration Flags</h6>
+                        </div>
+                        <div class="flags-body">
+                            <div class="row">
+                                <div class="col-md-6 col-lg-3 mb-3">
+                                    <div class="flag-card">
+                                        <div class="flag-check">
+                                            {{ form.is_remarks_mandatory }}
+                                            <label for="{{ form.is_remarks_mandatory.id_for_label }}">
+                                                <i class="fas fa-comment text-info"></i> Remarks Mandatory
+                                            </label>
+                                        </div>
+                                        <span class="flag-desc">Require remarks for this question</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3 mb-3">
+                                    <div class="flag-card">
+                                        <div class="flag-check">
+                                            {{ form.is_photo_required }}
+                                            <label for="{{ form.is_photo_required.id_for_label }}">
+                                                <i class="fas fa-camera text-warning"></i> Photo Required
+                                            </label>
+                                        </div>
+                                        <span class="flag-desc">Require photo evidence</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3 mb-3">
+                                    <div class="flag-card">
+                                        <div class="flag-check">
+                                            {{ form.is_critical }}
+                                            <label for="{{ form.is_critical.id_for_label }}">
+                                                <i class="fas fa-exclamation-triangle text-danger"></i> Critical Question
+                                            </label>
+                                        </div>
+                                        <span class="flag-desc">Mark as high-priority</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3 mb-3">
+                                    <div class="flag-card">
+                                        <div class="flag-check">
+                                            {{ form.auto_generate_finding }}
+                                            <label for="{{ form.auto_generate_finding.id_for_label }}">
+                                                <i class="fas fa-bolt text-primary"></i> Auto-Generate Finding
+                                            </label>
+                                        </div>
+                                        <span class="flag-desc">Create finding if "No"</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Status - Fixed Alignment -->
+                    <div class="status-card">
+                        {{ form.is_active }}
+                        <div class="status-content">
+                            <label class="status-label" for="{{ form.is_active.id_for_label }}">Active</label>
+                            <span class="status-desc">Only active questions can be used later.</span>
+                        </div>
+                    </div>
+                    {% if form.is_active.errors %}
+                    <span class="error-text" style="margin-top: 6px;">{{ form.is_active.errors.0 }}</span>
+                    {% endif %}
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <a href="{% url 'emergency:question_list' %}" class="btn-cancel-custom">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <div class="action-group">
+                            {% if action == 'Create' %}
+                            <button type="submit" onclick="setAction('save_and_add')" class="btn-teal-outline">
+                                <i class="fas fa-plus"></i> Save & Add Another
+                            </button>
+                            {% endif %}
+                            <button type="submit" onclick="setAction('save')" class="btn-teal">
+                                <i class="fas fa-save"></i> {{ action }} Question
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
 <script>
 function setAction(action) {
-  document.getElementById('action_type').value = action;
+    document.getElementById('action_type').value = action;
 }
 
-$(document).ready(function() {
-  $('textarea').each(function () {
-    this.style.height = this.scrollHeight + 'px';
-    this.style.overflowY = 'hidden';
-  }).on('input', function() {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-  });
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.style.overflowY = 'hidden';
+        
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
 
-  let formSubmitting = false;
-  $('form').on('submit', function(e) {
-    if (formSubmitting) {
-      e.preventDefault();
-      return false;
-    }
-    formSubmitting = true;
-    $(this).find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
-  });
+    // Prevent double submission
+    let formSubmitting = false;
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (formSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        formSubmitting = true;
+        this.querySelectorAll('button[type="submit"]').forEach(function(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        });
+    });
 });
 </script>
+
 {% endblock %}

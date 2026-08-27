@@ -1,8 +1,9 @@
+<!-- templates/emergency/report_list.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 {% load permission_tags %}
 
 {% block title %}Emergency Reports{% endblock %}
-{% block page_title %}Emergency Reports{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
@@ -12,180 +13,853 @@
 
 {% block extra_css %}
 <style>
-  .filter-section {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
+    /* ===== EMERGENCY REPORTS - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-  .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
 
-  .table {
-    min-width: 1200px;
-  }
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
 
-  .action-buttons {
-    white-space: nowrap;
-  }
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
 
-  .action-buttons .btn {
-    margin-right: 4px;
-  }
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .dash-page-header .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn-teal-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-sm:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal-sm i {
+        font-size: 12px;
+    }
+
+    .btn-danger-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-red);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-danger-sm:hover {
+        background: var(--secondary-red-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-danger-sm i {
+        font-size: 12px;
+    }
+
+    .btn-secondary-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-secondary-sm:hover {
+        background: var(--bg-page);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .btn-primary-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-primary-sm:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .filter-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .filter-card .card-body {
+        padding: 18px 24px;
+    }
+
+    .filter-card .form-label {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+        width: 100%;
+        padding: 8px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 40px;
+    }
+
+    .filter-card .form-control:focus,
+    .filter-card .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .filter-card .btn-filter {
+        padding: 8px 14px;
+        min-height: 40px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .filter-card .btn-filter:hover {
+        background: var(--primary-teal-dark);
+    }
+
+    /* Table Card */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .table-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .table-card .card-body {
+        padding: 0;
+    }
+
+    /* Table */
+    .reports-table {
+        width: 100%;
+        margin-bottom: 0;
+        min-width: 1200px;
+    }
+
+    .reports-table thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 12px 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .reports-table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .reports-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .reports-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .reports-table .report-link {
+        color: var(--primary-teal);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .reports-table .report-link:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+
+    .reports-table .location-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reports-table .location-cell .plant {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .reports-table .location-cell .location {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .reports-table .date-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reports-table .date-cell .date {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .reports-table .date-cell .time {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .reports-table .dept-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reports-table .dept-cell .dept {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .reports-table .dept-cell .incident-dept {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    /* Badges */
+    .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-custom.critical { background: var(--secondary-red-light); color: var(--secondary-red); }
+    .badge-custom.high { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.medium { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.low { background: var(--secondary-green-light); color: var(--secondary-green); }
+
+    .badge-custom.open { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-custom.investigation { background: var(--primary-teal-light); color: var(--primary-teal); }
+    .badge-custom.completed { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .badge-custom.closed { background: var(--secondary-green-light); color: var(--secondary-green); }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .action-btn.view:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+    }
+
+    .action-btn.edit:hover {
+        background: var(--secondary-gold-light);
+        border-color: var(--secondary-gold);
+        color: var(--secondary-gold);
+    }
+
+    .action-btn.download:hover {
+        background: var(--secondary-red-light);
+        border-color: var(--secondary-red);
+        color: var(--secondary-red);
+    }
+
+    .action-btn i {
+        font-size: 14px;
+    }
+
+    /* Pagination */
+    .table-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-page);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-footer .page-info {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .table-footer .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 16px;
+        min-height: 36px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .table-footer .page-btn:hover {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+    }
+
+    .table-footer .page-btn.active {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+        cursor: default;
+    }
+
+    .table-footer .page-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .empty-state h5 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .filter-card .btn-filter {
+            margin-top: 4px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-page-header .header-actions {
+            width: 100%;
+        }
+
+        .dash-page-header .header-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .filter-card .card-body {
+            padding: 14px 16px;
+        }
+
+        .filter-card .form-label {
+            font-size: 11px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table-footer {
+            flex-direction: column;
+            padding: 12px 16px;
+        }
+
+        .table-footer .page-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .filter-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .btn-danger-sm {
+            font-size: 12px;
+            padding: 5px 14px;
+            min-height: 30px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+        }
+
+        .action-btn i {
+            font-size: 12px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ehs-card">
-  <div class="card-header">
-    <div class="row align-items-center">
-      <div class="col">
-        <h3 class="card-title mb-0"><i class="fas fa-bell mr-2"></i>All Emergency Reports</h3>
-      </div>
-      <div class="col-auto">
-        <a href="{% url 'emergency:report_create' %}" class="btn btn-danger">
-          <i class="fas fa-plus mr-1"></i>Report Emergency
-        </a>
-      </div>
-    </div>
-  </div>
+<div class="container-fluid" style="padding: 0;">
 
-  <div class="card-body">
-    <div class="filter-section">
-      <form method="get">
-        <div class="row">
-          <div class="col-md-3 mb-3">
-            <label class="small font-weight-bold">Search</label>
-            <input type="text" name="search" class="form-control" placeholder="Report no, title..." value="{{ search_query }}">
-          </div>
-          <div class="col-md-2 mb-3">
-            <label class="small font-weight-bold">Emergency Type</label>
-            <select name="emergency_type" class="form-control">
-              <option value="">All Types</option>
-              {% for value, label in emergency_type_choices %}
-              <option value="{{ value }}" {% if selected_emergency_type == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-2 mb-3">
-            <label class="small font-weight-bold">Severity</label>
-            <select name="severity" class="form-control">
-              <option value="">All Severity</option>
-              {% for value, label in severity_choices %}
-              <option value="{{ value }}" {% if selected_severity == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-2 mb-3">
-            <label class="small font-weight-bold">Plant</label>
-            <select name="plant" class="form-control">
-              <option value="">All Plants</option>
-              {% for plant in plants %}
-              <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3 mb-3">
-            <label class="small font-weight-bold d-block">&nbsp;</label>
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-search mr-1"></i>Filter
-            </button>
-            <a href="{% url 'emergency:report_list' %}" class="btn btn-secondary ml-2">
-              <i class="fas fa-redo mr-1"></i>Reset
-            </a>
-          </div>
-          <div class="col-md-3 mb-2">
-            <label class="small font-weight-bold">Date From</label>
-            <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
-          </div>
-          <div class="col-md-3 mb-2">
-            <label class="small font-weight-bold">Date To</label>
-            <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
-          </div>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div>
+                <h1>Emergency Reports</h1>
+                <p class="subtitle">View and manage all emergency incident reports</p>
+            </div>
         </div>
-      </form>
+        <div class="header-actions">
+            <a href="{% url 'emergency:report_create' %}" class="btn-danger-sm">
+                <i class="fas fa-plus"></i> Report Emergency
+            </a>
+        </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover">
-        <thead class="thead-light">
-          <tr>
-            <th>#</th>
-            <th>Report No.</th>
-            <th>Emergency Title</th>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>Date & Time</th>
-            <th>Plant / Location</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th class="text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for report in reports %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td><a href="{% url 'emergency:report_detail' report.pk %}">{{ report.report_number }}</a></td>
-            <td>{{ report.emergency_title|truncatechars:35 }}</td>
-            <td>{{ report.get_emergency_type_display }}</td>
-            <td><span class="badge {{ report.severity_badge_class }}">{{ report.get_severity_level_display }}</span></td>
-            <td>
-              <div>{{ report.incident_date|date:"d M Y" }}</div>
-              <small class="text-muted">{{ report.incident_time|time:"H:i" }}</small>
-            </td>
-            <td>
-              <div><strong>{{ report.plant.name }}</strong></div>
-              <small class="text-muted">{{ report.location.name }}</small>
-            </td>
-            <td>
-              <div>{{ report.department.name|default:"-" }}</div>
-              <small class="text-muted">Incident: {{ report.incident_department.name|default:"-" }}</small>
-            </td>
-            <td><span class="badge {{ report.status_badge_class }}">{{ report.get_status_display }}</span></td>
-            <td class="text-center action-buttons">
-              {% if request.user|has_perm:'VIEW_EMERGENCY_REPORT' %}
-              <a href="{% url 'emergency:report_detail' report.pk %}" class="btn btn-sm btn-info" title="View">
-                <i class="fas fa-eye"></i>
-              </a>
-              {% endif %}
-              {% if request.user|has_perm:'EDIT_EMERGENCY_REPORT' %}
-              <a href="{% url 'emergency:report_update' report.pk %}" class="btn btn-sm btn-warning" title="Edit">
-                <i class="fas fa-edit"></i>
-              </a>
-              {% endif %}
-              {% if request.user|has_perm:'DOWNLOAD_EMERGENCY_REPORT' %}
-              <a href="{% url 'emergency:report_pdf' report.pk %}" class="btn btn-sm btn-danger" title="Download PDF" target="_blank">
-                <i class="fas fa-file-pdf"></i>
-              </a>
-              {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="10" class="text-center py-5 text-muted">No emergency reports found.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <div class="card-body">
+            <form method="get">
+                <div class="row g-2">
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" placeholder="Report no, title..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Emergency Type</label>
+                        <select name="emergency_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for value, label in emergency_type_choices %}
+                            <option value="{{ value }}" {% if selected_emergency_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Severity</label>
+                        <select name="severity" class="form-select">
+                            <option value="">All Severity</option>
+                            {% for value, label in severity_choices %}
+                            <option value="{{ value }}" {% if selected_severity == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">Plant</label>
+                        <select name="plant" class="form-select">
+                            <option value="">All Plants</option>
+                            {% for plant in plants %}
+                            <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Date From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label">Date To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label">&nbsp;</label>
+                        <a href="{% url 'emergency:report_list' %}" class="btn-secondary-sm" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: white; color: var(--text-secondary); font-weight: 500; font-size: 13px; font-family: 'Inter', sans-serif; text-decoration: none; min-height: 40px; width: 100%; justify-content: center;">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    {% if is_paginated %}
-    <nav class="mt-4">
-      <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-        {% endif %}
-        <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-        {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
-    {% endif %}
-  </div>
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%;">#</th>
+                            <th style="width: 10%;">Report No.</th>
+                            <th style="width: 15%;">Emergency Title</th>
+                            <th style="width: 12%;">Type</th>
+                            <th style="width: 10%;">Severity</th>
+                            <th style="width: 10%;">Date &amp; Time</th>
+                            <th style="width: 12%;">Plant / Location</th>
+                            <th style="width: 12%;">Department</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 10%;" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td data-label="#">{{ forloop.counter }}</td>
+                            <td data-label="Report No.">
+                                <a href="{% url 'emergency:report_detail' report.pk %}" class="report-link">{{ report.report_number }}</a>
+                            </td>
+                            <td data-label="Emergency Title">{{ report.emergency_title|truncatechars:35 }}</td>
+                            <td data-label="Type">{{ report.get_emergency_type_display }}</td>
+                            <td data-label="Severity">
+                                <span class="badge-custom {{ report.severity_badge_class }}">{{ report.get_severity_level_display }}</span>
+                            </td>
+                            <td data-label="Date &amp; Time">
+                                <div class="date-cell">
+                                    <span class="date">{{ report.incident_date|date:"d M Y" }}</span>
+                                    <span class="time">{{ report.incident_time|time:"H:i" }}</span>
+                                </div>
+                            </td>
+                            <td data-label="Plant / Location">
+                                <div class="location-cell">
+                                    <span class="plant">{{ report.plant.name }}</span>
+                                    <span class="location">{{ report.location.name }}</span>
+                                </div>
+                            </td>
+                            <td data-label="Department">
+                                <div class="dept-cell">
+                                    <span class="dept">{{ report.department.name|default:"-" }}</span>
+                                    <span class="incident-dept">Incident: {{ report.incident_department.name|default:"-" }}</span>
+                                </div>
+                            </td>
+                            <td data-label="Status">
+                                <span class="badge-custom {{ report.status_badge_class }}">{{ report.get_status_display }}</span>
+                            </td>
+                            <td data-label="Action" class="text-center">
+                                <div class="action-buttons">
+                                    {% if request.user|has_perm:'VIEW_EMERGENCY_REPORT' %}
+                                    <a href="{% url 'emergency:report_detail' report.pk %}" class="action-btn view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if request.user|has_perm:'EDIT_EMERGENCY_REPORT' %}
+                                    <a href="{% url 'emergency:report_update' report.pk %}" class="action-btn edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if request.user|has_perm:'DOWNLOAD_EMERGENCY_REPORT' %}
+                                    <a href="{% url 'emergency:report_pdf' report.pk %}" class="action-btn download" title="Download PDF" target="_blank">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <i class="fas fa-bell-slash"></i>
+                                    <h5>No Emergency Reports Found</h5>
+                                    <p>Try adjusting your filters or create a new emergency report.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="table-footer">
+                <nav aria-label="Page navigation">
+                    <ul style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin: 0; padding: 0; list-style: none;">
+                        {% if page_obj.has_previous %}
+                        <li>
+                            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <span class="page-btn disabled">
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </span>
+                        </li>
+                        {% endif %}
+
+                        <li>
+                            <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li>
+                            <a class="page-btn" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <span class="page-btn disabled">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}

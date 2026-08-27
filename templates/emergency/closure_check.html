@@ -1,94 +1,695 @@
+<!-- templates/emergency/closure_check.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Emergency Closure Check{% endblock %}
-{% block page_title %}Emergency Closure Check{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:report_detail' report.pk %}">{{ report.report_number }}</a></li>
 <li class="breadcrumb-item active">Closure Check</li>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ===== EMERGENCY CLOSURE CHECK - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Card */
+    .ehs-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+        max-width: 820px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .ehs-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .ehs-card .card-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .ehs-card .card-header h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ehs-card .card-header h3 i {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .ehs-card .card-header.success {
+        background: var(--secondary-green);
+    }
+
+    .ehs-card .card-header.warning {
+        background: var(--secondary-gold);
+    }
+
+    .ehs-card .card-body {
+        padding: 24px 28px;
+    }
+
+    /* Alert Boxes */
+    .alert-info-custom {
+        background: var(--primary-teal-light);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .alert-info-custom strong {
+        color: var(--primary-teal);
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .alert-info-custom .alert-detail {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .alert-info-custom .alert-detail i {
+        color: var(--primary-teal);
+        margin-right: 4px;
+    }
+
+    .alert-status {
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .alert-status i {
+        font-size: 18px;
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    .alert-status.success {
+        background: var(--secondary-green-light);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: var(--secondary-green);
+    }
+
+    .alert-status.danger {
+        background: var(--secondary-red-light);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: var(--secondary-red);
+    }
+
+    .alert-status.danger strong {
+        color: var(--secondary-red);
+    }
+
+    /* Status Grid */
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .status-item {
+        background: var(--bg-page);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.2s;
+    }
+
+    .status-item:hover {
+        border-color: rgba(13, 148, 136, 0.3);
+    }
+
+    .status-item .status-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .status-item .status-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-item .status-value .status-icon {
+        font-size: 14px;
+    }
+
+    .status-item .status-value .status-icon.success {
+        color: var(--secondary-green);
+    }
+
+    .status-item .status-value .status-icon.pending {
+        color: var(--secondary-gold);
+    }
+
+    .status-item .status-value .status-icon.danger {
+        color: var(--secondary-red);
+    }
+
+    .status-item .status-value .status-icon.muted {
+        color: var(--text-muted);
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 20px 0 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: var(--primary-teal);
+    }
+
+    /* CAPA Table */
+    .table-custom {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 13px;
+    }
+
+    .table-custom thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-custom tbody td {
+        padding: 10px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .table-custom tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-custom tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .table-custom .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-status.closed { background: var(--secondary-green-light); color: var(--secondary-green); }
+    .badge-status.in-progress { background: var(--secondary-gold-light); color: var(--secondary-gold); }
+    .badge-status.open { background: var(--primary-teal-light); color: var(--primary-teal); }
+
+    .empty-text {
+        color: var(--text-muted);
+        font-size: 13px;
+        padding: 8px 0;
+    }
+
+    /* Buttons */
+    .btn-success-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 30px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--secondary-green);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-success-teal:hover {
+        background: #15803d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-success-teal i {
+        font-size: 14px;
+    }
+
+    .btn-secondary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 24px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 48px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary-custom i {
+        font-size: 14px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .ehs-card {
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .ehs-card .card-body {
+            padding: 20px 18px;
+        }
+
+        .ehs-card .card-header {
+            padding: 14px 18px;
+        }
+
+        .ehs-card .card-header h3 {
+            font-size: 15px;
+        }
+
+        .status-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-custom thead {
+            display: none;
+        }
+
+        .table-custom tbody tr {
+            display: block;
+            padding: 8px 14px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table-custom tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-custom tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border: none;
+            align-items: center;
+        }
+
+        .table-custom tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .ehs-card .card-body {
+            padding: 16px 14px;
+        }
+
+        .status-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .status-item .status-value {
+            font-size: 14px;
+        }
+
+        .alert-info-custom strong {
+            font-size: 14px;
+        }
+
+        .alert-info-custom .alert-detail {
+            font-size: 12px;
+        }
+
+        .btn-success-teal,
+        .btn-secondary-custom {
+            font-size: 13px;
+            padding: 9px 16px;
+            min-height: 40px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="ehs-card">
-  <div class="card-header {% if can_close %}bg-success{% else %}bg-warning{% endif %}">
-    <h3 class="card-title mb-0 text-white"><i class="fas fa-check-double mr-2"></i>Emergency Closure Verification</h3>
-  </div>
-  <div class="card-body">
-    <div class="alert alert-info">
-      <strong>{{ report.report_number }}</strong> - {{ report.emergency_title }}<br>
-      Incident Department: {{ report.incident_department.name|default:"-" }}<br>
-      Status: {{ report.get_status_display }}
+<div class="container-fluid" style="padding: 0;">
+
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div>
+                <h1>Emergency Closure Check</h1>
+                <p class="subtitle">Verify all requirements are met before closing {{ report.report_number }}</p>
+            </div>
+        </div>
     </div>
 
-    <div class="alert {% if can_close %}alert-success{% else %}alert-danger{% endif %}">
-      {% if can_close %}
-      All required steps are complete. This emergency is ready to close.
-      {% else %}
-      <strong>Closure Blocked:</strong> {{ closure_message }}
-      {% endif %}
+    <!-- Main Card -->
+    <div class="ehs-card">
+        <div class="card-header {% if can_close %}success{% else %}warning{% endif %}">
+            <h3>
+                <i class="fas fa-check-double"></i>
+                Closure Verification
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <!-- Emergency Info -->
+            <div class="alert-info-custom">
+                <strong>{{ report.report_number }} - {{ report.emergency_title }}</strong>
+                <span class="alert-detail">
+                    <i class="fas fa-building"></i> Incident Department: {{ report.incident_department.name|default:"-" }}
+                </span>
+                <span class="alert-detail">
+                    <i class="fas fa-info-circle"></i> Status: {{ report.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Status Alert -->
+            <div class="alert-status {% if can_close %}success{% else %}danger{% endif %}">
+                <i class="fas {% if can_close %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <div>
+                    {% if can_close %}
+                    All required steps are complete. This emergency is ready to close.
+                    {% else %}
+                    <strong>Closure Blocked:</strong> {{ closure_message }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status Grid -->
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">Action Item</span>
+                    <span class="status-value">
+                        {% if action_item %}
+                            {% if action_item.status == 'ACTION_PERFORMED' %}
+                            <span class="status-icon success"><i class="fas fa-check-circle"></i></span>
+                            {{ action_item.get_status_display }}
+                            {% else %}
+                            <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+                            {{ action_item.get_status_display }}
+                            {% endif %}
+                        {% else %}
+                        <span class="status-icon muted"><i class="fas fa-minus-circle"></i></span>
+                        Not required
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Investigation</span>
+                    <span class="status-value">
+                        {% if investigation %}
+                        <span class="status-icon success"><i class="fas fa-check-circle"></i></span>
+                        Completed
+                        {% else %}
+                        <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+                        Pending
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Open CAPAs</span>
+                    <span class="status-value">
+                        {% if report.active_capas.count > 0 %}
+                        <span class="status-icon danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        {{ report.active_capas.count }}
+                        {% else %}
+                        <span class="status-icon success"><i class="fas fa-check-circle"></i></span>
+                        0
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- CAPA Summary -->
+            <div class="section-title">
+                <i class="fas fa-tools"></i>
+                CAPA Summary
+            </div>
+
+            {% if capas %}
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>CAPA No.</th>
+                            <th>Assigned To</th>
+                            <th>Target Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for capa in capas %}
+                        <tr>
+                            <td data-label="CAPA No.">{{ capa.capa_number }}</td>
+                            <td data-label="Assigned To">{{ capa.assigned_to.get_full_name|default:capa.assigned_to.username }}</td>
+                            <td data-label="Target Date">{{ capa.target_date|date:"d M Y" }}</td>
+                            <td data-label="Status">
+                                <span class="badge-status {% if capa.status == 'CLOSED' %}closed{% elif capa.status == 'IN_PROGRESS' %}in-progress{% else %}open{% endif %}">
+                                    {{ capa.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-text">No CAPA created for this emergency.</p>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{% url 'emergency:report_detail' report.pk %}" class="btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i> Back to Report
+                </a>
+                {% if can_close %}
+                <a href="{% url 'emergency:closure_form' report.pk %}" class="btn-success-teal">
+                    <i class="fas fa-check-circle"></i> Proceed to Close Emergency
+                </a>
+                {% else %}
+                <button class="btn-secondary-custom" disabled>
+                    <i class="fas fa-lock"></i> Closure Not Available
+                </button>
+                {% endif %}
+            </div>
+
+        </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Action Item</label>
-        <p class="mb-0">
-          {% if action_item %}
-            {{ action_item.get_status_display }}
-          {% else %}
-            Not required
-          {% endif %}
-        </p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Investigation</label>
-        <p class="mb-0">{% if investigation %}Completed{% else %}Pending{% endif %}</p>
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-muted">Open CAPAs</label>
-        <p class="mb-0">{{ report.active_capas.count }}</p>
-      </div>
-    </div>
-
-    <h5 class="mt-3">CAPA Summary</h5>
-    {% if capas %}
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered">
-        <thead class="thead-light">
-          <tr>
-            <th>CAPA No.</th>
-            <th>Assigned To</th>
-            <th>Target Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for capa in capas %}
-          <tr>
-            <td>{{ capa.capa_number }}</td>
-            <td>{{ capa.assigned_to.get_full_name|default:capa.assigned_to.username }}</td>
-            <td>{{ capa.target_date|date:"d M Y" }}</td>
-            <td>{{ capa.get_status_display }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="text-muted">No CAPA created for this emergency.</p>
-    {% endif %}
-
-    <div class="mt-4">
-      {% if can_close %}
-      <a href="{% url 'emergency:closure_form' report.pk %}" class="btn btn-success">
-        <i class="fas fa-check-circle mr-1"></i>Proceed to Close Emergency
-      </a>
-      {% else %}
-      <button class="btn btn-secondary" disabled>
-        <i class="fas fa-lock mr-1"></i>Closure Not Available
-      </button>
-      {% endif %}
-      <a href="{% url 'emergency:report_detail' report.pk %}" class="btn btn-secondary">Back to Report</a>
-    </div>
-  </div>
 </div>
 {% endblock %}

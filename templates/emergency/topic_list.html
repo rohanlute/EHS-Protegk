@@ -1,122 +1,798 @@
+<!-- templates/emergency/topic_list.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Emergency Topics{% endblock %}
-{% block page_title %}Emergency Topics{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
 <li class="breadcrumb-item active">Manage Topics</li>
 {% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
-.ehs-card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-.table thead th { position: sticky; top: 0; background: #f8f9fa; z-index: 2; }
-.table tbody tr:hover { background: rgba(0,123,255,0.05); }
-.badge { font-size: 0.75rem; padding: 5px 8px; border-radius: 6px; }
-@media(max-width: 768px) {
-  .table thead { display: none; }
-  .table tbody tr { display: block; margin-bottom: 15px; background: #fff; border-radius: 10px; padding: 10px; }
-  .table tbody td { display: flex; justify-content: space-between; padding: 6px 10px; border: none; }
-  .table tbody td::before { content: attr(data-label); font-weight: 600; color: #6c757d; }
-}
+    /* ===== EMERGENCY TOPICS - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .dash-page-header .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal i {
+        font-size: 14px;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .filter-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .filter-card .card-body {
+        padding: 20px 24px;
+    }
+
+    .filter-card .form-label {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+        width: 100%;
+        padding: 9px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        background: white;
+        color: var(--text-primary);
+        min-height: 42px;
+    }
+
+    .filter-card .form-control:focus,
+    .filter-card .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .filter-card .btn-filter {
+        width: 100%;
+        padding: 9px 14px;
+        min-height: 42px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .filter-card .btn-filter:hover {
+        background: var(--primary-teal-dark);
+    }
+
+    /* Table Card */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .table-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .table-card .card-header-custom {
+        padding: 14px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-card .card-header-custom h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .table-card .card-header-custom h3 i {
+        color: var(--primary-teal);
+    }
+
+    .table-card .card-header-custom .topic-count {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .table-card .card-body {
+        padding: 0;
+    }
+
+    /* Table */
+    .topics-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .topics-table thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 12px 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .topics-table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .topics-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .topics-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .topics-table .topic-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .topics-table .topic-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+    }
+
+    /* Badges */
+    .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-code {
+        background: var(--bg-page);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        font-family: 'Inter', monospace;
+    }
+
+    .badge-score {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .badge-mandatory-yes {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .badge-mandatory-no {
+        background: var(--bg-page);
+        color: var(--text-muted);
+    }
+
+    .badge-sessions {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .badge-status-active {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .badge-status-inactive {
+        background: var(--bg-page);
+        color: var(--text-muted);
+    }
+
+    .badge-category {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .action-btn i {
+        font-size: 14px;
+    }
+
+    /* Pagination */
+    .table-footer {
+        padding: 14px 20px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-page);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-footer .page-info {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .table-footer .page-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .table-footer .page-btn:hover {
+        background: var(--primary-teal);
+        border-color: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+    }
+
+    .table-footer .page-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .empty-state h4 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .filter-card .btn-filter {
+            margin-top: 4px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-page-header .header-actions {
+            width: 100%;
+        }
+
+        .dash-page-header .header-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .filter-card .card-body {
+            padding: 16px 18px;
+        }
+
+        .filter-card .form-label {
+            font-size: 11px;
+        }
+
+        .table-card .card-header-custom {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px 16px;
+        }
+
+        .topics-table thead {
+            display: none;
+        }
+
+        .topics-table tbody tr {
+            display: block;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+            background: white;
+        }
+
+        .topics-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .topics-table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border: none;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .topics-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .topics-table tbody td:last-child {
+            justify-content: center;
+        }
+
+        .topics-table tbody td:last-child:before {
+            display: none;
+        }
+
+        .table-footer {
+            flex-direction: column;
+            padding: 12px 16px;
+        }
+
+        .table-footer .page-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .filter-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .topics-table tbody tr {
+            padding: 10px 14px;
+        }
+
+        .topics-table tbody td {
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .badge-custom {
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+        }
+
+        .action-btn i {
+            font-size: 12px;
+        }
+
+        .btn-teal {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+    }
 </style>
+{% endblock %}
 
-<div class="ehs-card mb-3">
-  <div class="card-body py-3">
-    <form method="GET" class="form-row align-items-center">
-      <div class="col-md-4 mb-2">
-        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search topic..." value="{{ search_query }}">
-      </div>
-      <div class="col-md-3 mb-2">
-        <select name="category" class="form-control form-control-sm">
-          <option value="">All Categories</option>
-          {% for val, label in category_choices %}
-          <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-5 mb-2 text-md-right">
-        <button type="submit" class="btn btn-primary btn-sm mr-2">Filter</button>
-        <a href="{% url 'emergency:topic_list' %}" class="btn btn-outline-secondary btn-sm mr-2">Clear</a>
-        <a href="{% url 'emergency:topic_create' %}" class="btn btn-outline-primary btn-sm">+ Add Topic</a>
-      </div>
-    </form>
-  </div>
-</div>
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
 
-<div class="ehs-card">
-  <div class="card-body p-0">
-    {% if topics %}
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Code</th>
-            <th>Category</th>
-            <th>Validity</th>
-            <th>Score</th>
-            <th>Mandatory</th>
-            <th>Sessions</th>
-            <th>Status</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for topic in topics %}
-          <tr>
-            <td data-label="Name">
-              <strong>{{ topic.name }}</strong><br>
-              <small class="text-muted">{{ topic.description|truncatechars:50 }}</small>
-            </td>
-            <td data-label="Code"><span class="badge badge-secondary">{{ topic.code }}</span></td>
-            <td data-label="Category">{{ topic.get_category_display }}</td>
-            <td data-label="Validity">{{ topic.validity_period_days }} days</td>
-            <td data-label="Score"><span class="badge badge-info">{{ topic.passing_score }}%</span></td>
-            <td data-label="Mandatory">
-              {% if topic.is_mandatory %}
-              <span class="badge badge-danger">Yes</span>
-              {% else %}
-              <span class="badge badge-light">No</span>
-              {% endif %}
-            </td>
-            <td data-label="Sessions"><span class="badge badge-primary">{{ topic.session_count }}</span></td>
-            <td data-label="Status">
-              {% if topic.is_active %}
-              <span class="badge badge-success">Active</span>
-              {% else %}
-              <span class="badge badge-secondary">Inactive</span>
-              {% endif %}
-            </td>
-            <td data-label="Actions" class="text-center">
-              <a href="{% url 'emergency:topic_edit' topic.pk %}" class="btn btn-sm btn-outline-primary" title="Edit">
-                <i class="fas fa-edit"></i>
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-broadcast-tower"></i>
+            </div>
+            <div>
+                <h1>Emergency Topics</h1>
+                <p class="subtitle">Manage emergency response training topics and their configurations</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'emergency:topic_create' %}" class="btn-teal">
+                <i class="fas fa-plus"></i> Add Topic
+            </a>
+        </div>
     </div>
-    {% if is_paginated %}
-    <div class="card-footer text-center">
-      {% if page_obj.has_previous %}
-      <a class="btn btn-sm btn-light mr-2" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&category={{ selected_category }}">Prev</a>
-      {% endif %}
-      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-      {% if page_obj.has_next %}
-      <a class="btn btn-sm btn-light ml-2" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&category={{ selected_category }}">Next</a>
-      {% endif %}
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for val, label in category_choices %}
+                        <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="Search topics..." 
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    {% endif %}
-    {% else %}
-    <div class="text-center py-5 text-muted">
-      <i class="fas fa-broadcast-tower fa-3x mb-3"></i>
-      <p>No emergency topics found.</p>
-      <a href="{% url 'emergency:topic_create' %}" class="btn btn-primary">+ Add First Topic</a>
+
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="card-header-custom">
+            <h3>
+                <i class="fas fa-list"></i>
+                Topics
+                <span class="topic-count">({{ topics|length }})</span>
+            </h3>
+        </div>
+
+        <div class="card-body">
+            {% if topics %}
+            <div class="table-responsive">
+                <table class="topics-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Name</th>
+                            <th style="width: 10%;">Code</th>
+                            <th style="width: 12%;">Category</th>
+                            <th style="width: 10%;">Validity</th>
+                            <th style="width: 8%;">Score</th>
+                            <th style="width: 10%;">Mandatory</th>
+                            <th style="width: 8%;">Sessions</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 10%;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for topic in topics %}
+                        <tr>
+                            <td data-label="Name">
+                                <span class="topic-name">{{ topic.name }}</span>
+                                <span class="topic-desc">{{ topic.description|truncatechars:50 }}</span>
+                            </td>
+                            <td data-label="Code">
+                                <span class="badge-custom badge-code">{{ topic.code }}</span>
+                            </td>
+                            <td data-label="Category">
+                                <span class="badge-custom badge-category">{{ topic.get_category_display }}</span>
+                            </td>
+                            <td data-label="Validity">
+                                <span>{{ topic.validity_period_days }} days</span>
+                            </td>
+                            <td data-label="Score">
+                                <span class="badge-custom badge-score">{{ topic.passing_score }}%</span>
+                            </td>
+                            <td data-label="Mandatory">
+                                {% if topic.is_mandatory %}
+                                <span class="badge-custom badge-mandatory-yes">
+                                    <i class="fas fa-check-circle"></i> Yes
+                                </span>
+                                {% else %}
+                                <span class="badge-custom badge-mandatory-no">
+                                    <i class="fas fa-circle"></i> No
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Sessions">
+                                <span class="badge-custom badge-sessions">{{ topic.session_count }}</span>
+                            </td>
+                            <td data-label="Status">
+                                {% if topic.is_active %}
+                                <span class="badge-custom badge-status-active">
+                                    <i class="fas fa-circle" style="font-size: 8px;"></i> Active
+                                </span>
+                                {% else %}
+                                <span class="badge-custom badge-status-inactive">
+                                    <i class="fas fa-circle" style="font-size: 8px;"></i> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Actions" class="text-center">
+                                <a href="{% url 'emergency:topic_edit' topic.pk %}" class="action-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="table-footer">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&category={{ selected_category }}" 
+                   class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Prev
+                </a>
+                {% else %}
+                <span class="page-btn disabled">
+                    <i class="fas fa-chevron-left"></i> Prev
+                </span>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&category={{ selected_category }}" 
+                   class="page-btn">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+                {% else %}
+                <span class="page-btn disabled">
+                    Next <i class="fas fa-chevron-right"></i>
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fas fa-broadcast-tower"></i>
+                <h4>No Emergency Topics Found</h4>
+                <p>Get started by creating your first emergency response training topic.</p>
+                <a href="{% url 'emergency:topic_create' %}" class="btn-teal">
+                    <i class="fas fa-plus"></i> Add First Topic
+                </a>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
-  </div>
+
 </div>
 {% endblock %}

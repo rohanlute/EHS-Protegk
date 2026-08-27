@@ -1,7 +1,8 @@
+<!-- templates/emergency/session_detail.html -->
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}{{ session.session_number }} - Emergency Session Detail{% endblock %}
-{% block page_title %}Emergency Session Detail{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'emergency:home' %}">Emergency Response Management</a></li>
@@ -11,289 +12,904 @@
 
 {% block extra_css %}
 <style>
-.ehs-card { border-radius: 10px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
-.page-header { background: #fff; padding: 12px 18px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.session-hero-header { color: #fff; padding: 1rem 1.25rem; }
-.session-hero-header.status-scheduled { background: linear-gradient(135deg, #0d6efd, #3da5ff); }
-.session-hero-header.status-ongoing { background: linear-gradient(135deg, #17a2b8, #4dd0e1); }
-.session-hero-header.status-completed { background: linear-gradient(135deg, #28a745, #5ecb77); }
-.session-hero-header.status-cancelled { background: linear-gradient(135deg, #dc3545, #f06b78); }
+    /* ===== EMERGENCY SESSION DETAIL - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .dash-page-header .header-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .dash-page-header .header-status.scheduled {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    .dash-page-header .header-status.completed {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .dash-page-header .header-status.cancelled {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .dash-page-header .header-status.in-progress {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    /* Cards */
+    .ehs-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .ehs-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .ehs-card .card-header {
+        padding: 14px 20px;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h5, 
+    .ehs-card .card-header h6 {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ehs-card .card-header h5 i,
+    .ehs-card .card-header h6 i {
+        color: var(--primary-teal);
+    }
+
+    .ehs-card .card-body {
+        padding: 20px 24px;
+    }
+
+    .ehs-card .card-body.p-0 {
+        padding: 0;
+    }
+
+    /* Session Hero Header */
+    .session-hero-header {
+        padding: 20px 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .session-hero-header h4 {
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .session-hero-header h4 i {
+        opacity: 0.9;
+    }
+
+    .session-hero-header .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .session-hero-header.status-scheduled {
+        background: linear-gradient(135deg, var(--secondary-gold), #b45309);
+    }
+
+    .session-hero-header.status-in-progress {
+        background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    }
+
+    .session-hero-header.status-completed {
+        background: linear-gradient(135deg, var(--secondary-green), #15803d);
+    }
+
+    .session-hero-header.status-cancelled {
+        background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
+    }
+
+    /* Detail Tables */
+    .detail-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .detail-table tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .detail-table td {
+        padding: 6px 4px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        vertical-align: top;
+    }
+
+    .detail-table td.label {
+        color: var(--text-muted);
+        font-weight: 500;
+        width: 40%;
+    }
+
+    .detail-table td.value {
+        font-weight: 500;
+        color: var(--text-primary);
+        width: 60%;
+    }
+
+    /* Badges */
+    .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-custom.info {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .badge-custom.success {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .badge-custom.danger {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .badge-custom.warning {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    .badge-custom.secondary {
+        background: var(--bg-page);
+        color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .btn-teal-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-sm:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-teal-sm i {
+        font-size: 12px;
+    }
+
+    .btn-teal-outline-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--primary-teal);
+        background: transparent;
+        color: var(--primary-teal);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-teal-outline-sm:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    .btn-teal-outline-sm i {
+        font-size: 12px;
+    }
+
+    .btn-secondary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--bg-page);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom i {
+        font-size: 12px;
+    }
+
+    .btn-secondary-custom.block {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .btn-secondary-custom.block:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Stats Cards */
+    .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .stat-number.teal {
+        color: var(--primary-teal);
+    }
+
+    .stat-number.success {
+        color: var(--secondary-green);
+    }
+
+    .stat-number.info {
+        color: #3b82f6;
+    }
+
+    /* Tables */
+    .table-custom {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table-custom thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 10px 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-custom tbody td {
+        padding: 10px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .table-custom tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-custom tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    /* Empty State */
+    .empty-state-sm {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-sm i {
+        font-size: 32px;
+        color: var(--border-color);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .empty-state-sm p {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .session-hero-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 14px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-page-header .header-status {
+            align-self: flex-start;
+        }
+
+        .ehs-card .card-body {
+            padding: 16px 18px;
+        }
+
+        .session-hero-header {
+            padding: 16px 18px;
+        }
+
+        .session-hero-header h4 {
+            font-size: 18px;
+        }
+
+        .stat-number {
+            font-size: 22px;
+        }
+
+        .table-custom thead {
+            display: none;
+        }
+
+        .table-custom tbody tr {
+            display: block;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table-custom tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-custom tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border: none;
+            align-items: center;
+        }
+
+        .table-custom tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .detail-table td {
+            padding: 4px 0;
+        }
+
+        .btn-teal-sm,
+        .btn-teal-outline-sm,
+        .btn-secondary-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 16px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+        }
+
+        .session-hero-header h4 {
+            font-size: 16px;
+        }
+
+        .stat-number {
+            font-size: 20px;
+        }
+
+        .ehs-card .card-body {
+            padding: 12px 14px;
+        }
+
+        .table-custom tbody td {
+            font-size: 12px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-  <div class="col-12 d-flex justify-content-between align-items-center page-header">
-    <div>
-      <h5 class="mb-0">Emergency Session Detail</h5>
-      <small class="text-muted">{{ session.session_number }} overview and participant progress</small>
-    </div>
-    <span class="badge badge-light border px-3 py-2">{{ session.get_status_display }}</span>
-  </div>
-</div>
+<div class="container-fluid" style="padding: 0;">
 
-<div class="row mb-3">
-  <div class="col-md-8">
-    <div class="ehs-card">
-      <div class="session-hero-header d-flex justify-content-between align-items-center
-        {% if session.status == 'COMPLETED' %}status-completed
-        {% elif session.status == 'CANCELLED' %}status-cancelled
-        {% elif session.status == 'SCHEDULED' %}status-scheduled
-        {% else %}status-ongoing{% endif %}">
-        <h4 class="card-title mb-0">
-          <i class="fas fa-broadcast-tower mr-2"></i>{{ session.session_number }}
-        </h4>
-        <span class="badge badge-light text-dark">{{ session.get_status_display }}</span>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <table class="table table-sm table-borderless mb-0">
-              <tr>
-                <td class="text-muted" style="width:40%">Topic</td>
-                <td><strong>{{ session.topic.name }}</strong> ({{ session.topic.code }})</td>
-              </tr>
-              <tr>
-                <td class="text-muted">Category</td>
-                <td>{{ session.topic.get_category_display }}</td>
-              </tr>
-              <tr>
-                <td class="text-muted">Drill Type</td>
-                <td><span class="badge badge-info">{{ session.get_drill_type_display }}</span></td>
-              </tr>
-              <tr>
-                <td class="text-muted">Scheduled</td>
-                <td>{{ session.scheduled_date|date:"d M Y" }} at {{ session.scheduled_time|time:"H:i" }}</td>
-              </tr>
-              {% if session.duration_hours %}
-              <tr>
-                <td class="text-muted">Duration</td>
-                <td>{{ session.duration_hours }} hour{{ session.duration_hours|pluralize }}</td>
-              </tr>
-              {% endif %}
-            </table>
-          </div>
-          <div class="col-md-6">
-            <table class="table table-sm table-borderless mb-0">
-              <tr>
-                <td class="text-muted" style="width:40%">Plant</td>
-                <td>{{ session.plant.name }}</td>
-              </tr>
-              <tr>
-                <td class="text-muted">Location</td>
-                <td>
-                  {{ session.location.name }}
-                  {% if session.zone %}<br><small class="text-muted">{{ session.zone.name }}</small>{% endif %}
-                  {% if session.sublocation %}<br><small class="text-muted">{{ session.sublocation.name }}</small>{% endif %}
-                </td>
-              </tr>
-              <tr>
-                <td class="text-muted">Venue</td>
-                <td>{{ session.venue_details|default:"-" }}</td>
-              </tr>
-              <tr>
-                <td class="text-muted">Trainers</td>
-                <td>{{ trainer_count }}</td>
-              </tr>
-              <tr>
-                <td class="text-muted">Max Participants</td>
-                <td>{{ session.max_participants }}</td>
-              </tr>
-            </table>
-          </div>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <h1>{{ session.session_number }}</h1>
+                <p class="subtitle">Emergency session overview and participant progress</p>
+            </div>
         </div>
-
-        {% if session.agenda %}
-        <hr>
-        <strong>Agenda:</strong>
-        <p class="mt-1 text-muted">{{ session.agenda|linebreaksbr }}</p>
-        {% endif %}
-
-        {% if trainers %}
-        <hr>
-        <strong>Trainers:</strong>
-        <div class="mt-2">
-          {% for trainer in trainers %}
-          <div class="mb-2">
-            <div>{{ trainer.display_name }}</div>
-            <small class="text-muted">
-              {% if trainer.display_department %}
-              {{ trainer.display_department.name }}
-              {% else %}
-              Department not assigned
-              {% endif %}
-            </small>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if session.attachment %}
-        <a href="{{ session.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-          <i class="fas fa-file-download mr-1"></i> Download Attachment
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <div class="ehs-card mb-3">
-      <div class="card-header"><h6 class="mb-0"><i class="fas fa-users mr-2"></i>Session Snapshot</h6></div>
-      <div class="card-body text-center">
-        <div class="row">
-          <div class="col-4">
-            <div class="h3 text-primary">{{ participant_count }}</div>
-            <small class="text-muted">Participants</small>
-          </div>
-          <div class="col-4">
-            <div class="h3 text-success">{{ completed_participants.count }}</div>
-            <small class="text-muted">Submitted</small>
-          </div>
-          <div class="col-4">
-            <div class="h3 text-info">{{ trainer_count }}</div>
-            <small class="text-muted">Trainers</small>
-          </div>
-        </div>
-      </div>
+        <span class="header-status 
+            {% if session.status == 'SCHEDULED' %}scheduled
+            {% elif session.status == 'COMPLETED' %}completed
+            {% elif session.status == 'CANCELLED' %}cancelled
+            {% else %}in-progress{% endif %}">
+            <i class="fas fa-circle" style="font-size: 8px;"></i>
+            {{ session.get_status_display }}
+        </span>
     </div>
 
-    <div class="ehs-card">
-      <div class="card-header"><h6 class="mb-0"><i class="fas fa-bolt mr-2"></i>Actions</h6></div>
-      <div class="card-body">
-        {% if session.status != 'CANCELLED' %}
-        <a href="{% url 'emergency:add_participants' session.pk %}" class="btn btn-outline-primary btn-block mb-2">
-          <i class="fas fa-user-plus mr-1"></i> Add Participants
-        </a>
-        {% endif %}
-        <a href="{% url 'emergency:session_list' %}" class="btn btn-outline-secondary btn-block mb-2">
-          <i class="fas fa-list mr-1"></i> All Sessions
-        </a>
-        <a href="{% url 'emergency:my_sessions' %}" class="btn btn-outline-info btn-block">
-          <i class="fas fa-clipboard-list mr-1"></i> My Sessions
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
+    <!-- Main Content -->
+    <div class="row g-3">
 
-<div class="row">
-  <div class="col-12 mb-4">
-    <div class="ehs-card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-user-plus mr-2"></i>Participants</h5>
-        <a href="{% url 'emergency:add_participants' session.pk %}" class="btn btn-sm btn-outline-primary">
-          <i class="fas fa-plus mr-1"></i> Add Participant
-        </a>
-      </div>
-      <div class="card-body p-0">
-        {% if participants %}
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="thead-light">
-              <tr>
-                <th>#</th>
-                <th>Employee</th>
-                <th>Department</th>
-                <th>Assigned Questions</th>
-                <th>Status</th>
-                <th>Submitted On</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for participant in participants %}
-              <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                  <strong>{{ participant.employee.get_full_name }}</strong><br>
-                  <small class="text-muted">{{ participant.employee.employee_id|default:participant.employee.username }}</small>
-                </td>
-                <td>{{ participant.employee.department.name|default:"-" }}</td>
-                <td>{{ participant.question_assignments.count }}</td>
-                <td>
-                  <span class="badge
-                    {% if participant.status == 'APPROVED' %}badge-success
-                    {% elif participant.status == 'REJECTED' %}badge-danger
-                    {% elif participant.status == 'COMPLETED' %}badge-info
-                    {% elif participant.status == 'IN_PROGRESS' %}badge-warning
-                    {% else %}badge-secondary{% endif %}">
-                    {{ participant.get_status_display }}
-                  </span>
-                </td>
-                <td>
-                  {% if participant.has_submission %}
-                    {{ participant.submission.submitted_at|date:"d M Y, H:i" }}
-                  {% else %}
-                    <span class="text-muted">-</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="text-center py-4 text-muted">
-          <i class="fas fa-user-slash fa-2x mb-2"></i>
-          <p>No participants added yet.</p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
+        <!-- Left Column - Session Details -->
+        <div class="col-md-8">
+            <div class="ehs-card">
+                <!-- Hero Header -->
+                <div class="session-hero-header 
+                    {% if session.status == 'COMPLETED' %}status-completed
+                    {% elif session.status == 'CANCELLED' %}status-cancelled
+                    {% elif session.status == 'SCHEDULED' %}status-scheduled
+                    {% else %}status-in-progress{% endif %}">
+                    <h4>
+                        <i class="fas fa-broadcast-tower"></i>
+                        {{ session.session_number }}
+                    </h4>
+                    <span class="hero-badge">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                        {{ session.get_status_display }}
+                    </span>
+                </div>
 
-<div class="row">
-  <div class="col-12 mb-4">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-check-circle mr-2"></i>Completed Session Reviews</h5>
-      </div>
-      <div class="card-body p-0">
-        {% if completed_participants %}
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="thead-light">
-              <tr>
-                <th>Employee</th>
-                <th>Submitted By</th>
-                <th>Score</th>
-                <th>Review Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for participant in completed_participants %}
-              <tr>
-                <td>{{ participant.employee.get_full_name }}</td>
-                <td>{{ participant.submission.submitted_by.get_full_name }}</td>
-                <td>{{ participant.submission.compliance_score|default:0 }}%</td>
-                <td>
-                  <span class="badge
-                    {% if participant.submission.review_status == 'APPROVED' %}badge-success
-                    {% elif participant.submission.review_status == 'REJECTED' %}badge-danger
-                    {% else %}badge-warning{% endif %}">
-                    {{ participant.submission.get_review_status_display }}
-                  </span>
-                </td>
-                <td>
-                  <a href="{% url 'emergency:submission_review' participant.submission.id %}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-eye mr-1"></i> Review
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="detail-table">
+                                <tr>
+                                    <td class="label">Topic</td>
+                                    <td class="value">{{ session.topic.name }} ({{ session.topic.code }})</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Category</td>
+                                    <td class="value">{{ session.topic.get_category_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Drill Type</td>
+                                    <td class="value">
+                                        <span class="badge-custom info">{{ session.get_drill_type_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Scheduled</td>
+                                    <td class="value">{{ session.scheduled_date|date:"d M Y" }} at {{ session.scheduled_time|time:"H:i" }}</td>
+                                </tr>
+                                {% if session.duration_hours %}
+                                <tr>
+                                    <td class="label">Duration</td>
+                                    <td class="value">{{ session.duration_hours }} hour{{ session.duration_hours|pluralize }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="detail-table">
+                                <tr>
+                                    <td class="label">Plant</td>
+                                    <td class="value">{{ session.plant.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Location</td>
+                                    <td class="value">
+                                        {{ session.location.name }}
+                                        {% if session.zone %}<br><span class="text-muted" style="font-size: 12px;">{{ session.zone.name }}</span>{% endif %}
+                                        {% if session.sublocation %}<br><span class="text-muted" style="font-size: 12px;">{{ session.sublocation.name }}</span>{% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Venue</td>
+                                    <td class="value">{{ session.venue_details|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Trainers</td>
+                                    <td class="value">{{ trainer_count }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label">Max Participants</td>
+                                    <td class="value">{{ session.max_participants }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if session.agenda %}
+                    <hr>
+                    <strong style="font-size: 13px; color: var(--text-primary);">Agenda:</strong>
+                    <p class="mt-1 text-muted" style="font-size: 13px;">{{ session.agenda|linebreaksbr }}</p>
+                    {% endif %}
+
+                    {% if trainers %}
+                    <hr>
+                    <strong style="font-size: 13px; color: var(--text-primary);">Trainers:</strong>
+                    <div class="mt-2">
+                        {% for trainer in trainers %}
+                        <div class="mb-2">
+                            <div style="font-weight: 500; color: var(--text-primary);">{{ trainer.display_name }}</div>
+                            <small class="text-muted">
+                                {% if trainer.display_department %}
+                                {{ trainer.display_department.name }}
+                                {% else %}
+                                Department not assigned
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if session.attachment %}
+                    <hr>
+                    <a href="{{ session.attachment.url }}" target="_blank" class="btn-teal-outline-sm">
+                        <i class="fas fa-file-download"></i> Download Attachment
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        {% else %}
-        <div class="text-center py-4 text-muted">
-          <i class="fas fa-clipboard-check fa-2x mb-2"></i>
-          <p class="mb-0">No participant has completed this session yet.</p>
+
+        <!-- Right Column - Stats & Actions -->
+        <div class="col-md-4">
+            <!-- Stats Card -->
+            <div class="ehs-card mb-3">
+                <div class="card-header">
+                    <h6><i class="fas fa-users"></i> Session Snapshot</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="stat-number teal">{{ participant_count }}</div>
+                            <div class="stat-label">Participants</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number success">{{ completed_participants.count }}</div>
+                            <div class="stat-label">Submitted</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number info">{{ trainer_count }}</div>
+                            <div class="stat-label">Trainers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="ehs-card">
+                <div class="card-header">
+                    <h6><i class="fas fa-bolt"></i> Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if session.status != 'CANCELLED' %}
+                    <a href="{% url 'emergency:add_participants' session.pk %}" class="btn-teal-sm block" style="display: flex; justify-content: center; width: 100%; margin-bottom: 8px;">
+                        <i class="fas fa-user-plus"></i> Add Participants
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'emergency:session_list' %}" class="btn-secondary-custom block" style="display: flex; justify-content: center; width: 100%; margin-bottom: 8px;">
+                        <i class="fas fa-list"></i> All Sessions
+                    </a>
+                    <a href="{% url 'emergency:my_sessions' %}" class="btn-secondary-custom block" style="display: flex; justify-content: center; width: 100%;">
+                        <i class="fas fa-clipboard-list"></i> My Sessions
+                    </a>
+                </div>
+            </div>
         </div>
-        {% endif %}
-      </div>
     </div>
-  </div>
+
+    <!-- Participants Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="ehs-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-plus"></i> Participants</h5>
+                    <a href="{% url 'emergency:add_participants' session.pk %}" class="btn-teal-sm">
+                        <i class="fas fa-plus"></i> Add Participant
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if participants %}
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 25%;">Employee</th>
+                                    <th style="width: 20%;">Department</th>
+                                    <th style="width: 15%;">Questions</th>
+                                    <th style="width: 15%;">Status</th>
+                                    <th style="width: 20%;">Submitted On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in participants %}
+                                <tr>
+                                    <td data-label="#">{{ forloop.counter }}</td>
+                                    <td data-label="Employee">
+                                        <strong style="color: var(--text-primary);">{{ participant.employee.get_full_name }}</strong><br>
+                                        <small class="text-muted">{{ participant.employee.employee_id|default:participant.employee.username }}</small>
+                                    </td>
+                                    <td data-label="Department">{{ participant.employee.department.name|default:"-" }}</td>
+                                    <td data-label="Questions">{{ participant.question_assignments.count }}</td>
+                                    <td data-label="Status">
+                                        <span class="badge-custom 
+                                            {% if participant.status == 'APPROVED' %}success
+                                            {% elif participant.status == 'REJECTED' %}danger
+                                            {% elif participant.status == 'COMPLETED' %}info
+                                            {% elif participant.status == 'IN_PROGRESS' %}warning
+                                            {% else %}secondary{% endif %}">
+                                            {{ participant.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Submitted On">
+                                        {% if participant.has_submission %}
+                                            {{ participant.submission.submitted_at|date:"d M Y, H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-sm">
+                        <i class="fas fa-user-slash"></i>
+                        <p>No participants added yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Session Reviews -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="ehs-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-check-circle"></i> Completed Session Reviews</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if completed_participants %}
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Employee</th>
+                                    <th style="width: 20%;">Submitted By</th>
+                                    <th style="width: 15%;">Score</th>
+                                    <th style="width: 20%;">Review Status</th>
+                                    <th style="width: 20%;" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in completed_participants %}
+                                <tr>
+                                    <td data-label="Employee">
+                                        <strong style="color: var(--text-primary);">{{ participant.employee.get_full_name }}</strong>
+                                    </td>
+                                    <td data-label="Submitted By">{{ participant.submission.submitted_by.get_full_name }}</td>
+                                    <td data-label="Score">
+                                        <span class="badge-custom info">{{ participant.submission.compliance_score|default:0 }}%</span>
+                                    </td>
+                                    <td data-label="Review Status">
+                                        <span class="badge-custom 
+                                            {% if participant.submission.review_status == 'APPROVED' %}success
+                                            {% elif participant.submission.review_status == 'REJECTED' %}danger
+                                            {% else %}warning{% endif %}">
+                                            {{ participant.submission.get_review_status_display }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Action" class="text-center">
+                                        <a href="{% url 'emergency:submission_review' participant.submission.id %}" class="btn-teal-sm">
+                                            <i class="fas fa-eye"></i> Review
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-sm">
+                        <i class="fas fa-clipboard-check"></i>
+                        <p>No participant has completed this session yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

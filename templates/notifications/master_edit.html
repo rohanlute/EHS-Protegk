@@ -1,293 +1,1299 @@
+<!-- templates/notifications/notification_master_edit.html -->
 {% extends 'base/base.html' %}
 {% load static %}
 
 {% block title %}Edit Notification Configuration{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'notifications:notification_master_list' %}">Master List</a></li>
+<li class="breadcrumb-item active">Edit Configuration</li>
+{% endblock %}
+
 {% block extra_css %}
 <style>
-    .form-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    } 
+    /* ===== EDIT NOTIFICATION CONFIG - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-    .form-section h5 {
-        margin-bottom: 15px;
-        color: #495057;
-        border-bottom: 2px solid #0d6efd;
-        padding-bottom: 8px;
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
     }
 
-    .module-group {
-        border-radius: 6px;
-        margin-bottom: 15px;
+    .content-wrapper {
+        background: var(--bg-page) !important;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Main Layout */
+    .edit-container {
+        display: flex;
+        gap: 24px;
+    }
+
+    .edit-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .edit-sidebar {
+        width: 300px;
+        flex-shrink: 0;
+    }
+
+    /* Form Card */
+    .dash-form-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
         overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .dash-form-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .dash-form-card .card-header-custom {
+        padding: 16px 24px;
+        background: var(--primary-teal);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dash-form-card .card-header-custom h3 i {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .dash-form-card .card-body-custom {
+        padding: 24px 28px;
+    }
+
+    /* Form Sections */
+    .form-section {
+        background: var(--bg-page);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        transition: border-color 0.2s;
+    }
+
+    .form-section:hover {
+        border-color: rgba(13, 148, 136, 0.25);
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section .section-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 15px;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-section .section-title i {
+        color: var(--primary-teal);
+        width: 20px;
+        font-size: 16px;
+    }
+
+    .form-section .section-desc {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    /* Module Accordion */
+    .module-accordion {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        margin-bottom: 14px;
+        background: white;
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+
+    .module-accordion:hover {
+        border-color: rgba(13, 148, 136, 0.3);
+    }
+
+    .module-accordion:last-child {
+        margin-bottom: 0;
     }
 
     .module-header {
-        background: linear-gradient(45deg, #1e73d8, #1976d2);
-        color: white;
+        background: white;
         padding: 12px 18px;
         cursor: pointer;
-        transition: 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid transparent;
+        transition: all 0.25s ease;
     }
 
     .module-header:hover {
-        opacity: 0.9;
+        background: var(--primary-teal-light);
+    }
+
+    .module-header.active {
+        border-bottom-color: var(--primary-teal);
+        background: var(--primary-teal-light);
+    }
+
+    .module-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .module-header-left .module-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        transition: all 0.25s ease;
+    }
+
+    .module-header.active .module-icon {
+        background: var(--primary-teal);
+        color: white;
+    }
+
+    .module-header-left .module-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .module-header-right .toggle-icon {
+        color: var(--text-muted);
+        font-size: 14px;
+        transition: transform 0.3s ease;
+    }
+
+    .module-header.active .toggle-icon {
+        transform: rotate(180deg);
+        color: var(--primary-teal);
     }
 
     .module-body {
-        padding: 15px;
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.3s ease;
+    }
+
+    .module-body.open {
+        max-height: 800px;
+        padding: 16px 18px;
+    }
+
+    .module-body .event-item {
+        padding: 6px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .module-body .event-item:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .module-body .event-item .event-badge {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--border-color);
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    .module-body .event-item .event-badge.checked {
+        background: var(--primary-teal);
+    }
+
+    /* Custom Radio */
+    .custom-radio {
+        position: relative;
+        display: block;
+        min-height: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .custom-radio-input {
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+    }
+
+    .custom-radio-label {
+        position: relative;
+        margin-bottom: 0;
+        vertical-align: top;
+        cursor: pointer;
+        font-weight: 400;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .custom-radio-label::before {
+        position: absolute;
+        top: 0.15rem;
+        left: -2rem;
+        display: block;
+        width: 1.2rem;
+        height: 1.2rem;
+        pointer-events: none;
+        content: "";
+        background-color: #fff;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .custom-radio-label::after {
+        position: absolute;
+        top: 0.15rem;
+        left: -2rem;
+        display: block;
+        width: 1.2rem;
+        height: 1.2rem;
+        content: "";
+        background: no-repeat 50% / 50% 50%;
+        transition: all 0.2s;
+        border-radius: 50%;
+    }
+
+    .custom-radio-input:checked ~ .custom-radio-label::before {
+        background-color: var(--primary-teal);
+        border-color: var(--primary-teal);
+    }
+
+    .custom-radio-input:checked ~ .custom-radio-label::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3ccircle cx='4' cy='4' r='2.5' fill='%23fff'/%3e%3c/svg%3e");
+    }
+
+    .custom-radio-input:focus ~ .custom-radio-label::before {
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        border-color: var(--primary-teal);
+    }
+
+    /* Form Controls */
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .form-group .form-control,
+    .form-group .form-select {
+        width: 100%;
+        padding: 9px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
         background: white;
-        border: 1px solid #dee2e6;
-        border-top: none;
+        color: var(--text-primary);
+    }
+
+    .form-group .form-control:focus,
+    .form-group .form-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+    }
+
+    .form-group .form-control-lg {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+
+    .form-group .help-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: block;
+        font-weight: 400;
+    }
+
+    /* Settings Grid */
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 24px;
+    }
+
+    .settings-grid .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .settings-grid .form-group {
+        margin-bottom: 0;
+    }
+
+    /* Checkbox */
+    .custom-checkbox {
+        position: relative;
+        display: block;
+        min-height: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .custom-checkbox-input {
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+    }
+
+    .custom-checkbox-label {
+        position: relative;
+        margin-bottom: 0;
+        vertical-align: top;
+        cursor: pointer;
+        font-weight: 400;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .custom-checkbox-label::before {
+        position: absolute;
+        top: 0.15rem;
+        left: -2rem;
+        display: block;
+        width: 1.2rem;
+        height: 1.2rem;
+        pointer-events: none;
+        content: "";
+        background-color: #fff;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .custom-checkbox-label::after {
+        position: absolute;
+        top: 0.15rem;
+        left: -2rem;
+        display: block;
+        width: 1.2rem;
+        height: 1.2rem;
+        content: "";
+        background: no-repeat 50% / 50% 50%;
+        transition: all 0.2s;
+    }
+
+    .custom-checkbox-input:checked ~ .custom-checkbox-label::before {
+        background-color: var(--primary-teal);
+        border-color: var(--primary-teal);
+    }
+
+    .custom-checkbox-input:checked ~ .custom-checkbox-label::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
+    }
+
+    .custom-checkbox-input:focus ~ .custom-checkbox-label::before {
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        border-color: var(--primary-teal);
+    }
+
+    /* Filter Options */
+    .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 28px;
+        padding: 8px 0 2px 0;
+    }
+
+    .filter-options .custom-checkbox {
+        padding-left: 2rem;
+    }
+
+    /* Toggle Row */
+    .toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px 36px;
+        padding: 6px 0 0 0;
+    }
+
+    .toggle-row .custom-checkbox {
+        padding-left: 2rem;
+    }
+
+    .toggle-row .custom-checkbox .custom-checkbox-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 400;
+    }
+
+    .toggle-row .custom-checkbox .custom-checkbox-label .toggle-desc {
+        font-weight: 400;
+        color: var(--text-muted);
+        font-size: 12px;
+        display: block;
+        margin-top: -1px;
+    }
+
+    /* Buttons */
+    .btn-primary-teal {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 28px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--primary-teal);
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-primary-teal:hover {
+        background: var(--primary-teal-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-primary-teal:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-primary-teal i {
+        font-size: 16px;
+    }
+
+    .btn-cancel-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 15px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-cancel-custom:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 8px;
+    }
+
+    /* Info Sidebar */
+    .info-sidebar {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        position: sticky;
+        top: 20px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .info-sidebar .info-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .info-sidebar .info-header h5 {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .info-sidebar .info-header i {
+        color: var(--primary-teal);
+        font-size: 18px;
+    }
+
+    .info-sidebar hr {
+        border-color: var(--border-color);
+        margin: 12px 0;
+    }
+
+    .info-sidebar .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-sidebar .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-sidebar .info-item .info-label {
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .info-sidebar .info-item .info-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .info-sidebar .info-item .info-value.teal {
+        color: var(--primary-teal);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .edit-container {
+            flex-direction: column;
+        }
+
+        .edit-sidebar {
+            width: 100%;
+        }
+
+        .info-sidebar {
+            position: relative;
+            top: 0;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .settings-grid .full-width {
+            grid-column: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-form-card .card-body-custom {
+            padding: 16px 18px;
+        }
+
+        .dash-form-card .card-header-custom {
+            padding: 12px 16px;
+        }
+
+        .dash-form-card .card-header-custom h3 {
+            font-size: 16px;
+        }
+
+        .form-section {
+            padding: 16px 14px;
+        }
+
+        .module-header {
+            padding: 10px 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .module-body.open {
+            padding: 12px 14px;
+        }
+
+        .filter-options {
+            gap: 10px 16px;
+        }
+
+        .toggle-row {
+            gap: 14px 20px;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .form-actions .btn-primary-teal,
+        .form-actions .btn-cancel-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .settings-grid {
+            gap: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .dash-form-card .card-body-custom {
+            padding: 12px 14px;
+        }
+
+        .form-section {
+            padding: 12px 10px;
+        }
+
+        .form-group .form-control,
+        .form-group .form-select {
+            font-size: 13px;
+            padding: 8px 12px;
+        }
+
+        .module-body .event-item .custom-radio-label {
+            font-size: 12px;
+        }
+
+        .info-sidebar {
+            padding: 16px 18px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-<div class="row">
+<div class="container-fluid" style="padding: 0;">
 
-<div class="col-md-9">
-
-<h2 class="mb-3">
-    <i class="fas fa-edit"></i> Edit Notification Configuration
-</h2>
-
-<form method="POST">
-{% csrf_token %}
-
-<div class="form-section">
-    <h5><i class="fas fa-user-tag"></i> Step 1: Select Role</h5>
-
-    <select class="form-control form-control-lg"
-            name="role"
-            required>
-        {% for role in roles %}
-        <option value="{{ role.id }}"
-            {% if role.id == config.role.id %}selected{% endif %}>
-            {{ role.name }}
-        </option>
-        {% endfor %}
-    </select>
-</div>
-
-<div class="form-section">
-<h5><i class="fas fa-list-check"></i> Step 2: Modules & Events</h5>
-
-<input type="hidden" name="module" id="moduleField" value="{{ config.module }}">
-
-<div class="module-group">
-    <div class="module-header" data-bs-toggle="collapse" data-bs-target="#collapseIncident">
-        <i class="fas fa-exclamation-triangle"></i>
-        <strong> Incident Management</strong>
-    </div>
-
-    <div id="collapseIncident"
-         class="collapse {% if config.module == 'INCIDENT' %}show{% endif %}">
-        <div class="module-body">
-            {% for code, name in NOTIFICATION_EVENT_CHOICES %}
-                {% if code|slice:":8" == "INCIDENT" %}
-                <div class="form-check mb-2">
-                    <input class="form-check-input event-radio"
-                           type="radio"
-                           name="notification_event"
-                           value="{{ code }}"
-                           data-module="INCIDENT"
-                           {% if config.notification_event == code %}checked{% endif %}>
-                    <label class="form-check-label">{{ name }}</label>
-                </div>
-                {% endif %}
-            {% endfor %}
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div>
+                <h1>Edit Notification Configuration</h1>
+                <p class="subtitle">Update the notification settings for this role</p>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="module-group">
-    <div class="module-header" data-bs-toggle="collapse" data-bs-target="#collapseHazard">
-        <i class="fas fa-warning"></i>
-        <strong> Hazard / Near Miss</strong>
-    </div>
+    <!-- Main Content -->
+    <div class="edit-container">
 
-    <div id="collapseHazard"
-         class="collapse {% if config.module == 'HAZARD' %}show{% endif %}">
-        <div class="module-body">
-            {% for code, name in NOTIFICATION_EVENT_CHOICES %}
-                {% if code|slice:":6" == "HAZARD" %}
-                <div class="form-check mb-2">
-                    <input class="form-check-input event-radio"
-                           type="radio"
-                           name="notification_event"
-                           value="{{ code }}"
-                           data-module="HAZARD"
-                           {% if config.notification_event == code %}checked{% endif %}>
-                    <label class="form-check-label">{{ name }}</label>
+        <!-- Left: Form -->
+        <div class="edit-main">
+            <div class="dash-form-card">
+                <div class="card-header-custom">
+                    <h3>
+                        <i class="fas fa-sliders-h"></i>
+                        Edit Configuration
+                    </h3>
                 </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-</div>
 
-<div class="module-group">
-    <div class="module-header" data-bs-toggle="collapse" data-bs-target="#collapseEnv">
-        <i class="fas fa-leaf"></i>
-        <strong> Environmental</strong>
-    </div>
+                <div class="card-body-custom">
+                    <form method="POST">
+                        {% csrf_token %}
 
-    <div id="collapseEnv"
-         class="collapse {% if config.module == 'ENVIRONMENTAL' %}show{% endif %}">
-        <div class="module-body">
-            {% for code, name in NOTIFICATION_EVENT_CHOICES %}
-                {% if code|slice:":3" == "ENV" %}
-                <div class="form-check mb-2">
-                    <input class="form-check-input event-radio"
-                           type="radio"
-                           name="notification_event"
-                           value="{{ code }}"
-                           data-module="ENVIRONMENTAL"
-                           {% if config.notification_event == code %}checked{% endif %}>
-                    <label class="form-check-label">{{ name }}</label>
+                        <!-- Step 1: Select Role -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="fas fa-user-tag"></i>
+                                Step 1: Select Role
+                            </div>
+
+                            <div class="form-group">
+                                <label for="role">Role <span class="text-danger">*</span></label>
+                                <select class="form-control form-control-lg" id="role" name="role" required>
+                                    {% for role in roles %}
+                                    <option value="{{ role.id }}" {% if role.id == config.role.id %}selected{% endif %}>
+                                        {{ role.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-text">Select the role that will receive these notifications</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Select Modules and Events -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="fas fa-list-check"></i>
+                                Step 2: Select Module & Notification Event
+                            </div>
+                            <p class="section-desc">Click on a module to expand and select a specific event</p>
+
+                            <input type="hidden" name="module" id="moduleField" value="{{ config.module }}">
+
+                            <!-- Incident Module -->
+                            <div class="module-accordion">
+                                <div class="module-header {% if config.module == 'INCIDENT' %}active{% endif %}" onclick="toggleModule('incident')">
+                                    <div class="module-header-left">
+                                        <div class="module-icon">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </div>
+                                        <span class="module-name">Incident Management</span>
+                                    </div>
+                                    <div class="module-header-right">
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="module-body {% if config.module == 'INCIDENT' %}open{% endif %}" id="body_incident">
+                                    {% for code, name in NOTIFICATION_EVENT_CHOICES %}
+                                        {% if code|slice:":8" == "INCIDENT" %}
+                                        <div class="event-item">
+                                            <span class="event-badge {% if config.notification_event == code %}checked{% endif %}" id="badge_event_{{ code }}"></span>
+                                            <div class="custom-radio">
+                                                <input class="custom-radio-input event-radio"
+                                                       type="radio"
+                                                       name="notification_event"
+                                                       value="{{ code }}"
+                                                       data-module="INCIDENT"
+                                                       id="event_{{ code }}"
+                                                       {% if config.notification_event == code %}checked{% endif %}
+                                                       onchange="updateModuleField(this); updateBadges();">
+                                                <label class="custom-radio-label" for="event_{{ code }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Hazard Module -->
+                            <div class="module-accordion">
+                                <div class="module-header {% if config.module == 'HAZARD' %}active{% endif %}" onclick="toggleModule('hazard')">
+                                    <div class="module-header-left">
+                                        <div class="module-icon">
+                                            <i class="fas fa-warning"></i>
+                                        </div>
+                                        <span class="module-name">Hazard / Near Miss</span>
+                                    </div>
+                                    <div class="module-header-right">
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="module-body {% if config.module == 'HAZARD' %}open{% endif %}" id="body_hazard">
+                                    {% for code, name in NOTIFICATION_EVENT_CHOICES %}
+                                        {% if code|slice:":6" == "HAZARD" %}
+                                        <div class="event-item">
+                                            <span class="event-badge {% if config.notification_event == code %}checked{% endif %}" id="badge_event_{{ code }}"></span>
+                                            <div class="custom-radio">
+                                                <input class="custom-radio-input event-radio"
+                                                       type="radio"
+                                                       name="notification_event"
+                                                       value="{{ code }}"
+                                                       data-module="HAZARD"
+                                                       id="event_{{ code }}"
+                                                       {% if config.notification_event == code %}checked{% endif %}
+                                                       onchange="updateModuleField(this); updateBadges();">
+                                                <label class="custom-radio-label" for="event_{{ code }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Environmental Module -->
+                            <div class="module-accordion">
+                                <div class="module-header {% if config.module == 'ENVIRONMENTAL' %}active{% endif %}" onclick="toggleModule('env')">
+                                    <div class="module-header-left">
+                                        <div class="module-icon">
+                                            <i class="fas fa-leaf"></i>
+                                        </div>
+                                        <span class="module-name">Environmental Data</span>
+                                    </div>
+                                    <div class="module-header-right">
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="module-body {% if config.module == 'ENVIRONMENTAL' %}open{% endif %}" id="body_env">
+                                    {% for code, name in NOTIFICATION_EVENT_CHOICES %}
+                                        {% if code|slice:":3" == "ENV" %}
+                                        <div class="event-item">
+                                            <span class="event-badge {% if config.notification_event == code %}checked{% endif %}" id="badge_event_{{ code }}"></span>
+                                            <div class="custom-radio">
+                                                <input class="custom-radio-input event-radio"
+                                                       type="radio"
+                                                       name="notification_event"
+                                                       value="{{ code }}"
+                                                       data-module="ENVIRONMENTAL"
+                                                       id="event_{{ code }}"
+                                                       {% if config.notification_event == code %}checked{% endif %}
+                                                       onchange="updateModuleField(this); updateBadges();">
+                                                <label class="custom-radio-label" for="event_{{ code }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Inspection Module -->
+                            <div class="module-accordion">
+                                <div class="module-header {% if config.module == 'INSPECTION' %}active{% endif %}" onclick="toggleModule('inspection')">
+                                    <div class="module-header-left">
+                                        <div class="module-icon">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </div>
+                                        <span class="module-name">Inspection Management</span>
+                                    </div>
+                                    <div class="module-header-right">
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="module-body {% if config.module == 'INSPECTION' %}open{% endif %}" id="body_inspection">
+                                    {% for code, name in NOTIFICATION_EVENT_CHOICES %}
+                                        {% if code|slice:":10" == "INSPECTION" %}
+                                        <div class="event-item">
+                                            <span class="event-badge {% if config.notification_event == code %}checked{% endif %}" id="badge_event_{{ code }}"></span>
+                                            <div class="custom-radio">
+                                                <input class="custom-radio-input event-radio"
+                                                       type="radio"
+                                                       name="notification_event"
+                                                       value="{{ code }}"
+                                                       data-module="INSPECTION"
+                                                       id="event_{{ code }}"
+                                                       {% if config.notification_event == code %}checked{% endif %}
+                                                       onchange="updateModuleField(this); updateBadges();">
+                                                <label class="custom-radio-label" for="event_{{ code }}">
+                                                    {{ name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Common Settings -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="fas fa-cog"></i>
+                                Step 3: Common Settings
+                            </div>
+                            <p class="section-desc">These settings apply to the selected event</p>
+
+                            <!-- Reminder Settings -->
+                            <div class="settings-grid">
+                                <div class="form-group">
+                                    <label for="reminder_type">Reminder Type</label>
+                                    <select class="form-control" id="reminder_type" name="reminder_type">
+                                        {% for code, name in REMINDER_TYPE_CHOICES %}
+                                        <option value="{{ code }}" {% if config.reminder_type == code %}selected{% endif %}>
+                                            {{ name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="help-text">How often to send reminders</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="days_before_deadline">Days Before Deadline</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="days_before_deadline" 
+                                           name="days_before_deadline" 
+                                           min="0" 
+                                           value="{{ config.days_before_deadline }}">
+                                    <span class="help-text">Remind X days before the deadline</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="days_after_deadline">Days After Deadline</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="days_after_deadline" 
+                                           name="days_after_deadline" 
+                                           min="0" 
+                                           value="{{ config.days_after_deadline }}">
+                                    <span class="help-text">Remind X days after the deadline</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="reminder_frequency">Reminder Frequency</label>
+                                    <select class="form-control" id="reminder_frequency" name="reminder_frequency">
+                                        <option value="daily" {% if config.reminder_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                                        <option value="weekly" {% if config.reminder_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                                        <option value="biweekly" {% if config.reminder_frequency == 'biweekly' %}selected{% endif %}>Bi-weekly</option>
+                                        <option value="monthly" {% if config.reminder_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                                    </select>
+                                    <span class="help-text">How frequently to send reminders</span>
+                                </div>
+                            </div>
+
+                            <!-- Filter Options -->
+                            <div class="mt-4">
+                                <label style="font-size: 13px; color: var(--text-secondary); font-weight: 600;">Filter Options</label>
+                                <div class="filter-options">
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="filter_by_plant" 
+                                               name="filter_by_plant"
+                                               {% if config.filter_by_plant %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="filter_by_plant">
+                                            Filter by Plant
+                                        </label>
+                                    </div>
+
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="filter_by_location" 
+                                               name="filter_by_location"
+                                               {% if config.filter_by_location %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="filter_by_location">
+                                            Filter by Location
+                                        </label>
+                                    </div>
+
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="filter_by_zone" 
+                                               name="filter_by_zone"
+                                               {% if config.filter_by_zone %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="filter_by_zone">
+                                            Filter by Zone
+                                        </label>
+                                    </div>
+
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="filter_by_department" 
+                                               name="filter_by_department"
+                                               {% if config.filter_by_department %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="filter_by_department">
+                                            Filter by Department
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Toggle Options -->
+                            <div class="mt-3">
+                                <label style="font-size: 13px; color: var(--text-secondary); font-weight: 600;">Notification Settings</label>
+                                <div class="toggle-row">
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="is_active" 
+                                               name="is_active"
+                                               {% if config.is_active %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="is_active">
+                                            Active
+                                            <span class="toggle-desc">Enable this notification configuration</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="email_enabled" 
+                                               name="email_enabled"
+                                               {% if config.email_enabled %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="email_enabled">
+                                            Email Notifications
+                                            <span class="toggle-desc">Send email notifications for selected events</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="custom-checkbox">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox-input" 
+                                               id="in_app_enabled" 
+                                               name="in_app_enabled"
+                                               {% if config.in_app_enabled %}checked{% endif %}>
+                                        <label class="custom-checkbox-label" for="in_app_enabled">
+                                            In-App Notifications
+                                            <span class="toggle-desc">Show in-app notifications for selected events</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-actions">
+                            <a href="{% url 'notifications:notification_master_list' %}" class="btn-cancel-custom">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn-primary-teal">
+                                <i class="fas fa-save"></i> Update Configuration
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
-                {% endif %}
-            {% endfor %}
+            </div>
         </div>
-    </div>
-</div>
 
-<div class="module-group">
-    <div class="module-header" data-bs-toggle="collapse" data-bs-target="#collapseInspection">
-        <i class="fas fa-clipboard-check"></i>
-        <strong> Inspection</strong>
-    </div>
-
-    <div id="collapseInspection"
-         class="collapse {% if config.module == 'INSPECTION' %}show{% endif %}">
-        <div class="module-body">
-            {% for code, name in NOTIFICATION_EVENT_CHOICES %}
-                {% if code|slice:":10" == "INSPECTION" %}
-                <div class="form-check mb-2">
-                    <input class="form-check-input event-radio"
-                           type="radio"
-                           name="notification_event"
-                           value="{{ code }}"
-                           data-module="INSPECTION"
-                           {% if config.notification_event == code %}checked{% endif %}>
-                    <label class="form-check-label">{{ name }}</label>
+        <!-- Right: Info Sidebar -->
+        <div class="edit-sidebar">
+            <div class="info-sidebar">
+                <div class="info-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h5>Configuration Info</h5>
                 </div>
-                {% endif %}
-            {% endfor %}
+                <hr>
+                <div class="info-item">
+                    <span class="info-label">Configuration ID</span>
+                    <span class="info-value teal">#{{ config.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Role</span>
+                    <span class="info-value">{{ config.role.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Module</span>
+                    <span class="info-value">{{ config.get_module_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Event</span>
+                    <span class="info-value">{{ config.get_notification_event_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status</span>
+                    <span class="info-value" style="color: {% if config.is_active %}var(--secondary-green){% else %}var(--text-muted){% endif %};">
+                        {% if config.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value" style="color: {% if config.email_enabled %}var(--secondary-green){% else %}var(--text-muted){% endif %};">
+                        {% if config.email_enabled %}Enabled{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+                <hr>
+                <div style="font-size: 12px; color: var(--text-muted); text-align: center;">
+                    <i class="fas fa-clock"></i> Last updated: {{ config.updated_at|date:"M d, Y H:i" }}
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-</div>
-
-<div class="form-section">
-<h5><i class="fas fa-cog"></i> Step 3: Settings</h5>
-
-<div class="row">
-    <div class="col-md-6">
-        <label>Reminder Type</label>
-        <select name="reminder_type" class="form-control">
-            {% for code, name in REMINDER_TYPE_CHOICES %}
-            <option value="{{ code }}"
-                {% if config.reminder_type == code %}selected{% endif %}>
-                {{ name }}
-            </option>
-            {% endfor %}
-        </select>
     </div>
 
-    <div class="col-md-3">
-        <label>Days Before</label>
-        <input type="number" class="form-control"
-               name="days_before_deadline"
-               value="{{ config.days_before_deadline }}">
-    </div>
-
-    <div class="col-md-3">
-        <label>Days After</label>
-        <input type="number" class="form-control"
-               name="days_after_deadline"
-               value="{{ config.days_after_deadline }}">
-    </div>
 </div>
-
-<hr>
-
-<div class="row">
-    <div class="col-md-4">
-        <input type="checkbox" name="filter_by_plant"
-               {% if config.filter_by_plant %}checked{% endif %}>
-        Filter by Plant
-    </div>
-
-    <div class="col-md-4">
-        <input type="checkbox" name="filter_by_location"
-               {% if config.filter_by_location %}checked{% endif %}>
-        Filter by Location
-    </div>
-
-    <div class="col-md-4">
-        <input type="checkbox" name="filter_by_zone"
-               {% if config.filter_by_zone %}checked{% endif %}>
-        Filter by Zone
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-md-6">
-        <input type="checkbox" name="is_active"
-               {% if config.is_active %}checked{% endif %}>
-        <strong>Active</strong>
-    </div>
-
-    <div class="col-md-6">
-        <input type="checkbox" name="email_enabled"
-               {% if config.email_enabled %}checked{% endif %}>
-        <strong>Email Enabled</strong>
-    </div>
-</div>
-
-</div>
-
-<div class="text-end">
-    <a href="{% url 'notifications:notification_master_list' %}"
-       class="btn btn-secondary">
-        Cancel
-    </a>
-    <button type="submit" class="btn btn-primary">
-        Update Configuration
-    </button>
-</div>
-
-</form>
-</div>
-</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const radios = document.querySelectorAll(".event-radio");
-    const moduleField = document.getElementById("moduleField");
-
-    radios.forEach(radio => {
-        radio.addEventListener("change", function () {
-            moduleField.value = this.dataset.module;
-        });
+// Toggle module body visibility
+function toggleModule(moduleId) {
+    const body = document.getElementById('body_' + moduleId);
+    const header = body.closest('.module-accordion').querySelector('.module-header');
+    const isOpen = body.classList.contains('open');
+    
+    // Close all other modules
+    document.querySelectorAll('.module-body.open').forEach(el => {
+        if (el.id !== 'body_' + moduleId) {
+            el.classList.remove('open');
+            el.closest('.module-accordion').querySelector('.module-header').classList.remove('active');
+        }
     });
-
-    const selected = document.querySelector(".event-radio:checked");
-    if (selected) {
-        moduleField.value = selected.dataset.module;
+    
+    if (isOpen) {
+        body.classList.remove('open');
+        header.classList.remove('active');
+    } else {
+        body.classList.add('open');
+        header.classList.add('active');
     }
+}
+
+// Update module field when radio is selected
+function updateModuleField(radio) {
+    const moduleField = document.getElementById('moduleField');
+    if (moduleField) {
+        moduleField.value = radio.dataset.module;
+    }
+}
+
+// Update badge colors
+function updateBadges() {
+    document.querySelectorAll('.event-badge').forEach(badge => {
+        badge.classList.remove('checked');
+    });
+    document.querySelectorAll('.event-radio:checked').forEach(radio => {
+        const badge = document.getElementById('badge_' + radio.id);
+        if (badge) {
+            badge.classList.add('checked');
+        }
+    });
+}
+
+// Initialize: expand first module if none selected
+document.addEventListener('DOMContentLoaded', function() {
+    // Open the module that has the selected event
+    const selectedRadio = document.querySelector('.event-radio:checked');
+    if (selectedRadio) {
+        const module = selectedRadio.dataset.module.toLowerCase();
+        const body = document.getElementById('body_' + module);
+        if (body && !body.classList.contains('open')) {
+            body.classList.add('open');
+            body.closest('.module-accordion').querySelector('.module-header').classList.add('active');
+        }
+    }
+    
+    updateBadges();
 });
 </script>
 

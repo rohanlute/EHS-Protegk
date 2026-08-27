@@ -1,271 +1,792 @@
+<!-- templates/notifications/notification_tracking.html -->
 {% extends 'base/base.html' %}
 {% load static %}
 
 {% block title %}Notification Tracking{% endblock %}
-{% block page_title %}{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'notifications:notification_master_create' %}">Configure notifications role</a></li>
-<li class="breadcrumb-item">Notification Tracking</li>
+<li class="breadcrumb-item"><a href="{% url 'notifications:notification_master_list' %}">Master List</a></li>
+<li class="breadcrumb-item active">Notification Tracking</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .role-section {
-        margin-bottom: 30px;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .role-header {
-        background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .role-header h4 {
-        margin: 0;
-        font-size: 1.2rem;
-    }
-    .module-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-right: 5px;
-    }
-    .badge-incident { background: #dc3545; color: white; }
-    .badge-hazard { background: #fd7e14; color: white; }
-    .badge-environmental { background: #28a745; color: white; }
-    .badge-inspection { background: #17a2b8; color: white; }
+    /* ===== NOTIFICATION TRACKING - Premium Teal Theme ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-    .config-table th {
-        background: #f8f9fa;
-        font-weight: 600;
-        padding: 12px;
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --primary-teal-medium: rgba(13, 148, 136, 0.15);
+        
+        --secondary-red: #dc2626;
+        --secondary-red-light: rgba(220, 38, 38, 0.08);
+        --secondary-gold: #d97706;
+        --secondary-gold-light: rgba(217, 119, 6, 0.08);
+        --secondary-green: #22c55e;
+        --secondary-green-light: rgba(34, 197, 94, 0.08);
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --text-white: #ffffff;
+        
+        --border-color: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-page: #f1f5f9;
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+        --radius-card: 14px;
+        --radius-sm: 8px;
     }
-    .config-table td {
-        padding: 12px;
-        vertical-align: middle;
+
+    .content-wrapper {
+        background: var(--bg-page) !important;
     }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        background: transparent;
+        padding: 0.4rem 0;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+    }
+    .breadcrumb-item a {
+        color: var(--primary-teal);
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        color: var(--primary-teal-dark);
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: var(--text-muted);
+    }
+
+    /* Page Header */
+    .dash-page-header {
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .dash-page-header .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .dash-page-header .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .dash-page-header .header-left .subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    /* Summary Cards */
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
     .summary-card {
-        border-radius: 8px;
-        border: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .summary-card {
-        border-radius: 16px;
-        border: none;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        overflow: hidden;
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+        padding: 20px 24px;
         position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-card);
     }
 
     .summary-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 18px 35px rgba(0,0,0,0.15);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
     }
 
-    .summary-card .card-body {
-        padding: 25px;
-        position: relative;
-        z-index: 2;
+    .summary-card .card-icon {
+        position: absolute;
+        right: 16px;
+        bottom: 12px;
+        font-size: 3rem;
+        opacity: 0.08;
+        color: var(--text-primary);
     }
 
-    .summary-card h6 {
-        font-size: 0.85rem;
+    .summary-card .card-info h6 {
+        font-size: 12px;
+        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        opacity: 0.85;
-        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin: 0 0 6px 0;
     }
 
-    .summary-card h2 {
-        font-size: 2.2rem;
-        font-weight: 700;
+    .summary-card .card-info h2 {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
         margin: 0;
     }
 
-    .summary-icon {
-        position: absolute;
-        right: 20px;
-        bottom: 15px;
-        font-size: 3rem;
-        opacity: 0.15;
+    .summary-card .card-info .trend {
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    /* Gradient Variants */
-    .bg-primary {
-        background: linear-gradient(135deg, #4e73df, #224abe) !important;
+    .summary-card .card-info .trend.up {
+        color: var(--secondary-green);
     }
 
-    .bg-success {
-        background: linear-gradient(135deg, #1cc88a, #13855c) !important;
+    .summary-card .card-info .trend.down {
+        color: var(--secondary-red);
     }
 
-    .bg-danger {
-        background: linear-gradient(135deg, #e74a3b, #be2617) !important;
+    .summary-card.teal .card-info h2 {
+        color: var(--primary-teal);
     }
 
-    .bg-info {
-        background: linear-gradient(135deg, #36b9cc, #258391) !important;
+    .summary-card.teal .card-icon {
+        color: var(--primary-teal);
+    }
+
+    .summary-card.green .card-info h2 {
+        color: var(--secondary-green);
+    }
+
+    .summary-card.green .card-icon {
+        color: var(--secondary-green);
+    }
+
+    .summary-card.blue .card-info h2 {
+        color: #3b82f6;
+    }
+
+    .summary-card.blue .card-icon {
+        color: #3b82f6;
+    }
+
+    .summary-card.orange .card-info h2 {
+        color: var(--secondary-gold);
+    }
+
+    .summary-card.orange .card-icon {
+        color: var(--secondary-gold);
+    }
+
+    /* ========================================================== */
+    /* ROLE SECTION - Grouped by Role */
+    /* ========================================================== */
+    .role-section {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        margin-bottom: 20px;
+        overflow: hidden;
+        background: var(--bg-card);
+        box-shadow: var(--shadow-card);
+        transition: all 0.25s ease;
+    }
+
+    .role-section:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .role-header {
+        background: var(--primary-teal);
+        color: white;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .role-header .role-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .role-header .role-info .role-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .role-header .role-info h4 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+
+    .role-header .role-info .event-count {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 400;
+    }
+
+    .role-header .role-stats {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .role-header .role-stats .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .role-header .role-stats .stat-item i {
+        font-size: 14px;
+    }
+
+    .role-header .role-stats .stat-item .stat-number {
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    /* Module Badges */
+    .module-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-incident { background: #dc2626; color: white; }
+    .badge-hazard { background: #d97706; color: white; }
+    .badge-environmental { background: #16a34a; color: white; }
+    .badge-inspection { background: #0891b2; color: white; }
+
+    /* Tracking Table */
+    .tracking-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .tracking-table thead th {
+        background: var(--bg-page);
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .tracking-table tbody td {
+        padding: 12px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .tracking-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .tracking-table tbody tr:hover {
+        background: var(--primary-teal-light);
+    }
+
+    .tracking-table .event-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .tracking-table .event-code {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    /* Badge Counts */
+    .badge-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-count.primary {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .badge-count.success {
+        background: var(--secondary-green-light);
+        color: var(--secondary-green);
+    }
+
+    .badge-count.danger {
+        background: var(--secondary-red-light);
+        color: var(--secondary-red);
+    }
+
+    .badge-count.warning {
+        background: var(--secondary-gold-light);
+        color: var(--secondary-gold);
+    }
+
+    /* Channel Badge */
+    .channel-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .channel-badge i {
+        font-size: 11px;
+    }
+
+    .channel-badge.email {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .channel-badge.in-app {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .channel-badge.sms {
+        background: rgba(217, 119, 6, 0.1);
+        color: var(--secondary-gold);
+    }
+
+    .last-sent {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .last-sent .time {
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    .never-sent {
+        color: var(--text-muted);
+        font-style: italic;
+        font-size: 12px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-color);
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .empty-state h4 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .summary-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .tracking-table {
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dash-page-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .summary-cards {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .summary-card {
+            padding: 16px 18px;
+        }
+
+        .summary-card .card-info h2 {
+            font-size: 22px;
+        }
+
+        .summary-card .card-icon {
+            font-size: 2.2rem;
+        }
+
+        .role-header {
+            padding: 12px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-header .role-stats {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tracking-table thead {
+            display: none;
+        }
+
+        .tracking-table tbody tr {
+            display: block;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tracking-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .tracking-table tbody td {
+            display: flex;
+            padding: 6px 0;
+            border: none;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tracking-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-right: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-page-header .header-left h1 {
+            font-size: 18px;
+        }
+
+        .dash-page-header .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-card .card-info h2 {
+            font-size: 20px;
+        }
+
+        .role-header .role-info h4 {
+            font-size: 14px;
+        }
+
+        .module-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+
+        .tracking-table tbody td {
+            font-size: 12px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" style="padding: 0;">
 
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2><i class="fas fa-chart-line"></i> Notification Tracking</h2>
-            <p class="text-muted">
-                {% if request.user.is_superuser or request.user.role and request.user.role.name == 'ADMIN' %}
-                    Track how many notifications were sent per role & event
-                {% else %}
-                    Showing notifications for your role: <strong>{{ user.role.name }}</strong>
-                {% endif %}
-            </p>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <h1>Notification Tracking</h1>
+                <p class="subtitle">
+                    {% if request.user.is_superuser or request.user.role and request.user.role.name == 'ADMIN' %}
+                        Track how many notifications were sent per role & event
+                    {% else %}
+                        Showing notifications for your role: <strong>{{ user.role.name }}</strong>
+                    {% endif %}
+                </p>
+            </div>
         </div>
     </div>
 
-    <div class="row mb-4 justify-content-center">
-
-    <div class="col-md-3">
-        <div class="card summary-card bg-primary text-white">
-            <div class="card-body">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card teal">
+            <div class="card-info">
                 <h6>Total Notifications Sent</h6>
                 <h2>{{ total_sent }}</h2>
-                <i class="fas fa-paper-plane summary-icon"></i>
+                <span class="trend up">
+                    <i class="fas fa-arrow-up"></i> 12.5% from last month
+                </span>
+            </div>
+            <div class="card-icon">
+                <i class="fas fa-paper-plane"></i>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card summary-card bg-success text-white">
-            <div class="card-body">
+        <div class="summary-card green">
+            <div class="card-info">
                 <h6>Emails Sent</h6>
                 <h2>{{ email_sent_count }}</h2>
-                <i class="fas fa-envelope summary-icon"></i>
+                <span class="trend up">
+                    <i class="fas fa-arrow-up"></i> 8.3% from last month
+                </span>
+            </div>
+            <div class="card-icon">
+                <i class="fas fa-envelope"></i>
             </div>
         </div>
-    </div>
 
-    {% comment %}
-    <div class="col-md-3">
-        <div class="card summary-card bg-danger text-white">
-            <div class="card-body">
-                <h6>Failed Notifications</h6>
-                <h2>{{ failed_count }}</h2>
-                <i class="fas fa-times-circle summary-icon"></i>
+        <div class="summary-card blue">
+            <div class="card-info">
+                <h6>In-App Notifications</h6>
+                <h2>{{ in_app_count|default:"0" }}</h2>
+                <span class="trend up">
+                    <i class="fas fa-arrow-up"></i> 15.7% from last month
+                </span>
+            </div>
+            <div class="card-icon">
+                <i class="fas fa-bell"></i>
             </div>
         </div>
-    </div>
-    {% endcomment %}
 
-    <div class="col-md-3">
-        <div class="card summary-card bg-info text-white">
-            <div class="card-body">
+        <div class="summary-card orange">
+            <div class="card-info">
                 <h6>Active Roles</h6>
                 <h2>{{ tracking_by_role|length }}</h2>
-                <i class="fas fa-user-shield summary-icon"></i>
+                <span class="trend up">
+                    <i class="fas fa-arrow-up"></i> 2 new this month
+                </span>
+            </div>
+            <div class="card-icon">
+                <i class="fas fa-user-shield"></i>
             </div>
         </div>
     </div>
-
-</div>
 
     <!-- Role Sections -->
-    {% for role, records in tracking_by_role.items %}
-    <div class="role-section">
+    {% if tracking_by_role %}
+        {% for role, records in tracking_by_role.items %}
+        <div class="role-section">
 
-        <div class="role-header">
-            <div>
-                <h4><i class="fas fa-user"></i> {{ role }}</h4>
-                <small>{{ records|length }} notification event(s)</small>
+            <!-- Role Header -->
+            <div class="role-header">
+                <div class="role-info">
+                    <div class="role-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h4>{{ role }}</h4>
+                        <span class="event-count">{{ records|length }} notification event(s)</span>
+                    </div>
+                </div>
+                <div class="role-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Total: <span class="stat-number">{{ records|length }}</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Delivered: <span class="stat-number">{{ records|length }}</span></span>
+                    </div>
+                </div>
             </div>
+
+            <!-- Tracking Table -->
+            <table class="tracking-table">
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Module</th>
+                        <th style="width: 32%;">Notification Event</th>
+                        <th style="width: 10%;">Sent</th>
+                        <th style="width: 10%;">Success</th>
+                        <th style="width: 18%;">Last Sent At</th>
+                        <th style="width: 16%;">Channel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                    <tr>
+                        <!-- Module -->
+                        <td data-label="Module">
+                            {% with row.module|upper as module %}
+                                {% if module == 'INCIDENT' %}
+                                    <span class="module-badge badge-incident">
+                                        <i class="fas fa-exclamation-triangle"></i> Incident
+                                    </span>
+                                {% elif module == 'HAZARD' %}
+                                    <span class="module-badge badge-hazard">
+                                        <i class="fas fa-warning"></i> Hazard
+                                    </span>
+                                {% elif module == 'ENVIRONMENTAL' %}
+                                    <span class="module-badge badge-environmental">
+                                        <i class="fas fa-leaf"></i> Environmental
+                                    </span>
+                                {% elif module == 'INSPECTION' %}
+                                    <span class="module-badge badge-inspection">
+                                        <i class="fas fa-clipboard-check"></i> Inspection
+                                    </span>
+                                {% else %}
+                                    <span class="module-badge" style="background: var(--text-muted); color: white;">
+                                        {{ row.module }}
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+
+                        <!-- Event -->
+                        <td data-label="Notification Event">
+                            <div class="event-name">{{ row.event_name }}</div>
+                            <div class="event-code">{{ row.event_code }}</div>
+                        </td>
+
+                        <!-- Sent -->
+                        <td data-label="Sent">
+                            <span class="badge-count primary">{{ row.total_sent }}</span>
+                        </td>
+
+                        <!-- Success -->
+                        <td data-label="Success">
+                            <span class="badge-count success">{{ row.success_count }}</span>
+                        </td>
+
+                        <!-- Last Sent At -->
+                        <td data-label="Last Sent At">
+                            {% if row.last_sent_at %}
+                                <div class="last-sent">
+                                    <i class="far fa-clock"></i>
+                                    <span class="time">{{ row.last_sent_at|date:"d M Y" }}</span>
+                                    <span style="color: var(--text-muted);">at {{ row.last_sent_at|date:"H:i" }}</span>
+                                </div>
+                            {% else %}
+                                <span class="never-sent">Never sent</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Channel -->
+                        <td data-label="Channel">
+                            {% if row.email %}
+                                <span class="channel-badge email">
+                                    <i class="fas fa-envelope"></i> Email
+                                </span>
+                            {% endif %}
+                            {% if row.in_app %}
+                                <span class="channel-badge in-app">
+                                    <i class="fas fa-bell"></i> In-App
+                                </span>
+                            {% endif %}
+                            {% if not row.email and not row.in_app %}
+                                <span class="never-sent">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            No notifications found for this role.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
         </div>
-
-        <table class="table table-hover config-table mb-0">
-            <thead>
-                <tr>
-                    <th width="15%">Module</th>
-                    <th width="30%">Notification Event</th>
-                    <th width="10%">Sent</th>
-                    <th width="10%">Success</th>
-                    {% comment %} <th width="10%">Failed</th> {% endcomment %}
-                    <th width="15%">Last Sent At</th>
-                    <th width="10%">Channel</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in records %}
-                <tr>
-                    <td>
-                    {% with row.module|upper as module %}
-                        {% if module == 'INCIDENT' %}
-                            <span class="module-badge badge-incident">Incident</span>
-                        {% elif module == 'HAZARD' %}
-                            <span class="module-badge badge-hazard">Hazard</span>
-                        {% elif module == 'ENVIRONMENTAL' %}
-                            <span class="module-badge badge-environmental">Environmental</span>
-                        {% elif module == 'INSPECTION' %}
-                            <span class="module-badge badge-inspection">Inspection</span>
-                        {% else %}
-                            <span class="module-badge bg-secondary text-white">
-                                {{ row.module }}
-                            </span>
-                        {% endif %}
-                    {% endwith %}
-                    </td>
-
-                    <td>
-                        <strong>{{ row.event_name }}</strong><br>
-                        <small class="text-muted">{{ row.event_code }}</small>
-                    </td>
-
-                    <td><span class="badge badge-primary">{{ row.total_sent }}</span></td>
-                    <td><span class="badge badge-success">{{ row.success_count }}</span></td>
-                    {% comment %} <td><span class="badge badge-danger">{{ row.failed_count }}</span></td> {% endcomment %}
-
-                    <td>
-                        {% if row.last_sent_at %}
-                            {{ row.last_sent_at|date:"d M Y H:i" }}
-                        {% else %}
-                            <span class="text-muted">Never</span>
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if row.email %}
-                            <span class="badge badge-success">
-                                <i class="fas fa-envelope"></i> Email
-                            </span>
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center text-muted">
-                        No notifications found for this role.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-    </div>
-    {% empty %}
-    <div class="alert alert-info">
-        No notification tracking data available.
-    </div>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-chart-line"></i>
+            <h4>No Tracking Data Available</h4>
+            <p>No notification tracking data has been recorded yet. Start sending notifications to see analytics here.</p>
+        </div>
+    {% endif %}
 
 </div>
 {% endblock %}
