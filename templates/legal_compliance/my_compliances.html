@@ -1,626 +1,1131 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}
-My Compliances
-{% endblock %}
-
-{% block page_title %}
-My Compliances
-{% endblock %}
+{% block title %}My Compliances{% endblock %}
 
 {% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Legal Compliance</a></li>
+<li class="breadcrumb-item active">My Compliances</li>
+{% endblock %}
 
-<li class="breadcrumb-item">
-    <a href="{% url 'dashboards:home' %}">
-        Home
-    </a>
-</li>
+{% block extra_css %}
+<style>
+  /* ===== MY COMPLIANCES - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-<li class="breadcrumb-item">
-    <a href="{% url 'legal_compliance:dashboard' %}">
-        Legal Compliance
-    </a>
-</li>
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
 
-<li class="breadcrumb-item active">
-    My Compliances
-</li>
+  body {
+    font-family: 'Inter', sans-serif;
+  }
 
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* STATS CARDS - Full Width                                   */
+  /* ========================================================== */
+  .stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 14px 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .stat-card .stat-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    opacity: 0.12;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Stat Card Variants */
+  .stat-card.teal { border-left: 4px solid var(--primary-teal); }
+  .stat-card.teal .stat-icon { color: var(--primary-teal); }
+
+  .stat-card.blue { border-left: 4px solid var(--secondary-blue); }
+  .stat-card.blue .stat-icon { color: var(--secondary-blue); }
+
+  .stat-card.gold { border-left: 4px solid var(--secondary-gold); }
+  .stat-card.gold .stat-icon { color: var(--secondary-gold); }
+
+  .stat-card.green { border-left: 4px solid var(--secondary-green); }
+  .stat-card.green .stat-icon { color: var(--secondary-green); }
+
+  .stat-card.red { border-left: 4px solid var(--secondary-red); }
+  .stat-card.red .stat-icon { color: var(--secondary-red); }
+
+  /* ========================================================== */
+  /* STATS ROW - Full Width Fix                                 */
+  /* ========================================================== */
+  .stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -6px;
+  }
+
+  .stats-row .stat-col {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding: 0 6px;
+    margin-bottom: 12px;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD - Single Line with Right Button                */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 18px;
+    width: 100%;
+  }
+
+  .filter-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .filter-card .card-body {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-card .filter-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .filter-card .filter-label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .filter-card .filter-label i {
+    color: var(--primary-teal);
+    font-size: 12px;
+  }
+
+  .filter-card .filter-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-card .filter-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 4px 28px 4px 10px;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    height: 30px;
+    min-width: 768px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2364748b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .filter-card .filter-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .filter-card .filter-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 30px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    min-height: 24px;
+    height: 24px;
+  }
+
+  .btn-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn-warning {
+    background: var(--secondary-gold);
+    color: white;
+  }
+
+  .btn-warning:hover {
+    background: #b45309;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b91c1c;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn-info {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-info:hover {
+    background: var(--primary-teal-dark);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn i {
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: var(--primary-teal);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.55rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td strong {
+    color: var(--text-primary);
+  }
+
+  .table .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .badge-info {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+
+  .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--secondary-blue);
+  }
+
+  .badge-sm {
+    font-size: 0.55rem;
+    padding: 1px 6px;
+    margin-bottom: 1px;
+    display: inline-block;
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                 */
+  /* ========================================================== */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .pagination .page-item .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .pagination .page-item .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+    cursor: default;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 3rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .empty-state h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 992px) {
+    .stats-row .stat-col {
+      flex: 0 0 33.333%;
+      max-width: 33.333%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .stats-row .stat-col {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 6px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.2rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.8rem;
+    }
+
+    .filter-card .card-body {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 10px 14px;
+    }
+
+    .filter-card .filter-left {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-card .filter-form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-card .filter-select {
+      min-width: 100%;
+    }
+
+    .filter-card .filter-right {
+      width: 100%;
+    }
+
+    .filter-card .filter-right .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .table {
+      font-size: 0.7rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 10px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      min-width: 90px;
+    }
+
+    .table .table-actions {
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .btn-sm {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      min-height: 20px;
+      height: 20px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.55rem;
+      padding: 1px 6px;
+    }
+
+    .pagination .page-item .page-link {
+      min-width: 28px;
+      height: 28px;
+      font-size: 0.7rem;
+      padding: 0 6px;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 2.5rem;
+    }
+
+    .empty-state h4 {
+      font-size: 0.95rem;
+    }
+
+    .empty-state p {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .stats-row .stat-col {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card {
+      padding: 8px 10px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1rem;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.4rem;
+      right: 8px;
+    }
+
+    .filter-card .card-body {
+      padding: 8px 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 8px 10px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.8rem;
+    }
+
+    .table tbody td {
+      padding: 3px 8px;
+      font-size: 0.65rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.55rem;
+      min-width: 70px;
+    }
+
+    .btn-sm {
+      font-size: 0.6rem;
+      padding: 1px 4px;
+      min-height: 18px;
+      height: 18px;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<!-- STATS -->
+<div class="container-fluid" style="padding: 0;">
 
-<div class="row mb-3">
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-gavel"></i>
+      </div>
+      <div class="header-text">
+        <h1>My Compliances</h1>
+        <p class="subtitle">View and manage your assigned compliance tasks</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="col-md-2">
-
-        <div class="info-box">
-
-            <span class="info-box-icon bg-info">
-
-                <i class="fas fa-list"></i>
-
-            </span>
-
-            <div class="info-box-content">
-
-                <span class="info-box-text">
-                    Total
-                </span>
-
-                <span class="info-box-number">
-
-                    {{ stats.total }}
-
-                </span>
-
-            </div>
-
-        </div>
-
+  <!-- ========================================================== -->
+  <!-- STATS - Full Width                                         -->
+  <!-- ========================================================== -->
+  <div class="stats-row">
+    <div class="stat-col">
+      <div class="stat-card teal">
+        <div class="stat-icon"><i class="fas fa-list"></i></div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
     </div>
 
-    <div class="col-md-2">
-
-        <div class="info-box">
-
-            <span class="info-box-icon bg-primary">
-
-                <i class="fas fa-calendar"></i>
-
-            </span>
-
-            <div class="info-box-content">
-
-                <span class="info-box-text">
-                    Pending
-                </span>
-
-                <span class="info-box-number">
-
-                    {{ stats.pending }}
-
-                </span>
-
-            </div>
-
-        </div>
-
+    <div class="stat-col">
+      <div class="stat-card blue">
+        <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
     </div>
 
-
-    <div class="col-md-2">
-
-        <div class="info-box">
-
-            <span class="info-box-icon bg-warning">
-
-                <i class="fas fa-clock"></i>
-
-            </span>
-
-            <div class="info-box-content">
-
-                <span class="info-box-text">
-                    In Progress
-                </span>
-
-                <span class="info-box-number">
-
-                    {{ stats.in_progress }}
-
-                </span>
-
-            </div>
-
-        </div>
-
+    <div class="stat-col">
+      <div class="stat-card gold">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ stats.in_progress }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
     </div>
 
-
-    <div class="col-md-2">
-
-        <div class="info-box">
-
-            <span class="info-box-icon bg-success">
-
-                <i class="fas fa-check"></i>
-
-            </span>
-
-            <div class="info-box-content">
-
-                <span class="info-box-text">
-                    Submitted
-                </span>
-
-                <span class="info-box-number">
-
-                    {{ stats.submitted }}
-
-                </span>
-
-            </div>
-
-        </div>
-
+    <div class="stat-col">
+      <div class="stat-card green">
+        <div class="stat-icon"><i class="fas fa-check"></i></div>
+        <div class="stat-value">{{ stats.submitted }}</div>
+        <div class="stat-label">Submitted</div>
+      </div>
     </div>
 
-
-    <div class="col-md-2">
-
-        <div class="info-box">
-
-            <span class="info-box-icon bg-danger">
-
-                <i class="fas fa-exclamation-triangle"></i>
-
-            </span>
-
-            <div class="info-box-content">
-
-                <span class="info-box-text">
-                    Overdue
-                </span>
-
-                <span class="info-box-number">
-
-                    {{ stats.overdue }}
-
-                </span>
-
-            </div>
-
-        </div>
-
+    <div class="stat-col">
+      <div class="stat-card red">
+        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-value">{{ stats.overdue }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
     </div>
+  </div>
 
-</div>
-
-
-<!-- FILTERS -->
-
-<div class="card mb-3"
-     style="background: var(--light-blue);">
-
+  <!-- ========================================================== -->
+  <!-- FILTERS - Single Line with Right Button                    -->
+  <!-- ========================================================== -->
+  <div class="filter-card">
     <div class="card-body">
-
-        <form method="get"
-              class="form-inline">
-
-            <label class="mr-2">
-
-                Filter by Status:
-
-            </label>
-
-            <select name="status"
-                    class="form-control mr-2">
-
-                <option value="">
-                    All
-                </option>
-
-                {% for value, label in status_choices %}
-
-                <option value="{{ value }}"
-                    {% if selected_status == value %}
-                        selected
-                    {% endif %}>
-
-                    {{ label }}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-            <button type="submit"
-                    class="btn btn-primary">
-
-                <i class="fas fa-filter"></i>
-
-                Apply
-
-            </button>
-
+      <div class="filter-left">
+        <span class="filter-label">
+          <i class="fas fa-filter"></i> Filter by Status:
+        </span>
+        <form method="get" class="filter-form">
+          <select name="status" class="filter-select">
+            <option value="">All</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
         </form>
-
+      </div>
+      <div class="filter-right">
+        <button type="submit" form="filterForm" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Apply
+        </button>
+        {% if selected_status %}
+          <a href="{% url 'legal_compliance:my_compliances' %}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Clear
+          </a>
+        {% endif %}
+      </div>
     </div>
+  </div>
 
-</div>
+  <!-- Hidden form for the filter button -->
+  <form method="get" id="filterForm" style="display: none;">
+    <input type="hidden" name="status" id="filterStatus" value="{{ selected_status }}">
+  </form>
 
-
-<!-- COMPLIANCE LIST -->
-
-<div class="ehs-card">
-
+  <!-- ========================================================== -->
+  <!-- COMPLIANCE LIST                                            -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
     <div class="card-header">
-
-        <h3 class="card-title">
-
-            <i class="fas fa-gavel"></i>
-
-            My Assigned Compliances
-
-        </h3>
-
+      <h5 class="card-title">
+        <i class="fas fa-gavel"></i> My Assigned Compliances
+      </h5>
     </div>
 
     <div class="card-body">
-
-        {% if page_obj.object_list %}
-
+      {% if page_obj.object_list %}
         <div class="table-responsive">
-
-            <table class="table table-striped table-hover">
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Compliance Code
-                        </th>
-
-                        <th>
-                            Compliance
-                        </th>
-
-                        <th>
-                            Legal Act
-                        </th>
-
-                        <th>
-                            Due Date
-                        </th>
-
-                        <th>
-                            Responsible
-                        </th>
-
-                        <th>
-                            Reviewer
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                        <th>
-                            Actions
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for compliance in page_obj  %}
-
-                    <tr>
-
-                        <td>
-
-                            <strong>
-
-                                {{ compliance.requirement_code }}
-
-                            </strong>
-
-                        </td>
-
-
-                        <td>
-
-                            {{ compliance.title }}   
-
-                        </td>
-
-
-                        <td>
-
-                            {{ compliance.legal_act.short_name }}
-
-                        </td>
-
-
-                        <td>
-
-                            {% if compliance.due_date %}
-
-                                {{ compliance.due_date|date:"d M Y" }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                            {% if compliance.status == 'OVERDUE' %}
-
-                                <br>
-
-                                <span class="badge badge-danger">
-
-                                    Overdue
-
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-                            {% for user in compliance.responsible_person.all %}
-                                <span class="badge badge-info mb-1">
-                                    {{ user.get_full_name }}
-                                </span>
-                            {% empty %}
-                                -
-                            {% endfor %}
-                        </td>
-
-                        <td>
-                            {% for user in compliance.reviewer.all %}
-                                <span class="badge badge-info mb-1">
-                                    {{ user.get_full_name }}
-                                </span>
-                            {% empty %}
-                                -
-                            {% endfor %}
-                        </td>
-
-
-                        <td>
-
-                            {% if request.user in compliance.reviewer.all %}
-
-                                {% if compliance.status == 'SUBMITTED' %}
-
-                                    <span class="badge badge-warning">
-
-                                        Waiting for Approval
-
-                                    </span>
-
-                                {% elif compliance.status == 'COMPLETED' %}
-
-                                    <span class="badge badge-success">
-
-                                        Completed
-
-                                    </span>
-
-                                {% endif %}
-
-                            {% else %}
-
-                                <span class="badge
-
-                                    {% if compliance.status == 'PENDING' %}
-                                        badge-primary
-
-                                    {% elif compliance.status == 'IN_PROGRESS' %}
-                                        badge-warning
-
-                                    {% elif compliance.status == 'SUBMITTED' %}
-                                        badge-success
-
-                                    {% elif compliance.status == 'OVERDUE' %}
-                                        badge-danger
-
-                                    {% elif complinace.status == 'REJECTED' %}
-                                        badge-danger
-
-                                    {% elif compliance.status == 'COMPLETED' %}
-                                        badge-success
-
-                                    {% else %}
-                                        badge-secondary
-                                    {% endif %}
-                                ">
-
-                                    {{ compliance.get_status_display }}
-
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-
-                        <td class="table-actions">
-
-                            <!-- ===================================== -->
-                            <!-- RESPONSIBLE PERSON ACTIONS -->
-                            <!-- ===================================== -->
-
-                            {% if request.user in compliance.responsible_person.all %}
-
-                                {% if compliance.status == 'PENDING' %}
-
-                                <a href="{% url 'legal_compliance:compliance_start' compliance.id %}"
-                                    class="btn btn-sm btn-success"
-                                    title="Start Compliance">
-
-                                    <i class="fas fa-play"></i>
-
-                                    Start
-
-                                </a>
-
-                                {% elif compliance.status == 'IN_PROGRESS' %}
-
-                                <a href="{% url 'legal_compliance:compliance_start' compliance.id %}"
-                                    class="btn btn-sm btn-warning"
-                                    title="Continue Compliance">
-
-                                    <i class="fas fa-edit"></i>
-
-                                    Continue
-
-                                </a>
-
-                                {% elif compliance.status == 'REJECTED' %}
-
-                                <a href="{% url 'legal_compliance:compliance_start' compliance.id %}"
-                                    class="btn btn-sm btn-danger"
-                                    title="Resubmit Compliance">
-
-                                    <i class="fas fa-redo"></i>
-
-                                    Resubmit
-
-                                </a>
-
-                                {% elif compliance.status == 'SUBMITTED' or compliance.status == 'COMPLETED' %}
-
-                                <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}"
-                                    class="btn btn-sm btn-info"
-                                    title="View Compliance">
-
-                                    <i class="fas fa-eye"></i>
-
-                                </a>
-
-                                {% endif %}
-
-                            {% endif %}
-
-
-                            <!-- ===================================== -->
-                            <!-- REVIEWER ACTIONS -->
-                            <!-- ===================================== -->
-
-                            {% if request.user in compliance.reviewer.all %}
-
-                                {% if compliance.status == 'SUBMITTED' %}
-
-                                <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}"
-                                    class="btn btn-sm btn-primary"
-                                    title="Review Compliance">
-
-                                    <i class="fas fa-play"></i>
-
-                                </a>
-
-                                {% elif compliance.status == 'COMPLETED' %}
-
-                                <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}"
-                                    class="btn btn-sm btn-info"
-                                    title="View Compliance">
-
-                                    <i class="fas fa-eye"></i>
-
-                                </a>
-
-                                {% endif %}
-
-                            {% endif %}
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-
-        <!-- PAGINATION -->
-
-        {% if page_obj.has_other_pages %}
-
-        <nav aria-label="Page navigation"
-             class="mt-3">
-
-            <ul class="pagination justify-content-center">
-
-                {% if page_obj.has_previous %}
-
-                <li class="page-item">
-
-                    <a class="page-link"
-                       href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}">
-
-                        <i class="fas fa-chevron-left"></i>
-
-                    </a>
-
-                </li>
-
-                {% endif %}
-
-
-                {% for num in page_obj.paginator.page_range %}
-
-                <li class="page-item
-                    {% if page_obj.number == num %}
-                        active
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Compliance Code</th>
+                <th>Compliance</th>
+                <th>Legal Act</th>
+                <th>Due Date</th>
+                <th>Responsible</th>
+                <th>Reviewer</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for compliance in page_obj %}
+                <tr>
+                  <td data-label="Compliance Code">
+                    <strong>{{ compliance.requirement_code }}</strong>
+                  </td>
+                  <td data-label="Compliance">
+                    {{ compliance.title }}
+                  </td>
+                  <td data-label="Legal Act">
+                    {{ compliance.legal_act.short_name }}
+                  </td>
+                  <td data-label="Due Date">
+                    {% if compliance.due_date %}
+                      {{ compliance.due_date|date:"d M Y" }}
+                    {% else %}
+                      —
                     {% endif %}
-                ">
+                    {% if compliance.status == 'OVERDUE' %}
+                      <br>
+                      <span class="badge badge-danger">Overdue</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="Responsible">
+                    {% for user in compliance.responsible_person.all %}
+                      <span class="badge badge-info badge-sm">{{ user.get_full_name }}</span>
+                    {% empty %}
+                      —
+                    {% endfor %}
+                  </td>
+                  <td data-label="Reviewer">
+                    {% for user in compliance.reviewer.all %}
+                      <span class="badge badge-info badge-sm">{{ user.get_full_name }}</span>
+                    {% empty %}
+                      —
+                    {% endfor %}
+                  </td>
+                  <td data-label="Status">
+                    {% if request.user in compliance.reviewer.all %}
+                      {% if compliance.status == 'SUBMITTED' %}
+                        <span class="badge badge-warning">Waiting for Approval</span>
+                      {% elif compliance.status == 'COMPLETED' %}
+                        <span class="badge badge-success">Completed</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge
+                        {% if compliance.status == 'PENDING' %}
+                          badge-primary
+                        {% elif compliance.status == 'IN_PROGRESS' %}
+                          badge-warning
+                        {% elif compliance.status == 'SUBMITTED' %}
+                          badge-success
+                        {% elif compliance.status == 'OVERDUE' %}
+                          badge-danger
+                        {% elif compliance.status == 'REJECTED' %}
+                          badge-danger
+                        {% elif compliance.status == 'COMPLETED' %}
+                          badge-success
+                        {% else %}
+                          badge-secondary
+                        {% endif %}
+                      ">
+                        {{ compliance.get_status_display }}
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td data-label="Actions" class="table-actions">
+                    <!-- Responsible Person Actions -->
+                    {% if request.user in compliance.responsible_person.all %}
+                      {% if compliance.status == 'PENDING' %}
+                        <a href="{% url 'legal_compliance:compliance_start' compliance.id %}" class="btn btn-sm btn-success" title="Start Compliance">
+                          <i class="fas fa-play"></i> Start
+                        </a>
+                      {% elif compliance.status == 'IN_PROGRESS' %}
+                        <a href="{% url 'legal_compliance:compliance_start' compliance.id %}" class="btn btn-sm btn-warning" title="Continue Compliance">
+                          <i class="fas fa-edit"></i> Continue
+                        </a>
+                      {% elif compliance.status == 'REJECTED' %}
+                        <a href="{% url 'legal_compliance:compliance_start' compliance.id %}" class="btn btn-sm btn-danger" title="Resubmit Compliance">
+                          <i class="fas fa-redo"></i> Resubmit
+                        </a>
+                      {% elif compliance.status == 'SUBMITTED' or compliance.status == 'COMPLETED' %}
+                        <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}" class="btn btn-sm btn-info" title="View Compliance">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      {% endif %}
+                    {% endif %}
 
-                    <a class="page-link"
-                       href="?page={{ num }}&status={{ selected_status }}">
-
-                        {{ num }}
-
-                    </a>
-
-                </li>
-
-                {% endfor %}
-
-
-                {% if page_obj.has_next %}
-
-                <li class="page-item">
-
-                    <a class="page-link"
-                       href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}">
-
-                        <i class="fas fa-chevron-right"></i>
-
-                    </a>
-
-                </li>
-
-                {% endif %}
-
-            </ul>
-
-        </nav>
-
-        {% endif %}
-
-
-        {% else %}
-
-        <div class="text-center py-5">
-
-            <i class="fas fa-gavel fa-4x text-muted mb-3"></i>
-
-            <p class="text-muted">
-
-                No compliances assigned to you yet.
-
-            </p>
-
+                    <!-- Reviewer Actions -->
+                    {% if request.user in compliance.reviewer.all %}
+                      {% if compliance.status == 'SUBMITTED' %}
+                        <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}" class="btn btn-sm btn-primary" title="Review Compliance">
+                          <i class="fas fa-play"></i>
+                        </a>
+                      {% elif compliance.status == 'COMPLETED' %}
+                        <a href="{% url 'legal_compliance:compliance_review' compliance.submissions.first.id %}" class="btn btn-sm btn-info" title="View Compliance">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
 
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+          <nav class="pagination">
+            {% if page_obj.has_previous %}
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              <a class="page-link {% if page_obj.number == num %}active{% endif %}" href="?page={{ num }}&status={{ selected_status }}">
+                {{ num }}
+              </a>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            {% endif %}
+          </nav>
         {% endif %}
 
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-icon"><i class="fas fa-gavel"></i></span>
+          <h4>No Compliances Assigned</h4>
+          <p>You don't have any compliance tasks assigned to you yet.</p>
+        </div>
+      {% endif %}
     </div>
+  </div>
 
 </div>
 
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Update hidden input when dropdown changes
+  const select = document.querySelector('.filter-select');
+  const hiddenInput = document.getElementById('filterStatus');
+  const applyBtn = document.querySelector('.filter-right .btn-primary');
+  
+  if (select && applyBtn) {
+    // Set initial value
+    if (hiddenInput) {
+      hiddenInput.value = select.value;
+    }
+    
+    // Update hidden input on change
+    select.addEventListener('change', function() {
+      if (hiddenInput) {
+        hiddenInput.value = this.value;
+      }
+    });
+  }
+});
+</script>

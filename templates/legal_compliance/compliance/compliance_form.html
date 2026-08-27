@@ -1,717 +1,1023 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Compliance Requirement{% else %}Create Compliance Requirement{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'legal_compliance:dashboard' %}">Compliance</a></li>
 <li class="breadcrumb-item"><a href="{% url 'legal_compliance:compliance_list' %}">Schedules</a></li>
-<li class="breadcrumb-item active">{{ action }}</li>
+<li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Create{% endif %}</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+  /* ===== COMPLIANCE REQUIREMENT FORM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                              */
+  /* ========================================================== */
+  .form-section {
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .form-section .section-title {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section .section-title i {
+    color: var(--primary-teal);
+  }
+
+  .form-section .section-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .required-mark {
+    color: var(--secondary-red);
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  .form-error {
+    color: var(--secondary-red) !important;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 36px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .form-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GRID                                              */
+  /* ========================================================== */
   .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
+    gap: 8px;
     max-height: 350px;
     overflow-y: auto;
-    border: 1px solid #dee2e6;
-    padding: 15px;
-    border-radius: 5px;
-    background: #f8f9fa;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: white;
+  }
+
+  .checkbox-grid::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .checkbox-grid::-webkit-scrollbar-track {
+    background: var(--bg-page);
+  }
+
+  .checkbox-grid::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 4px;
   }
 
   .checkbox-item {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
+    gap: 10px;
+    padding: 6px 10px;
     background: white;
     border-radius: 4px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.2s ease;
   }
 
   .checkbox-item:hover {
-    background: #e7f3ff;
-    border-color: #b8d4f0;
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
   }
 
   .checkbox-item input[type="checkbox"] {
-    margin-right: 10px;
     width: 16px;
     height: 16px;
+    accent-color: var(--primary-teal);
     cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
   }
 
   .checkbox-item label {
     margin: 0;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
   }
 
-  .select-all-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #e9ecef;
-    border-radius: 5px;
+  .checkbox-item label strong {
+    color: var(--text-primary);
   }
 
   .group-header {
     grid-column: 1 / -1;
-    background: #d1ecf1;
-    padding: 7px 12px;
+    background: var(--primary-teal-light);
+    padding: 6px 12px;
     font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--primary-teal);
     border-radius: 4px;
-    font-size: 0.85rem;
-    color: #0c5460;
-    border-left: 3px solid #17a2b8;
+    border-left: 3px solid var(--primary-teal);
+  }
+
+  .group-header i {
+    margin-right: 6px;
   }
 
   .section-label {
     font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .badge-count {
-    background: #007bff;
+    background: var(--primary-teal);
     color: white;
     border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    padding: 1px 8px;
+    font-size: 0.7rem;
     font-weight: 600;
   }
 
   .loading-text {
-    color: #6c757d;
+    color: var(--text-muted);
     font-style: italic;
     padding: 10px;
     grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.82rem;
   }
 
-  .auto-schedule-section {
-    background: #f0f7ff;
-    border: 1px solid #b8d4f0;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 10px;
+  .loading-text.text-danger {
+    color: var(--secondary-red) !important;
   }
 
-  .offset-section {
-    display: none;
-    margin-top: 15px;
+  /* ========================================================== */
+  /* SELECT ALL BAR                                             */
+  /* ========================================================== */
+  .select-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-outline-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--primary-teal);
+    background: transparent;
+    color: var(--primary-teal);
+    font-weight: 600;
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-outline-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* CHECKBOXES (Regular)                                       */
+  /* ========================================================== */
+  .form-check {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 10px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .form-check:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .form-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    margin: 0;
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+  }
+
+  .form-check .form-check-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin: 0;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .form-section .section-body {
+      padding: 10px 12px;
+    }
+
+    .form-section .section-title {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 10px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .checkbox-grid {
+      grid-template-columns: 1fr;
+      max-height: 250px;
+      padding: 8px;
+    }
+
+    .select-all-bar {
+      flex-wrap: wrap;
+    }
+
+    .form-check {
+      padding: 4px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .form-section .section-body {
+      padding: 8px 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 10px;
+    }
+
+    .checkbox-grid {
+      max-height: 200px;
+      padding: 6px;
+    }
+
+    .checkbox-item {
+      padding: 4px 8px;
+    }
+
+    .checkbox-item label {
+      font-size: 0.75rem;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-11 mx-auto">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-calendar-plus"></i> {{ title }}
-        </h3>
-      </div>
-      <div class="card-body">
-        <form method="POST" id="complianceForm">
 
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-md-11 mx-auto">
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-calendar-plus"></i> {% if form.instance.pk %}Edit Compliance Requirement{% else %}Create Compliance Requirement{% endif %}
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" id="complianceForm">
             {% csrf_token %}
 
-            <!-- BASIC INFORMATION -->
-
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle"></i>
-                        Basic Information
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="row">
-
-                        <div class="col-md-8">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Compliance Title
-                                    <span class="text-danger">*</span>
-                                </label>
-
-                                {{ form.title }}
-
-                                {% if form.title.errors %}
-                                <div class="text-danger small">
-                                    {{ form.title.errors }}
-                                </div>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Legal Act
-                                    <span class="text-danger">*</span>
-                                </label>
-
-                                {{ form.legal_act }}
-
-                                {% if form.legal_act.errors %}
-                                <div class="text-danger small">
-                                    {{ form.legal_act.errors }}
-                                </div>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
+            <!-- ========================================================== -->
+            <!-- BASIC INFORMATION                                           -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-info-circle"></i> Basic Information
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-8">
                     <div class="form-group">
+                      <label class="field-label">Compliance Title <span class="required-mark">*</span></label>
+                      {{ form.title }}
+                      {% if form.title.errors %}
+                        <div class="form-error">{{ form.title.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="field-label">Legal Act <span class="required-mark">*</span></label>
+                      {{ form.legal_act }}
+                      {% if form.legal_act.errors %}
+                        <div class="form-error">{{ form.legal_act.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
 
-                        <label>Description</label>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="field-label">Description</label>
+                  {{ form.description }}
+                  {% if form.description.errors %}
+                    <div class="form-error">{{ form.description.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
 
-                        {{ form.description }}
+            <!-- ========================================================== -->
+            <!-- APPLICABLE PLANTS                                           -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-industry"></i> Applicable Plants
+              </div>
+              <div class="section-body">
+                <div class="section-label">
+                  <span class="field-label">Plants <span class="required-mark">*</span></span>
+                  <span class="badge-count" id="plantCount">0</span>
+                </div>
+                <span class="form-text">Select one or more plants</span>
 
-                        {% if form.description.errors %}
-                        <div class="text-danger small">
-                            {{ form.description.errors }}
-                        </div>
+                <div class="select-all-bar">
+                  <button type="button" class="btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
+                    <i class="fas fa-check-square"></i> Select All
+                  </button>
+                  <button type="button" class="btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount)">
+                    <i class="fas fa-square"></i> Deselect All
+                  </button>
+                </div>
+
+                <div class="checkbox-grid" id="plantsGrid">
+                  {% for plant in form.applicable_plants.field.queryset %}
+                    <div class="checkbox-item">
+                      <input type="checkbox"
+                        name="applicable_plants"
+                        value="{{ plant.id }}"
+                        id="plant_{{ plant.id }}"
+                        class="plant-checkbox"
+                        {% if plant in form.instance.applicable_plants.all %}checked{% endif %}>
+                      <label for="plant_{{ plant.id }}">
+                        <strong>{{ plant.name }}</strong>
+                        {% if plant.code %}
+                          <span class="text-muted">({{ plant.code }})</span>
                         {% endif %}
-
+                      </label>
                     </div>
-
+                  {% endfor %}
                 </div>
-
+              </div>
             </div>
 
-            <!-- PLANTS -->
+            <!-- ========================================================== -->
+            <!-- RESPONSIBLE PERSON                                          -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-users"></i> Responsible Person
+              </div>
+              <div class="section-body">
+                <div class="section-label">
+                  <span class="field-label">HOD / Safety Manager <span class="required-mark">*</span></span>
+                  <span class="badge-count" id="userCount">0</span>
+                </div>
+                <span class="form-text">Select plants first — only related HODs and Safety Managers will appear</span>
 
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-industry"></i>
-                        Applicable Plants
-                    </h5>
-
+                <div class="select-all-bar" id="userSelectBar" style="display:none;">
+                  <button type="button" class="btn-outline-primary" onclick="selectAll('user-checkbox', updateUserCount)">
+                    <i class="fas fa-check-square"></i> Select All
+                  </button>
+                  <button type="button" class="btn-outline-secondary" onclick="deselectAll('user-checkbox', updateUserCount)">
+                    <i class="fas fa-square"></i> Deselect All
+                  </button>
                 </div>
 
-                <div class="card-body">
-
-                    <div class="section-label">
-
-                        <span>
-                            Plants
-                            <span class="text-danger">*</span>
-                        </span>
-
-                        <span class="badge-count" id="plantCount">0</span>
-
-                    </div>
-
-                    <small class="form-text text-muted mb-2 d-block">
-                        Select one or more plants
-                    </small>
-
-                    <div class="select-all-bar">
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                onclick="selectAll('plant-checkbox', updatePlantCount)">
-
-                            <i class="fas fa-check-square mr-1"></i>
-                            Select All
-
-                        </button>
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
-                                onclick="deselectAll('plant-checkbox', updatePlantCount)">
-
-                            <i class="fas fa-square mr-1"></i>
-                            Deselect All
-
-                        </button>
-
-                    </div>
-
-                    <div class="checkbox-grid" id="plantsGrid">
-
-                        {% for plant in form.applicable_plants.field.queryset %}
-
-                        <div class="checkbox-item">
-
-                            <input type="checkbox"
-                                name="applicable_plants"
-                                value="{{ plant.id }}"
-                                id="plant_{{ plant.id }}"
-                                class="plant-checkbox"
-
-                                {% if plant in form.instance.applicable_plants.all %}
-                                checked
-                                {% endif %}
-                            >
-
-                            <label for="plant_{{ plant.id }}">
-
-                                <strong>{{ plant.name }}</strong>
-
-                                {% if plant.code %}
-                                <small class="text-muted">
-                                    ({{ plant.code }})
-                                </small>
-                                {% endif %}
-
-                            </label>
-
-                        </div>
-
-                        {% endfor %}
-
-                    </div>
-
+                <div class="checkbox-grid" id="usersGrid">
+                  <div class="loading-text">Please select plants first</div>
                 </div>
-
+              </div>
             </div>
 
-            <!-- RESPONSIBILITY -->
+            <!-- ========================================================== -->
+            <!-- REVIEWERS                                                  -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-user-check"></i> Reviewers
+              </div>
+              <div class="section-body">
+                <div class="section-label">
+                  <span class="field-label">EHS Department Reviewers</span>
+                  <span class="badge-count" id="reviewerCount">0</span>
+                </div>
+                <span class="form-text">Only EHS department users are shown</span>
 
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-users"></i>
-                        Responsible Person
-                    </h5>
-
+                <div class="select-all-bar">
+                  <button type="button" class="btn-outline-primary" onclick="selectAll('reviewer-checkbox', updateReviewerCount)">
+                    <i class="fas fa-check-square"></i> Select All
+                  </button>
+                  <button type="button" class="btn-outline-secondary" onclick="deselectAll('reviewer-checkbox', updateReviewerCount)">
+                    <i class="fas fa-square"></i> Deselect All
+                  </button>
                 </div>
 
-                <div class="card-body">
-
-                    <div class="section-label">
-
-                        <span>
-                            HOD / Safety Manager
-                            <span class="text-danger">*</span>
-                        </span>
-
-                        <span class="badge-count" id="userCount">0</span>
-
-                    </div>
-
-                    <small class="form-text text-muted mb-2 d-block">
-
-                        Select plants first —
-                        only related HODs and Safety Managers will appear
-
-                    </small>
-
-                    <div class="select-all-bar"
-                        id="userSelectBar"
-                        style="display:none;">
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                onclick="selectAll('user-checkbox', updateUserCount)">
-
-                            <i class="fas fa-check-square mr-1"></i>
-                            Select All
-
-                        </button>
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
-                                onclick="deselectAll('user-checkbox', updateUserCount)">
-
-                            <i class="fas fa-square mr-1"></i>
-                            Deselect All
-
-                        </button>
-
-                    </div>
-
-                    <div class="checkbox-grid" id="usersGrid">
-
-                        <div class="loading-text">
-
-                            Please select plants first
-
-                        </div>
-
-                    </div>
-
+                <div class="checkbox-grid" id="reviewersGrid">
+                  <div class="loading-text">Loading EHS reviewers...</div>
                 </div>
-
+              </div>
             </div>
 
-            <!-- REVIEWERS -->
-
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-check"></i>
-                        Reviewers
-                    </h5>
-
+            <!-- ========================================================== -->
+            <!-- COMPLIANCE CONFIGURATION                                   -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-cogs"></i> Compliance Configuration
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="field-label">Scheduled Date</label>
+                      {{ form.scheduled_date }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="field-label">Due Date</label>
+                      {{ form.due_date }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="field-label">Frequency</label>
+                      {{ form.frequency }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Criticality</label>
+                      {{ form.criticality }}
+                    </div>
+                  </div>
                 </div>
-
-                <div class="card-body">
-
-                    <div class="section-label">
-
-                        <span>
-                            EHS Department Reviewers
-                        </span>
-
-                        <span class="badge-count" id="reviewerCount">0</span>
-
-                    </div>
-
-                    <small class="form-text text-muted mb-2 d-block">
-
-                        Only EHS department users are shown
-
-                    </small>
-
-                    <div class="select-all-bar">
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                onclick="selectAll('reviewer-checkbox', updateReviewerCount)">
-
-                            <i class="fas fa-check-square mr-1"></i>
-                            Select All
-
-                        </button>
-
-                        <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
-                                onclick="deselectAll('reviewer-checkbox', updateReviewerCount)">
-
-                            <i class="fas fa-square mr-1"></i>
-                            Deselect All
-
-                        </button>
-
-                    </div>
-
-                    <div class="checkbox-grid" id="reviewersGrid">
-
-                        <div class="loading-text">
-
-                            Loading EHS reviewers...
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+              </div>
             </div>
 
-            <!-- CONFIGURATION -->
-
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-cogs"></i>
-                        Compliance Configuration
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="row">
-                        <div class="col-md-3">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Scheduled Date
-                                </label>
-
-                                {{ form.scheduled_date }}
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Due Date
-                                </label>
-
-                                {{ form.due_date }}
-
-                            </div>
-
-                        </div>
-                        <div class="col-md-3">
-
-                            <div class="form-group">
-
-                                <label>Frequency</label>
-
-                                {{ form.frequency }}
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="form-group">
-
-                                <label>Criticality</label>
-
-                                {{ form.criticality }}
-
-                            </div>
-
-                        </div>
+            <!-- ========================================================== -->
+            <!-- WORKFLOW CONFIGURATION                                     -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-project-diagram"></i> Workflow Configuration
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="field-label">Due Days Before</label>
+                      {{ form.due_days_before }}
                     </div>
-
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="field-label">Reminder Days</label>
+                      {{ form.reminder_days }}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Escalation Days</label>
+                      {{ form.escalation_days }}
+                    </div>
+                  </div>
                 </div>
 
+                <div class="row" style="margin-top: 12px;">
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      {{ form.evidence_required }}
+                      <label class="form-check-label">Evidence Required</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      {{ form.requires_approval }}
+                      <label class="form-check-label">Requires Approval</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check" style="margin-bottom: 0;">
+                      {{ form.is_active }}
+                      <label class="form-check-label">Active Compliance</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- WORKFLOW -->
-
-            <div class="card mb-4">
-
-                <div class="card-header bg-light">
-
-                    <h5 class="mb-0">
-                        <i class="fas fa-project-diagram"></i>
-                        Workflow Configuration
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="row mb-4">
-
-                        <div class="col-md-4">
-
-                            <div class="form-group">
-
-                                <label>Due Days Before</label>
-
-                                {{ form.due_days_before }}
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="form-group">
-
-                                <label>Reminder Days</label>
-
-                                {{ form.reminder_days }}
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="form-group">
-
-                                <label>Escalation Days</label>
-
-                                {{ form.escalation_days }}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-md-4">
-
-                            <div class="form-check">
-
-                                {{ form.evidence_required }}
-
-                                <label class="form-check-label">
-                                    Evidence Required
-                                </label>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="form-check">
-
-                                {{ form.requires_approval }}
-
-                                <label class="form-check-label">
-                                    Requires Approval
-                                </label>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="form-check">
-
-                                {{ form.is_active }}
-
-                                <label class="form-check-label">
-                                    Active Compliance
-                                </label>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+            <!-- ========================================================== -->
+            <!-- ACTION BUTTONS                                              -->
+            <!-- ========================================================== -->
+            <div class="form-actions">
+              <a href="{% url 'legal_compliance:compliance_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save"></i>
+                {% if form.instance.pk %}
+                  Update Compliance
+                {% else %}
+                  Create Compliance
+                {% endif %}
+              </button>
             </div>
 
-
-            <!-- ACTIONS -->
-
-            <div class="d-flex justify-content-between">
-
-                <a href="{% url 'legal_compliance:compliance_list' %}"
-                class="btn btn-secondary">
-
-                    <i class="fas fa-arrow-left"></i>
-                    Back
-
-                </a>
-
-                <button type="submit"
-                        class="btn btn-primary"
-                        id="submitBtn">
-
-                    <i class="fas fa-save"></i>
-
-                    {% if form.instance.pk %}
-                    Update Compliance
-                    {% else %}
-                    Create Compliance
-                    {% endif %}
-
-                </button>
-
-            </div>
-
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
-
 <script>
-
 const selectedPlants = [
-
-    {% for id in selected_plant_ids %}
-        "{{ id }}",
-    {% endfor %}
-
+  {% for id in selected_plant_ids %}
+    "{{ id }}",
+  {% endfor %}
 ];
 
 const selectedResponsible = [
-
-    {% for id in selected_responsible_ids %}
-        "{{ id }}",
-    {% endfor %}
-
+  {% for id in selected_responsible_ids %}
+    "{{ id }}",
+  {% endfor %}
 ];
 
 const selectedReviewers = [
-
-    {% for id in selected_reviewer_ids %}
-        "{{ id }}",
-    {% endfor %}
-
+  {% for id in selected_reviewer_ids %}
+    "{{ id }}",
+  {% endfor %}
 ];
 
-</script>
-
-<script>
-
-
-
 document.addEventListener('DOMContentLoaded', function () {
+  loadPlants();
+  loadReviewers();
 
-    loadPlants();
-    loadReviewers();
-
-    var isSubmitting = false;
-
-    document.getElementById('complianceForm')
-        .addEventListener('submit', function (e) {
-
-        if (isSubmitting) {
-
-            e.preventDefault();
-
-            return;
-        }
-
-        isSubmitting = true;
-
-        var btn = document.getElementById('submitBtn');
-
-        btn.disabled = true;
-
-        btn.innerHTML =
-            '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
-
-    });
-
+  var isSubmitting = false;
+  document.getElementById('complianceForm').addEventListener('submit', function (e) {
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
+    isSubmitting = true;
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  });
 });
 
 // ─── Generic helpers ──────────────────────────────────────────
@@ -731,12 +1037,8 @@ function updatePlantCount() {
 }
 
 function updateReviewerCount() {
-
-    document.getElementById('reviewerCount').textContent =
-
-        document.querySelectorAll(
-            '.reviewer-checkbox:checked'
-        ).length;
+  document.getElementById('reviewerCount').textContent =
+    document.querySelectorAll('.reviewer-checkbox:checked').length;
 }
 
 function updateUserCount() {
@@ -758,344 +1060,158 @@ function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
 function buildGroupHeader(text, icon) {
   var div = document.createElement('div');
   div.className = 'group-header';
-  div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + text;
+  div.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + text;
   return div;
 }
 
 function loadPlants() {
+  var grid = document.getElementById('plantsGrid');
+  grid.innerHTML = '<div class="loading-text">Loading plants...</div>';
 
-    var grid = document.getElementById('plantsGrid');
-
-    grid.innerHTML =
-        '<div class="loading-text">Loading plants...</div>';
-
-    fetch('/organizations/ajax/get-all-plants/')
-
-        .then(function (r) {
-            return r.json();
-        })
-
-        .then(function (data) {
-
-            grid.innerHTML = '';
-
-            if (!data.length) {
-
-                grid.innerHTML =
-                    '<div class="loading-text">No plants available</div>';
-
-                return;
-            }
-
-            data.forEach(function (plant) {
-
-                var item = buildCheckboxItem(
-
-                    'applicable_plants',
-
-                    plant.id,
-
-                    'plant_' + plant.id,
-
-                    '<strong>' + plant.name + '</strong>' +
-
-                    (plant.code
-                        ? ' <small class="text-muted">(' +
-                          plant.code +
-                          ')</small>'
-                        : ''),
-
-                    'plant-checkbox',
-
-                    function () {
-
-                        updatePlantCount();
-
-                        loadUsersForPlants();
-                        loadReviewers();
-                    }
-                );
-
-                grid.appendChild(item);
-                if (
-                    selectedPlants.includes(
-                        String(plant.id)
-                    )
-                ) {
-
-                    item.querySelector('input').checked = true;
-                }
-
-            });
-
+  fetch('/organizations/ajax/get-all-plants/')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      grid.innerHTML = '';
+      if (!data.length) {
+        grid.innerHTML = '<div class="loading-text">No plants available</div>';
+        return;
+      }
+      data.forEach(function (plant) {
+        var item = buildCheckboxItem(
+          'applicable_plants',
+          plant.id,
+          'plant_' + plant.id,
+          '<strong>' + plant.name + '</strong>' +
+          (plant.code ? ' <span class="text-muted">(' + plant.code + ')</span>' : ''),
+          'plant-checkbox',
+          function () {
             updatePlantCount();
             loadUsersForPlants();
             loadReviewers();
-
-        })
-
-        .catch(function () {
-
-            grid.innerHTML =
-                '<div class="loading-text text-danger">Error loading plants</div>';
-
-        });
-}
-
-
-function loadUsersForPlants() {
-
-    var plantIds = getCheckedValues('.plant-checkbox');
-
-    var grid = document.getElementById('usersGrid');
-
-    var bar = document.getElementById('userSelectBar');
-
-    if (!plantIds.length) {
-
-        resetGrid(
-            'usersGrid',
-            'Please select plants first'
+          }
         );
-
-        bar.style.display = 'none';
-
-        updateUserCount();
-
-        return;
-    }
-
-    grid.innerHTML =
-        '<div class="loading-text">Loading users...</div>';
-
-    fetch(
-        '/legal-compliance/ajax/get-users-by-plants/?plant_ids='
-        + plantIds.join(',')
-    )
-
-    .then(function (r) {
-
-        return r.json();
-
-    })
-
-    .then(function (data) {
-
-        grid.innerHTML = '';
-
-        if (!data.users.length) {
-
-            grid.innerHTML =
-                '<div class="loading-text">No HOD or Safety Manager found</div>';
-
-            bar.style.display = 'none';
-
-            return;
+        grid.appendChild(item);
+        if (selectedPlants.includes(String(plant.id))) {
+          item.querySelector('input').checked = true;
         }
-
-        var grouped = {};
-
-        data.users.forEach(function (u) {
-
-            if (!grouped[u.plant_name]) {
-
-                grouped[u.plant_name] = [];
-            }
-
-            grouped[u.plant_name].push(u);
-
-        });
-
-        Object.keys(grouped).forEach(function (plantName) {
-
-            grid.appendChild(
-                buildGroupHeader(
-                    plantName,
-                    'building'
-                )
-            );
-
-            grouped[plantName].forEach(function (user) {
-
-                var item = buildCheckboxItem(
-
-                    'responsible_person',
-
-                    user.id,
-
-                    'user_' + user.id,
-
-                    '<strong>' + user.full_name + '</strong>' +
-
-                    ' <small class="text-muted">— ' +
-
-                    user.role +
-
-                    '</small>',
-
-                    'user-checkbox',
-
-                    function () {
-
-                        updateUserCount();
-
-                    }
-                );
-
-                grid.appendChild(item);
-                if (
-                    selectedResponsible.includes(
-                        String(user.id)
-                    )
-                ) {
-
-                    item.querySelector('input').checked = true;
-                }
-
-            });
-
-        });
-
-        bar.style.display = 'flex';
-
-        updateUserCount();
-
+      });
+      updatePlantCount();
+      loadUsersForPlants();
+      loadReviewers();
     })
-
     .catch(function () {
-
-        grid.innerHTML =
-            '<div class="loading-text text-danger">Error loading users</div>';
-
+      grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
     });
 }
 
+function loadUsersForPlants() {
+  var plantIds = getCheckedValues('.plant-checkbox');
+  var grid = document.getElementById('usersGrid');
+  var bar = document.getElementById('userSelectBar');
 
+  if (!plantIds.length) {
+    grid.innerHTML = '<div class="loading-text">Please select plants first</div>';
+    bar.style.display = 'none';
+    updateUserCount();
+    return;
+  }
+
+  grid.innerHTML = '<div class="loading-text">Loading users...</div>';
+
+  fetch('/legal-compliance/ajax/get-users-by-plants/?plant_ids=' + plantIds.join(','))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      grid.innerHTML = '';
+      if (!data.users.length) {
+        grid.innerHTML = '<div class="loading-text">No HOD or Safety Manager found</div>';
+        bar.style.display = 'none';
+        return;
+      }
+
+      var grouped = {};
+      data.users.forEach(function (u) {
+        if (!grouped[u.plant_name]) grouped[u.plant_name] = [];
+        grouped[u.plant_name].push(u);
+      });
+
+      Object.keys(grouped).forEach(function (plantName) {
+        grid.appendChild(buildGroupHeader(plantName, 'building'));
+        grouped[plantName].forEach(function (user) {
+          var item = buildCheckboxItem(
+            'responsible_person',
+            user.id,
+            'user_' + user.id,
+            '<strong>' + user.full_name + '</strong>' +
+            ' <span class="text-muted">— ' + user.role + '</span>',
+            'user-checkbox',
+            function () { updateUserCount(); }
+          );
+          grid.appendChild(item);
+          if (selectedResponsible.includes(String(user.id))) {
+            item.querySelector('input').checked = true;
+          }
+        });
+      });
+
+      bar.style.display = 'flex';
+      updateUserCount();
+    })
+    .catch(function () {
+      grid.innerHTML = '<div class="loading-text text-danger">Error loading users</div>';
+    });
+}
 
 function loadReviewers() {
+  var plantIds = getCheckedValues('.plant-checkbox');
+  var grid = document.getElementById('reviewersGrid');
 
-    var plantIds = getCheckedValues('.plant-checkbox');
+  if (!plantIds.length) {
+    grid.innerHTML = '<div class="loading-text">Please select plants first</div>';
+    updateReviewerCount();
+    return;
+  }
 
-    var grid = document.getElementById(
-        'reviewersGrid'
-    );
+  grid.innerHTML = '<div class="loading-text">Loading reviewers...</div>';
 
-    if (!plantIds.length) {
-
-        grid.innerHTML =
-            '<div class="loading-text">Please select plants first</div>';
-
-        updateReviewerCount();
-
-        return;
-    }
-
-    grid.innerHTML =
-        '<div class="loading-text">Loading reviewers...</div>';
-
-    fetch(
-        '/legal-compliance/ajax/get-reviewers/?plant_ids='
-        + plantIds.join(',')
-    )
-
-    .then(function (r) {
-
-        return r.json();
-
-    })
-
+  fetch('/legal-compliance/ajax/get-reviewers/?plant_ids=' + plantIds.join(','))
+    .then(function (r) { return r.json(); })
     .then(function (data) {
+      grid.innerHTML = '';
+      if (!data.users.length) {
+        grid.innerHTML = '<div class="loading-text">No EHS reviewers found</div>';
+        return;
+      }
 
-        grid.innerHTML = '';
+      var grouped = {};
+      data.users.forEach(function (u) {
+        if (!grouped[u.plant_name]) grouped[u.plant_name] = [];
+        grouped[u.plant_name].push(u);
+      });
 
-        if (!data.users.length) {
-
-            grid.innerHTML =
-                '<div class="loading-text">No EHS reviewers found</div>';
-
-            return;
-        }
-
-        var grouped = {};
-
-        data.users.forEach(function (u) {
-
-            if (!grouped[u.plant_name]) {
-
-                grouped[u.plant_name] = [];
-            }
-
-            grouped[u.plant_name].push(u);
-
+      Object.keys(grouped).forEach(function (plantName) {
+        grid.appendChild(buildGroupHeader(plantName, 'building'));
+        grouped[plantName].forEach(function (user) {
+          var item = buildCheckboxItem(
+            'reviewer',
+            user.id,
+            'reviewer_' + user.id,
+            '<strong>' + user.full_name + '</strong>' +
+            ' <span class="text-muted">— ' + user.role +
+            (user.department ? ' | ' + user.department : '') + '</span>',
+            'reviewer-checkbox',
+            function () { updateReviewerCount(); }
+          );
+          grid.appendChild(item);
+          if (selectedReviewers.includes(String(user.id))) {
+            item.querySelector('input').checked = true;
+          }
         });
+      });
 
-        Object.keys(grouped).forEach(function (plantName) {
-
-            grid.appendChild(
-                buildGroupHeader(
-                    plantName,
-                    'building'
-                )
-            );
-
-            grouped[plantName].forEach(function (user) {
-
-                var item = buildCheckboxItem(
-
-                    'reviewer',
-
-                    user.id,
-
-                    'reviewer_' + user.id,
-
-                    '<strong>' +
-
-                    user.full_name +
-
-                    '</strong>' +
-
-                    ' <small class="text-muted">— ' +
-
-                    user.role +
-
-                    (user.department
-                        ? ' | ' + user.department
-                        : '') +
-
-                    '</small>',
-
-                    'reviewer-checkbox',
-
-                    function () {
-
-                        updateReviewerCount();
-
-                    }
-                );
-
-                grid.appendChild(item);
-                if (
-                    selectedReviewers.includes(
-                        String(user.id)
-                    )
-                ) {
-
-                    item.querySelector('input').checked = true;
-                }
-
-            });
-
-        });
-
-        updateReviewerCount();
-
+      updateReviewerCount();
     })
-
     .catch(function () {
-
-        grid.innerHTML =
-            '<div class="loading-text text-danger">Error loading reviewers</div>';
-
+      grid.innerHTML = '<div class="loading-text text-danger">Error loading reviewers</div>';
     });
 }
 
@@ -1106,11 +1222,6 @@ function getCheckedValues(selector) {
     values.push(cb.value);
   });
   return values;
-}
-
-function resetGrid(gridId, message) {
-  document.getElementById(gridId).innerHTML =
-    '<div class="loading-text">' + message + '</div>';
 }
 </script>
 {% endblock %}
