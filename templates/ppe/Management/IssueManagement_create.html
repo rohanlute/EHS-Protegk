@@ -1,1023 +1,1162 @@
 {% extends 'base/base.html' %}
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% load static %}
+
+{% block title %}{{ title }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'PPE:IssueManagement_list' %}">Issue List</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== PPE ISSUE MANAGEMENT - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.78rem;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER - BOLD                                         */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .dash-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-form-card .card-header-custom {
+    padding: 14px 20px;
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-form-card .card-header-custom h3 i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dash-form-card .card-body-custom {
+    padding: 20px 24px;
+  }
+
+  .dash-form-card .card-footer-custom {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                 */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .form-group .text-danger {
+    color: var(--secondary-red) !important;
+  }
+
+  .form-control,
+  .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    height: 38px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .form-control[readonly] {
+    background: var(--primary-teal-light);
+    cursor: not-allowed;
+    font-weight: 600;
+  }
+
+  .form-helper-text {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-helper-text i {
+    margin-right: 4px;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                      */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    font-size: 13px;
+    margin-bottom: 0;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color);
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 6px 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td .form-control,
+  .table tbody td .form-select {
+    height: 34px;
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-submit-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 24px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: #0d9488 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-submit-teal:hover {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  .btn-submit-teal:visited,
+  .btn-submit-teal:active,
+  .btn-submit-teal:focus {
+    color: #ffffff !important;
+  }
+
+  .btn-submit-teal:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-submit-teal i {
+    color: #ffffff !important;
+    font-size: 14px;
+  }
+
+  .btn-submit-teal:hover i {
+    color: #ffffff !important;
+  }
+
+  .btn-cancel-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-cancel-custom:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .btn-cancel-custom i {
+    color: var(--text-secondary);
+  }
+
+  .btn-cancel-custom:hover i {
+    color: var(--primary-teal);
+  }
+
+  /* ===== ADD ROW BUTTON ===== */
+  .btn-add-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: #22c55e !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    width: 100%;
+    min-height: 28px;
+    max-width: 50px;
+  }
+
+  .btn-add-row:hover {
+    background: #16a34a !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-add-row i {
+    color: #ffffff !important;
+    font-size: 12px;
+  }
+
+  .btn-add-row:hover i {
+    color: #ffffff !important;
+  }
+
+  .btn-remove-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-remove-row:hover {
+    background: #b91c1c !important;
+    color: #ffffff !important;
+  }
+
+  .btn-remove-row i {
+    color: #ffffff !important;
+    font-size: 10px;
+  }
+
+  .btn-remove-row:hover i {
+    color: #ffffff !important;
+  }
+
+  /* ========================================================== */
+  /* AVAILABLE QUANTITY BADGE                                   */
+  /* ========================================================== */
+  .available-qty-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    border: 2px solid rgba(13, 148, 136, 0.15);
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 1024px) {
+    .dash-form-card .card-body-custom {
+      padding: 18px 20px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 16px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 11px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 14px 16px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 10px 14px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 15px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-form-card .card-footer-custom .btn-submit-teal,
+    .dash-form-card .card-footer-custom .btn-cancel-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-group label {
+      font-size: 12px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 13px;
+      padding: 7px 10px;
+      height: 36px;
+    }
+
+    .table tbody td .form-control,
+    .table tbody td .form-select {
+      height: 32px;
+      font-size: 12px;
+      padding: 3px 8px;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 4px 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 10px;
+      flex-shrink: 0;
+      width: 80px;
+    }
+
+    .table tbody td .form-control,
+    .table tbody td .form-select {
+      flex: 1;
+      margin-left: 6px;
+    }
+
+    .btn-add-row {
+      font-size: 11px;
+      min-height: 24px;
+      max-width: 40px;
+      padding: 1px 6px;
+    }
+
+    .btn-add-row i {
+      font-size: 10px;
+    }
+
+    .btn-remove-row {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;
+    }
+
+    .btn-remove-row i {
+      font-size: 9px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .available-qty-badge {
+      font-size: 14px;
+      padding: 4px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .dash-form-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .dash-form-card .card-header-custom {
+      padding: 8px 10px;
+    }
+
+    .dash-form-card .card-header-custom h3 {
+      font-size: 13px;
+    }
+
+    .dash-form-card .card-footer-custom {
+      padding: 10px 12px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 12px;
+      padding: 5px 8px;
+      height: 34px;
+    }
+
+    .table tbody td .form-control,
+    .table tbody td .form-select {
+      height: 30px;
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+
+    .btn-submit-teal,
+    .btn-cancel-custom {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+
+    .btn-add-row {
+      font-size: 10px;
+      min-height: 20px;
+      max-width: 32px;
+      padding: 1px 4px;
+    }
+
+    .btn-add-row i {
+      font-size: 9px;
+    }
+
+    .btn-remove-row {
+      width: 22px;
+      height: 22px;
+      font-size: 9px;
+    }
+
+    .btn-remove-row i {
+      font-size: 8px;
+    }
+
+    .table tbody td::before {
+      width: 60px;
+      font-size: 9px;
+    }
+
+    .available-qty-badge {
+      font-size: 12px;
+      padding: 3px 8px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER - BOLD                                         -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ title }}</h1>
+        <p class="subtitle">
+          {% if issue %}
+            Update existing PPE issue record
+          {% else %}
+            <h1>Create Stock Issue</h1>
+            <p class="subtitle">Add new stock issue for PPE items</p>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="dash-form-card">
+    <div class="card-header-custom">
+      <h3>
+        <i class="fas fa-hard-hat"></i>
+        Create Issue
+      </h3>
+    </div>
+
     <form method="POST">
-        {% csrf_token %}
-        <div class="card">
-            <div class="card-header">
-                <h4>
-                    <i class="fas fa-hard-hat"></i>
-                    {% if issue %}
-                        Edit PPE Issue
-                    {% else %}
-                        PPE Issue Management
-                    {% endif %}
-                </h4>
+      {% csrf_token %}
+
+      <div class="card-body-custom">
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
             </div>
-            <div class="card-body">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                <!-- First Row -->
-                <div class="row">
-                    <div class="col-3">
-                        <div class="form-group">
-                          <label>
-                                Issue Date
-                                <span class="text-danger">*</span>
-                            </label>
-                           <input type="date"
-                                    name="issue_date"
-                                    class="form-control"
-                                    value="{% if issue %}{{ issue.issue_date|date:'Y-m-d' }}{% else %}{{ issue_date }}{% endif %}"
-                                    required>
-                        </div>
-                    </div>
+          {% endfor %}
+        {% endif %}
 
-                    <div class="col-3">
-                        <div class="form-group">
-                        <label>
-                            PPE Item
-                            <span class="text-danger">*</span>
-                        </label>
+        <!-- First Row: Issue Date, PPE Item, Plant, Available Quantity -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Issue Date <span class="text-danger">*</span></label>
+              <input type="date" name="issue_date" class="form-control"
+                     value="{% if issue %}{{ issue.issue_date|date:'Y-m-d' }}{% else %}{{ issue_date }}{% endif %}" required>
+            </div>
+          </div>
 
-                        <select name="ppe_item"
-                                class="form-control"
-                                onchange="
-                                    let plant = document.querySelector('[name=plant]').value;
-                                    let issueDate = document.querySelector('[name=issue_date]').value;
-                                    window.location='?ppe_item='+this.value+'&plant='+plant+'&issue_date='+issueDate;">
-
-                            <option value="">Select PPE Item</option>
-
-                            {% for item in ppe_items %} 
-                                <option value="{{ item.id }}"
-                                    {% if selected_item and selected_item.id == item.id %}
-                                        selected
-                                    {% endif %}>
-                                    {{ item.name }}
-                                </option>
-                            {% endfor %}
-
-                        </select>
-                    </div>
-                    </div>
-                     <div class="col-3">
-                        <label>
-                            Plant Name
-                            <span class="text-danger">*</span>
-                        </label>
-                        <select name="plant"
-                            class="form-control"
-                            onchange="
-                                let ppeItem = document.querySelector('[name=ppe_item]').value;
-                                let issueDate = document.querySelector('[name=issue_date]').value;
-                                window.location='?ppe_item='+ppeItem+'&plant='+this.value+'&issue_date='+issueDate;">
-
-                        <option value="">Select Plant</option>
-
-                        {% for plant in plants %}
-                            <option value="{{ plant.id }}"
-                                {% if selected_plant_id == plant.id|stringformat:'s' %}
-                                    selected
-                                {% endif %}>
-                                {{ plant.name }}
-                            </option>
-                        {% endfor %}
-
-                    </select>
-                    </div>
-                    
-                    <div class="col-3">
-                         <div class="form-group">
-                            <label>
-                                Available Quantity
-                            </label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                value="{{ available_quantity }}"
-                                readonly>
-                             </div>
-                        </div>
-                    </div>
-                <hr>
-                <!-- Table -->
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="thead-light">
-                            <tr>
-                                <th width="150">
-                                    Issue To
-                                </th>
-                                <th width="220">
-                                    Employee / Contractor
-                                </th>
-                                <th width="180">
-                                    Department
-                                </th>
-                                <th width="180">
-                                    Size
-                                </th>
-                                <th width="120">
-                                    Qty
-                                </th>
-                                <th width="140">
-                                    Remarks
-                                </th>
-                                <th>
-                               <button type="button" id="addRow" class="btn btn-success">
-                                +
-                               </button>
-                             </th>
-                            </tr>
-                        </thead>
-                        <tbody id="issueRows">
-
-{% if edit_mode %}
-
-    {% for issue in issues %}
-
-    <tr class="issue-row">
-
-        <input type="hidden"
-               name="issue_id[]"
-               value="{{ issue.id }}">
-
-
-        <!-- Issue To -->
-        <td>
-            <select class="issue_to form-control"
-                    name="issue_to[]">
-
-                <option value="">
-                    Select
-                </option>
-
-                <option value="EMPLOYEE"
-                    {% if issue.issue_to == 'EMPLOYEE' %}
-                    selected
-                    {% endif %}>
-                    Employee
-                </option>
-
-                <option value="CONTRACTOR"
-                    {% if issue.issue_to == 'CONTRACTOR' %}
-                    selected
-                    {% endif %}>
-                    Contractor
-                </option>
-
-            </select>
-        </td>
-
-
-
-        <!-- Employee / Contractor -->
-
-        <td>
-
-            <select class="employee_div form-control"
-                    name="employee[]">
-
-                <option value="">
-                    Select Employee
-                </option>
-
-
-                {% for emp in employees %}
-
-                <option value="{{ emp.id }}"
-                    data-dept="{{ emp.department.id }}"
-                    data-deptname="{{ emp.department.name }}"
-
-                    {% if issue.employee_id == emp.id %}
-                    selected
-                    {% endif %}
-                >
-
-                {{ emp.get_full_name }}
-
-                </option>
-
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>PPE Item <span class="text-danger">*</span></label>
+              <select name="ppe_item" class="form-select"
+                      onchange="
+                        let plant = document.querySelector('[name=plant]').value;
+                        let issueDate = document.querySelector('[name=issue_date]').value;
+                        window.location='?ppe_item='+this.value+'&plant='+plant+'&issue_date='+issueDate;">
+                <option value="">Select PPE Item</option>
+                {% for item in ppe_items %}
+                  <option value="{{ item.id }}" {% if selected_item and selected_item.id == item.id %}selected{% endif %}>
+                    {{ item.name }}
+                  </option>
                 {% endfor %}
+              </select>
+            </div>
+          </div>
 
-            </select>
-
-
-
-            <input type="text"
-                   name="contractor_name[]"
-                   class="contractor_div form-control mt-1"
-
-                   value="{{ issue.contractor_name|default:'' }}"
-
-                   placeholder="Enter Contractor Name"
-
-                   {% if issue.issue_to == 'CONTRACTOR' %}
-                   style="display:block;"
-                   {% else %}
-                   style="display:none;"
-                   {% endif %}>
-
-        </td>
-
-
-
-
-        <!-- Department -->
-
-        <td>
-
-
-            <input type="text"
-                   class="department_name form-control"
-
-                   value="{% if issue.department %}
-                          {{ issue.department.name }}
-                          {% endif %}"
-
-                   readonly>
-
-
-            <input type="hidden"
-                   class="department"
-                   name="department[]"
-
-                   value="{% if issue.department %}
-                          {{ issue.department.id }}
-                          {% endif %}">
-
-
-            <input type="text"
-                   name="contractor_department[]"
-
-                   class="contractor_department form-control"
-
-                   value="{{ issue.contractor_department|default:'' }}"
-
-                   placeholder="Enter Department"
-
-                   {% if issue.issue_to == 'CONTRACTOR' %}
-                   style="display:block;"
-                   {% else %}
-                   style="display:none;"
-                   {% endif %}>
-
-        </td>
-
-
-
-
-        <!-- Size -->
-
-        <td>
-
-            <select name="size[]"
-                    class="form-control"
-                    required>
-
-
-                <option value="">
-                    Select Size
-                </option>
-
-
-                {% for size in sizes %}
-
-                <option value="{{ size.id }}"
-
-                    data-qty="{{ size.original_qty }}"
-
-                    {% if issue.size_id == size.id %}
-                    selected
-                    {% endif %}>
-
-                    {{ size.size }}
-                    =
-                    {{ size.original_qty }}
-
-                </option>
-
-
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Plant Name <span class="text-danger">*</span></label>
+              <select name="plant" class="form-select"
+                      onchange="
+                        let ppeItem = document.querySelector('[name=ppe_item]').value;
+                        let issueDate = document.querySelector('[name=issue_date]').value;
+                        window.location='?ppe_item='+ppeItem+'&plant='+this.value+'&issue_date='+issueDate;">
+                <option value="">Select Plant</option>
+                {% for plant in plants %}
+                  <option value="{{ plant.id }}" {% if selected_plant_id == plant.id|stringformat:'s' %}selected{% endif %}>
+                    {{ plant.name }}
+                  </option>
                 {% endfor %}
-
-
-            </select>
-
-
-        </td>
-
-
-
-
-        <!-- Quantity -->
-
-        <td>
-
-
-            <input type="number"
-
-                   name="quantity_issue[]"
-
-                   class="form-control"
-
-                   min="1"
-
-                   value="{{ issue.quantity_issue }}"
-
-                   required>
-
-
-        </td>
-
-
-
-
-        <!-- Remarks -->
-
-
-        <td>
-
-
-            <input type="text"
-
-                   name="remarks[]"
-
-                   class="form-control"
-
-                   value="{{ issue.remarks|default:'' }}">
-
-
-        </td>
-
-
-
-        <td>
-
-            <button type="button"
-
-                    class="btn btn-danger btn-sm removeRow">
-
-                <i class="fas fa-trash"></i>
-
-            </button>
-
-        </td>
-
-
-    </tr>
-
-
-    {% endfor %}
-
-
-
-
-{% else %}
-
-
-
-<tr class="issue-row">
-
-<td>
-
-<select name="issue_to[]"
-        class="issue_to form-control">
-
-<option value="">
-Select
-</option>
-
-<option value="EMPLOYEE">
-Employee
-</option>
-
-<option value="CONTRACTOR">
-Contractor
-</option>
-
-</select>
-
-</td>
-
-
-<td>
-
-
-<select name="employee[]"
-        class="employee_div form-control">
-
-
-<option value="">
-Select Employee
-</option>
-
-
-{% for emp in employees %}
-
-<option value="{{ emp.id }}"
-        data-dept="{{ emp.department.id }}"
-        data-deptname="{{ emp.department.name }}">
-    {{ emp.get_full_name }}
-</option>
-{% endfor %}
-
-
-</select>
-
-
-<input type="text"
-       name="contractor_name[]"
-       class="contractor_div form-control mt-1"
-
-       placeholder="Enter Contractor Name"
-
-       style="display:none;">
-
-
-</td>
-
-
-<td>
-
-
-<input type="text"
-       class="department_name form-control"
-       readonly>
-
-
-<input type="hidden"
-       name="department[]"
-       class="department">
-
-
-<input type="text"
-       name="contractor_department[]"
-
-       class="contractor_department form-control"
-
-       style="display:none;"
-
-       placeholder="Enter Department">
-
-
-</td>
-
-
-
-<td>
-
-
-<select name="size[]"
-        class="form-control"
-        required>
-
-
-<option value="">
-Select Size
-</option>
-
-
-{% for size in sizes %}
-
-<option value="{{ size.id }}"
-
-data-qty="{{ size.available_quantity }}">
-
-{{ size.size }}
-=
-{{ size.available_quantity }}
-
-</option>
-
-{% endfor %}
-
-
-</select>
-
-
-</td>
-
-
-
-<td>
-
-<input type="number"
-
-name="quantity_issue[]"
-
-class="form-control"
-
-min="1"
-
-required>
-
-</td>
-
-
-
-<td>
-
-<input type="text"
-
-name="remarks[]"
-
-class="form-control">
-
-</td>
-
-
-
-<td>
-
-<button type="button"
-
-class="btn btn-danger btn-sm removeRow">
-
-<i class="fas fa-trash"></i>
-
-</button>
-
-</td>
-
-
-</tr>
-
-
-
-{% endif %}
-
-
-</tbody>
-                    </table>
-                </div>
+              </select>
             </div>
-            <div class="card-footer text-right">
-                <a href="{% url 'PPE:IssueManagement_list' %}"
-                    class="btn btn-secondary">
-                    Cancel
-                </a>
-               <button
-                    type="submit"
-                    class="btn btn-primary">
-                    {% if issue %}
-                        Update Issue
-                    {% else %}
-                        Save Issue
-                    {% endif %}
-                </button>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Available Quantity</label>
+              <div class="available-qty-badge">{{ available_quantity|default:"0" }}</div>
             </div>
+          </div>
         </div>
+
+        <hr>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th style="width: 12%;">Issue To</th>
+                <th style="width: 20%;">Employee / Contractor</th>
+                <th style="width: 15%;">Department</th>
+                <th style="width: 15%;">Size</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 18%;">Remarks</th>
+                <th style="width: 10%;">
+                  <button type="button" id="addRow" class="btn-add-row" title="Add Row">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="issueRows">
+
+              {% if edit_mode %}
+                {% for issue in issues %}
+                <tr class="issue-row">
+                  <input type="hidden" name="issue_id[]" value="{{ issue.id }}">
+
+                  <!-- Issue To -->
+                  <td data-label="Issue To">
+                    <select class="issue_to form-select" name="issue_to[]">
+                      <option value="">Select</option>
+                      <option value="EMPLOYEE" {% if issue.issue_to == 'EMPLOYEE' %}selected{% endif %}>Employee</option>
+                      <option value="CONTRACTOR" {% if issue.issue_to == 'CONTRACTOR' %}selected{% endif %}>Contractor</option>
+                    </select>
+                  </td>
+
+                  <!-- Employee / Contractor -->
+                  <td data-label="Employee / Contractor">
+                    <select class="employee_div form-select" name="employee[]">
+                      <option value="">Select Employee</option>
+                      {% for emp in employees %}
+                        <option value="{{ emp.id }}" data-dept="{{ emp.department.id }}" data-deptname="{{ emp.department.name }}"
+                          {% if issue.employee_id == emp.id %}selected{% endif %}>
+                          {{ emp.get_full_name }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    <input type="text" name="contractor_name[]" class="contractor_div form-control mt-1"
+                           value="{{ issue.contractor_name|default:'' }}" placeholder="Enter Contractor Name"
+                           {% if issue.issue_to == 'CONTRACTOR' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+                  </td>
+
+                  <!-- Department -->
+                  <td data-label="Department">
+                    <input type="text" class="department_name form-control"
+                           value="{% if issue.department %}{{ issue.department.name }}{% endif %}" readonly>
+                    <input type="hidden" class="department" name="department[]"
+                           value="{% if issue.department %}{{ issue.department.id }}{% endif %}">
+                    <input type="text" name="contractor_department[]" class="contractor_department form-control"
+                           value="{{ issue.contractor_department|default:'' }}" placeholder="Enter Department"
+                           {% if issue.issue_to == 'CONTRACTOR' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+                  </td>
+
+                  <!-- Size -->
+                  <td data-label="Size">
+                    <select name="size[]" class="form-select" required>
+                      <option value="">Select Size</option>
+                      {% for size in sizes %}
+                        <option value="{{ size.id }}" data-qty="{{ size.original_qty }}"
+                          {% if issue.size_id == size.id %}selected{% endif %}>
+                          {{ size.size }} = {{ size.original_qty }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </td>
+
+                  <!-- Quantity -->
+                  <td data-label="Qty">
+                    <input type="number" name="quantity_issue[]" class="form-control" min="1"
+                           value="{{ issue.quantity_issue }}" required>
+                  </td>
+
+                  <!-- Remarks -->
+                  <td data-label="Remarks">
+                    <input type="text" name="remarks[]" class="form-control" value="{{ issue.remarks|default:'' }}">
+                  </td>
+
+                  <!-- Action -->
+                  <td data-label="Action">
+                    <button type="button" class="btn-remove-row removeRow" title="Remove Row">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+
+              {% else %}
+
+                <tr class="issue-row">
+                  <!-- Issue To -->
+                  <td data-label="Issue To">
+                    <select class="issue_to form-select" name="issue_to[]">
+                      <option value="">Select</option>
+                      <option value="EMPLOYEE">Employee</option>
+                      <option value="CONTRACTOR">Contractor</option>
+                    </select>
+                  </td>
+
+                  <!-- Employee / Contractor -->
+                  <td data-label="Employee / Contractor">
+                    <select class="employee_div form-select" name="employee[]">
+                      <option value="">Select Employee</option>
+                      {% for emp in employees %}
+                        <option value="{{ emp.id }}" data-dept="{{ emp.department.id }}" data-deptname="{{ emp.department.name }}">
+                          {{ emp.get_full_name }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    <input type="text" name="contractor_name[]" class="contractor_div form-control mt-1"
+                           placeholder="Enter Contractor Name" style="display:none;">
+                  </td>
+
+                  <!-- Department -->
+                  <td data-label="Department">
+                    <input type="text" class="department_name form-control" readonly>
+                    <input type="hidden" class="department" name="department[]">
+                    <input type="text" name="contractor_department[]" class="contractor_department form-control"
+                           style="display:none;" placeholder="Enter Department">
+                  </td>
+
+                  <!-- Size -->
+                  <td data-label="Size">
+                    <select name="size[]" class="form-select" required>
+                      <option value="">Select Size</option>
+                      {% for size in sizes %}
+                        <option value="{{ size.id }}" data-qty="{{ size.available_quantity }}">
+                          {{ size.size }} = {{ size.available_quantity }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </td>
+
+                  <!-- Quantity -->
+                  <td data-label="Qty">
+                    <input type="number" name="quantity_issue[]" class="form-control" min="1" required>
+                  </td>
+
+                  <!-- Remarks -->
+                  <td data-label="Remarks">
+                    <input type="text" name="remarks[]" class="form-control">
+                  </td>
+
+                  <!-- Action -->
+                  <td data-label="Action">
+                    <button type="button" class="btn-remove-row removeRow" title="Remove Row">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+
+              {% endif %}
+
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- FORM FOOTER                                                -->
+      <!-- ========================================================== -->
+      <div class="card-footer-custom">
+        <a href="{% url 'PPE:IssueManagement_list' %}" class="btn-cancel-custom">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+        <button type="submit" class="btn-submit-teal" id="submitBtn">
+          <i class="fas fa-save"></i> {% if issue %}Update Issue{% else %}Save Issue{% endif %}
+        </button>
+      </div>
+
     </form>
+  </div>
+
 </div>
+
 <script>
-let stockData = {};
-{% for size in sizes %}
-stockData["{{ size.id }}"] = {
+  // Stock Data
+  let stockData = {};
+  {% for size in sizes %}
+  stockData["{{ size.id }}"] = {
     size: "{{ size.size }}",
-    qty: {% if edit_mode %}
-            {{ size.original_qty }}
-         {% else %}
-            {{ size.available_quantity }}
-         {% endif %}
-};
-{% endfor %}
-// Add New Row
-document.getElementById('addRow').addEventListener(
-    'click',
-    function () {
-        const firstRow =
-            document.querySelector('.issue-row');
+    qty: {% if edit_mode %}{{ size.original_qty }}{% else %}{{ size.available_quantity }}{% endif %}
+  };
+  {% endfor %}
 
-        const clone =
-            firstRow.cloneNode(true);
+  // Add New Row
+  document.getElementById('addRow').addEventListener('click', function() {
+    const firstRow = document.querySelector('.issue-row');
+    const clone = firstRow.cloneNode(true);
 
-        clone.querySelectorAll('input').forEach(
-            input => input.value = ''
-        );
+    clone.querySelectorAll('input').forEach(input => input.value = '');
+    clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
 
-        clone.querySelectorAll('select').forEach(
-            select => select.selectedIndex = 0
-        );
-        const remaining =
-            getRemainingStock();
+    const remaining = getRemainingStock();
+    const sizeSelect = clone.querySelector('[name="size[]"]');
 
-        const sizeSelect =
-            clone.querySelector('[name="size[]"]');
+    sizeSelect.innerHTML = '<option value="">Select Size</option>';
+    Object.keys(remaining).forEach(function(id) {
+      const option = document.createElement('option');
+      option.value = id;
+      option.text = remaining[id].size + ' = ' + remaining[id].qty;
+      option.setAttribute('data-qty', remaining[id].qty);
+      sizeSelect.appendChild(option);
+    });
 
-        sizeSelect.innerHTML =
-            '<option value="">Select Size</option>';
+    clone.querySelector('.contractor_div').style.display = 'none';
+    clone.querySelector('.contractor_department').style.display = 'none';
 
-        Object.keys(remaining).forEach(function (id) {
+    document.getElementById('issueRows').appendChild(clone);
+  });
 
-            const option =
-                document.createElement('option');
-            option.value = id;
-            option.text =
-                remaining[id].size +
-                ' = ' +
-                remaining[id].qty;
-
-            option.setAttribute(
-                'data-qty',
-                remaining[id].qty
-            );
-            sizeSelect.appendChild(option);
-        });
-        clone.querySelector(
-            '.contractor_div'
-        ).style.display = 'none';
-        clone.querySelector(
-            '.contractor_department'
-        ).style.display = 'none';
-        document
-            .getElementById('issueRows')
-            .appendChild(clone);
-    }
-);
-// Calculate Remaining Stock
-function getRemainingStock() {
-    let remaining =
-        JSON.parse(
-            JSON.stringify(stockData)
-        );
-    document
-        .querySelectorAll('.issue-row')
-        .forEach(function (row) {
-            const sizeSelect =
-                row.querySelector(
-                    '[name="size[]"]'
-                );
-            const qtyInput =
-                row.querySelector(
-                    '[name="quantity_issue[]"]'
-                );
-            const sizeId =
-                sizeSelect.value;
-            const qty =
-                parseInt(
-                    qtyInput.value || 0
-                );
-            if (
-                sizeId &&
-                remaining[sizeId]
-            ) {
-                remaining[sizeId].qty -= qty;
-            }
-        });
+  // Calculate Remaining Stock
+  function getRemainingStock() {
+    let remaining = JSON.parse(JSON.stringify(stockData));
+    document.querySelectorAll('.issue-row').forEach(function(row) {
+      const sizeSelect = row.querySelector('[name="size[]"]');
+      const qtyInput = row.querySelector('[name="quantity_issue[]"]');
+      const sizeId = sizeSelect.value;
+      const qty = parseInt(qtyInput.value || 0);
+      if (sizeId && remaining[sizeId]) {
+        remaining[sizeId].qty -= qty;
+      }
+    });
     return remaining;
-}
-// Update Last Row Stock
-function updateLastRowStock() {
-    const rows =
-        document.querySelectorAll(
-            '.issue-row'
-        );
-    if (rows.length === 0) {
-        return;
-    }
-    const remaining =
-        getRemainingStock();
-    const lastRow =
-        rows[rows.length - 1];
-    const sizeSelect =
-        lastRow.querySelector(
-            '[name="size[]"]'
-        );
-    const currentValue =
-        sizeSelect.value;
-    sizeSelect.innerHTML =
-        '<option value="">Select Size</option>';
-    Object.keys(remaining).forEach(function (id) {
-        const option =
-            document.createElement('option');
-        option.value = id;
-        option.text =
-            remaining[id].size +
-            ' = ' +
-            remaining[id].qty;
-        option.setAttribute(
-            'data-qty',
-            remaining[id].qty
-        );
-        if (currentValue === id) {
+  }
+
+  // Recalculate All Rows
+  function recalculateAllRows() {
+    const rows = document.querySelectorAll('.issue-row');
+    let runningStock = JSON.parse(JSON.stringify(stockData));
+
+    rows.forEach(function(row, index) {
+      const sizeSelect = row.querySelector('[name="size[]"]');
+      const selectedSize = sizeSelect.value;
+      const qty = parseInt(row.querySelector('[name="quantity_issue[]"]').value || 0);
+
+      if (index > 0) {
+        sizeSelect.innerHTML = '<option value="">Select Size</option>';
+        Object.keys(runningStock).forEach(function(id) {
+          const option = document.createElement('option');
+          option.value = id;
+          option.text = runningStock[id].size + ' = ' + runningStock[id].qty;
+          option.setAttribute('data-qty', runningStock[id].qty);
+          if (id === selectedSize) {
             option.selected = true;
-        }
-        sizeSelect.appendChild(option);
+          }
+          sizeSelect.appendChild(option);
+        });
+      }
+
+      if (selectedSize && runningStock[selectedSize]) {
+        runningStock[selectedSize].qty -= qty;
+      }
     });
-}
-// Recalculate All Rows
-function recalculateAllRows() {
-    const rows =
-        document.querySelectorAll(
-            '.issue-row'
-        );
-    let runningStock =
-        JSON.parse(
-            JSON.stringify(stockData)
-        );
-    rows.forEach(function (row, index) {
-        const sizeSelect =
-            row.querySelector(
-                '[name="size[]"]'
-            );
-        const selectedSize =
-            sizeSelect.value;
-        const qty =
-            parseInt(
-                row.querySelector(
-                    '[name="quantity_issue[]"]'
-                ).value || 0
-            );
-        if (index > 0) {
-            sizeSelect.innerHTML =
-                '<option value="">Select Size</option>';
-            Object.keys(
-                runningStock
-            ).forEach(function (id) {
-                const option =
-                    document.createElement(
-                        'option'
-                    );
-                option.value = id;
-                option.text =
-                    runningStock[id].size +
-                    ' = ' +
-                    runningStock[id].qty;
-                option.setAttribute(
-                    'data-qty',
-                    runningStock[id].qty
-                );
-                if (id === selectedSize) {
-                    option.selected = true;
-                }
-                sizeSelect.appendChild(
-                    option
-                );
-            });
-        }
-        if (
-            selectedSize &&
-            runningStock[selectedSize]
-        ) {
-            runningStock[selectedSize].qty -= qty;
-        }
+  }
 
-    });
-}
-// Quantity Change Event
-document.addEventListener(
-    'input',
-    function (e) {
-        if (
-            e.target.name ===
-            'quantity_issue[]'
-        ) {
-            recalculateAllRows();
-        }
-
+  // Delete Row
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.removeRow')) {
+      const rows = document.querySelectorAll('.issue-row');
+      if (rows.length === 1) {
+        alert('At least one row is required.');
+        return;
+      }
+      e.target.closest('.issue-row').remove();
+      recalculateAllRows();
     }
-);
-// Delete Row
-document.addEventListener(
-    'click',
-    function (e) {
-        if (
-            e.target.closest('.removeRow')
-        ) {
-            const rows =
-                document.querySelectorAll(
-                    '.issue-row'
-                );
-            if (
-                rows.length === 1
-            ) {
+  });
 
-                alert(
-                    'At least one row is required.'
-                );
-
-                return;
-            }
-            e.target
-                .closest('.issue-row')
-                .remove();
-            recalculateAllRows();
-        }
-    }
-);
-// Form Submit Validation
-document.querySelector('form')
-    .addEventListener(
-        'submit',
-        function (e) {
-            let rows =
-                document.querySelectorAll(
-                    '.issue-row'
-                );
-            for (let row of rows) {
-                let sizeSelect =
-                    row.querySelector(
-                        '[name="size[]"]'
-                    );
-                let qtyInput =
-                    row.querySelector(
-                        '[name="quantity_issue[]"]'
-                    );
-                if (
-                    !sizeSelect ||
-                    !qtyInput
-                ) {
-                    continue;
-                }
-                let selectedOption =
-                    sizeSelect.options[
-                    sizeSelect.selectedIndex
-                    ];
-                let availableQty =
-                    parseInt(
-                        selectedOption.getAttribute(
-                            'data-qty'
-                        ) || 0
-                    );
-                let enteredQty =
-                    parseInt(
-                        qtyInput.value || 0
-                    );
-
-                console.log(
-                    'Available:',
-                    availableQty,
-                    'Entered:',
-                    enteredQty
-                );
-                if (
-                    enteredQty > availableQty
-                ) {
-
-                    qtyInput.setCustomValidity(
-                        `Only ${availableQty} quantity available`
-                    );
-
-                    qtyInput.reportValidity();
-
-                    e.preventDefault();
-
-                    return false;
-                }
-                qtyInput.setCustomValidity('');
-            }
-
-        }
-    );
-document.addEventListener(
-'DOMContentLoaded',
-function () {
-    document.querySelectorAll('.issue-row').forEach(function(row){
-        let issueTo =
-            row.querySelector('.issue_to');
-        if(issueTo.value === 'CONTRACTOR'){
-            row.querySelector('.employee_div').style.display='none';
-            row.querySelector('.contractor_div').style.display='block';
-            row.querySelector('.department_name').style.display='none';
-            row.querySelector('.contractor_department').style.display='block';
-        }
-    });
-});
-document.addEventListener('change', function(e) {
-    if (e.target.name === 'employee[]') {
-        const row =
-            e.target.closest('.issue-row');
-        const selectedOption =
-            e.target.options[
-                e.target.selectedIndex
-            ];
-        const deptId =
-            selectedOption.getAttribute(
-                'data-dept'
-            ) || '';
-        const deptName =
-            selectedOption.getAttribute(
-                'data-deptname'
-            ) || '';
-        row.querySelector(
-            '.department'
-        ).value = deptId;
-        row.querySelector(
-            '.department_name'
-        ).value = deptName;
-    }
-});
-document.addEventListener(
-    'change',
-    function(e){
-        if(
-            e.target.name === 'issue_to[]'
-        ){
-            const row =
-                e.target.closest('.issue-row');
-            const employeeDiv =
-                row.querySelector(
-                    '.employee_div'
-                );
-            const contractorDiv =
-                row.querySelector(
-                    '.contractor_div'
-                );
-            const departmentName =
-                row.querySelector(
-                    '.department_name'
-                );
-            const contractorDepartment =
-                row.querySelector(
-                    '.contractor_department'
-                );
-            const departmentHidden =
-                row.querySelector(
-                    '.department'
-                );
-            if(
-                e.target.value ===
-                'CONTRACTOR'
-            ){
-                employeeDiv.style.display =
-                    'none';
-                contractorDiv.style.display =
-                    'block';
-                departmentName.style.display =
-                    'none';
-                contractorDepartment.style.display =
-                    'block';
-                // Clear employee values
-                employeeDiv.value = '';
-                departmentName.value = '';
-                departmentHidden.value = '';
-            }
-            else{
-
-                employeeDiv.style.display =
-                    'block';
-
-                contractorDiv.style.display =
-                    'none';
-
-                departmentName.style.display =
-                    'block';
-
-                contractorDepartment.style.display =
-                    'none';
-
-                contractorDiv.value = '';
-
-                contractorDepartment.value = '';
-            }
-        }
-    }
-);
-document.addEventListener('change', function(e){
-    if(e.target.name === 'size[]'){
-        const row =
-            e.target.closest('.issue-row');
-        const qtyInput =
-            row.querySelector(
-                '[name="quantity_issue[]"]'
-            );
-        qtyInput.setCustomValidity('');
-    }
-});
-document.addEventListener('input', function(e) {
+  // Quantity Change Event
+  document.addEventListener('input', function(e) {
     if (e.target.name === 'quantity_issue[]') {
-        let row = e.target.closest('.issue-row');
-        let sizeSelect = row.querySelector('[name="size[]"]');
-        if (!sizeSelect.value) {
-            return;
-        }
-        let selectedOption =
-            sizeSelect.options[sizeSelect.selectedIndex];
-        let availableQty =
-            parseInt(
-                selectedOption.getAttribute('data-qty') || 0
-            );
-        let enteredQty =
-            parseInt(e.target.value || 0);
-        if (enteredQty <= availableQty) {
-
-            e.target.setCustomValidity('');
-        } else {
-            e.target.setCustomValidity(
-                `Only ${availableQty} quantity available`
-            );
-
-        }
-        recalculateAllRows();
+      recalculateAllRows();
     }
-});
+  });
+
+  // Issue To Change
+  document.addEventListener('change', function(e) {
+    if (e.target.name === 'issue_to[]') {
+      const row = e.target.closest('.issue-row');
+      const employeeDiv = row.querySelector('.employee_div');
+      const contractorDiv = row.querySelector('.contractor_div');
+      const departmentName = row.querySelector('.department_name');
+      const contractorDepartment = row.querySelector('.contractor_department');
+      const departmentHidden = row.querySelector('.department');
+
+      if (e.target.value === 'CONTRACTOR') {
+        employeeDiv.style.display = 'none';
+        contractorDiv.style.display = 'block';
+        departmentName.style.display = 'none';
+        contractorDepartment.style.display = 'block';
+        employeeDiv.value = '';
+        departmentName.value = '';
+        departmentHidden.value = '';
+      } else {
+        employeeDiv.style.display = 'block';
+        contractorDiv.style.display = 'none';
+        departmentName.style.display = 'block';
+        contractorDepartment.style.display = 'none';
+        contractorDiv.value = '';
+        contractorDepartment.value = '';
+      }
+    }
+
+    // Employee selection - update department
+    if (e.target.name === 'employee[]') {
+      const row = e.target.closest('.issue-row');
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const deptId = selectedOption.getAttribute('data-dept') || '';
+      const deptName = selectedOption.getAttribute('data-deptname') || '';
+      row.querySelector('.department').value = deptId;
+      row.querySelector('.department_name').value = deptName;
+    }
+  });
+
+  // Quantity validation on input
+  document.addEventListener('input', function(e) {
+    if (e.target.name === 'quantity_issue[]') {
+      const row = e.target.closest('.issue-row');
+      const sizeSelect = row.querySelector('[name="size[]"]');
+      if (!sizeSelect.value) return;
+
+      const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+      const availableQty = parseInt(selectedOption.getAttribute('data-qty') || 0);
+      const enteredQty = parseInt(e.target.value || 0);
+
+      if (enteredQty > availableQty) {
+        e.target.setCustomValidity(`Only ${availableQty} quantity available`);
+      } else {
+        e.target.setCustomValidity('');
+      }
+      recalculateAllRows();
+    }
+  });
+
+  // Form Submit Validation
+  document.querySelector('form').addEventListener('submit', function(e) {
+    let rows = document.querySelectorAll('.issue-row');
+    for (let row of rows) {
+      let sizeSelect = row.querySelector('[name="size[]"]');
+      let qtyInput = row.querySelector('[name="quantity_issue[]"]');
+
+      if (!sizeSelect || !qtyInput) continue;
+
+      let selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+      let availableQty = parseInt(selectedOption.getAttribute('data-qty') || 0);
+      let enteredQty = parseInt(qtyInput.value || 0);
+
+      if (enteredQty > availableQty) {
+        qtyInput.setCustomValidity(`Only ${availableQty} quantity available`);
+        qtyInput.reportValidity();
+        e.preventDefault();
+        return false;
+      }
+      qtyInput.setCustomValidity('');
+    }
+  });
+
+  // Initialize: Contractor visibility on load
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.issue-row').forEach(function(row) {
+      let issueTo = row.querySelector('.issue_to');
+      if (issueTo.value === 'CONTRACTOR') {
+        row.querySelector('.employee_div').style.display = 'none';
+        row.querySelector('.contractor_div').style.display = 'block';
+        row.querySelector('.department_name').style.display = 'none';
+        row.querySelector('.contractor_department').style.display = 'block';
+      }
+    });
+  });
 </script>
+
 {% endblock %}
