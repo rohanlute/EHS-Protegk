@@ -1,154 +1,851 @@
 {% extends 'base/base.html' %}
-{% block title %}Issue List{% endblock %}
-{% block page_title %}Issue List{% endblock %}
+{% load static %}
+
+{% block title %}Issue List | EHS-360{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'PPE:dashboard' %}">PPE Management</a></li>
 <li class="breadcrumb-item active">Issue List</li>
 {% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== ISSUE LIST - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.78rem;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
+
+  .dash-page-header .header-left h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-page-header .header-left .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .dash-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .dash-main-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dash-main-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-main-card .card-header-custom {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-main-card .card-header-custom .header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-main-card .card-header-custom .header-title i {
+    color: var(--primary-teal);
+    font-size: 16px;
+  }
+
+  .dash-main-card .card-header-custom .header-title h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .dash-main-card .card-header-custom .header-title .count-badge {
+    background: var(--primary-teal);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+
+  .dash-main-card .card-body-custom {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS - FIXED TEAL                                       */
+  /* ========================================================== */
+  
+  /* ---- Add Issue Button ---- */
+  .btn-add-issue {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 18px !important;
+    background: #0d9488 !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2) !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+
+  .btn-add-issue:hover {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35) !important;
+    text-decoration: none !important;
+  }
+
+  .btn-add-issue:visited,
+  .btn-add-issue:active,
+  .btn-add-issue:focus {
+    color: #ffffff !important;
+  }
+
+  .btn-add-issue i {
+    color: #ffffff !important;
+  }
+
+  .btn-add-issue:hover i {
+    color: #ffffff !important;
+  }
+
+  /* ---- Search Button ---- */
+  .btn-search-teal {
+    background: #0d9488 !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 6px 16px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    font-family: 'Inter', sans-serif !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .btn-search-teal:hover {
+    background: #0f766e !important;
+    color: #ffffff !important;
+  }
+
+  .btn-search-teal:visited,
+  .btn-search-teal:active,
+  .btn-search-teal:focus {
+    color: #ffffff !important;
+  }
+
+  .btn-search-teal i {
+    color: #ffffff !important;
+  }
+
+  .btn-search-teal:hover i {
+    color: #ffffff !important;
+  }
+
+  /* ---- Reset Button ---- */
+  .btn-reset-teal {
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 6px 16px !important;
+    background: var(--bg-card) !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    font-family: 'Inter', sans-serif !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-left: 4px !important;
+  }
+
+  .btn-reset-teal:hover {
+    background: var(--primary-teal-light) !important;
+    border-color: var(--primary-teal) !important;
+    color: var(--primary-teal) !important;
+    text-decoration: none !important;
+  }
+
+  .btn-reset-teal i {
+    color: var(--text-secondary) !important;
+  }
+
+  .btn-reset-teal:hover i {
+    color: var(--primary-teal) !important;
+  }
+
+  /* ---- Action Buttons ---- */
+  .btn-action-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .btn-action:hover {
+    text-decoration: none;
+  }
+
+  .btn-action.view {
+    color: #3b82f6;
+    border-color: #dbeafe;
+    background: #eff6ff;
+  }
+
+  .btn-action.view:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+  }
+
+  .btn-action.edit {
+    color: #d97706;
+    border-color: #fef3c7;
+    background: #fffbeb;
+  }
+
+  .btn-action.edit:hover {
+    background: #d97706;
+    border-color: #d97706;
+    color: white;
+  }
+
+  .btn-action.delete {
+    color: #dc2626;
+    border-color: #fef2f2;
+    background: #fef2f2;
+  }
+
+  .btn-action.delete:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* SEARCH CARD                                                */
+  /* ========================================================== */
+  .search-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+
+  .search-card .card-body {
+    padding: 14px 18px;
+  }
+
+  .search-card .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    height: 36px;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
+
+  .search-card .form-control:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .search-card .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-card .input-group {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .search-card .input-group .form-control {
+    flex: 1;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                      */
+  /* ========================================================== */
+  .table {
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 12px 0;
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                 */
+  /* ========================================================== */
+  .pagination {
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .pagination .page-item .page-link {
+    color: var(--primary-teal);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    border-radius: var(--radius-sm);
+  }
+
+  .pagination .page-item .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-right {
+      width: 100%;
+    }
+
+    .dash-page-header .header-right .btn-add-issue {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .dash-main-card .card-header-custom {
+      padding: 12px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .search-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .search-card .form-control {
+      font-size: 12px;
+      height: 34px;
+    }
+
+    .btn-search-teal,
+    .btn-reset-teal {
+      font-size: 12px !important;
+      height: 34px !important;
+      padding: 4px 12px !important;
+    }
+
+    .btn-add-issue {
+      font-size: 12px !important;
+      padding: 6px 14px !important;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      border: none;
+      font-size: 12px;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .btn-action-group {
+      justify-content: flex-end;
+    }
+
+    .btn-action {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      font-size: 10px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .pagination .page-item .page-link {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-main-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .search-card .input-group {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .search-card .input-group .form-control {
+      border-radius: var(--radius-sm);
+      flex: 1 1 100%;
+    }
+
+    .search-card .input-group .btn-search-teal {
+      border-radius: var(--radius-sm) !important;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .search-card .input-group .btn-reset-teal {
+      border-radius: var(--radius-sm) !important;
+      flex: 1;
+      justify-content: center;
+      margin-left: 0 !important;
+    }
+
+    .btn-add-issue {
+      font-size: 11px !important;
+      padding: 5px 12px !important;
+    }
+
+    .table tbody tr {
+      padding: 4px 6px;
+    }
+
+    .table tbody td {
+      font-size: 11px;
+      padding: 3px 6px;
+    }
+
+    .table tbody td::before {
+      font-size: 10px;
+    }
+
+    .btn-action {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      font-size: 9px;
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+    }
+
+    .pagination .page-item .page-link {
+      font-size: 10px;
+      padding: 2px 8px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-    <!-- Header with Add Button -->
-    <div class="mb-3">
-        <a href="{% url 'PPE:IssueManagement_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add Issue
-        </a>
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div>
+        <h1>Issue List</h1>
+        <p class="subtitle">Manage and track all PPE issue records</p>
+      </div>
     </div>
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="get" class="form-inline">
-                <div class="input-group" style="width: 96%;">
-                    <input type="text"
-                           name="search"
-                           class="form-control"
-                           placeholder="Search Issue"
-                           value="{{ request.GET.search }}">
-                    <div class="input-group-append">
-                        <button type="submit" class="btn btn-primary me-4">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                        <a href="{% url 'PPE:IssueManagement_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i> Reset
-                        </a>
-                    </div>
+    <div class="header-right">
+      <a href="{% url 'PPE:IssueManagement_create' %}" class="btn-add-issue">
+        <i class="fas fa-plus"></i> Add Issue
+      </a>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SEARCH CARD                                                -->
+  <!-- ========================================================== -->
+  <div class="search-card">
+    <div class="card-body">
+      <form method="get" class="search-form">
+        <div class="input-group">
+          <input type="text"
+                 name="search"
+                 class="form-control"
+                 placeholder="Search by issue number, PPE item..."
+                 value="{{ request.GET.search }}">
+          <button type="submit" class="btn-search-teal">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <a href="{% url 'PPE:IssueManagement_list' %}" class="btn-reset-teal">
+            <i class="fas fa-undo"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ISSUE TABLE CARD                                           -->
+  <!-- ========================================================== -->
+  <div class="dash-main-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-list"></i>
+        <h3>Issue List</h3>
+        <span class="count-badge">{{ page_obj|length }}</span>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      {% if page_obj %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Issue No</th>
+              <th>Issue Date</th>
+              <th>PPE Item</th>
+              <th style="text-align: center;">Quantity Issued</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ppe in page_obj %}
+            <tr>
+              <td data-label="Issue No">
+                <strong style="color: var(--text-primary);">{{ ppe.issue_group_no }}</strong>
+              </td>
+              <td data-label="Issue Date">
+                {{ ppe.issue_date|date:"d M Y" }}
+              </td>
+              <td data-label="PPE Item">
+                {{ ppe.ppe_item__name }}
+              </td>
+              <td data-label="Quantity Issued" style="text-align: center;">
+                <span style="background: var(--primary-teal-light); color: var(--primary-teal); padding: 2px 12px; border-radius: 12px; font-weight: 700; font-size: 13px;">
+                  {{ ppe.total_qty }}
+                </span>
+              </td>
+              <td data-label="Actions" style="text-align: center;">
+                <div class="btn-action-group">
+                  <a href="{% url 'PPE:issue_detail' ppe.first_id %}" 
+                     class="btn-action view" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'PPE:edit_issue' ppe.first_id %}" 
+                     class="btn-action edit" title="Edit">
+                    <i class="fas fa-pen"></i>
+                  </a>
+                  <a href="{% url 'PPE:issue_delete' ppe.first_id %}" 
+                     class="btn-action delete" title="Delete"
+                     onclick="return confirm('⚠️ Are you sure you want to delete this issue? This action cannot be undone.');">
+                    <i class="fas fa-trash-alt"></i>
+                  </a>
                 </div>
-            </form>
-        </div>
-    </div>
-    <!-- PPE Table -->
-    <div class="ehs-card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-hard-hat"></i> Issue List
-            </h3>
-        </div>
-        <div class="card-body">
-            {% if page_obj %}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Issue No</th>
-                            <th>Issue Date</th>
-                            <th>PPE Item</th>
-                            <th>Quantity Issued</th>
-                            <th width="180">Actions</th>
-                        </tr>
-                        </thead>
-                    <tbody>
-                    {% for ppe in page_obj %}
-                    <tr>
-                        <td>
-                            {{ ppe.issue_group_no }}
-                        </td>
-                        <td>
-                            {{ ppe.issue_date|date:"y-m-d" }}
-                        </td>
-                        <td>
-                            {{ ppe.ppe_item__name }}
-                        </td>
-                        <td>
-                            {{ ppe.total_qty }}
-                        </td>
-                        <td class="table-actions">
-                            <a href="{% url 'PPE:issue_detail' ppe.first_id %}"
-                            class="btn btn-sm btn-info"
-                            title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{% url 'PPE:edit_issue' ppe.first_id %}"
-                                class="btn btn-sm btn-warning">
-                                   <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'PPE:issue_delete' ppe.first_id %}"
-                            class="btn btn-sm btn-danger"
-                            title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </a>  
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="11" class="text-center">
-                            No PPE Issue Records Found
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mt-3">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link"
-                           href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ num }}</span>
-                            </li>
-                        {% else %}
-                            <li class="page-item">
-                                <a class="page-link"
-                                   href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">
-                                    {{ num }}
-                                </a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link"
-                           href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+          </li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+            </li>
             {% endif %}
-            {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-hard-hat fa-4x text-muted mb-3"></i>
-                <p class="text-muted">
-                    No Issue found.
-                </p>
-                <a href="{% url 'PPE:IssueManagement_create' %}"
-                   class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Create Issue
-                </a>
-            </div>
-            {% endif %}
-        </div>
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <i class="fas fa-file-invoice"></i>
+        <p>No issue records found.</p>
+        <a href="{% url 'PPE:IssueManagement_create' %}" class="btn-add-issue" style="display: inline-flex !important;">
+          <i class="fas fa-plus"></i> Create Issue
+        </a>
+      </div>
+      {% endif %}
     </div>
+  </div>
+
 </div>
-</div>
+
 {% endblock %}

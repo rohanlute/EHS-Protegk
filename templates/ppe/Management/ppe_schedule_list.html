@@ -1,292 +1,1009 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}PPE Schedules{% endblock %}
-{% block page_title %}Inspection Schedule{% endblock %}
+{% block title %}PPE Schedules | EHS-360{% endblock %}
+
 {% block breadcrumb %}
-<li class="breadcrumb-item">
-    <a href="{% url 'dashboards:home' %}">Home</a>
-</li>
-<li class="breadcrumb-item">
-    <a href="{% url 'PPE:schedule_list' %}">
-        PPE
-    </a>
-</li>
-<li class="breadcrumb-item active">
-    Inspection Schedule
-</li>
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'PPE:schedule_list' %}">PPE</a></li>
+<li class="breadcrumb-item active">Inspection Schedule</li>
 {% endblock %}
+
 {% block extra_css %}
 <style>
-.action-buttons-container {
+  /* ===== PPE SCHEDULES - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    --secondary-purple: #7c3aed;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.78rem;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 6px;
-}
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-.action-buttons-container .btn {
-    width: 34px;
-    height: 34px;
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-teal);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-primary-custom:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-primary-custom i {
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD - REDUCED BUTTON SIZE                          */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .filter-card .card-body {
+    padding: 14px 18px;
+  }
+
+  .filter-card .form-control,
+  .filter-card .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    height: 38px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .filter-card .form-control:focus,
+  .filter-card .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+  }
+
+  .filter-card .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* Filter Button - Reduced Size */
+  .filter-card .btn-filter {
+    background: var(--primary-teal);
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.75rem;
+    transition: all 0.25s ease;
+    padding: 5px 12px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-card .btn-filter:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .filter-card .btn-filter i {
+    font-size: 0.75rem;
+  }
+
+  /* Cancel Button - Reduced Size */
+  .filter-card .btn-cancel-filter {
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 5px 12px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: white;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-card .btn-cancel-filter:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .filter-card .btn-cancel-filter i {
+    font-size: 0.75rem;
+  }
+
+  .filter-card label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    color: white;
+    padding: 12px 20px;
+    border-bottom: none;
+  }
+
+  .ehs-card .card-header .card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .ehs-card .card-header .card-title i {
+    margin-right: 8px;
+  }
+
+  .ehs-card .card-body {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* TABLE                                                      */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 8px 12px;
+  }
+
+  .table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .action-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .action-buttons-container .btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0;
-}
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    border: none;
+    transition: all 0.25s ease;
+  }
+
+  .btn-info-custom {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .btn-info-custom:hover {
+    background: var(--primary-teal);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  .btn-warning-custom {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+  }
+
+  .btn-warning-custom:hover {
+    background: var(--secondary-gold);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+  }
+
+  .btn-danger-custom {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .btn-danger-custom:hover {
+    background: var(--secondary-red);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  }
+
+  .btn-pdf-custom {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+  }
+
+  .btn-pdf-custom:hover {
+    background: var(--secondary-red);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge-scheduled {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-in-progress {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--secondary-gold);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-completed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--secondary-green);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--secondary-red);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .badge-secondary-custom {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* MODAL                                                      */
+  /* ========================================================== */
+  .modal-content {
+    border-radius: var(--radius-card);
+    border: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: 14px 20px;
+  }
+
+  .modal-header.bg-danger {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c) !important;
+    color: white;
+  }
+
+  .modal-header .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .modal-header .close {
+    color: white;
+    opacity: 0.8;
+  }
+
+  .modal-header .close:hover {
+    opacity: 1;
+  }
+
+  .modal-body {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .modal-body i {
+    color: var(--secondary-red);
+    margin-bottom: 12px;
+  }
+
+  .modal-body p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .modal-body p strong {
+    color: var(--text-primary);
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .modal-footer .btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .modal-footer .btn-danger {
+    background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
+    border: none;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                 */
+  /* ========================================================== */
+  .pagination .page-link {
+    color: var(--primary-teal);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background: var(--primary-teal);
+    border-color: var(--primary-teal);
+    color: white;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 16px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 11px;
+    }
+
+    .btn-primary-custom {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .filter-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .filter-card .row .col-md-2,
+    .filter-card .row .col-md-3,
+    .filter-card .row .col-md-1 {
+      margin-bottom: 8px;
+    }
+
+    .filter-card .btn-filter,
+    .filter-card .btn-cancel-filter {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+      padding: 6px 8px;
+    }
+
+    .action-buttons-container .btn {
+      width: 26px;
+      height: 26px;
+      font-size: 0.6rem;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .modal-body {
+      padding: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .btn-primary-custom {
+      font-size: 0.75rem;
+      padding: 5px 14px;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+      font-size: 0.75rem;
+      height: 34px;
+      padding: 5px 10px;
+    }
+
+    .filter-card .btn-filter,
+    .filter-card .btn-cancel-filter {
+      font-size: 0.7rem;
+      height: 30px;
+      padding: 4px 10px;
+    }
+
+    .table {
+      font-size: 0.65rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+      padding: 4px 6px;
+    }
+
+    .table thead th {
+      font-size: 0.5rem;
+    }
+
+    .action-buttons-container .btn {
+      width: 22px;
+      height: 22px;
+      font-size: 0.5rem;
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+    }
+
+    .empty-state p {
+      font-size: 0.8rem;
+    }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
 
-        <!-- Create Button -->
-        <div class="mb-3">
-            <a href="{% url 'PPE:schedule_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus-circle"></i> Create PPE Schedule
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="header-text">
+        <h1>PPE Inspection Schedule</h1>
+        <p class="subtitle">Manage and track all PPE inspection schedules</p>
+      </div>
+    </div>
+    <a href="{% url 'PPE:schedule_create' %}" class="btn-primary-custom">
+      <i class="fas fa-plus-circle"></i> Create PPE Schedule
+    </a>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER CARD - REDUCED BUTTON SIZE                          -->
+  <!-- ========================================================== -->
+  <div class="filter-card">
+    <div class="card-body">
+      <form method="get">
+        <div class="row align-items-end">
+          <div class="col-md-2 mb-2">
+            <label>Status</label>
+            <select name="status" class="form-select">
+              <option value="">All Status</option>
+              {% for value,label in status_choices %}
+              <option value="{{ value }}"
+                {% if selected_status == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3 mb-2">
+            <label>Plant</label>
+            <select name="plant" class="form-select">
+              <option value="">All Plants</option>
+              {% for plant in plants %}
+              <option value="{{ plant.id }}"
+                {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>
+                {{ plant.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3 mb-2">
+            <label>Assigned To</label>
+            <select name="assigned_to" class="form-select">
+              <option value="">All HODs / Safety Managers</option>
+              {% for hod in hods %}
+              <option value="{{ hod.id }}"
+                {% if selected_assigned == hod.id|stringformat:"s" %}selected{% endif %}>
+                {{ hod.get_full_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2 mb-2">
+            <label>Search</label>
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Search..."
+                   value="{{ request.GET.search }}">
+          </div>
+
+          <div class="col-md-1 mb-2">
+            <button type="submit" class="btn-filter w-100">
+              <i class="fas fa-filter"></i>
+            </button>
+          </div>
+
+          <div class="col-md-1 mb-2">
+            <a href="{% url 'PPE:schedule_list' %}"
+               class="btn-cancel-filter w-100">
+              <i class="fas fa-times"></i>
             </a>
+          </div>
         </div>
+      </form>
+    </div>
+  </div>
 
-        <!-- Filters -->
-        <div class="card mb-3" style="background: var(--light-blue);">
-            <div class="card-body">
-                <form method="get">
-                    <div class="row align-items-end">
+  <!-- ========================================================== -->
+  <!-- SCHEDULE TABLE                                             -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-hard-hat"></i>
+        PPE Schedule List
+      </h3>
+    </div>
 
-                        <div class="col-md-2">
-                            <label>Status</label>
-                            <select name="status" class="form-control">
-                                <option value="">All Status</option>
-                                {% for value,label in status_choices %}
-                                <option value="{{ value }}"
-                                    {% if selected_status == value %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+    <div class="card-body">
 
-                        <div class="col-md-3">
-                            <label>Plant</label>
-                            <select name="plant" class="form-control">
-                                <option value="">All Plants</option>
-                                {% for plant in plants %}
-                                <option value="{{ plant.id }}">
-                                    {{ plant.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label>Assigned To</label>
-                            <select name="assigned_to" class="form-control">
-                            <option value="">All HODs / Safety Managers</option>
-
-                            {% for hod in hods %}
-                            <option value="{{ hod.id }}"
-                                {% if selected_assigned == hod.id|stringformat:"s" %}
-                                    selected
-                                {% endif %}>
-                                {{ hod.get_full_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label>Search</label>
-                            <input type="text"
-                                   name="search"
-                                   class="form-control"
-                                   placeholder="Search...">
-                        </div>
-
-                        <div class="col-md-1">
-                            <button type="submit"
-                                    class="btn btn-primary w-100">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                        </div>
-
-                        <div class="col-md-1">
-                            <a href="{% url 'PPE:schedule_list' %}"
-                               class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Schedule Table -->
-        <div class="ehs-card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-hard-hat"></i>
-                    PPE Schedule List
-                </h3>
-            </div>
-
-            <div class="card-body">
-
-                {% if page_obj %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-
-                        <thead>
-                            <tr>
-                                <th>Schedule Code</th>
-                                <th>PPE Item</th>
-                                <th>Assigned To</th>
-                                <th>Plant</th>
-                                <th>Scheduled Date</th>
-                                <th>Scheduled End Date</th>
-                                <th>Status</th>
-                                <th width="140">Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {% for schedule in page_obj %}
-                            <tr>
-
-                                <td>
-                                    <strong>
-                                        {{ schedule.inspection_no }}
-                                    </strong>
-                                </td>
-
-                                <td>
-                                    {{ schedule.ppe_item.name }}
-                                </td>
-
-                                <td>
-                                    {{ schedule.assigned_user }}
-                                </td>
-
-                                <td>
-                                    {{ schedule.plant.name }}
-                                </td>
-
-                                <td>
-                                    {{ schedule.scheduled_date|date:"d M Y" }}
-                                </td>
-
-                                <td>
-                                    {{ schedule.scheduled_end_date|date:"d M Y" }}
-                                </td>
-
-                                <td>
-                                    <span class="badge
-                                        {% if schedule.status == 'SCHEDULED' %}
-                                            badge-primary
-                                        {% elif schedule.status == 'IN_PROGRESS' %}
-                                            badge-warning
-                                        {% elif schedule.status == 'COMPLETED' %}
-                                            badge-success
-                                        {% elif schedule.status == 'OVERDUE' %}
-                                            badge-danger
-                                        {% else %}
-                                            badge-secondary
-                                        {% endif %}">
-                                        {{ schedule.get_status_display }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div class="action-buttons-container">
-                                        <a href="{% url 'PPE:schedule_detail' schedule.pk %}"
-                                           class="btn btn-info btn-sm"
-                                           title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if schedule.status != 'COMPLETED' %}
-                                        <a href="{% url 'PPE:schedule_edit' schedule.pk %}"
-                                        class="btn btn-warning btn-sm"
-                                        title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        {% endif %}
-                                        <a href="{% url 'PPE:ppe_inspection_pdf_download' schedule.pk %}" 
-                                        class="btn btn-sm btn-danger" title="Download PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </a>
-                                        <button type="button"
-                                                class="btn btn-danger btn-sm"
-                                                data-toggle="modal"
-                                                data-target="#deleteModal{{ schedule.id }}"
-                                                title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                    </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- Delete Modal -->
-                            <div class="modal fade"
-                                 id="deleteModal{{ schedule.id }}"
-                                 tabindex="-1">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">
-                                                Confirm Delete
-                                            </h5>
-                                            <button type="button"
-                                                    class="close text-white"
-                                                    data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-
-                                        <div class="modal-body text-center">
-                                            <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-
-                                            <p>
-                                                Are you sure you want to delete
-                                                <strong>
-                                                    {{ schedule.inspection_no }}
-                                                </strong>?
-                                            </p>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="button"
-                                                    class="btn btn-secondary"
-                                                    data-dismiss="modal">
-                                                Cancel
-                                            </button>
-
-                                            <form method="post"
-                                                  action="{% url 'PPE:schedule_delete' schedule.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit"
-                                                        class="btn btn-danger">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            {% endfor %}
-                        </tbody>
-
-                    </table>
+      {% if page_obj %}
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Schedule Code</th>
+              <th>PPE Item</th>
+              <th>Assigned To</th>
+              <th>Plant</th>
+              <th>Scheduled Date</th>
+              <th>Scheduled End Date</th>
+              <th>Status</th>
+              <th width="140" class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for schedule in page_obj %}
+            <tr>
+              <td><strong>{{ schedule.inspection_no }}</strong></td>
+              <td>{{ schedule.ppe_item.name }}</td>
+              <td>{{ schedule.assigned_user }}</td>
+              <td>{{ schedule.plant.name }}</td>
+              <td>{{ schedule.scheduled_date|date:"d M Y" }}</td>
+              <td>{{ schedule.scheduled_end_date|date:"d M Y" }}</td>
+              <td>
+                <span class="
+                  {% if schedule.status == 'SCHEDULED' %}badge-scheduled
+                  {% elif schedule.status == 'IN_PROGRESS' %}badge-in-progress
+                  {% elif schedule.status == 'COMPLETED' %}badge-completed
+                  {% elif schedule.status == 'OVERDUE' %}badge-overdue
+                  {% else %}badge-secondary-custom{% endif %}">
+                  {{ schedule.get_status_display }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons-container justify-content-center">
+                  <a href="{% url 'PPE:schedule_detail' schedule.pk %}"
+                     class="btn btn-info-custom"
+                     title="View">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% if schedule.status != 'COMPLETED' %}
+                  <a href="{% url 'PPE:schedule_edit' schedule.pk %}"
+                     class="btn btn-warning-custom"
+                     title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% endif %}
+                  <a href="{% url 'PPE:ppe_inspection_pdf_download' schedule.pk %}"
+                     class="btn btn-pdf-custom"
+                     title="Download PDF">
+                    <i class="fas fa-file-pdf"></i>
+                  </a>
+                  <button type="button"
+                          class="btn btn-danger-custom"
+                          data-toggle="modal"
+                          data-target="#deleteModal{{ schedule.id }}"
+                          title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
+              </td>
+            </tr>
 
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                    <p>No PPE schedules found.</p>
+            <!-- Delete Modal -->
+            <div class="modal fade"
+                 id="deleteModal{{ schedule.id }}"
+                 tabindex="-1">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger">
+                    <h5 class="modal-title">
+                      <i class="fas fa-exclamation-triangle mr-2"></i>
+                      Confirm Delete
+                    </h5>
+                    <button type="button"
+                            class="close text-white"
+                            data-dismiss="modal">
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <i class="fas fa-trash-alt fa-3x"></i>
+                    <p>
+                      Are you sure you want to delete
+                      <strong>{{ schedule.inspection_no }}</strong>?
+                    </p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-dismiss="modal">
+                      <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                    <form method="post"
+                          action="{% url 'PPE:schedule_delete' schedule.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                {% endif %}
-
+              </div>
             </div>
-        </div>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <p>No PPE schedules found.</p>
+        <a href="{% url 'PPE:schedule_create' %}" class="btn-primary-custom mt-3">
+          <i class="fas fa-plus-circle"></i> Create PPE Schedule
+        </a>
+      </div>
+      {% endif %}
 
     </div>
+  </div>
+
 </div>
+
 {% endblock %}

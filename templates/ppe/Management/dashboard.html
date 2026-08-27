@@ -1,276 +1,678 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block content %}
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+{% block title %}PPE Dashboard | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">PPE Dashboard</li>
+{% endblock %}
+
+{% block extra_css %}
 <style>
-.dashboard-card{
-    border:none;
-    border-radius:18px;
-    box-shadow:0 4px 15px rgba(0,0,0,.08);
-    transition:.3s;
-}
+  /* ===== PPE DASHBOARD - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-.dashboard-card:hover{
-    transform:translateY(-3px);
-}
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
 
-.kpi-card{
-    padding:20px;
-    border-radius:18px;
-    color:white;
-}
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
 
-.bg-stock{
-    background:linear-gradient(135deg,#0ea5e9,#0284c7);
-}
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.78rem;
+  }
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
 
-.bg-issued{
-    background:linear-gradient(135deg,#3b82f6,#1d4ed8);
-}
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-.bg-return{
-    background:linear-gradient(135deg,#22c55e,#15803d);
-}
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.bg-inspection{
-    background:linear-gradient(135deg,#f59e0b,#d97706);
-}
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
 
-.chart-card{
-    background:white;
-    border-radius:18px;
-    padding:20px;
-    box-shadow:0 4px 15px rgba(0,0,0,.08);
-}
+  .dash-page-header .header-left h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
 
-.chart-title{
-    font-size:18px;
-    font-weight:600;
-    margin-bottom:15px;
-}
+  .dash-page-header .header-left .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* KPI CARDS                                                   */
+  /* ========================================================== */
+  .kpi-card {
+    padding: 18px 20px;
+    border-radius: var(--radius-card);
+    color: white;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .kpi-card h6 {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.9;
+    margin: 0 0 4px 0;
+  }
+
+  .kpi-card h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .kpi-card .kpi-icon {
+    float: right;
+    font-size: 28px;
+    opacity: 0.3;
+  }
+
+  /* KPI Colors - Teal Theme */
+  .bg-stock {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+  }
+
+  .bg-issued {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+  }
+
+  .bg-return {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+  }
+
+  .bg-inspection {
+    background: linear-gradient(135deg, #d97706, #b45309);
+  }
+
+  /* ========================================================== */
+  /* CHART CARDS                                                 */
+  /* ========================================================== */
+  .chart-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .chart-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .chart-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-title i {
+    color: var(--primary-teal);
+  }
+
+  .chart-scroll {
+    overflow-x: auto;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .kpi-card {
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card h2 {
+      font-size: 22px;
+    }
+
+    .kpi-card .kpi-icon {
+      font-size: 22px;
+    }
+
+    .chart-card {
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header .header-left h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .kpi-card {
+      padding: 12px 14px;
+    }
+
+    .kpi-card h2 {
+      font-size: 20px;
+    }
+
+    .kpi-card h6 {
+      font-size: 12px;
+    }
+
+    .kpi-card .kpi-icon {
+      font-size: 18px;
+    }
+
+    .chart-card {
+      padding: 10px 12px;
+    }
+
+    .chart-title {
+      font-size: 13px;
+    }
+  }
+
+  /* Utility */
+  .container-fluid {
+    padding: 0 !important;
+  }
+
+  .row {
+    margin: 0 -10px !important;
+  }
+
+  .col-md-3,
+  .col-lg-6,
+  .col-lg-12 {
+    padding: 0 10px !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 16px !important;
+  }
 </style>
-<div class="container-fluid mt-4">
-    <!-- KPI CARDS -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="kpi-card bg-stock">
-                <h6>Total Stock</h6>
-                <h2>{{ total_stock }}</h2>
-            </div>
-        </div>
+{% endblock %}
 
-        <div class="col-md-3">
-            <div class="kpi-card bg-issued">
-                <h6>Total Issued</h6>
-                <h2>{{ total_issued }}</h2>
-            </div>
-        </div>
+{% block content %}
 
-        <div class="col-md-3">
-            <div class="kpi-card bg-return">
-                <h6>Total Returned</h6>
-                <h2>{{ total_returned }}</h2>
-            </div>
-        </div>
+<div class="container-fluid" style="padding: 0;">
 
-        <div class="col-md-3">
-            <div class="kpi-card bg-inspection">
-                <h6>Inspections</h6>
-                <h2>{{ total_inspections }}</h2>
-            </div>
-        </div>
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div>
+        <h1>PPE Dashboard</h1>
+        <p class="subtitle">Monitor and track all PPE activities across the organization</p>
+      </div>
+    </div>
+  </div>
 
+  <!-- ========================================================== -->
+  <!-- KPI CARDS                                                   -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="kpi-card bg-stock">
+        <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
+        <h6>Total Stock</h6>
+        <h2>{{ total_stock }}</h2>
+      </div>
     </div>
 
-    <!-- ISSUE VS RETURN + INSPECTION -->
-    <div class="row mb-4">
-        <div class="col-lg-12">
-            <div class="chart-card">
-                <div class="chart-title">
-                    PPE Issue vs Return
-                </div>
-                <div class="chart-scroll">
-                    <div id="issueReturnChart"></div>
-                </div>
-            </div>
-        </div>
+    <div class="col-md-3">
+      <div class="kpi-card bg-issued">
+        <div class="kpi-icon"><i class="fas fa-arrow-up"></i></div>
+        <h6>Total Issued</h6>
+        <h2>{{ total_issued }}</h2>
+      </div>
     </div>
-    <!-- INSPECTION -->
-    <div class="row mb-4">
-        <div class="col-lg-6">
-            <div class="chart-card">
-                <div class="chart-title">
-                    Inspection Status
-                </div>
-                <div id="inspectionChart"></div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="chart-card">
-                <div class="chart-title">
-                    PPE Category Distribution
-                </div>
-                <div id="categoryChart"></div>
-            </div>
-        </div>
+
+    <div class="col-md-3">
+      <div class="kpi-card bg-return">
+        <div class="kpi-icon"><i class="fas fa-arrow-down"></i></div>
+        <h6>Total Returned</h6>
+        <h2>{{ total_returned }}</h2>
+      </div>
     </div>
-    <!-- PLANT STOCK + PPE LIFE CYCLE -->
-    <div class="row mb-4">
-        <div class="col-lg-6">
-            <div class="chart-card">
-                <div class="chart-title">
-                    Plant Wise Stock
-                </div>
-                <div id="plantChart"></div>
-            </div>
+
+    <div class="col-md-3">
+      <div class="kpi-card bg-inspection">
+        <div class="kpi-icon"><i class="fas fa-clipboard-check"></i></div>
+        <h6>Inspections</h6>
+        <h2>{{ total_inspections }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ISSUE VS RETURN CHART                                       -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-12">
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-chart-bar"></i> PPE Issue vs Return
         </div>
-        <div class="col-lg-6">
-            <div class="chart-card">
-                <div class="chart-title">
-                    PPE Lifecycle
-                </div>
-                <div id="funnelChart"></div>
-            </div>
+        <div class="chart-scroll">
+          <div id="issueReturnChart" style="height: 350px;"></div>
         </div>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- INSPECTION STATUS & CATEGORY DISTRIBUTION                   -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-chart-pie"></i> Inspection Status
+        </div>
+        <div id="inspectionChart" style="height: 350px;"></div>
+      </div>
     </div>
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-chart-pie"></i> PPE Category Distribution
+        </div>
+        <div id="categoryChart" style="height: 350px;"></div>
+      </div>
     </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- PLANT WISE STOCK & PPE LIFECYCLE                            -->
+  <!-- ========================================================== -->
+  <div class="row mb-4">
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-industry"></i> Plant Wise Stock
+        </div>
+        <div id="plantChart" style="height: 350px;"></div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-sync-alt"></i> PPE Lifecycle
+        </div>
+        <div id="funnelChart" style="height: 350px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================== -->
+<!-- JAVASCRIPT - ApexCharts                                     -->
+<!-- ========================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 <script>
-// =============================
-// ISSUE VS RETURN
-// =============================
-new ApexCharts(
-    document.querySelector("#issueReturnChart"),
-    {
-        chart: {
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // =============================
+    // ISSUE VS RETURN
+    // =============================
+    var issueData = JSON.parse('{{ issue_values|escapejs }}' || '[]');
+    var returnData = JSON.parse('{{ return_values|escapejs }}' || '[]');
+    var ppeLabels = JSON.parse('{{ ppe_labels|escapejs }}' || '[]');
+
+    if (document.querySelector("#issueReturnChart")) {
+      new ApexCharts(
+        document.querySelector("#issueReturnChart"), {
+          chart: {
             type: "bar",
-            height: 350
-        },
-        series: [
-            {
-                name: "Issued",
-                data: JSON.parse('{{ issue_values|escapejs }}')
-            },
-            {
-                name: "Returned",
-                data: JSON.parse('{{ return_values|escapejs }}')
-            }
-        ],
-        xaxis: {
-            categories: JSON.parse('{{ ppe_labels|escapejs }}')
-        }
-    }
-).render();
-// =============================
-// INSPECTION STATUS
-// =============================
-new ApexCharts(
-    document.querySelector("#inspectionChart"),
-    {
-        chart: {
-            type: "donut",
-            height: 350
-        },
-        series: JSON.parse('{{ completed_values|escapejs }}'),
-        labels: JSON.parse('{{ inspection_labels|escapejs }}')
-    }
-).render();
-// =============================
-// CATEGORY DISTRIBUTION
-// =============================
-new ApexCharts(
-    document.querySelector("#categoryChart"),
-    {
-        chart: {
-            type: "pie",
-            height: 350
-        },
-        series: JSON.parse('{{ category_values|escapejs }}'),
-        labels: JSON.parse('{{ category_labels|escapejs }}')
-    }
-).render();
-// =============================
-// PLANT WISE STOCK
-// =============================
-new ApexCharts(
-    document.querySelector("#plantChart"),
-    {
-        chart: {
-            type: "bar",
-            height: 350
-        },
-        plotOptions: {
+            height: 350,
+            toolbar: { show: false },
+            background: 'transparent'
+          },
+          series: [{
+            name: "Issued",
+            data: issueData,
+            color: '#3b82f6'
+          }, {
+            name: "Returned",
+            data: returnData,
+            color: '#22c55e'
+          }],
+          plotOptions: {
             bar: {
-                horizontal: true
+              borderRadius: 6,
+              columnWidth: '50%'
             }
-        },
-        series: [
-            {
-                name: "Stock",
-                data: JSON.parse('{{ plant_values|escapejs }}')
-            }
-        ],
-        xaxis: {
-            categories: JSON.parse('{{ plant_labels|escapejs }}')
+          },
+          xaxis: {
+            categories: ppeLabels,
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '11px' } }
+          },
+          yaxis: {
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '12px' } }
+          },
+          legend: {
+            position: 'top',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px'
+          },
+          grid: {
+            borderColor: '#e2e8f0'
+          },
+          tooltip: {
+            theme: 'light'
+          }
         }
+      ).render();
     }
-).render();
-// =============================
-// MONTHLY TREND
-// =============================
 
-new ApexCharts(
-    document.querySelector("#trendChart"),
-    {
-        chart: {
-            type: "area",
-            height: 350
-        },
-        series: [
-            {
-                name: "Issue Qty",
-                data: JSON.parse('{{ monthly_issue|escapejs }}')
+    // =============================
+    // INSPECTION STATUS
+    // =============================
+    var inspectionValues = JSON.parse('{{ completed_values|escapejs }}' || '[]');
+    var inspectionLabels = JSON.parse('{{ inspection_labels|escapejs }}' || '[]');
+
+    if (document.querySelector("#inspectionChart")) {
+      new ApexCharts(
+        document.querySelector("#inspectionChart"), {
+          chart: {
+            type: "donut",
+            height: 350,
+            toolbar: { show: false },
+            background: 'transparent'
+          },
+          series: inspectionValues,
+          labels: inspectionLabels,
+          colors: ['#22c55e', '#d97706', '#dc2626', '#3b82f6'],
+          legend: {
+            position: 'bottom',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px'
+          },
+          plotOptions: {
+            pie: {
+              donut: {
+                size: '65%'
+              }
             }
-        ],
-        xaxis: {
-            categories: JSON.parse('{{ month_labels|escapejs }}')
+          },
+          tooltip: {
+            theme: 'light'
+          },
+          dataLabels: {
+            style: {
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              fontWeight: '600'
+            }
+          }
         }
+      ).render();
     }
-).render();
-// =============================
-// PPE LIFE CYCLE
-// =============================
 
-new ApexCharts(
-    document.querySelector("#funnelChart"),
-    {
-        chart: {
+    // =============================
+    // CATEGORY DISTRIBUTION
+    // =============================
+    var categoryValues = JSON.parse('{{ category_values|escapejs }}' || '[]');
+    var categoryLabels = JSON.parse('{{ category_labels|escapejs }}' || '[]');
+
+    if (document.querySelector("#categoryChart")) {
+      new ApexCharts(
+        document.querySelector("#categoryChart"), {
+          chart: {
+            type: "pie",
+            height: 350,
+            toolbar: { show: false },
+            background: 'transparent'
+          },
+          series: categoryValues,
+          labels: categoryLabels,
+          colors: ['#0d9488', '#3b82f6', '#d97706', '#22c55e', '#8b5cf6', '#ec4899'],
+          legend: {
+            position: 'bottom',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px'
+          },
+          plotOptions: {
+            pie: {
+              expandOnClick: true
+            }
+          },
+          tooltip: {
+            theme: 'light'
+          },
+          dataLabels: {
+            style: {
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              fontWeight: '600'
+            }
+          }
+        }
+      ).render();
+    }
+
+    // =============================
+    // PLANT WISE STOCK
+    // =============================
+    var plantValues = JSON.parse('{{ plant_values|escapejs }}' || '[]');
+    var plantLabels = JSON.parse('{{ plant_labels|escapejs }}' || '[]');
+
+    if (document.querySelector("#plantChart")) {
+      new ApexCharts(
+        document.querySelector("#plantChart"), {
+          chart: {
             type: "bar",
-            height: 350
-        },
-        series: [{
+            height: 350,
+            toolbar: { show: false },
+            background: 'transparent'
+          },
+          series: [{
+            name: "Stock",
+            data: plantValues,
+            color: '#0d9488'
+          }],
+          plotOptions: {
+            bar: {
+              borderRadius: 6,
+              horizontal: true,
+              barHeight: '60%'
+            }
+          },
+          xaxis: {
+            categories: plantLabels,
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '11px' } }
+          },
+          yaxis: {
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '12px' } }
+          },
+          grid: {
+            borderColor: '#e2e8f0'
+          },
+          tooltip: {
+            theme: 'light'
+          },
+          dataLabels: {
+            style: {
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              fontWeight: '600'
+            }
+          }
+        }
+      ).render();
+    }
+
+    // =============================
+    // PPE LIFECYCLE (FUNNEL)
+    // =============================
+    if (document.querySelector("#funnelChart")) {
+      new ApexCharts(
+        document.querySelector("#funnelChart"), {
+          chart: {
+            type: "bar",
+            height: 350,
+            toolbar: { show: false },
+            background: 'transparent'
+          },
+          series: [{
             name: "Count",
             data: [
-                {{ opening_stock }},
-                {{ total_issued }},
-                {{ total_returned }},
-                {{ total_scheduled }},
-                {{ total_completed }}
-            ]
-        }],
-        xaxis: {
+              {{ opening_stock|default:0 }},
+              {{ total_issued|default:0 }},
+              {{ total_returned|default:0 }},
+              {{ total_scheduled|default:0 }},
+              {{ total_completed|default:0 }}
+            ],
+            color: '#0d9488'
+          }],
+          plotOptions: {
+            bar: {
+              borderRadius: 6,
+              horizontal: true,
+              barHeight: '50%'
+            }
+          },
+          xaxis: {
             categories: [
-                "Opening Stock",
-                "Issued",
-                "Returned",
-                "Scheduled",
-                "Completed"
-            ]
+              "Opening Stock",
+              "Issued",
+              "Returned",
+              "Scheduled",
+              "Completed"
+            ],
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '11px' } }
+          },
+          yaxis: {
+            labels: { style: { fontFamily: 'Inter, sans-serif', fontSize: '12px' } }
+          },
+          grid: {
+            borderColor: '#e2e8f0'
+          },
+          tooltip: {
+            theme: 'light'
+          },
+          dataLabels: {
+            style: {
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              fontWeight: '600'
+            }
+          }
         }
+      ).render();
     }
-).render();
+
+  });
 </script>
+
 {% endblock %}
