@@ -2,105 +2,705 @@
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="#">Toolbox Talks</a></li>
-<li class="breadcrumb-item"><a href="#">Sessions</a></li>
+<li class="breadcrumb-item"><a href="{% url 'toolbox_talk:toolbox_dashboard' %}">Toolbox Talks</a></li>
+<li class="breadcrumb-item"><a href="{% url 'toolbox_talk:session_list' %}">Sessions</a></li>
 <li class="breadcrumb-item active">{{ action }}</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+  /* ===== TOOLBOX TALK SESSION FORM - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+  }
+
+  .required-mark {
+    color: var(--secondary-red);
+    line-height: 1;
+  }
+
+  .form-error {
+    color: var(--secondary-red);
+    font-size: 0.7rem;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 36px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .form-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  hr {
+    border-color: var(--border-color);
+    margin: 16px 0;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GRID                                              */
+  /* ========================================================== */
   .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
+    gap: 8px;
     max-height: 350px;
     overflow-y: auto;
-    border: 1px solid #dee2e6;
-    padding: 15px;
-    border-radius: 5px;
-    background: #f8f9fa;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: white;
+  }
+
+  .checkbox-grid::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .checkbox-grid::-webkit-scrollbar-track {
+    background: var(--bg-page);
+  }
+
+  .checkbox-grid::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: 4px;
   }
 
   .checkbox-item {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
+    gap: 10px;
+    padding: 6px 10px;
     background: white;
     border-radius: 4px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.2s ease;
   }
 
   .checkbox-item:hover {
-    background: #e7f3ff;
-    border-color: #b8d4f0;
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
   }
 
   .checkbox-item input[type="checkbox"] {
-    margin-right: 10px;
     width: 16px;
     height: 16px;
+    accent-color: var(--primary-teal);
     cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
   }
 
   .checkbox-item label {
     margin: 0;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
   }
 
-  .select-all-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #e9ecef;
-    border-radius: 5px;
+  .checkbox-item label strong {
+    color: var(--text-primary);
   }
 
   .group-header {
     grid-column: 1 / -1;
-    background: #d1ecf1;
-    padding: 7px 12px;
+    background: var(--primary-teal-light);
+    padding: 6px 12px;
     font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--primary-teal);
     border-radius: 4px;
-    font-size: 0.85rem;
-    color: #0c5460;
-    border-left: 3px solid #17a2b8;
+    border-left: 3px solid var(--primary-teal);
+  }
+
+  .group-header i {
+    margin-right: 6px;
   }
 
   .section-label {
     font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .badge-count {
-    background: #007bff;
+    background: var(--primary-teal);
     color: white;
     border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    padding: 1px 8px;
+    font-size: 0.7rem;
     font-weight: 600;
   }
 
   .loading-text {
-    color: #6c757d;
+    color: var(--text-muted);
     font-style: italic;
     padding: 10px;
     grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.82rem;
+  }
+
+  .loading-text.text-danger {
+    color: var(--secondary-red) !important;
+  }
+
+  /* ========================================================== */
+  /* SELECT ALL BAR                                             */
+  /* ========================================================== */
+  .select-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: var(--primary-teal-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-outline-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--primary-teal);
+    background: transparent;
+    color: var(--primary-teal);
+    font-weight: 600;
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-outline-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* ALERT                                                      */
+  /* ========================================================== */
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+
+  .alert i {
+    font-size: 15px;
+    margin-top: 1px;
+  }
+
+  .alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--secondary-red);
+  }
+
+  .alert-danger i {
+    color: var(--secondary-red);
+  }
+
+  /* ========================================================== */
+  /* SECTION HEADERS                                            */
+  /* ========================================================== */
+  .section-title {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .section-title i {
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-info {
+    background: var(--secondary-blue);
+    color: white;
+    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.2);
+  }
+
+  .btn-info:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(59, 130, 246, 0.35);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm {
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    height: 28px;
+  }
+
+  .btn i {
+    font-size: 13px;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .form-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 10px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .form-actions-right {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .checkbox-grid {
+      grid-template-columns: 1fr;
+      max-height: 250px;
+      padding: 8px;
+    }
+
+    .select-all-bar {
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 12px;
+    }
+
+    .checkbox-grid {
+      max-height: 200px;
+      padding: 6px;
+    }
+
+    .checkbox-item {
+      padding: 4px 8px;
+    }
+
+    .checkbox-item label {
+      font-size: 0.75rem;
+    }
   }
 </style>
 {% endblock %}
-
 
 {% block content %}
 
@@ -116,247 +716,286 @@
   const selectedIncharges = [{% for i in session.incharges.all %}{{ i.id }},{% endfor %}];
 </script>
 
-<div class="row">
-  <div class="col-md-11 mx-auto">
-    <div class="ehs-card">
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-calendar-plus"></i> {{ title }}
-        </h3>
-      </div>
+<div class="container-fluid" style="padding: 0;">
 
-      <div class="card-body">
-        <form method="POST" id="sessionForm">
-          {% csrf_token %}
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-md-11 mx-auto">
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-calendar-plus"></i> {{ title }}
+          </h3>
+        </div>
 
-          <!-- ======================== -->
-          <!-- TOPIC INFORMATION -->
-          <!-- ======================== -->
-          <h5 class="mb-3"><i class="fas fa-book"></i> Topic Information</h5>
-          <div class="row">
+        <div class="card-body">
+          <form method="POST" id="sessionForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" id="action_type">
 
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.category.id_for_label }}">
-                  Topic Category <span class="text-danger">*</span>
-                </label>
-                {{ form.category }}
-                {% if form.category.errors %}
-                <div class="text-danger small">{{ form.category.errors }}</div>
-                {% endif %}
-                <small class="form-text text-muted">Select toolbox talk category</small>
+            <!-- ========================================================== -->
+            <!-- TOPIC INFORMATION                                           -->
+            <!-- ========================================================== -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div class="section-title">
+                <i class="fas fa-book"></i> Topic Information
               </div>
             </div>
 
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="{{ form.topic.id_for_label }}">
-                  Topic <span class="text-danger">*</span>
-                </label>
-                {{ form.topic }}
-                {% if form.topic.errors %}
-                <div class="text-danger small">{{ form.topic.errors }}</div>
-                {% endif %}
-                <small class="form-text text-muted">Select toolbox talk topic</small>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.category.id_for_label }}" class="field-label">
+                    Topic Category <span class="required-mark">*</span>
+                  </label>
+                  {{ form.category }}
+                  {% if form.category.errors %}
+                    <div class="form-error">{{ form.category.errors }}</div>
+                  {% endif %}
+                  <span class="form-text">Select toolbox talk category</span>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.topic.id_for_label }}" class="field-label">
+                    Topic <span class="required-mark">*</span>
+                  </label>
+                  {{ form.topic }}
+                  {% if form.topic.errors %}
+                    <div class="form-error">{{ form.topic.errors }}</div>
+                  {% endif %}
+                  <span class="form-text">Select toolbox talk topic</span>
+                </div>
               </div>
             </div>
 
-          </div>
-          <hr>
+            <hr>
 
-          <!-- ======================== -->
-          <!-- LOCATION ASSIGNMENT -->
-          <!-- ======================== -->
-          <h5 class="mb-3"><i class="fas fa-industry"></i> Location Assignment</h5>
-
-          <!-- PLANTS -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Plants <span class="text-danger">*</span></span>
-              <span class="badge-count" id="plantCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select one or more plants</small>
-            <div class="select-all-bar">
-              <button type="button" class="btn btn-sm btn-outline-primary"
-                onclick="selectAll('plant-checkbox', updatePlantCount, onPlantChange)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary"
-                onclick="deselectAll('plant-checkbox', updatePlantCount, onPlantChange)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-            <div class="checkbox-grid" id="plantsGrid">
-              <div class="loading-text">Loading plants...</div>
-            </div>
-          </div>
-
-          <!-- ZONES -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Zones</span>
-              <span class="badge-count" id="zoneCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select plants first, then select zones</small>
-            <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary"
-                onclick="selectAll('zone-checkbox', updateZoneCount, onZoneChange)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary"
-                onclick="deselectAll('zone-checkbox', updateZoneCount, onZoneChange)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-            <div class="checkbox-grid" id="zonesGrid">
-              <div class="loading-text">Please select plants first</div>
-            </div>
-          </div>
-
-          <!-- LOCATIONS -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Locations</span>
-              <span class="badge-count" id="locationCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select zones first, then select locations</small>
-            <div class="select-all-bar" id="locationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary"
-                onclick="selectAll('location-checkbox', updateLocationCount, onLocationChange)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary"
-                onclick="deselectAll('location-checkbox', updateLocationCount, onLocationChange)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-            <div class="checkbox-grid" id="locationsGrid">
-              <div class="loading-text">Please select zones first</div>
-            </div>
-          </div>
-
-          <!-- SUBLOCATIONS -->
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Sub-Locations</span>
-              <span class="badge-count" id="sublocationCount">0</span>
-            </div>
-            <small class="form-text text-muted mb-2 d-block">Select locations first, then select sub-locations</small>
-            <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
-              <button type="button" class="btn btn-sm btn-outline-primary"
-                onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-check-square mr-1"></i> Select All
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary"
-                onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
-                <i class="fas fa-square mr-1"></i> Deselect All
-              </button>
-            </div>
-            <div class="checkbox-grid" id="sublocationsGrid">
-              <div class="loading-text">Please select locations first</div>
-            </div>
-          </div>
-
-          <hr>
-
-          <!-- ======================== -->
-          <!-- TRAINER ASSIGNMENT -->
-          <!-- ======================== -->
-          <div id="trainer-incharge-error" class="alert alert-danger" style="display:none;">
-            Same user cannot be Trainer and Incharge.
-          </div>
-
-          <h5 class="mb-3"><i class="fas fa-chalkboard-teacher"></i> Trainer Assignment</h5>
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Trainers <span class="text-danger">*</span></span>
-              <span class="badge-count" id="trainerCount">0</span>
-            </div>
-            <div class="checkbox-grid" id="trainersGrid">
-              <div class="loading-text">Please select plants first</div>
-            </div>
-          </div>
-
-          <hr>
-
-          <!-- ======================== -->
-          <!-- INCHARGE ASSIGNMENT -->
-          <!-- ======================== -->
-          <h5 class="mb-3"><i class="fas fa-user-tie"></i> Incharge Assignment</h5>
-          <div class="mb-4">
-            <div class="section-label">
-              <span>Incharges <span class="text-danger">*</span></span>
-              <span class="badge-count" id="inchargeCount">0</span>
-            </div>
-            <div class="checkbox-grid" id="inchargesGrid">
-              <div class="loading-text">Please select plants first</div>
-            </div>
-          </div>
-
-          <hr>
-
-          <!-- ======================== -->
-          <!-- SESSION DETAILS -->
-          <!-- ======================== -->
-          <h5 class="mb-3"><i class="fas fa-clock"></i> Session Details</h5>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>Planned Date</label>
-                {{ form.planned_date }}
+            <!-- ========================================================== -->
+            <!-- LOCATION ASSIGNMENT                                         -->
+            <!-- ========================================================== -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div class="section-title">
+                <i class="fas fa-industry"></i> Location Assignment
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>Planned Time</label>
-                {{ form.planned_time }}
+
+            <!-- PLANTS -->
+            <div class="form-group">
+              <div class="section-label">
+                <span>Plants <span class="required-mark">*</span></span>
+                <span class="badge-count" id="plantCount">0</span>
+              </div>
+              <span class="form-text">Select one or more plants</span>
+              <div class="select-all-bar">
+                <button type="button" class="btn-outline-primary"
+                  onclick="selectAll('plant-checkbox', updatePlantCount, onPlantChange)">
+                  <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button type="button" class="btn-outline-secondary"
+                  onclick="deselectAll('plant-checkbox', updatePlantCount, onPlantChange)">
+                  <i class="fas fa-square"></i> Deselect All
+                </button>
+              </div>
+              <div class="checkbox-grid" id="plantsGrid">
+                <div class="loading-text">Loading plants...</div>
               </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="{{ form.department.id_for_label }}">Department</label>
-            {{ form.department }}
-            {% if form.department.errors %}
-            <div class="text-danger small">{{ form.department.errors }}</div>
-            {% endif %}
-          </div>
+            <!-- ZONES -->
+            <div class="form-group">
+              <div class="section-label">
+                <span>Zones</span>
+                <span class="badge-count" id="zoneCount">0</span>
+              </div>
+              <span class="form-text">Select plants first, then select zones</span>
+              <div class="select-all-bar" id="zoneSelectBar" style="display:none;">
+                <button type="button" class="btn-outline-primary"
+                  onclick="selectAll('zone-checkbox', updateZoneCount, onZoneChange)">
+                  <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button type="button" class="btn-outline-secondary"
+                  onclick="deselectAll('zone-checkbox', updateZoneCount, onZoneChange)">
+                  <i class="fas fa-square"></i> Deselect All
+                </button>
+              </div>
+              <div class="checkbox-grid" id="zonesGrid">
+                <div class="loading-text">Please select plants first</div>
+              </div>
+            </div>
 
-          <hr>
+            <!-- LOCATIONS -->
+            <div class="form-group">
+              <div class="section-label">
+                <span>Locations</span>
+                <span class="badge-count" id="locationCount">0</span>
+              </div>
+              <span class="form-text">Select zones first, then select locations</span>
+              <div class="select-all-bar" id="locationSelectBar" style="display:none;">
+                <button type="button" class="btn-outline-primary"
+                  onclick="selectAll('location-checkbox', updateLocationCount, onLocationChange)">
+                  <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button type="button" class="btn-outline-secondary"
+                  onclick="deselectAll('location-checkbox', updateLocationCount, onLocationChange)">
+                  <i class="fas fa-square"></i> Deselect All
+                </button>
+              </div>
+              <div class="checkbox-grid" id="locationsGrid">
+                <div class="loading-text">Please select zones first</div>
+              </div>
+            </div>
 
-          <div class="form-group">
-            <label>Expected Participants</label>
-            {{ form.expected_participants }}
-          </div>
+            <!-- SUBLOCATIONS -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <div class="section-label">
+                <span>Sub-Locations</span>
+                <span class="badge-count" id="sublocationCount">0</span>
+              </div>
+              <span class="form-text">Select locations first, then select sub-locations</span>
+              <div class="select-all-bar" id="sublocationSelectBar" style="display:none;">
+                <button type="button" class="btn-outline-primary"
+                  onclick="selectAll('sublocation-checkbox', updateSublocationCount)">
+                  <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button type="button" class="btn-outline-secondary"
+                  onclick="deselectAll('sublocation-checkbox', updateSublocationCount)">
+                  <i class="fas fa-square"></i> Deselect All
+                </button>
+              </div>
+              <div class="checkbox-grid" id="sublocationsGrid">
+                <div class="loading-text">Please select locations first</div>
+              </div>
+            </div>
 
-          <div class="form-group">
-            <label>Remarks</label>
-            {{ form.remarks }}
-          </div>
+            <hr>
 
-          <!-- ======================== -->
-          <!-- FORM ACTIONS -->
-          <!-- ======================== -->
-          <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'toolbox_talk:session_list' %}" class="btn btn-secondary">
-              <i class="fas fa-times"></i> Cancel
-            </a>
-            <button type="submit" class="btn btn-primary" id="submitBtn">
-              <i class="fas fa-calendar-check"></i> {{ action }} Session
-            </button>
-          </div>
+            <!-- ========================================================== -->
+            <!-- TRAINER & INCHARGE ASSIGNMENT                              -->
+            <!-- ========================================================== -->
+            <div id="trainer-incharge-error" class="alert alert-danger" style="display:none;">
+              <i class="fas fa-exclamation-circle"></i>
+              Same user cannot be both Trainer and Incharge.
+            </div>
 
-        </form>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div class="section-title">
+                <i class="fas fa-chalkboard-teacher"></i> Trainer Assignment
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="section-label">
+                <span>Trainers <span class="required-mark">*</span></span>
+                <span class="badge-count" id="trainerCount">0</span>
+              </div>
+              <div class="checkbox-grid" id="trainersGrid">
+                <div class="loading-text">Please select plants first</div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div class="section-title">
+                <i class="fas fa-user-tie"></i> Incharge Assignment
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <div class="section-label">
+                <span>Incharges <span class="required-mark">*</span></span>
+                <span class="badge-count" id="inchargeCount">0</span>
+              </div>
+              <div class="checkbox-grid" id="inchargesGrid">
+                <div class="loading-text">Please select plants first</div>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- ========================================================== -->
+            <!-- SESSION DETAILS                                             -->
+            <!-- ========================================================== -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <div class="section-title">
+                <i class="fas fa-clock"></i> Session Details
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.planned_date.id_for_label }}" class="field-label">Planned Date</label>
+                  {{ form.planned_date }}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.planned_time.id_for_label }}" class="field-label">Planned Time</label>
+                  {{ form.planned_time }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.department.id_for_label }}" class="field-label">Department</label>
+              {{ form.department }}
+              {% if form.department.errors %}
+                <div class="form-error">{{ form.department.errors }}</div>
+              {% endif %}
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+              <label for="{{ form.expected_participants.id_for_label }}" class="field-label">Expected Participants</label>
+              {{ form.expected_participants }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="{{ form.remarks.id_for_label }}" class="field-label">Remarks</label>
+              {{ form.remarks }}
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- FORM ACTIONS                                                -->
+            <!-- ========================================================== -->
+            <div class="form-actions">
+              <a href="{% url 'toolbox_talk:session_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+              </a>
+              <div class="form-actions-right">
+                <button type="submit" onclick="setAction('save_and_add')" class="btn btn-info">
+                  <i class="fas fa-plus"></i> Save &amp; Add Another
+                </button>
+                <button type="submit" onclick="setAction('save')" class="btn btn-primary" id="submitBtn">
+                  <i class="fas fa-save"></i> {{ action }} Session
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
 
 {% endblock %}
 
-
 {% block extra_js %}
 <script>
+
+// ─────────────────────────────────────────────
+// ACTION TYPE HANDLER
+// ─────────────────────────────────────────────
+
+function setAction(action) {
+    document.getElementById('action_type').value = action;
+}
 
 // ─────────────────────────────────────────────
 // UTILITY FUNCTIONS
@@ -437,7 +1076,7 @@ function buildCheckboxItem(name, value, id, labelHtml, cssClass, onChangeFn) {
 function buildGroupHeader(text, icon) {
   var div = document.createElement('div');
   div.className = 'group-header';
-  div.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + text;
+  div.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + text;
   return div;
 }
 
@@ -490,7 +1129,7 @@ function loadPlants() {
         var item = buildCheckboxItem(
           'selected_plants', plant.id, 'plant_' + plant.id,
           '<strong>' + plant.name + '</strong>' +
-          (plant.code ? ' <small class="text-muted">(' + plant.code + ')</small>' : ''),
+          (plant.code ? ' <span class="text-muted">(' + plant.code + ')</span>' : ''),
           'plant-checkbox',
           function () {
             updatePlantCount();
@@ -569,7 +1208,7 @@ function loadZonesForPlants() {
           var item = buildCheckboxItem(
             'selected_zones', zone.id, 'zone_' + zone.id,
             '<strong>' + zone.name + '</strong>' +
-            (zone.code ? ' <small class="text-muted">(' + zone.code + ')</small>' : ''),
+            (zone.code ? ' <span class="text-muted">(' + zone.code + ')</span>' : ''),
             'zone-checkbox',
             function () {
               updateZoneCount();
@@ -645,7 +1284,7 @@ function loadLocationsForZones() {
           var item = buildCheckboxItem(
             'selected_locations', loc.id, 'loc_' + loc.id,
             '<strong>' + loc.name + '</strong>' +
-            (loc.code ? ' <small class="text-muted">(' + loc.code + ')</small>' : ''),
+            (loc.code ? ' <span class="text-muted">(' + loc.code + ')</span>' : ''),
             'location-checkbox',
             function () {
               updateLocationCount();
@@ -715,7 +1354,7 @@ function loadSublocationsForLocations() {
         grouped[locName].forEach(function (sub) {
           var item = buildCheckboxItem(
             'selected_sublocations', sub.id, 'sub_' + sub.id,
-            sub.name + (sub.code ? ' <small class="text-muted">(' + sub.code + ')</small>' : ''),
+            sub.name + (sub.code ? ' <span class="text-muted">(' + sub.code + ')</span>' : ''),
             'sublocation-checkbox',
             function () { updateSublocationCount(); }
           );
@@ -869,6 +1508,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Auto-resize textarea
+  $('textarea').each(function () {
+    this.style.height = this.scrollHeight + 'px';
+    this.style.overflowY = 'hidden';
+  }).on('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+  });
+
   // Submit guard
   var isSubmitting = false;
   document.getElementById('sessionForm').addEventListener('submit', function (e) {
@@ -877,8 +1525,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = IS_EDIT
-      ? '<i class="fas fa-spinner fa-spin mr-1"></i> Updating...'
-      : '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
+      ? '<i class="fas fa-spinner fa-spin"></i> Updating...'
+      : '<i class="fas fa-spinner fa-spin"></i> Creating...';
   });
 
   // Load plants — cascades automatically in edit mode
