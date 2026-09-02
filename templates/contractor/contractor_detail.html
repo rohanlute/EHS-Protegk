@@ -1,0 +1,804 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ contractor.contractor_name }} | Contractor Management | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== CONTRACTOR DETAIL - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                */
+  /* ========================================================== */
+  .page-header-custom {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-header-custom .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .page-header-custom .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .page-header-custom .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .page-header-custom .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .page-header-custom .header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    text-decoration: none;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: transparent;
+    border: 2px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-primary-custom:hover {
+    background: var(--primary-teal);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-success-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: transparent;
+    border: 2px solid #22c55e;
+    color: #22c55e;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-success-custom:hover {
+    background: #22c55e;
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-danger-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: transparent;
+    border: 2px solid #dc2626;
+    color: #dc2626;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-danger-custom:hover {
+    background: #dc2626;
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-outline-warning-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: transparent;
+    border: 2px solid #d97706;
+    color: #d97706;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-outline-warning-custom:hover {
+    background: #d97706;
+    color: white;
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* SUMMARY HEADER                                             */
+  /* ========================================================== */
+  .summary-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .summary-header .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .summary-header .summary-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-header .summary-item .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+  }
+
+  .summary-header .summary-item .value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .badge-status.active {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .badge-status.active::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #16a34a;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .badge-status.inactive {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .badge-status.inactive::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #dc2626;
+  }
+
+  .badge-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .badge-type.teal {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.15);
+  }
+
+  .badge-type.blue {
+    background: #dbeafe;
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+  }
+
+  .badge-type.gold {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.15);
+  }
+
+  .badge-type.purple {
+    background: #ede9fe;
+    color: #7c3aed;
+    border: 1px solid rgba(124, 58, 237, 0.15);
+  }
+
+  .badge-type.green {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.15);
+  }
+
+  .badge-type.red {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.15);
+  }
+
+  .badge-type.default {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ========================================================== */
+  /* DETAIL CARDS                                               */
+  /* ========================================================== */
+  .detail-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .detail-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .detail-card .card-header-custom {
+    background: var(--primary-teal-light);
+    padding: 12px 20px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-card .card-header-custom .section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-teal);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .detail-card .card-header-custom .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .detail-card .card-body {
+    padding: 16px 20px;
+  }
+
+  .detail-card .detail-row {
+    display: flex;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .detail-card .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-card .detail-row .detail-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 35%;
+    flex-shrink: 0;
+  }
+
+  .detail-card .detail-row .detail-value {
+    font-size: 14px;
+    color: var(--text-secondary);
+    width: 65%;
+  }
+
+  .detail-card .detail-row .detail-value strong {
+    color: var(--text-primary);
+  }
+
+  .detail-card .detail-row .detail-value a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .detail-card .detail-row .detail-value a:hover {
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .page-header-custom {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .page-header-custom .header-actions {
+      width: 100%;
+    }
+
+    .page-header-custom .header-actions .btn-primary-custom,
+    .page-header-custom .header-actions .btn-outline-primary-custom,
+    .page-header-custom .header-actions .btn-outline-success-custom,
+    .page-header-custom .header-actions .btn-outline-danger-custom,
+    .page-header-custom .header-actions .btn-outline-warning-custom {
+      flex: 1;
+      justify-content: center;
+      font-size: 13px;
+      padding: 6px 14px;
+    }
+
+    .summary-header .summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .summary-header .summary-item .value {
+      font-size: 14px;
+    }
+
+    .detail-card .detail-row {
+      flex-direction: column;
+      padding: 6px 0;
+    }
+
+    .detail-card .detail-row .detail-label {
+      width: 100%;
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+
+    .detail-card .detail-row .detail-value {
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .detail-card .card-body {
+      padding: 12px 16px;
+    }
+
+    .badge-status,
+    .badge-type {
+      font-size: 12px;
+      padding: 3px 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-header-custom .header-left h1 {
+      font-size: 18px;
+    }
+
+    .summary-header .summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .summary-header {
+      padding: 16px 18px;
+    }
+
+    .summary-header .summary-item .value {
+      font-size: 13px;
+    }
+
+    .detail-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .page-header-custom .header-actions {
+      flex-direction: column;
+    }
+
+    .page-header-custom .header-actions .btn-primary-custom,
+    .page-header-custom .header-actions .btn-outline-primary-custom,
+    .page-header-custom .header-actions .btn-outline-success-custom,
+    .page-header-custom .header-actions .btn-outline-danger-custom,
+    .page-header-custom .header-actions .btn-outline-warning-custom {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="page-header-custom">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <div>
+        <h1>{{ contractor.contractor_name }}</h1>
+        <p class="subtitle">
+          {{ contractor.contractor_code }} · 
+          {{ contractor.get_contractor_type_display }}
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <!-- Edit Button -->
+      <a href="{% url 'contractor:contractor_edit' contractor.pk %}" class="btn-outline-primary-custom">
+        <i class="fas fa-edit"></i> Edit
+      </a>
+
+      <!-- Toggle Active/Inactive Button -->
+      {% if contractor.is_active %}
+        <form method="POST" action="{% url 'contractor:contractor_suspend' contractor.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button type="submit" class="btn-outline-warning-custom" onclick="return confirm('Are you sure you want to deactivate this contractor?');">
+            <i class="fas fa-pause"></i> Deactivate
+          </button>
+        </form>
+      {% else %}
+        <form method="POST" action="{% url 'contractor:contractor_activate' contractor.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button type="submit" class="btn-outline-success-custom" onclick="return confirm('Are you sure you want to activate this contractor?');">
+            <i class="fas fa-play"></i> Activate
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SUMMARY HEADER                                             -->
+  <!-- ========================================================== -->
+  <div class="summary-header">
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span class="label">Contractor Code</span>
+        <span class="value">{{ contractor.contractor_code }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Status</span>
+        <span class="value">
+          {% if contractor.is_active %}
+            <span class="badge-status active">Active</span>
+          {% else %}
+            <span class="badge-status inactive">Inactive</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Contractor Type</span>
+        <span class="value">
+          <span class="badge-type 
+            {% if contractor.contractor_type == 'ELECTRICAL' %}gold
+            {% elif contractor.contractor_type == 'CIVIL' %}blue
+            {% elif contractor.contractor_type == 'MECHANICAL' %}purple
+            {% elif contractor.contractor_type == 'CONSTRUCTION' %}red
+            {% elif contractor.contractor_type == 'HOUSEKEEPING' %}green
+            {% elif contractor.contractor_type == 'SECURITY' %}teal
+            {% elif contractor.contractor_type == 'TRANSPORT' %}gold
+            {% elif contractor.contractor_type == 'WASTE_MANAGEMENT' %}blue
+            {% elif contractor.contractor_type == 'FACILITY_MANAGEMENT' %}purple
+            {% else %}default{% endif %}">
+            {{ contractor.get_contractor_type_display }}
+          </span>
+        </span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Work Category</span>
+        <span class="value">{{ contractor.get_work_category_display }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- DETAIL CARDS - ROW 1                                       -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <!-- Basic Information -->
+    <div class="col-md-6 mb-4">
+      <div class="detail-card">
+        <div class="card-header-custom">
+          <div class="section-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <h5 class="card-title">Basic Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <span class="detail-label">Contractor Code</span>
+            <span class="detail-value"><strong>{{ contractor.contractor_code }}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contractor Name</span>
+            <span class="detail-value"><strong>{{ contractor.contractor_name }}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contractor Type</span>
+            <span class="detail-value">{{ contractor.get_contractor_type_display }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Registration Number</span>
+            <span class="detail-value">{{ contractor.registration_number|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">PAN Number</span>
+            <span class="detail-value">{{ contractor.pan_number|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">GSTIN</span>
+            <span class="detail-value">{{ contractor.gstin|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Establishment Year</span>
+            <span class="detail-value">{{ contractor.establishment_year|default:"Not set" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="col-md-6 mb-4">
+      <div class="detail-card">
+        <div class="card-header-custom">
+          <div class="section-icon">
+            <i class="fas fa-address-card"></i>
+          </div>
+          <h5 class="card-title">Contact Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <span class="detail-label">Contact Person</span>
+            <span class="detail-value"><strong>{{ contractor.contact_person }}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Designation</span>
+            <span class="detail-value">{{ contractor.designation }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Mobile</span>
+            <span class="detail-value">{{ contractor.mobile }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email</span>
+            <span class="detail-value"><a href="mailto:{{ contractor.email }}">{{ contractor.email }}</a></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Alternate Mobile</span>
+            <span class="detail-value">{{ contractor.alternate_mobile|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Address</span>
+            <span class="detail-value">
+              {{ contractor.address_line1 }}
+              {% if contractor.address_line2 %}, {{ contractor.address_line2 }}{% endif %}
+              <br>
+              {{ contractor.city }}, {{ contractor.state }}, {{ contractor.country }}
+              <br>
+              Pincode: {{ contractor.pincode }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- DETAIL CARDS - ROW 2                                       -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <!-- Business Information -->
+    <div class="col-md-6 mb-4">
+      <div class="detail-card">
+        <div class="card-header-custom">
+          <div class="section-icon">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <h5 class="card-title">Business Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <span class="detail-label">Nature of Business</span>
+            <span class="detail-value">{{ contractor.nature_of_business }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Work Category</span>
+            <span class="detail-value">{{ contractor.get_work_category_display }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Service Description</span>
+            <span class="detail-value">{{ contractor.service_description|linebreaks }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Years of Experience</span>
+            <span class="detail-value">{{ contractor.years_of_experience|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Number of Workers</span>
+            <span class="detail-value">{{ contractor.number_of_workers|default:"Not set" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EHS Information -->
+    <div class="col-md-6 mb-4">
+      <div class="detail-card">
+        <div class="card-header-custom">
+          <div class="section-icon">
+            <i class="fas fa-hard-hat"></i>
+          </div>
+          <h5 class="card-title">EHS / Responsible Person</h5>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <span class="detail-label">EHS Officer Name</span>
+            <span class="detail-value"><strong>{{ contractor.ehs_officer_name }}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Designation</span>
+            <span class="detail-value">{{ contractor.ehs_designation|default:"Not set" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Mobile</span>
+            <span class="detail-value">{{ contractor.ehs_mobile }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email</span>
+            <span class="detail-value"><a href="mailto:{{ contractor.ehs_email }}">{{ contractor.ehs_email }}</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- METADATA                                                   -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="detail-card">
+        <div class="card-header-custom">
+          <div class="section-icon">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <h5 class="card-title">System Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <span class="detail-label">Created By</span>
+            <span class="detail-value">{{ contractor.created_by.get_full_name|default:contractor.created_by.username|default:"System" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Created At</span>
+            <span class="detail-value">{{ contractor.created_at|date:"d M Y, H:i" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Last Updated</span>
+            <span class="detail-value">{{ contractor.updated_at|date:"d M Y, H:i" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

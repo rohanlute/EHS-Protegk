@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'apps.emergency.apps.EmergencyConfig',
     'apps.PPE.apps.PpeConfig',
     'apps.toolbox_talk.apps.ToolboxTalkConfig',
+    'apps.contractor',
 
     'django.contrib.admin',
     'django.contrib.auth',

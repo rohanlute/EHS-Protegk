@@ -1,0 +1,849 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Contractor Onboarding | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  .page-header-custom {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-header-custom .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .page-header-custom .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .page-header-custom .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .page-header-custom .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .form-card .card-header-custom {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .form-card .card-header-custom .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--primary-teal);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .form-card .card-header-custom .header-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-card .card-header-custom .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .form-card .card-header-custom .section-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .form-card .card-body {
+    padding: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  .form-group label .required-star {
+    color: #dc2626;
+    margin-left: 2px;
+  }
+
+  .form-group .form-control,
+  .form-group .form-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .form-group .form-control:focus,
+  .form-group .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .form-group .form-control[readonly] {
+    background: #f1f5f9;
+    cursor: not-allowed;
+    color: var(--text-muted);
+  }
+
+  .form-group textarea.form-control {
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  /* Contractor Details Preview */
+  .contractor-details-preview {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    display: none;
+  }
+
+  .contractor-details-preview.show {
+    display: block;
+  }
+
+  .contractor-details-preview .detail-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .contractor-details-preview .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+  }
+
+  .contractor-details-preview .detail-item {
+    display: flex;
+    padding: 4px 0;
+  }
+
+  .contractor-details-preview .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 130px;
+    flex-shrink: 0;
+  }
+
+  .contractor-details-preview .detail-value {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  /* Checklist Styles */
+  .checklist-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .checklist-item:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+  }
+
+  .checklist-item.checked {
+    background: #dcfce7;
+    border-color: #22c55e;
+  }
+
+  .checklist-item .checklist-checkbox {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .checklist-item .checklist-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary-teal);
+  }
+
+  .checklist-item .checklist-info {
+    flex: 1;
+  }
+
+  .checklist-item .checklist-info .checklist-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .checklist-item .checklist-info .checklist-description {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .checklist-item .checklist-info .checklist-type {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+  }
+
+  .selection-summary {
+    background: #f1f5f9;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .selection-summary .count {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  .selection-summary .count span {
+    color: var(--primary-teal);
+  }
+
+  .form-actions {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .form-actions .action-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 24px;
+    background: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-cancel:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #dc2626;
+    text-decoration: none;
+  }
+
+  .btn-submit-onboarding {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 28px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-submit-onboarding:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-submit-onboarding i {
+    color: white;
+  }
+
+  .alert-danger {
+    background: #fef2f2;
+    border: 1px solid #dc2626;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #dc2626;
+    font-size: 14px;
+  }
+
+  .alert-success {
+    background: #dcfce7;
+    border: 1px solid #22c55e;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #16a34a;
+    font-size: 14px;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 992px) {
+    .checklist-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-header-custom {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-card .card-body {
+      padding: 16px 18px;
+    }
+
+    .form-card .card-header-custom {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 16px 18px;
+    }
+
+    .form-actions .action-group {
+      flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-submit-onboarding {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .contractor-details-preview .detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .checklist-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-header-custom .header-left h1 {
+      font-size: 18px;
+    }
+
+    .form-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+    }
+
+    .form-group .form-control,
+    .form-group .form-select {
+      font-size: 13px;
+      padding: 7px 10px;
+    }
+
+    .checklist-item {
+      padding: 8px 10px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="page-header-custom">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div>
+        <h1>Contractor Onboarding</h1>
+        <p class="subtitle">Select contractor, review details, and choose requirements</p>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" id="onboardingForm">
+    {% csrf_token %}
+
+    <!-- ========================================================== -->
+    <!-- SECTION 1: Select Contractor                                -->
+    <!-- ========================================================== -->
+    <div class="form-card">
+      <div class="card-header-custom">
+        <div class="section-icon"><i class="fas fa-user-tie"></i></div>
+        <div class="header-content">
+          <h5 class="section-title">Select Contractor</h5>
+          <p class="section-subtitle">Choose a contractor from the list</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="contractor_select">Contractor <span class="required-star">*</span></label>
+              <select name="contractor" id="contractor_select" class="form-select" required>
+                <option value="">-- Select Contractor --</option>
+                {% for contractor in contractors %}
+                  <option value="{{ contractor.id }}" data-code="{{ contractor.contractor_code }}">
+                    {{ contractor.contractor_code }} - {{ contractor.contractor_name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contractor Details Preview (Auto-populated) -->
+        <div id="contractor_details_preview" class="contractor-details-preview">
+          <div class="detail-title">Contractor Details</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Contractor Code</span>
+              <span class="detail-value" id="preview_code">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Company Name</span>
+              <span class="detail-value" id="preview_name">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Company Type</span>
+              <span class="detail-value" id="preview_type">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Contact Person</span>
+              <span class="detail-value" id="preview_contact">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Designation</span>
+              <span class="detail-value" id="preview_designation">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Mobile</span>
+              <span class="detail-value" id="preview_mobile">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Email</span>
+              <span class="detail-value" id="preview_email">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Address</span>
+              <span class="detail-value" id="preview_address">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">EHS Officer</span>
+              <span class="detail-value" id="preview_ehs_officer">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">EHS Mobile</span>
+              <span class="detail-value" id="preview_ehs_mobile">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">EHS Email</span>
+              <span class="detail-value" id="preview_ehs_email">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 2: Pre-Qualification Checklist                      -->
+    <!-- ========================================================== -->
+    <div class="form-card">
+      <div class="card-header-custom">
+        <div class="section-icon"><i class="fas fa-clipboard-check"></i></div>
+        <div class="header-content">
+          <h5 class="section-title">Pre-Qualification Checklist</h5>
+          <p class="section-subtitle">Select the pre-qualification questions to send to the contractor</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="checklist-container" id="prequalChecklist">
+          {% for question in prequal_questions %}
+            <div class="checklist-item" onclick="toggleChecklist(this, 'prequal', {{ question.id }})">
+              <div class="checklist-checkbox">
+                <input type="checkbox" name="prequal_questions" value="{{ question.id }}" id="prequal_{{ question.id }}" {% if question.is_mandatory %}checked disabled{% endif %}>
+              </div>
+              <div class="checklist-info">
+                <div class="checklist-name">{{ question.question }}</div>
+                <div class="checklist-type">{{ question.get_question_type_display }}</div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="no-data">No pre-qualification questions available.</div>
+          {% endfor %}
+        </div>
+
+        <div class="selection-summary">
+          <span>Selected Questions: <span class="count"><span id="prequalCount">0</span> / {{ prequal_questions|length }}</span></span>
+          <span style="font-size: 12px; color: var(--text-muted);">
+            <i class="fas fa-info-circle"></i> Pre-selected items are required
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 3: Document Checklist                               -->
+    <!-- ========================================================== -->
+    <div class="form-card">
+      <div class="card-header-custom">
+        <div class="section-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="header-content">
+          <h5 class="section-title">Document Checklist</h5>
+          <p class="section-subtitle">Select the documents required for verification</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="checklist-container" id="documentChecklist">
+          {% for doc in documents %}
+            <div class="checklist-item" onclick="toggleChecklist(this, 'doc', {{ doc.id }})">
+              <div class="checklist-checkbox">
+                <input type="checkbox" name="documents" value="{{ doc.id }}" id="doc_{{ doc.id }}" {% if doc.is_mandatory %}checked disabled{% endif %}>
+              </div>
+              <div class="checklist-info">
+                <div class="checklist-name">{{ doc.name }}</div>
+                <div class="checklist-description">{{ doc.description|default:"" }}</div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="no-data">No document types available.</div>
+          {% endfor %}
+        </div>
+
+        <div class="selection-summary">
+          <span>Selected Documents: <span class="count"><span id="docCount">0</span> / {{ documents|length }}</span></span>
+          <span style="font-size: 12px; color: var(--text-muted);">
+            <i class="fas fa-info-circle"></i> Pre-selected items are required
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 4: Additional Notes                                 -->
+    <!-- ========================================================== -->
+    <div class="form-card">
+      <div class="card-header-custom">
+        <div class="section-icon"><i class="fas fa-sticky-note"></i></div>
+        <div class="header-content">
+          <h5 class="section-title">Additional Notes</h5>
+          <p class="section-subtitle">Any special instructions or comments</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="notes">Notes (Optional)</label>
+          <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Enter any additional notes or special requirements..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- FORM ACTIONS                                                -->
+    <!-- ========================================================== -->
+    <div class="form-actions">
+      <div class="action-group">
+        <a href="{% url 'contractor:contractor_list' %}" class="btn-cancel">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+      <div class="action-group">
+        <button type="submit" name="send_for_upload" class="btn-submit-onboarding" onclick="return confirmSubmit()">
+          <i class="fas fa-paper-plane"></i> Send for Upload
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Contractor data for preview
+  const contractorData = {
+    {% for contractor in contractors %}
+      "{{ contractor.id }}": {
+        code: "{{ contractor.contractor_code|escapejs }}",
+        name: "{{ contractor.contractor_name|escapejs }}",
+        type: "{{ contractor.get_contractor_type_display|escapejs }}",
+        contact: "{{ contractor.contact_person|escapejs }}",
+        designation: "{{ contractor.designation|escapejs }}",
+        mobile: "{{ contractor.mobile|escapejs }}",
+        email: "{{ contractor.email|escapejs }}",
+        address: "{{ contractor.address_line1|escapejs }}, {{ contractor.city|escapejs }}, {{ contractor.state|escapejs }}, {{ contractor.country|escapejs }} - {{ contractor.pincode|escapejs }}",
+        ehs_officer: "{{ contractor.ehs_officer_name|escapejs }}",
+        ehs_mobile: "{{ contractor.ehs_mobile|escapejs }}",
+        ehs_email: "{{ contractor.ehs_email|escapejs }}"
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  };
+
+  // Toggle checklist item
+  function toggleChecklist(element, type, id) {
+    const checkbox = document.getElementById(type + '_' + id);
+    if (checkbox && !checkbox.disabled) {
+      checkbox.checked = !checkbox.checked;
+      element.classList.toggle('checked');
+      updateCounts();
+    }
+  }
+
+  // Update counts
+  function updateCounts() {
+    const prequalCheckboxes = document.querySelectorAll('input[name="prequal_questions"]:checked');
+    document.getElementById('prequalCount').textContent = prequalCheckboxes.length;
+
+    const docCheckboxes = document.querySelectorAll('input[name="documents"]:checked');
+    document.getElementById('docCount').textContent = docCheckboxes.length;
+  }
+
+  // Confirm submit
+  function confirmSubmit() {
+    const prequalChecked = document.querySelectorAll('input[name="prequal_questions"]:checked');
+    const docChecked = document.querySelectorAll('input[name="documents"]:checked');
+    
+    if (prequalChecked.length === 0) {
+      alert('Please select at least one pre-qualification question.');
+      return false;
+    }
+    
+    if (docChecked.length === 0) {
+      alert('Please select at least one document for verification.');
+      return false;
+    }
+    
+    return confirm('Are you sure you want to send this onboarding request? The selected documents and questions will be sent to the responsible person for upload.');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initial counts
+    updateCounts();
+
+    // Add click handlers for pre-qual items
+    document.querySelectorAll('.checklist-item').forEach(function(item) {
+      const checkbox = item.querySelector('input[type="checkbox"]');
+      if (checkbox && checkbox.checked) {
+        item.classList.add('checked');
+      }
+    });
+
+    // Update counts on checkbox change
+    document.querySelectorAll('input[name="prequal_questions"]').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const item = this.closest('.checklist-item');
+        if (item) {
+          if (this.checked) {
+            item.classList.add('checked');
+          } else {
+            item.classList.remove('checked');
+          }
+        }
+        updateCounts();
+      });
+    });
+
+    document.querySelectorAll('input[name="documents"]').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const item = this.closest('.checklist-item');
+        if (item) {
+          if (this.checked) {
+            item.classList.add('checked');
+          } else {
+            item.classList.remove('checked');
+          }
+        }
+        updateCounts();
+      });
+    });
+
+    // Load contractor details on selection
+    const contractorSelect = document.getElementById('contractor_select');
+    const detailsPreview = document.getElementById('contractor_details_preview');
+
+    if (contractorSelect) {
+      contractorSelect.addEventListener('change', function() {
+        const contractorId = this.value;
+        if (contractorId && contractorData[contractorId]) {
+          const data = contractorData[contractorId];
+          detailsPreview.classList.add('show');
+          document.getElementById('preview_code').textContent = data.code;
+          document.getElementById('preview_name').textContent = data.name;
+          document.getElementById('preview_type').textContent = data.type;
+          document.getElementById('preview_contact').textContent = data.contact;
+          document.getElementById('preview_designation').textContent = data.designation;
+          document.getElementById('preview_mobile').textContent = data.mobile;
+          document.getElementById('preview_email').textContent = data.email;
+          document.getElementById('preview_address').textContent = data.address;
+          document.getElementById('preview_ehs_officer').textContent = data.ehs_officer;
+          document.getElementById('preview_ehs_mobile').textContent = data.ehs_mobile;
+          document.getElementById('preview_ehs_email').textContent = data.ehs_email;
+        } else {
+          detailsPreview.classList.remove('show');
+        }
+      });
+
+      // Trigger change event if contractor is pre-selected
+      if (contractorSelect.value) {
+        contractorSelect.dispatchEvent(new Event('change'));
+      }
+    }
+  });
+</script>
+
+{% endblock %}
