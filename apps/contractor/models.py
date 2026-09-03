@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -239,6 +240,86 @@ class Contractor(models.Model):
         return 'Active' if self.is_active else 'Inactive'
 
 
+
+class ContractorPortalUser(models.Model):
+    """
+    Separate login account for external Contractor Portal users.
+
+    This is completely independent from the internal EHS-360 User model.
+    """
+
+    USER_TYPE_CHOICES = [
+        ('CONTACT_PERSON', 'Contact Person'),
+        ('EHS_OFFICER', 'EHS Officer'),
+    ]
+
+    contractor = models.ForeignKey(
+        Contractor,
+        on_delete=models.CASCADE,
+        related_name='portal_users'
+    )
+
+    name = models.CharField(
+        max_length=150,
+        verbose_name="Name"
+    )
+
+    email = models.EmailField(
+        verbose_name="Email Address"
+    )
+
+    user_type = models.CharField(
+        max_length=20,
+        choices=USER_TYPE_CHOICES,
+        verbose_name="User Type"
+    )
+
+    password = models.CharField(
+        max_length=255,
+        verbose_name="Password"
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Active"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    last_login = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Contractor Portal User'
+        verbose_name_plural = 'Contractor Portal Users'
+
+    def __str__(self):
+        return f"{self.name} - {self.email}"
+
+    def set_password(self, raw_password):
+        """
+        Store a hashed password using Django's password hashing.
+        """
+        from django.contrib.auth.hashers import make_password
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        """
+        Check the supplied password against the stored hash.
+        """
+        from django.contrib.auth.hashers import check_password
+        return check_password(raw_password, self.password)
+
+
 class PreQualificationQuestion(models.Model):
     """Pre-qualification questions for contractor assessment"""
     
@@ -367,6 +448,117 @@ class OnboardingRequest(models.Model):
 
     def __str__(self):
         return f"{self.contractor.contractor_code} - {self.contractor.contractor_name}"
+
+
+
+class ContractorAssignment(models.Model):
+    """
+    Controls external Contractor Portal access for an onboarding assignment.
+    """
+
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('COMPLETED', 'Completed'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELLED', 'Cancelled'),
+        ('EXPIRED', 'Expired'),
+    ]
+
+    onboarding = models.ForeignKey(
+        OnboardingRequest,
+        on_delete=models.CASCADE,
+        related_name='assignments'
+    )
+
+    portal_user = models.ForeignKey(
+        ContractorPortalUser,
+        on_delete=models.CASCADE,
+        related_name='assignments'
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='ACTIVE'
+    )
+
+    is_access_active = models.BooleanField(
+        default=True,
+        verbose_name="Access Active"
+    )
+
+    assigned_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+    access_token = models.UUIDField(
+        default=uuid.uuid4,
+        null=True,
+        blank=True,
+        editable=False
+    )
+
+    class Meta:
+        ordering = ['-assigned_at']
+        verbose_name = 'Contractor Assignment'
+        verbose_name_plural = 'Contractor Assignments'
+
+    def __str__(self):
+        return (
+            f"{self.onboarding.contractor.contractor_name} - "
+            f"{self.portal_user.email}"
+        )
+
+    def deactivate(self, status='COMPLETED'):
+        """
+        Deactivate portal access.
+        """
+        self.status = status
+        self.is_access_active = False
+
+        if status == 'COMPLETED':
+            self.completed_at = timezone.now()
+
+        self.save(
+            update_fields=[
+                'status',
+                'is_access_active',
+                'completed_at'
+            ]
+        )
+
+    @property
+    def can_access(self):
+        """
+        Check whether this assignment is currently accessible.
+        """
+        if not self.is_access_active:
+            return False
+
+        if self.status != 'ACTIVE':
+            return False
+
+        if self.expires_at and timezone.now() >= self.expires_at:
+            self.status = 'EXPIRED'
+            self.is_access_active = False
+            self.save(
+                update_fields=[
+                    'status',
+                    'is_access_active'
+                ]
+            )
+            return False
+
+        return True
 
 
 class OnboardingDocumentRequirement(models.Model):

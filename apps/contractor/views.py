@@ -1,3 +1,5 @@
+import secrets
+import string
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -9,14 +11,17 @@ from django.utils import timezone
 from datetime import datetime, date
 from django.http import JsonResponse
 from apps.contractor.models import (
-    Contractor, 
-    OnboardingRequest, 
-    OnboardingDocumentRequirement, 
-    DocumentType, 
-    PreQualificationQuestion
+    Contractor,
+    OnboardingRequest,
+    OnboardingDocumentRequirement,
+    DocumentType,
+    PreQualificationQuestion,
+    ContractorPortalUser,
+    ContractorAssignment,
 )
 from apps.contractor.forms import ContractorForm
 from django.contrib.auth import get_user_model
+from apps.notifications.services import NotificationService
 
 User = get_user_model()
 
@@ -184,6 +189,20 @@ class ContractorDeactivateView(LoginRequiredMixin, View):
 
 
 # ==========================================================
+# Genrate Contractor Password
+# ==========================================================
+def generate_contractor_password(length=10):
+    """
+    Generate a secure temporary password for Contractor Portal users.
+    """
+    characters = string.ascii_letters + string.digits + "!@#$%"
+
+    return ''.join(
+        secrets.choice(characters)
+        for _ in range(length)
+    )
+
+# ==========================================================
 # ONBOARDING VIEWS
 # ==========================================================
 class ContractorOnboardingView(LoginRequiredMixin, View):
@@ -204,74 +223,703 @@ class ContractorOnboardingView(LoginRequiredMixin, View):
         }
         return render(request, self.template_name, context)
     
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         contractor_id = request.POST.get('contractor')
-        prequal_question_ids = request.POST.getlist('prequal_questions')
-        document_ids = request.POST.getlist('documents')
-        notes = request.POST.get('notes', '')
-        
-        # Validate
+        selected_questions = request.POST.getlist('prequal_questions')
+        selected_documents = request.POST.getlist('documents')
+        notes = request.POST.get('notes', '').strip()
+
+        portal_credentials = []
+
+        # ---------------------------------------------------------
+        # Basic validation
+        # ---------------------------------------------------------
         if not contractor_id:
-            messages.error(request, 'Please select a contractor.')
-            return self.get(request)
-        
-        if not prequal_question_ids:
-            messages.error(request, 'Please select at least one pre-qualification question.')
-            return self.get(request)
-        
-        if not document_ids:
-            messages.error(request, 'Please select at least one document for verification.')
-            return self.get(request)
-        
-        contractor = get_object_or_404(Contractor, id=contractor_id)
-        
-        # Check if contractor already has a pending onboarding
+            messages.error(request, "Please select a contractor.")
+            return redirect('contractor:contractor_onboarding')
+
+        contractor = get_object_or_404(
+            Contractor,
+            pk=contractor_id
+        )
+
+        if not selected_questions:
+            messages.error(
+                request,
+                "Please select at least one pre-qualification question."
+            )
+            return redirect('contractor:contractor_onboarding')
+
+        if not selected_documents:
+            messages.error(
+                request,
+                "Please select at least one document requirement."
+            )
+            return redirect('contractor:contractor_onboarding')
+
+        # ---------------------------------------------------------
+        # Get contractor contact details
+        # ---------------------------------------------------------
+        contact_name = contractor.contact_person
+        contact_email = (contractor.email or '').strip().lower()
+
+        ehs_name = contractor.ehs_officer_name
+        ehs_email = (contractor.ehs_email or '').strip().lower()
+
+        if not contact_email and not ehs_email:
+            messages.error(
+                request,
+                "Contractor Contact Person and EHS Officer email are missing."
+            )
+            return redirect('contractor:contractor_onboarding')
+
+        # ---------------------------------------------------------
+        # Prevent duplicate active onboarding
+        # ---------------------------------------------------------
         existing_onboarding = OnboardingRequest.objects.filter(
             contractor=contractor,
             status__in=['DRAFT', 'PENDING']
         ).first()
-        
+
         if existing_onboarding:
-            messages.warning(request, f'Contractor "{contractor.contractor_name}" already has a pending onboarding request.')
-            return redirect('contractor:onboarding_detail', pk=existing_onboarding.pk)
-        
-        # Create Onboarding Request - EHS Officer is auto-assigned from contractor
+            messages.warning(
+                request,
+                "An active onboarding request already exists for this contractor."
+            )
+            return redirect(
+                'contractor:onboarding_detail',
+                pk=existing_onboarding.pk
+            )
+
+        # ---------------------------------------------------------
+        # Existing internal EHS officer lookup
+        # ---------------------------------------------------------
+        internal_ehs_officer = None
+
+        if ehs_email:
+            internal_ehs_officer = User.objects.filter(
+                email__iexact=ehs_email
+            ).first()
+
+        # ---------------------------------------------------------
+        # Create Onboarding Request
+        # ---------------------------------------------------------
         onboarding = OnboardingRequest.objects.create(
             contractor=contractor,
-            ehs_officer=contractor.ehs_officer_name,  # Store EHS officer name from contractor
+            ehs_officer=internal_ehs_officer,
+            pre_qualification_answers={
+                str(question_id): False
+                for question_id in selected_questions
+            },
             notes=notes,
+            status='PENDING',
             submitted_by=request.user,
-            status='PENDING'
+            submitted_at=timezone.now()
         )
-        
-        # Add pre-qualification questions (store as JSON)
-        prequal_answers = {}
-        for q_id in prequal_question_ids:
-            prequal_answers[str(q_id)] = False  # Default answer, will be filled by contractor
-        onboarding.pre_qualification_answers = prequal_answers
-        onboarding.save()
-        
-        # Add selected documents
-        for doc_id in document_ids:
-            doc_type = get_object_or_404(DocumentType, id=doc_id)
+
+        # ---------------------------------------------------------
+        # Create document requirements
+        # ---------------------------------------------------------
+        for document_id in selected_documents:
+            document_type = get_object_or_404(
+                DocumentType,
+                pk=document_id
+            )
+
             OnboardingDocumentRequirement.objects.create(
                 onboarding=onboarding,
-                document_type=doc_type,
+                document_type=document_type,
                 is_required=True,
                 status='PENDING'
             )
-        
-        onboarding.submitted_at = timezone.now()
-        onboarding.save()
-        
-        messages.success(
-            request, 
-            f'Onboarding request sent successfully! Documents and questions sent to {contractor.ehs_officer_name} for upload.'
+
+        # ---------------------------------------------------------
+        # Create Contact Person portal assignment
+        # ---------------------------------------------------------
+        if contact_email:
+            portal_user = ContractorPortalUser.objects.filter(
+                contractor=contractor,
+                email__iexact=contact_email
+            ).first()
+
+            temporary_password = generate_contractor_password()
+
+            if portal_user:
+                portal_user.name = contact_name
+                portal_user.user_type = 'CONTACT_PERSON'
+                portal_user.is_active = True
+                portal_user.set_password(temporary_password)
+
+                portal_user.save(
+                    update_fields=[
+                        'name',
+                        'user_type',
+                        'is_active',
+                        'password',
+                        'updated_at'
+                    ]
+                )
+            else:
+                portal_user = ContractorPortalUser.objects.create(
+                    contractor=contractor,
+                    name=contact_name,
+                    email=contact_email,
+                    user_type='CONTACT_PERSON',
+                    password='',
+                    is_active=True
+                )
+
+                portal_user.set_password(temporary_password)
+                portal_user.save(update_fields=['password'])
+
+            assignment = ContractorAssignment.objects.create(
+                onboarding=onboarding,
+                portal_user=portal_user,
+                status='ACTIVE',
+                is_access_active=True
+            )
+
+            portal_credentials.append({
+                'portal_user': portal_user,
+                'assignment': assignment,
+                'password': temporary_password,
+            })
+
+        # ---------------------------------------------------------
+        # Create EHS Officer portal assignment
+        # ---------------------------------------------------------
+        if ehs_email:
+
+            # ---------------------------------------------------------
+            # Same email as Contact Person
+            # ---------------------------------------------------------
+            if ehs_email == contact_email:
+
+                portal_user = ContractorPortalUser.objects.filter(
+                    contractor=contractor,
+                    email__iexact=ehs_email
+                ).first()
+
+                if portal_user:
+
+                    # Same account, so do not generate another password.
+                    existing_credentials = next(
+                        (
+                            item
+                            for item in portal_credentials
+                            if item['portal_user'].id == portal_user.id
+                        ),
+                        None
+                    )
+
+                    if existing_credentials:
+                        temporary_password = existing_credentials['password']
+                    else:
+                        temporary_password = generate_contractor_password()
+                        portal_user.set_password(temporary_password)
+                        portal_user.save(
+                            update_fields=['password', 'updated_at']
+                        )
+
+                else:
+                    temporary_password = generate_contractor_password()
+
+                    portal_user = ContractorPortalUser.objects.create(
+                        contractor=contractor,
+                        name=ehs_name,
+                        email=ehs_email,
+                        user_type='EHS_OFFICER',
+                        password='',
+                        is_active=True
+                    )
+
+                    portal_user.set_password(temporary_password)
+                    portal_user.save(update_fields=['password'])
+
+                if not onboarding.assignments.filter(
+                    portal_user=portal_user
+                ).exists():
+
+                    assignment = ContractorAssignment.objects.create(
+                        onboarding=onboarding,
+                        portal_user=portal_user,
+                        status='ACTIVE',
+                        is_access_active=True
+                    )
+
+                    portal_credentials.append({
+                        'portal_user': portal_user,
+                        'assignment': assignment,
+                        'password': temporary_password,
+                    })
+
+            # ---------------------------------------------------------
+            # Different email from Contact Person
+            # ---------------------------------------------------------
+            else:
+
+                portal_user = ContractorPortalUser.objects.filter(
+                    contractor=contractor,
+                    email__iexact=ehs_email
+                ).first()
+
+                temporary_password = generate_contractor_password()
+
+                if portal_user:
+                    portal_user.name = ehs_name
+                    portal_user.user_type = 'EHS_OFFICER'
+                    portal_user.is_active = True
+                    portal_user.set_password(temporary_password)
+
+                    portal_user.save(
+                        update_fields=[
+                            'name',
+                            'user_type',
+                            'is_active',
+                            'password',
+                            'updated_at'
+                        ]
+                    )
+
+                else:
+                    portal_user = ContractorPortalUser.objects.create(
+                        contractor=contractor,
+                        name=ehs_name,
+                        email=ehs_email,
+                        user_type='EHS_OFFICER',
+                        password='',
+                        is_active=True
+                    )
+
+                    portal_user.set_password(temporary_password)
+                    portal_user.save(update_fields=['password'])
+
+                assignment = ContractorAssignment.objects.create(
+                    onboarding=onboarding,
+                    portal_user=portal_user,
+                    status='ACTIVE',
+                    is_access_active=True
+                )
+
+                portal_credentials.append({
+                    'portal_user': portal_user,
+                    'assignment': assignment,
+                    'password': temporary_password,
+                })
+
+        # ---------------------------------------------------------
+        # Send Contractor Portal Login Emails
+        # ---------------------------------------------------------
+
+        emails_sent = 0
+        emails_failed = 0
+
+        contact_email = (
+            contractor.email or ''
+        ).strip().lower()
+
+        ehs_email = (
+            contractor.ehs_email or ''
+        ).strip().lower()
+
+
+        for credential in portal_credentials:
+
+            portal_user = credential['portal_user']
+            assignment = credential['assignment']
+            temporary_password = credential['password']
+
+            # ---------------------------------------------------------
+            # Build assignment-specific login URL
+            # ---------------------------------------------------------
+
+            login_path = reverse(
+                'contractor_portal:login'
+            )
+
+            login_url = request.build_absolute_uri(
+                f"{login_path}?assignment={assignment.access_token}"
+            )
+
+            # ---------------------------------------------------------
+            # Determine recipients
+            # ---------------------------------------------------------
+
+            if portal_user.user_type == 'EHS_OFFICER':
+
+                # EHS Officer is primary recipient
+                to_email = ehs_email
+
+                # Contact Person is CC
+                cc_email = contact_email
+
+            else:
+
+                # Contact Person receives their own credentials
+                to_email = contact_email
+
+                # No CC required
+                cc_email = None
+
+            # ---------------------------------------------------------
+            # Send email
+            # ---------------------------------------------------------
+
+            email_sent = NotificationService.send_contractor_onboarding_email(
+                portal_user=portal_user,
+                assignment=assignment,
+                temporary_password=temporary_password,
+                login_url=login_url,
+                cc_email=cc_email
+            )
+
+            if email_sent:
+                emails_sent += 1
+            else:
+                emails_failed += 1
+
+
+        # ---------------------------------------------------------
+        # Success / Email Status
+        # ---------------------------------------------------------
+        if emails_failed == 0:
+
+            messages.success(
+                request,
+                f"Contractor onboarding created successfully. "
+                f"{emails_sent} portal email(s) sent."
+            )
+
+        else:
+
+            messages.warning(
+                request,
+                f"Contractor onboarding created successfully, "
+                f"but {emails_failed} portal email(s) could not be sent."
+            )
+
+
+        return redirect(
+            'contractor:onboarding_detail',
+            pk=onboarding.pk
         )
-        
-        return redirect('contractor:contractor_list')
 
 
+
+
+class ContractorPortalLoginView(View):
+    """
+    Separate login for external Contractor Portal users.
+
+    This does NOT use the internal accounts.User authentication.
+    """
+
+    template_name = 'contractor/portal/login.html'
+
+    def get(self, request, *args, **kwargs):
+        """
+        Display contractor portal login page.
+        """
+
+        assignment_token = request.GET.get('assignment')
+
+        if assignment_token:
+            request.session['contractor_login_token'] = assignment_token
+
+        return render(
+            request,
+            self.template_name
+        )
+
+    def post(self, request, *args, **kwargs):
+        """
+        Authenticate ContractorPortalUser and verify assignment access.
+        """
+
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '').strip()
+
+        assignment_token = (
+            request.POST.get('assignment')
+            or request.session.get('contractor_login_token')
+        )
+
+        # ---------------------------------------------------------
+        # Basic validation
+        # ---------------------------------------------------------
+        if not email or not password:
+            messages.error(
+                request,
+                "Please enter your email and password."
+            )
+
+            return render(
+                request,
+                self.template_name
+            )
+
+        # ---------------------------------------------------------
+        # Find external contractor portal user
+        # ---------------------------------------------------------
+        portal_user = ContractorPortalUser.objects.filter(
+            email__iexact=email,
+            is_active=True
+        ).first()
+
+        if not portal_user:
+            messages.error(
+                request,
+                "Invalid email or password."
+            )
+
+            return render(
+                request,
+                self.template_name
+            )
+
+        # ---------------------------------------------------------
+        # Check password
+        # ---------------------------------------------------------
+        if not portal_user.check_password(password):
+            messages.error(
+                request,
+                "Invalid email or password."
+            )
+
+            return render(
+                request,
+                self.template_name
+            )
+
+        # ---------------------------------------------------------
+        # Find assignment
+        # ---------------------------------------------------------
+        assignment = None
+
+        if assignment_token:
+
+            assignment = ContractorAssignment.objects.filter(
+                access_token=assignment_token,
+                portal_user=portal_user
+            ).select_related(
+                'onboarding',
+                'onboarding__contractor'
+            ).first()
+
+        else:
+
+            assignment = ContractorAssignment.objects.filter(
+                portal_user=portal_user
+            ).select_related(
+                'onboarding',
+                'onboarding__contractor'
+            ).order_by('-assigned_at').first()
+
+        # ---------------------------------------------------------
+        # Assignment validation
+        # ---------------------------------------------------------
+        if not assignment:
+            messages.error(
+                request,
+                "No contractor onboarding assignment was found."
+            )
+
+            return render(
+                request,
+                self.template_name
+            )
+
+        if not assignment.can_access:
+            messages.error(
+                request,
+                "This contractor assignment is no longer active."
+            )
+
+            return render(
+                request,
+                self.template_name
+            )
+
+        # ---------------------------------------------------------
+        # Create separate contractor portal session
+        # ---------------------------------------------------------
+        request.session['contractor_portal_user_id'] = portal_user.id
+        request.session['contractor_assignment_id'] = assignment.id
+
+        # Remove temporary login token
+        request.session.pop(
+            'contractor_login_token',
+            None
+        )
+
+        # Update last login
+        portal_user.last_login = timezone.now()
+        portal_user.save(
+            update_fields=[
+                'last_login',
+                'updated_at'
+            ]
+        )
+
+        messages.success(
+            request,
+            f"Welcome, {portal_user.name}."
+        )
+
+        return redirect(
+            'contractor_portal:home'
+        )
+
+
+
+
+class ContractorPortalLogoutView(View):
+    """
+    Logout external Contractor Portal user.
+    """
+
+    def get(self, request, *args, **kwargs):
+
+        request.session.pop(
+            'contractor_portal_user_id',
+            None
+        )
+
+        request.session.pop(
+            'contractor_assignment_id',
+            None
+        )
+
+        request.session.pop(
+            'contractor_login_token',
+            None
+        )
+
+        messages.success(
+            request,
+            "You have been logged out successfully."
+        )
+
+        return redirect(
+            'contractor_portal:login'
+        )
+
+
+
+class ContractorPortalHomeView(View):
+    """
+    Main page for an authenticated Contractor Portal user.
+
+    The user can see ONLY their assigned onboarding.
+    """
+
+    template_name = 'contractor/portal/home.html'
+
+    def get(self, request, *args, **kwargs):
+
+        portal_user_id = request.session.get(
+            'contractor_portal_user_id'
+        )
+
+        assignment_id = request.session.get(
+            'contractor_assignment_id'
+        )
+
+        # ---------------------------------------------------------
+        # Check contractor portal session
+        # ---------------------------------------------------------
+        if not portal_user_id or not assignment_id:
+            return redirect(
+                'contractor_portal:login'
+            )
+
+        # ---------------------------------------------------------
+        # Get assignment
+        # ---------------------------------------------------------
+        assignment = ContractorAssignment.objects.filter(
+            id=assignment_id,
+            portal_user_id=portal_user_id
+        ).select_related(
+            'portal_user',
+            'onboarding',
+            'onboarding__contractor'
+        ).first()
+
+        if not assignment:
+            request.session.flush()
+
+            messages.error(
+                request,
+                "Your contractor assignment could not be found."
+            )
+
+            return redirect(
+                'contractor_portal:login'
+            )
+
+        # ---------------------------------------------------------
+        # Check assignment access
+        # ---------------------------------------------------------
+        if not assignment.can_access:
+            request.session.pop(
+                'contractor_assignment_id',
+                None
+            )
+
+            messages.error(
+                request,
+                "Your contractor assignment is no longer active."
+            )
+
+            return redirect(
+                'contractor_portal:login'
+            )
+
+        onboarding = assignment.onboarding
+
+        # ---------------------------------------------------------
+        # Get selected pre-qualification questions
+        # ---------------------------------------------------------
+        question_ids = []
+
+        if onboarding.pre_qualification_answers:
+            question_ids = [
+                int(question_id)
+                for question_id in onboarding.pre_qualification_answers.keys()
+            ]
+
+        questions = PreQualificationQuestion.objects.filter(
+            id__in=question_ids,
+            is_active=True
+        ).order_by(
+            'sequence',
+            'id'
+        )
+
+        # ---------------------------------------------------------
+        # Get required documents
+        # ---------------------------------------------------------
+        document_requirements = onboarding.document_requirements.select_related(
+            'document_type'
+        ).all()
+
+        context = {
+            'portal_user': assignment.portal_user,
+            'assignment': assignment,
+            'onboarding': onboarding,
+            'contractor': onboarding.contractor,
+            'questions': questions,
+            'document_requirements': document_requirements,
+        }
+
+        return render(
+            request,
+            self.template_name,
+            context
+        )
+
+
+    
 class OnboardingListView(LoginRequiredMixin, ListView):
     """
     Display list of all onboarding requests.
