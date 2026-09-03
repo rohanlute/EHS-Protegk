@@ -61,6 +61,11 @@ class FlexibleJSONField(forms.CharField):
 
 
 class CAPAForm(BaseEHSForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["owner"].queryset = User.objects.filter(is_active=True, is_superuser=False)
+
     def clean(self):
         cleaned_data = super().clean()
         source_type = cleaned_data.get("source_type")
@@ -227,7 +232,15 @@ class CAPAActionForm(BaseEHSForm):
 
     class Meta:
         model = CAPAAction
-        exclude = ("capa", "created_by", "completion_remarks", "verified_remarks", "status")
+        exclude = (
+            "capa",
+            "created_by",
+            "completion_remarks",
+            "verified_remarks",
+            "status",
+            "source_action_content_type",
+            "source_action_object_id",
+        )
         widgets = {
             "target_date": forms.DateInput(attrs={"type": "date"}),
             "action_description": forms.Textarea(attrs={"rows": 3}),
