@@ -1,8 +1,556 @@
-{% extends 'capa/form.html' %}
-{% block page_title %}CAPA Investigation{% endblock %}
-{% block form_heading %}CAPA Investigation{% endblock %}
-{% block form_subtitle %}Complete and submit the investigation for this CAPA{% endblock %}
-{% block form_card_title %}Investigation Details{% endblock %}
-{% block breadcrumb_label %}Investigation{% endblock %}
-{% block submit_button_attrs %}name="submit_investigation" value="1"{% endblock %}
-{% block submit_label %}Submit Investigation{% endblock %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CAPA Investigation{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:dashboard' %}">CAPA Management</a></li>
+<li class="breadcrumb-item"><a href="{{ cancel_url }}">CAPA Details</a></li>
+<li class="breadcrumb-item active">Investigation</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== CAPA INVESTIGATION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --capa-teal: #0d9488;
+    --capa-teal-dark: #0f766e;
+    --capa-teal-light: rgba(13, 148, 136, .08);
+    --capa-text: #0f172a;
+    --capa-muted: #64748b;
+    --capa-border: #e2e8f0;
+    --capa-bg: #f8fafc;
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--capa-bg) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--capa-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--capa-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--capa-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* HEADER                                                     */
+  /* ========================================================== */
+  .investigation-header {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    margin-bottom: 14px;
+  }
+
+  .investigation-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .investigation-heading .heading-icon {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: var(--capa-teal);
+    background: var(--capa-teal-light);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .investigation-heading h1 {
+    margin: 0;
+    color: var(--capa-text);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .investigation-heading p {
+    margin: 1px 0 0;
+    color: var(--capa-muted);
+    font-size: 0.72rem;
+  }
+
+  .investigation-number {
+    color: var(--capa-teal);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    background: var(--capa-teal-light);
+    border-radius: 14px;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .investigation-card {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .investigation-card-header {
+    padding: 8px 16px;
+    color: #fff;
+    background: var(--capa-teal);
+  }
+
+  .investigation-card-header i {
+    margin-right: 6px;
+  }
+
+  .investigation-card-header h3 {
+    display: inline;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .investigation-card-body {
+    padding: 16px 18px;
+  }
+
+  /* ========================================================== */
+  /* FORM GRID                                                  */
+  /* ========================================================== */
+  .investigation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+  }
+
+  .investigation-field {
+    min-width: 0;
+  }
+
+  .investigation-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                */
+  /* ========================================================== */
+  .investigation-field > label {
+    display: block;
+    margin-bottom: 4px;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .investigation-field input:not([type="checkbox"]),
+  .investigation-field select,
+  .investigation-field textarea {
+    width: 100%;
+    border: 2px solid var(--capa-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--capa-text);
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .investigation-field input:not([type="checkbox"]),
+  .investigation-field select {
+    height: 34px;
+  }
+
+  .investigation-field textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .investigation-field select[multiple] {
+    height: 100px;
+  }
+
+  .investigation-field input:focus,
+  .investigation-field select:focus,
+  .investigation-field textarea:focus {
+    outline: none;
+    border-color: var(--capa-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX - FIXED OVERLAPPING ISSUE                         */
+  /* ========================================================== */
+  .investigation-checkbox {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border: 1px solid rgba(13, 148, 136, .18);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(13, 148, 136, .06), rgba(13, 148, 136, .015));
+    min-height: 38px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .investigation-checkbox input[type="checkbox"] {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    margin: 2px 0 0 0 !important;
+    flex: 0 0 17px !important;
+    accent-color: var(--capa-teal);
+    cursor: pointer;
+    border: 2px solid var(--capa-border);
+    border-radius: 4px;
+    padding: 0 !important;
+    display: inline-block !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    float: none !important;
+    clear: none !important;
+  }
+
+  .investigation-checkbox label {
+    margin: 0 !important;
+    color: #334155;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    cursor: pointer;
+    display: inline-block !important;
+    padding: 0 !important;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .investigation-checkbox label strong {
+    font-weight: 700;
+    color: var(--capa-text);
+  }
+
+  /* For multi-checkbox groups */
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  .checkbox-group .investigation-checkbox {
+    padding: 6px 12px !important;
+    min-height: 32px;
+  }
+
+  /* ========================================================== */
+  /* HELP TEXT & ERRORS                                         */
+  /* ========================================================== */
+  .helptext {
+    display: block;
+    margin-top: 3px;
+    color: var(--capa-muted);
+    font-size: 0.68rem;
+  }
+
+  .field-errors {
+    color: #dc2626;
+    font-size: 0.68rem;
+    margin-top: 3px;
+  }
+
+  .form-errors {
+    color: #dc2626;
+    font-size: 0.78rem;
+    padding: 10px 14px;
+    background: rgba(220, 38, 38, .08);
+    border: 1px solid rgba(220, 38, 38, .2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .investigation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--capa-border);
+  }
+
+  .investigation-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 5px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .investigation-button-primary {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, var(--capa-teal), var(--capa-teal-dark));
+    box-shadow: 0 3px 12px rgba(13, 148, 136, .2);
+  }
+
+  .investigation-button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, .35);
+  }
+
+  .investigation-button-muted {
+    border: 2px solid var(--capa-border);
+    color: #334155;
+    background: #fff;
+  }
+
+  .investigation-button-muted:hover {
+    background: var(--capa-teal-light);
+    border-color: var(--capa-teal);
+    color: var(--capa-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .investigation-header {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 12px 14px;
+    }
+
+    .investigation-heading h1 {
+      font-size: 0.9rem;
+    }
+
+    .investigation-card-body {
+      padding: 12px 14px;
+    }
+
+    .investigation-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .investigation-field-wide {
+      grid-column: auto;
+    }
+
+    .investigation-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .investigation-button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .investigation-checkbox {
+      padding: 6px 10px !important;
+    }
+
+    .investigation-checkbox input[type="checkbox"] {
+      width: 16px !important;
+      height: 16px !important;
+      min-width: 16px !important;
+      flex: 0 0 16px !important;
+    }
+
+    .investigation-checkbox label {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .investigation-header {
+      padding: 10px 12px;
+    }
+
+    .investigation-heading .heading-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .investigation-heading h1 {
+      font-size: 0.82rem;
+    }
+
+    .investigation-heading p {
+      font-size: 0.68rem;
+    }
+
+    .investigation-card-body {
+      padding: 10px 12px;
+    }
+
+    .investigation-field > label {
+      font-size: 0.68rem;
+    }
+
+    .investigation-field input:not([type="checkbox"]),
+    .investigation-field select,
+    .investigation-field textarea {
+      font-size: 0.72rem;
+      padding: 5px 8px;
+    }
+
+    .investigation-field input:not([type="checkbox"]),
+    .investigation-field select {
+      height: 32px;
+    }
+
+    .investigation-button {
+      font-size: 0.72rem;
+      min-height: 32px;
+      padding: 4px 14px;
+    }
+
+    .investigation-checkbox {
+      padding: 4px 8px !important;
+      min-height: 30px;
+    }
+
+    .investigation-checkbox input[type="checkbox"] {
+      width: 15px !important;
+      height: 15px !important;
+      min-width: 15px !important;
+      flex: 0 0 15px !important;
+    }
+
+    .investigation-checkbox label {
+      font-size: 0.72rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- HEADER                                                     -->
+  <!-- ========================================================== -->
+  <div class="investigation-header">
+    <div class="investigation-heading">
+      <span class="heading-icon"><i class="fas fa-search"></i></span>
+      <div>
+        <h1>CAPA Investigation</h1>
+        <p>Complete and submit the investigation for this CAPA</p>
+      </div>
+    </div>
+    {% if capa %}<span class="investigation-number">{{ capa.capa_number }}</span>{% endif %}
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="investigation-card">
+    <div class="investigation-card-header">
+      <i class="fas fa-edit"></i><h3>Investigation Details</h3>
+    </div>
+    <div class="investigation-card-body">
+      <form method="post" action="" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="investigation-grid">
+          {% for field in form %}
+          <div class="investigation-field
+            {% if field.field.widget.input_type == 'checkbox' %}investigation-checkbox{% endif %}
+            {% if field.name in 'investigation_team problem_statement what_happened impact_consequence what_was_affected sequence_of_events findings evidence_collected witness_statements existing_controls control_failure_reason control_gap_identified why1 why2 why3 why4 why5 final_root_cause root_cause_details contributing_factors extent_analysis related_references existing_controls_summary risk_assessment_remarks management_system_impact_details investigation_conclusion investigator_recommendation' %}investigation-field-wide{% endif %}
+          ">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              {{ field }}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% else %}
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}<span style="color:#dc2626"> *</span>{% endif %}
+              </label>
+              {{ field }}
+            {% endif %}
+
+            {% if field.help_text %}
+              <span class="helptext">{{ field.help_text }}</span>
+            {% endif %}
+
+            {% if field.errors %}
+              <div class="field-errors">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="investigation-actions">
+          <button class="investigation-button investigation-button-muted" type="submit">
+            <i class="fas fa-save"></i> Save Investigation
+          </button>
+          <button class="investigation-button investigation-button-primary" type="submit" name="submit_investigation" value="1">
+            <i class="fas fa-check"></i> Submit Investigation
+          </button>
+          <a class="investigation-button investigation-button-muted" href="{{ cancel_url }}">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
