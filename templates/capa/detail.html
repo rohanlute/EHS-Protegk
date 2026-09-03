@@ -1,0 +1,886 @@
+{% extends 'base/base.html' %}
+{% load permission_tags %}
+{% load static %}
+
+{% block title %}CAPA Details - {{ capa.capa_number }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:dashboard' %}">CAPA Management</a></li>
+<li class="breadcrumb-item active">{{ capa.capa_number }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== CAPA DETAILS - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --capa-teal: #0d9488;
+    --capa-dark: #0f766e;
+    --capa-soft: rgba(13, 148, 136, 0.08);
+    --capa-border: #e2e8f0;
+    --capa-page: #f1f5f9;
+    --capa-ink: #0f172a;
+    --capa-muted: #64748b;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--capa-page) !important;
+  }
+
+  .capa-report {
+    max-width: 1420px;
+    margin: 0 auto;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--capa-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--capa-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--capa-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* HEADER CARD - REDUCED PADDING                              */
+  /* ========================================================== */
+  .dash-header-card {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .dash-header-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-header-card .card-body-custom {
+    padding: 14px 18px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .title-section h3 {
+    margin: 0;
+    color: var(--capa-ink);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .title-section .subtitle {
+    margin: 2px 0 0;
+    color: var(--capa-muted);
+    font-size: 13px;
+  }
+
+  .badge-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BADGES - REDUCED PADDING                                   */
+  /* ========================================================== */
+  .dash-badge-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 16px;
+    font-weight: 650;
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+
+  .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 14px;
+    font-weight: 650;
+    padding: 3px 10px;
+    font-size: 10px;
+  }
+
+  .badge-info { background: #ecfdf5; color: #0d9488; }
+  .badge-success { background: #dcfce7; color: #16a34a; }
+  .badge-warning { background: #fffbeb; color: #d97706; }
+  .badge-danger { background: #fef2f2; color: #dc2626; }
+  .badge-secondary { background: #f1f5f9; color: #64748b; }
+  .badge-primary { background: var(--capa-soft); color: var(--capa-teal); }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .dash-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--capa-border);
+  }
+
+  .btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+    height: 32px;
+  }
+
+  .btn-dash:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  .btn-dash-primary {
+    background: var(--capa-teal);
+    color: #fff;
+  }
+  .btn-dash-primary:hover {
+    background: var(--capa-dark);
+    color: #fff;
+  }
+
+  .btn-dash-success {
+    background: #22c55e;
+    color: #fff;
+  }
+  .btn-dash-success:hover {
+    background: #16a34a;
+    color: #fff;
+  }
+
+  .btn-dash-warning {
+    background: #d97706;
+    color: #fff;
+  }
+  .btn-dash-warning:hover {
+    background: #b45309;
+    color: #fff;
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid var(--capa-border);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--capa-soft);
+    color: var(--capa-teal);
+    border-color: var(--capa-teal);
+  }
+
+  /* ========================================================== */
+  /* DETAIL CARDS - REDUCED PADDING                             */
+  /* ========================================================== */
+  .dash-detail-card {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .dash-detail-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .dash-detail-card .card-header-custom {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--capa-border);
+    background: var(--capa-soft);
+  }
+
+  .dash-detail-card .card-header-custom h5 {
+    margin: 0;
+    color: var(--capa-ink);
+    font-size: 13px;
+    font-weight: 750;
+  }
+
+  .dash-detail-card .card-header-custom h5 i {
+    color: var(--capa-teal);
+    margin-right: 4px;
+  }
+
+  .dash-detail-card .card-header-custom.bg-warning {
+    background: #fffbeb;
+  }
+  .dash-detail-card .card-header-custom.bg-warning h5 i {
+    color: #d97706;
+  }
+
+  .dash-detail-card .card-header-custom.bg-success {
+    background: #dcfce7;
+  }
+  .dash-detail-card .card-header-custom.bg-success h5 i {
+    color: #16a34a;
+  }
+
+  .dash-detail-card .card-header-custom.bg-info {
+    background: #ecfdf5;
+  }
+
+  .dash-detail-card .card-body-custom {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* INFO ITEMS - BETTER ALIGNMENT                              */
+  /* ========================================================== */
+  .info-label {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--capa-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+  }
+
+  .info-value {
+    margin: 0;
+    color: var(--capa-ink);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  .info-value.regular {
+    font-weight: 400;
+  }
+
+  /* Priority badge - better alignment */
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 12px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 650;
+  }
+
+  .priority-badge i {
+    font-size: 10px;
+  }
+
+  .priority-badge.priority-low {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .priority-badge.priority-medium {
+    background: #ecfdf5;
+    color: #0d9488;
+  }
+
+  .priority-badge.priority-high {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  .priority-badge.priority-urgent {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .priority-badge.priority-critical {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .mb-2 {
+    margin-bottom: 8px;
+  }
+  .mb-3 {
+    margin-bottom: 10px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .capa-table {
+    width: 100%;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .capa-table th {
+    padding: 8px 10px;
+    background: var(--capa-soft);
+    color: #334155;
+    border-bottom: 2px solid var(--capa-teal);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  .capa-table td {
+    padding: 8px 10px;
+    color: #475569;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--capa-border);
+    font-size: 12px;
+  }
+
+  .capa-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .capa-table a {
+    color: var(--capa-teal);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .capa-table a:hover {
+    color: var(--capa-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .capa-empty {
+    padding: 16px 0;
+    color: var(--capa-muted);
+    text-align: center;
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* AUDIT ROW                                                  */
+  /* ========================================================== */
+  .audit-row {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--capa-border);
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .audit-row:last-child {
+    border-bottom: 0;
+  }
+
+  .audit-row strong {
+    color: var(--capa-ink);
+  }
+
+  .text-muted {
+    color: var(--capa-muted) !important;
+  }
+
+  .text-teal {
+    color: var(--capa-teal);
+  }
+
+  .mt-3 {
+    margin-top: 10px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-header-card .card-body-custom,
+    .dash-detail-card .card-body-custom {
+      padding: 12px 14px;
+    }
+
+    .title-section h3 {
+      font-size: 16px;
+    }
+
+    .title-section .subtitle {
+      font-size: 12px;
+    }
+
+    .dash-actions .btn-dash {
+      flex: 1;
+      justify-content: center;
+      font-size: 11px;
+      padding: 5px 10px;
+      height: 30px;
+    }
+
+    .dash-actions {
+      gap: 4px;
+    }
+
+    .capa-table thead {
+      display: none;
+    }
+
+    .capa-table tr {
+      display: block;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--capa-border);
+    }
+
+    .capa-table td {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 5px 4px;
+      border: 0;
+      text-align: right;
+    }
+
+    .capa-table td:before {
+      content: attr(data-label);
+      color: var(--capa-muted);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    .badge-section .dash-badge-lg {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+
+    .header-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dash-detail-card .card-header-custom {
+      padding: 6px 12px;
+    }
+
+    .dash-detail-card .card-header-custom h5 {
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-header-card .card-body-custom,
+    .dash-detail-card .card-body-custom {
+      padding: 10px 12px;
+    }
+
+    .title-section h3 {
+      font-size: 14px;
+    }
+
+    .title-section .subtitle {
+      font-size: 11px;
+    }
+
+    .dash-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-actions .btn-dash {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .info-value {
+      font-size: 12px;
+    }
+
+    .capa-table td {
+      font-size: 11px;
+      padding: 4px 2px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid capa-report">
+
+  <!-- ========================================================== -->
+  <!-- HEADER CARD                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-header-card">
+    <div class="card-body-custom">
+      <div class="header-top">
+        <div class="title-section">
+          <h3>{{ capa.capa_number }} - {{ capa.title }}</h3>
+          <p class="subtitle">
+            {{ capa.plant }}{% if capa.zone %} | {{ capa.zone }}{% endif %}{% if capa.location %} | {{ capa.location }}{% endif %}
+          </p>
+        </div>
+        <div class="badge-section">
+          <span class="dash-badge-lg {% if capa.status == 'CLOSED' %}badge-success{% elif capa.status == 'REOPENED' or capa.status == 'INVESTIGATION_REJECTED' %}badge-danger{% elif capa.status == 'EFFECTIVENESS_REVIEW' %}badge-info{% elif capa.status == 'OPEN' or capa.status == 'DRAFT' %}badge-warning{% else %}badge-primary{% endif %}">
+            <i class="fas fa-circle"></i> {{ capa.get_status_display }}
+          </span>
+          <span class="dash-badge-lg {% if capa.severity == 'CRITICAL' %}badge-danger{% elif capa.severity == 'HIGH' %}badge-warning{% elif capa.severity == 'MEDIUM' %}badge-info{% else %}badge-success{% endif %}">
+            <i class="fas fa-triangle-exclamation"></i> {{ capa.get_severity_display }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="dash-actions">
+        {% if user|has_perm:'CAPA_EDIT' %}
+          <a href="{% url 'capa:edit' capa.pk %}" class="btn-dash btn-dash-primary">
+            <i class="fas fa-edit"></i> Edit CAPA
+          </a>
+        {% endif %}
+
+        {% if can_start_investigation and user|has_perm:'CAPA_INVESTIGATE' %}
+          <a href="{% url 'capa:investigation' capa.pk %}" class="btn-dash btn-dash-warning">
+            <i class="fas fa-search"></i> {% if investigation %}Continue Investigation{% else %}Start Investigation{% endif %}
+          </a>
+        {% elif investigation %}
+          <a href="{% url 'capa:investigation_detail' capa.pk %}" class="btn-dash btn-dash-secondary">
+            <i class="fas fa-file-alt"></i> View Investigation
+          </a>
+        {% endif %}
+
+        {% if can_review_investigation and user|has_perm:'CAPA_APPROVE_INVESTIGATION' %}
+          <a href="{% url 'capa:investigation_review' capa.pk %}" class="btn-dash btn-dash-primary">
+            <i class="fas fa-user-check"></i> Review Investigation
+          </a>
+        {% endif %}
+
+        {% if can_add_action and user|has_perm:'CAPA_MANAGE_ACTIONS' %}
+          <a href="{% url 'capa:action_add' capa.pk %}" class="btn-dash btn-dash-success">
+            <i class="fas fa-plus"></i> Add Action
+          </a>
+        {% endif %}
+
+        {% if can_start_effectiveness and user|has_perm:'CAPA_EFFECTIVENESS' %}
+          <a href="{% url 'capa:effectiveness' capa.pk %}" class="btn-dash btn-dash-warning">
+            <i class="fas fa-chart-line"></i> Effectiveness Review
+          </a>
+        {% endif %}
+
+        {% if can_close and user|has_perm:'CAPA_CLOSE' %}
+          <a href="{% url 'capa:close' capa.pk %}" class="btn-dash btn-dash-success">
+            <i class="fas fa-check-circle"></i> Close CAPA
+          </a>
+        {% endif %}
+
+        <a href="{% url 'capa:list' %}" class="btn-dash btn-dash-secondary">
+          <i class="fas fa-arrow-left"></i> Back
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-lg-8">
+
+      <!-- CAPA Information -->
+      <div class="dash-detail-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-info-circle"></i> CAPA Information</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <span class="info-label">CAPA Number</span>
+              <p class="info-value">{{ capa.capa_number }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Priority</span>
+              <p class="info-value">
+                <span class="priority-badge priority-{% if capa.priority == 'URGENT' %}urgent{% elif capa.priority == 'HIGH' %}high{% elif capa.priority == 'MEDIUM' %}medium{% else %}low{% endif %}">
+                  <i class="fas fa-flag"></i> {{ capa.get_priority_display }}
+                </span>
+              </p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Owner</span>
+              <p class="info-value">{{ capa.owner|default:'Not assigned' }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Target Date</span>
+              <p class="info-value">
+                {{ capa.target_date|date:'d/m/Y'|default:'Not specified' }}
+                {% if capa.is_overdue %} <span class="dash-badge badge-danger">Overdue</span>{% endif %}
+              </p>
+            </div>
+            <div class="col-md-12 mb-3">
+              <span class="info-label">Description</span>
+              <p class="info-value regular">{{ capa.description|default:'No description provided.' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source and Location -->
+      <div class="dash-detail-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-map-marker-alt"></i> Source and Location</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <span class="info-label">Source Type</span>
+              <p class="info-value">{{ capa.get_source_type_display }}</p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="info-label">Source Reference</span>
+              <p class="info-value">{{ capa.source_reference|default:'-' }}</p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <span class="info-label">Department</span>
+              <p class="info-value">{{ capa.department|default:'-' }}</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <span class="info-label">Plant</span>
+              <p class="info-value">{{ capa.plant }}</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <span class="info-label">Zone</span>
+              <p class="info-value">{{ capa.zone|default:'-' }}</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <span class="info-label">Location</span>
+              <p class="info-value">{{ capa.location|default:'-' }}</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <span class="info-label">Sub-Location</span>
+              <p class="info-value">{{ capa.sublocation|default:'-' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Investigation Report -->
+      {% if investigation %}
+      <div class="dash-detail-card">
+        <div class="card-header-custom bg-warning">
+          <h5><i class="fas fa-search"></i> Investigation Report</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Investigation Date</span>
+              <p class="info-value">{{ investigation.investigation_date|default:'-' }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Lead Investigator</span>
+              <p class="info-value">{{ investigation.lead_investigator|default:'-' }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Method</span>
+              <p class="info-value">{{ investigation.get_investigation_method_display }}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <span class="info-label">Completed By</span>
+              <p class="info-value">{{ investigation.completed_by|default:'-' }}</p>
+            </div>
+            <div class="col-md-12 mb-3">
+              <span class="info-label">Problem Statement</span>
+              <p class="info-value regular">{{ investigation.problem_statement|default:'-' }}</p>
+            </div>
+            <div class="col-md-12 mb-3">
+              <span class="info-label">Findings</span>
+              <p class="info-value regular">{{ investigation.findings|default:'-' }}</p>
+            </div>
+            <div class="col-md-12 mb-3">
+              <span class="info-label">Final Root Cause</span>
+              <p class="info-value regular">{{ investigation.final_root_cause|default:'-' }}</p>
+            </div>
+          </div>
+          <a href="{% url 'capa:investigation_detail' capa.pk %}" class="btn-dash btn-dash-primary">
+            <i class="fas fa-eye"></i> View Full Investigation
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Action Plan -->
+      <div class="dash-detail-card">
+        <div class="card-header-custom bg-success">
+          <h5><i class="fas fa-tasks"></i> Action Plan</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="table-responsive">
+            <table class="capa-table">
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Assigned To</th>
+                  <th>Target</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for action in capa.actions.all %}
+                <tr>
+                  <td data-label="Action">
+                    <a href="{% url 'capa:action_detail' action.pk %}">{{ action.action_description|truncatewords:16 }}</a>
+                  </td>
+                  <td data-label="Assigned To">{{ action.assigned_to|default:'Not assigned' }}</td>
+                  <td data-label="Target">{{ action.target_date|date:'d/m/Y'|default:'-' }}</td>
+                  <td data-label="Status">
+                    <span class="dash-badge {% if action.status == 'VERIFIED' %}badge-success{% elif action.status == 'PENDING_VERIFICATION' %}badge-info{% elif action.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
+                      {{ action.get_status_display }}
+                    </span>
+                    {% if action.status == 'PENDING' or action.status == 'IN_PROGRESS' or action.status == 'REJECTED' %}
+                      {% if action.assigned_to and action.assigned_to.pk == user.pk %}
+                        <a class="btn-dash btn-dash-secondary ml-1" href="{% url 'capa:action_complete' action.pk %}">Submit</a>
+                      {% endif %}
+                    {% elif action.status == 'PENDING_VERIFICATION' and user|has_perm:'CAPA_VERIFY_ACTION' %}
+                      <a class="btn-dash btn-dash-primary ml-1" href="{% url 'capa:action_verify' action.pk %}">Verify</a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4">
+                    <div class="capa-empty">No action items have been added.</div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- RIGHT COLUMN                                                -->
+    <!-- ========================================================== -->
+    <div class="col-lg-4">
+
+      <!-- CAPA Progress -->
+      <div class="dash-detail-card">
+        <div class="card-header-custom bg-info">
+          <h5><i class="fas fa-route"></i> CAPA Progress</h5>
+        </div>
+        <div class="card-body-custom">
+          <div class="mb-3">
+            <span class="info-label">Current Stage</span>
+            <p class="info-value">{{ capa.get_status_display }}</p>
+          </div>
+          <div class="mb-3">
+            <span class="info-label">Actions</span>
+            <p class="info-value">{{ capa.actions.count }} total</p>
+          </div>
+          <div class="mb-3">
+            <span class="info-label">Verified Actions</span>
+            <p class="info-value">{{ capa.action_summary.1 }} of {{ capa.action_summary.0 }}</p>
+          </div>
+          <div>
+            <span class="info-label">Created</span>
+            <p class="info-value">{{ capa.created_at|date:'d/m/Y H:i' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence -->
+      <div class="dash-detail-card">
+        <div class="card-header-custom">
+          <h5><i class="fas fa-paperclip"></i> Evidence</h5>
+        </div>
+        <div class="card-body-custom">
+          {% for attachment in capa.attachments.all %}
+            <p class="info-value mb-2">
+              <i class="fas fa-file text-teal mr-1"></i> {{ attachment.title|default:attachment.file.name }}
+            </p>
+          {% empty %}
+            <div class="capa-empty">No evidence uploaded.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Effectiveness Review -->
+      {% if effectiveness_review %}
+      <div class="dash-detail-card">
+        <div class="card-header-custom {% if effectiveness_review.result == 'EFFECTIVE' %}bg-success{% else %}bg-warning{% endif %}">
+          <h5><i class="fas fa-chart-line"></i> Effectiveness Review</h5>
+        </div>
+        <div class="card-body-custom">
+          <span class="info-label">Result</span>
+          <p class="info-value">{{ effectiveness_review.get_result_display }}</p>
+          <span class="info-label mt-3">Findings</span>
+          <p class="info-value regular">{{ effectiveness_review.review_findings|default:'-' }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ACTIVITY HISTORY                                            -->
+  <!-- ========================================================== -->
+  <div class="dash-detail-card">
+    <div class="card-header-custom">
+      <h5><i class="fas fa-history"></i> Activity History</h5>
+    </div>
+    <div class="card-body-custom">
+      {% for item in capa.audit_logs.all %}
+        <div class="audit-row">
+          <strong>{{ item.action }}</strong> by {{ item.user|default:'System' }}
+          <span class="text-muted">on {{ item.timestamp|date:'d/m/Y H:i' }}</span>
+          {% if item.comments %}<div>{{ item.comments }}</div>{% endif %}
+        </div>
+      {% empty %}
+        <div class="capa-empty">No activity recorded.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

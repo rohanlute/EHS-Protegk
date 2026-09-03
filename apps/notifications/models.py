@@ -19,6 +19,7 @@ class NotificationMaster(models.Model):
         ('ENVIRONMENTAL', 'Environmental Data'),
         ('INSPECTION', 'Inspection Management'),
         ('LEGAL_COMPLIANCE', 'Legal Compliance'),
+        ('CAPA', 'Corrective and Preventive Action'),
     ]
     
     NOTIFICATION_EVENT_CHOICES = [
@@ -55,6 +56,25 @@ class NotificationMaster(models.Model):
         ('INSPECTION_OVERDUE', 'Inspection Overdue'),
         ('NOTIFY_INSPECTION', 'Inspection Assigned / Reminder'),
         ('INSPECTION_NONCOMPLIANCE_ASSIGNED', 'Non-Compliance Assigned'),
+
+        # CAPA Module
+        ('CAPA_CREATED', 'CAPA Created'),
+        ('CAPA_INVESTIGATION_ASSIGNED', 'Investigation Assigned'),
+        ('CAPA_INVESTIGATION_DUE', 'Investigation Due'),
+        ('CAPA_INVESTIGATION_OVERDUE', 'Investigation Overdue'),
+        ('CAPA_INVESTIGATION_SUBMITTED', 'Investigation Submitted'),
+        ('CAPA_INVESTIGATION_APPROVED', 'Investigation Approved'),
+        ('CAPA_INVESTIGATION_REJECTED', 'Investigation Rejected'),
+        ('CAPA_ACTION_ASSIGNED', 'Action Assigned'),
+        ('CAPA_ACTION_DUE', 'Action Due'),
+        ('CAPA_ACTION_OVERDUE', 'Action Overdue'),
+        ('CAPA_ACTION_SUBMITTED', 'Action Submitted'),
+        ('CAPA_ACTION_REJECTED', 'Action Rejected'),
+        ('CAPA_ACTION_VERIFIED', 'Action Verified'),
+        ('CAPA_EFFECTIVENESS_REVIEW_DUE', 'Effectiveness Review Due'),
+        ('CAPA_EFFECTIVENESS_FAILED', 'Effectiveness Failed'),
+        ('CAPA_REOPENED', 'CAPA Reopened'),
+        ('CAPA_CLOSED', 'CAPA Closed'),
 
         # Legal Compliance Module
         ('COMPLIANCE_REMINDER', 'Compliance Reminder'),

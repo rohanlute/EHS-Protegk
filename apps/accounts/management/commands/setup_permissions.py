@@ -59,6 +59,7 @@ class Command(BaseCommand):
             ('ACCESS_HAZARD_MODULE', 'Access Hazard Module', 'Can access hazard management module'),
             ('ACCESS_INSPECTION_MODULE', 'Access Inspection Module', 'Can access inspection module'),
             ('ACCESS_EMERGENCY_MODULE', 'Access Emergency Module', 'Can access emergency module'),
+            ('ACCESS_CAPA_MODULE', 'Access CAPA Module', 'Can access CAPA module'),
             # ('ACCESS_AUDIT_MODULE', 'Access Audit Module', 'Can access audit module'),
             # ('ACCESS_TRAINING_MODULE', 'Access Training Module', 'Can access training module'),
             # ('ACCESS_PERMIT_MODULE', 'Access Permit Module', 'Can access work permit module'),
@@ -67,6 +68,20 @@ class Command(BaseCommand):
             
             # Other Permissions
             ('APPROVE_PERMIT', 'Approve Permit', 'Can approve work permit requests'),
+            ('CAPA_VIEW', 'View CAPA', 'Can view CAPA records'),
+            ('CAPA_CREATE', 'Create CAPA', 'Can create CAPA records'),
+            ('CAPA_EDIT', 'Edit CAPA', 'Can edit CAPA records'),
+            ('CAPA_ASSIGN', 'Assign CAPA', 'Can assign CAPA owners and actions'),
+            ('CAPA_INVESTIGATE', 'Investigate CAPA', 'Can perform CAPA investigation'),
+            ('CAPA_RCA', 'CAPA Root Cause Analysis', 'Can perform root cause analysis'),
+            ('CAPA_APPROVE_INVESTIGATION', 'Approve CAPA Investigation', 'Can approve or reject CAPA investigation'),
+            ('CAPA_MANAGE_ACTIONS', 'Manage CAPA Actions', 'Can manage CAPA actions'),
+            ('CAPA_COMPLETE_ACTION', 'Complete CAPA Action', 'Can complete CAPA actions'),
+            ('CAPA_VERIFY_ACTION', 'Verify CAPA Action', 'Can verify CAPA actions'),
+            ('CAPA_EFFECTIVENESS', 'CAPA Effectiveness Review', 'Can perform effectiveness reviews'),
+            ('CAPA_CLOSE', 'Close CAPA', 'Can close CAPA records'),
+            ('CAPA_REOPEN', 'Reopen CAPA', 'Can reopen CAPA records'),
+            ('CAPA_EXPORT', 'Export CAPA', 'Can export CAPA reports'),
         ]
         
         for code, name, description in permissions_data:
@@ -134,10 +149,13 @@ class Command(BaseCommand):
                 # Full inspection access
                 'CREATE_INSPECTION', 'EDIT_INSPECTION', 'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF',
                 # 'APPROVE_INSPECTION',
+                'CAPA_VIEW', 'CAPA_CREATE', 'CAPA_EDIT', 'CAPA_INVESTIGATE', 'CAPA_APPROVE_INVESTIGATION',
+                'CAPA_MANAGE_ACTIONS', 'CAPA_COMPLETE_ACTION', 'CAPA_VERIFY_ACTION', 'CAPA_EFFECTIVENESS',
+                'CAPA_CLOSE', 'CAPA_REOPEN', 'CAPA_EXPORT',
                 
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
-                'ACCESS_INSPECTION_MODULE', 
+                'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE',
                 # 'ACCESS_AUDIT_MODULE','ACCESS_REPORTS_MODULE',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
@@ -160,10 +178,11 @@ class Command(BaseCommand):
                 
                 # Inspection access
                 'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF', #'APPROVE_INSPECTION',
+                'CAPA_VIEW', 'CAPA_CREATE', 'CAPA_INVESTIGATE',
                 
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
-                'ACCESS_INSPECTION_MODULE', #'ACCESS_REPORTS_MODULE',
+                'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE', #'ACCESS_REPORTS_MODULE',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)
@@ -188,10 +207,11 @@ class Command(BaseCommand):
                 
                 # Inspection and permits
                 'VIEW_INSPECTION', 'EXPORT_INSPECTION_PDF', 'APPROVE_PERMIT',
+                'CAPA_VIEW', 'CAPA_CREATE', 'CAPA_INVESTIGATE', 'CAPA_APPROVE_INVESTIGATION',
                 
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
-                'ACCESS_INSPECTION_MODULE', 
+                'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE',
                 #'ACCESS_PERMIT_MODULE','ACCESS_REPORTS_MODULE',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
@@ -209,10 +229,10 @@ class Command(BaseCommand):
             perm_codes = [
                 # Basic reporting
                 'CREATE_INJURY', 'VIEW_INJURY',
-                'CREATE_HAZARD', 'VIEW_HAZARD', #'APPROVE_HAZARD',
+                'CREATE_HAZARD', 'VIEW_HAZARD', 'CAPA_VIEW', #'APPROVE_HAZARD',
                 
                 # Module access
-                'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
+                'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE', 'ACCESS_CAPA_MODULE',
                 #'ACCESS_OBSERVATION_MODULE',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
@@ -230,10 +250,10 @@ class Command(BaseCommand):
             perm_codes = [
                 # Can only create and view own reports
                 'CREATE_INJURY', 'VIEW_INJURY',
-                'CREATE_HAZARD', 'VIEW_HAZARD',
+                'CREATE_HAZARD', 'VIEW_HAZARD', 'CAPA_VIEW',
                 
                 # Module access
-                'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
+                'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE', 'ACCESS_CAPA_MODULE',
                 # 'ACCESS_OBSERVATION_MODULE', 'ACCESS_TRAINING_MODULE',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)

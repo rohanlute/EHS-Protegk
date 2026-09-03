@@ -40,6 +40,23 @@ class NotificationService:
         'NOTIFY_INSPECTION': 'emails/notify_inspection/notification.html',
         'INSPECTION_SCHEDULE': 'emails/notify_inspection/notification.html',
         'INSPECTION_NONCOMPLIANCE_ASSIGNED': 'emails/inspection_noncompliance/notification.html',
+        'CAPA_CREATED': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_ASSIGNED': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_DUE': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_OVERDUE': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_SUBMITTED': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_APPROVED': 'emails/capa/notification.html',
+        'CAPA_INVESTIGATION_REJECTED': 'emails/capa/notification.html',
+        'CAPA_ACTION_ASSIGNED': 'emails/capa/notification.html',
+        'CAPA_ACTION_DUE': 'emails/capa/notification.html',
+        'CAPA_ACTION_OVERDUE': 'emails/capa/notification.html',
+        'CAPA_ACTION_SUBMITTED': 'emails/capa/notification.html',
+        'CAPA_ACTION_REJECTED': 'emails/capa/notification.html',
+        'CAPA_ACTION_VERIFIED': 'emails/capa/notification.html',
+        'CAPA_EFFECTIVENESS_REVIEW_DUE': 'emails/capa/notification.html',
+        'CAPA_EFFECTIVENESS_FAILED': 'emails/capa/notification.html',
+        'CAPA_REOPENED': 'emails/capa/notification.html',
+        'CAPA_CLOSED': 'emails/capa/notification.html',
         'SESSION_SCHEDULED': 'emails/notification.html',
         'SESSION_REMINDER': 'emails/notification.html',
         'SESSION_CANCELLED': 'emails/notification.html',
@@ -260,6 +277,23 @@ class NotificationService:
             'NOTIFY_INSPECTION': 'emails/notify_inspection/notification.html',
             'INSPECTION_SCHEDULE': 'emails/notify_inspection/notification.html',
             'INSPECTION_NONCOMPLIANCE_ASSIGNED': 'emails/inspection_noncompliance/notification.html',
+            'CAPA_CREATED': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_ASSIGNED': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_DUE': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_OVERDUE': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_SUBMITTED': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_APPROVED': 'emails/capa/notification.html',
+            'CAPA_INVESTIGATION_REJECTED': 'emails/capa/notification.html',
+            'CAPA_ACTION_ASSIGNED': 'emails/capa/notification.html',
+            'CAPA_ACTION_DUE': 'emails/capa/notification.html',
+            'CAPA_ACTION_OVERDUE': 'emails/capa/notification.html',
+            'CAPA_ACTION_SUBMITTED': 'emails/capa/notification.html',
+            'CAPA_ACTION_REJECTED': 'emails/capa/notification.html',
+            'CAPA_ACTION_VERIFIED': 'emails/capa/notification.html',
+            'CAPA_EFFECTIVENESS_REVIEW_DUE': 'emails/capa/notification.html',
+            'CAPA_EFFECTIVENESS_FAILED': 'emails/capa/notification.html',
+            'CAPA_REOPENED': 'emails/capa/notification.html',
+            'CAPA_CLOSED': 'emails/capa/notification.html',
         }.get(notification_type)
 
         if template:
@@ -270,6 +304,7 @@ class NotificationService:
             'ENV': 'emails/env/notification.html',
             'ENVIRONMENTAL': 'emails/env/notification.html',
             'INSPECTION': 'emails/inspection/notification.html',
+            'CAPA': 'emails/capa/notification.html',
             'INVESTIGATION_OVERDUE': 'emails/investigation_overdue/notification.html',
         }
         return module_templates.get(
@@ -407,6 +442,8 @@ class NotificationService:
             context = NotificationService._build_noncompliance_assigned_context(content_object)
         elif notification_type == 'INCIDENT_INVESTIGATION_OVERDUE':
             context = NotificationService._build_investigation_overdue_context(content_object)
+        elif notification_type.startswith('CAPA_') or module == 'CAPA':
+            context = NotificationService._build_capa_context(content_object, notification_type)
         elif module == 'INSPECTION':
             context = NotificationService._build_inspection_context(content_object)
         else:
@@ -1248,4 +1285,34 @@ EHS Management System
             'incident': incident,
             'days_overdue': days_overdue,
             'incident_url':incident_url,
+        }
+
+    @staticmethod
+    def _build_capa_context(capa, notification_type):
+        capa_url = f"{settings.SITE_URL}{reverse('capa:detail', args=[capa.id])}"
+        label = notification_type.replace("CAPA_", "").replace("_", " ").title()
+        return {
+            'title': f"{label} | {capa.capa_number}",
+            'subject': f"CAPA Update - {capa.capa_number}",
+            'message': f"""
+Hello,
+
+CAPA update: {label}
+
+CAPA DETAILS
+--------------------------------------------------
+CAPA Number : {capa.capa_number}
+Title       : {capa.title}
+Status      : {capa.get_status_display()}
+Owner       : {capa.owner.get_full_name() if capa.owner else 'N/A'}
+Plant       : {capa.plant.name if capa.plant else 'N/A'}
+Target Date : {capa.target_date if capa.target_date else 'N/A'}
+
+Please review the CAPA record in the EHS system.
+
+Regards,
+EHS Management System
+""",
+            'capa': capa,
+            'capa_url': capa_url,
         }

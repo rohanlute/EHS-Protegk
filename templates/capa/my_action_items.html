@@ -1,0 +1,46 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}My CAPA Action Items | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+  .capa-actions-page { padding: 22px 0; }
+  .dash-page-header, .dash-main-card, .dash-stat-card { background: #fff; border: 1px solid #dbe5ec; border-radius: 12px; box-shadow: 0 3px 14px rgba(27, 62, 87, .07); }
+  .dash-page-header { display: flex; align-items: center; padding: 18px 22px; margin-bottom: 18px; }
+  .header-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; color: #078f87; background: #e7f6f4; font-size: 21px; margin-right: 14px; }
+  .dash-page-header h1 { margin: 0; color: #17324d; font-size: 22px; font-weight: 700; }
+  .subtitle { margin: 3px 0 0; color: #71849a; font-size: 13px; }
+  .dash-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .dash-stat-card { display: flex; align-items: center; padding: 16px; border-left: 4px solid #079b91; }
+  .dash-stat-card.gold { border-left-color: #e1aa35; } .dash-stat-card.blue { border-left-color: #3586c7; } .dash-stat-card.red { border-left-color: #d45d63; }
+  .stat-icon { color: #078f87; font-size: 20px; width: 32px; } .gold .stat-icon { color: #c28b16; } .blue .stat-icon { color: #3586c7; } .red .stat-icon { color: #d45d63; }
+  .stat-value { color: #17324d; font-size: 23px; font-weight: 700; line-height: 1; } .stat-label { color: #71849a; font-size: 12px; margin-top: 5px; }
+  .card-header-custom { background: #079b91; color: #fff; padding: 14px 18px; border-radius: 12px 12px 0 0; } .card-header-custom h3 { margin: 0; font-size: 16px; }
+  .card-body-custom { padding: 18px; } .dash-filter-section { background: #f5f9fb; border: 1px solid #e0e9ef; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+  .filter-select { min-width: 190px; border: 1px solid #cbd8e1; border-radius: 6px; padding: 8px 10px; color: #29435d; background: #fff; }
+  .btn-filter-teal, .btn-reset-teal { border: 0; border-radius: 6px; padding: 8px 14px; font-size: 13px; text-decoration: none; } .btn-filter-teal { color: #fff; background: #078f87; } .btn-reset-teal { color: #078f87; border: 1px solid #078f87; background: #fff; }
+  .dash-table-wrapper { overflow-x: auto; } .dash-table { width: 100%; border-collapse: collapse; min-width: 760px; } .dash-table th { background: #eef8f7; color: #376078; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #079b91; text-align: left; } .dash-table td { padding: 13px 10px; border-bottom: 1px solid #e6edf1; color: #29435d; font-size: 13px; vertical-align: middle; } .dash-table tr.overdue td { background: #fff8f7; } .dash-link { color: #087f9c; font-weight: 700; text-decoration: none; } .dash-badge { display: inline-block; border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; } .badge-success { color: #16754f; background: #e3f6ed; } .badge-warning { color: #976c0b; background: #fff3ce; } .badge-info { color: #176b9b; background: #e1f2fb; } .badge-danger { color: #a73b43; background: #fde7e8; } .btn-action { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; margin: 2px; text-decoration: none; color: #fff; background: #078f87; } .btn-action.view { background: #5c7b96; } .btn-action.attachment { background: #be8c24; } .dash-empty-state { padding: 50px 15px; text-align: center; color: #71849a; } .empty-icon { font-size: 32px; color: #9bc9c5; }
+  @media (max-width: 800px) { .dash-stats-grid { grid-template-columns: repeat(2, 1fr); } .dash-page-header h1 { font-size: 19px; } }
+  @media (max-width: 500px) { .dash-stats-grid { grid-template-columns: 1fr; } .card-body-custom { padding: 12px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid capa-actions-page">
+  <div class="dash-page-header"><div class="header-icon"><i class="fas fa-tasks"></i></div><div><h1>My CAPA Action Items</h1><p class="subtitle">Track and complete corrective actions assigned to you</p></div></div>
+  <div class="dash-stats-grid">
+    <div class="dash-stat-card"><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value">{{ total_assigned }}</div><div class="stat-label">Total Assigned</div></div></div>
+    <div class="dash-stat-card gold"><div class="stat-icon"><i class="fas fa-clock"></i></div><div><div class="stat-value">{{ pending_count }}</div><div class="stat-label">Pending</div></div></div>
+    <div class="dash-stat-card blue"><div class="stat-icon"><i class="fas fa-spinner"></i></div><div><div class="stat-value">{{ in_progress_count }}</div><div class="stat-label">In Progress</div></div></div>
+    <div class="dash-stat-card red"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value">{{ overdue_count }}</div><div class="stat-label">Overdue</div></div></div>
+  </div>
+  <div class="dash-main-card"><div class="card-header-custom"><h3><i class="fas fa-tasks"></i> Assigned CAPA Actions</h3></div><div class="card-body-custom">
+    <div class="dash-filter-section"><form method="get" class="d-flex flex-wrap align-items-center" style="gap:8px"><select name="status" class="filter-select"><option value="">All Statuses</option>{% for key,value in status_choices %}<option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ value }}</option>{% endfor %}</select><button class="btn-filter-teal" type="submit"><i class="fas fa-filter"></i> Filter</button><a class="btn-reset-teal" href="{% url 'capa:my_action_items' %}"><i class="fas fa-redo"></i> Reset</a></form></div>
+    <div class="dash-table-wrapper"><table class="dash-table"><thead><tr><th>CAPA No.</th><th>Action</th><th>Target Date</th><th>Status</th><th>Created By</th><th>Actions</th></tr></thead><tbody>
+      {% for item in action_items %}<tr {% if item.is_overdue %}class="overdue"{% endif %}><td><a class="dash-link" href="{% url 'capa:detail' item.capa.pk %}">{{ item.capa.capa_number }}</a><br><small>{{ item.capa.plant|default:'-' }}</small></td><td>{{ item.action_description|truncatewords:18 }}</td><td>{{ item.target_date|date:'d M Y'|default:'-' }}{% if item.is_overdue %}<br><span class="dash-badge badge-danger">Overdue</span>{% endif %}</td><td>{% if item.status == 'VERIFIED' or item.status == 'CLOSED' %}<span class="dash-badge badge-success">{{ item.get_status_display }}</span>{% elif item.status == 'PENDING_VERIFICATION' %}<span class="dash-badge badge-info">{{ item.get_status_display }}</span>{% elif item.status == 'REJECTED' %}<span class="dash-badge badge-danger">{{ item.get_status_display }}</span>{% else %}<span class="dash-badge badge-warning">{{ item.get_status_display }}</span>{% endif %}</td><td>{{ item.created_by.get_full_name|default:'N/A' }}</td><td><a class="btn-action view" href="{% url 'capa:detail' item.capa.pk %}" title="View CAPA"><i class="fas fa-eye"></i></a>{% if item.status == 'PENDING' or item.status == 'IN_PROGRESS' or item.status == 'REJECTED' %}<a class="btn-action" href="{% url 'capa:action_complete' item.pk %}" title="Submit completion"><i class="fas fa-check-circle"></i></a>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="6"><div class="dash-empty-state"><span class="empty-icon"><i class="fas fa-inbox"></i></span><h4>No Action Items</h4><p>No CAPA actions are currently assigned to you.</p></div></td></tr>{% endfor %}
+    </tbody></table></div>
+  </div></div>
+</div>
+{% endblock %}
