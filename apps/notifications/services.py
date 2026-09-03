@@ -255,6 +255,146 @@ class NotificationService:
             return False
 
     @staticmethod
+    def send_contractor_onboarding_email(
+        portal_user,
+        assignment,
+        temporary_password,
+        login_url,
+        cc_email=None
+    ):
+        """
+        Send Contractor Portal onboarding credentials.
+
+        Primary recipient:
+            Contractor Portal user / EHS Officer
+
+        CC:
+            Contractor Contact Person, when provided.
+        """
+
+        if not portal_user or not portal_user.email:
+            logger.error(
+                "Contractor portal email cannot be sent: email is missing."
+            )
+            return False
+
+        if not assignment:
+            logger.error(
+                "Contractor portal email cannot be sent: assignment is missing."
+            )
+            return False
+
+        contractor = assignment.onboarding.contractor
+
+        subject = (
+            f"EHS-360 Contractor Portal Access - "
+            f"{contractor.contractor_name}"
+        )
+
+        message = f"""
+    Hello {portal_user.name},
+
+    You have been assigned an onboarding task in the EHS-360 Contractor Portal.
+
+    CONTRACTOR DETAILS
+    --------------------------------------------------
+    Contractor Name : {contractor.contractor_name}
+    Contractor Code : {contractor.contractor_code}
+
+    PORTAL LOGIN DETAILS
+    --------------------------------------------------
+    Login URL       : {login_url}
+    Email           : {portal_user.email}
+    Password        : {temporary_password}
+
+    Please use the above credentials to log in to the Contractor Portal
+    and complete the assigned onboarding requirements.
+
+    The assignment will remain accessible only while the assignment is active.
+
+    IMPORTANT
+    --------------------------------------------------
+    Please keep your login credentials confidential.
+
+    If you did not expect this email, please contact the EHS administrator.
+
+    Regards,
+    EHS-360
+    EHS Management System
+    """
+
+        context = {
+            'portal_user': portal_user,
+            'assignment': assignment,
+            'contractor': contractor,
+            'temporary_password': temporary_password,
+            'login_url': login_url,
+        }
+
+        try:
+
+            html_content = select_template(
+                [
+                    'notifications/contractor_onboarding.html',
+                    'emails/notification.html',
+                ]
+            ).render(context)
+
+            # ---------------------------------------------------------
+            # CC EMAIL
+            # ---------------------------------------------------------
+
+            cc = []
+
+            if cc_email:
+                cc_email = cc_email.strip().lower()
+
+                if (
+                    cc_email
+                    and cc_email.lower() != portal_user.email.lower()
+                ):
+                    cc.append(cc_email)
+
+            # ---------------------------------------------------------
+            # SEND EMAIL
+            # ---------------------------------------------------------
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[portal_user.email],
+                cc=cc
+            )
+
+            email.attach_alternative(
+                html_content,
+                "text/html"
+            )
+
+            email.send(
+                fail_silently=False
+            )
+
+            logger.info(
+                "Contractor onboarding email sent successfully to %s, CC: %s",
+                portal_user.email,
+                cc
+            )
+
+            return True
+
+        except Exception as e:
+
+            logger.exception(
+                "Failed to send contractor onboarding email to %s: %s",
+                portal_user.email,
+                e
+            )
+
+            return False
+
+    @staticmethod
     def _resolve_email_template(notification_type, module):
         template = {
             'INCIDENT_REPORTED': 'emails/incident/notification.html',
