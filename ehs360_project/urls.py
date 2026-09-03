@@ -43,6 +43,7 @@ urlpatterns = [
     path('toolbox-talk/',include('apps.toolbox_talk.urls')),
     path('PPE/',include('apps.PPE.urls')),
     path('capa/',include('apps.capa.urls')),
+    path('contractor/', include('apps.contractor.urls', namespace='contractor')),
     #path('observations/', include('apps.observations.urls')),
 
     # Redirect root to login

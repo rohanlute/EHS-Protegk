@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.PPE.apps.PpeConfig',
     'apps.toolbox_talk.apps.ToolboxTalkConfig',
     'apps.capa.apps.CapaConfig',
+    'apps.contractor',
 
     'django.contrib.admin',
     'django.contrib.auth',
