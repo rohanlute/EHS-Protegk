@@ -1,0 +1,762 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Onboarding Dashboard | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  .page-header-custom {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-header-custom .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .page-header-custom .header-left .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .page-header-custom .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .page-header-custom .header-left .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .page-header-custom .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .onboarding-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .onboarding-card .card-header-custom {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .onboarding-card .card-header-custom .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--primary-teal);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .onboarding-card .card-header-custom .header-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .onboarding-card .card-header-custom .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .onboarding-card .card-header-custom .section-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .onboarding-card .card-body {
+    padding: 24px;
+  }
+
+  /* Contractor Info Grid */
+  .contractor-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .contractor-info-item {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .contractor-info-item .label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .contractor-info-item .value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 2px;
+  }
+
+  /* Questions */
+  .question-item {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .question-item .q-number {
+    font-weight: 700;
+    color: var(--primary-teal);
+    min-width: 35px;
+    font-size: 14px;
+    padding-top: 4px;
+  }
+
+  .question-item .q-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+    min-width: 200px;
+    padding-top: 4px;
+  }
+
+  .question-item .q-answer {
+    flex: 2;
+    min-width: 250px;
+  }
+
+  .question-item .q-answer textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    min-height: 60px;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+
+  .question-item .q-answer textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .question-item .q-answer textarea.answered {
+    border-color: var(--success-green);
+  }
+
+  .question-item .q-status {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 12px;
+    white-space: nowrap;
+    align-self: center;
+  }
+
+  .question-item .q-status.answered {
+    color: var(--success-green);
+    background: rgba(34, 197, 94, 0.12);
+  }
+
+  .question-item .q-status.pending {
+    color: var(--pending-orange);
+    background: rgba(217, 119, 6, 0.12);
+  }
+
+  /* Document Table */
+  .document-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .document-table thead th {
+    background: var(--primary-teal-light);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .document-table thead th:last-child {
+    text-align: center;
+  }
+
+  .document-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+  }
+
+  .document-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .document-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .document-table .doc-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .document-table .doc-upload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .document-table .doc-upload .file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .document-table .doc-upload .file-input-wrapper input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  .document-table .doc-upload .upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1.5px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .document-table .doc-upload .upload-btn:hover {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .document-table .doc-upload .upload-btn.uploaded {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #16a34a;
+  }
+
+  .document-table .doc-upload .file-name {
+    font-size: 12px;
+    color: var(--text-muted);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .document-table .doc-status {
+    text-align: center;
+  }
+
+  .document-table .doc-status .status-icon {
+    font-size: 20px;
+  }
+
+  .document-table .doc-status .status-icon.uploaded {
+    color: var(--success-green);
+  }
+
+  .document-table .doc-status .status-icon.pending {
+    color: var(--text-muted);
+  }
+
+  .form-actions {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .form-actions .action-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex: 1;
+  }
+
+  .btn-approve {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 32px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-approve i {
+    color: white;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 992px) {
+    .contractor-info-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .contractor-info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .question-item {
+      flex-direction: column;
+    }
+
+    .question-item .q-number {
+      min-width: auto;
+    }
+
+    .question-item .q-text {
+      min-width: auto;
+    }
+
+    .question-item .q-answer {
+      min-width: auto;
+      width: 100%;
+    }
+
+    .document-table thead {
+      display: none;
+    }
+
+    .document-table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+    }
+
+    .document-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .document-table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .document-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-approve {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="page-header-custom">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div>
+        <h1>Onboarding Dashboard</h1>
+        <p class="subtitle">Complete your onboarding tasks</p>
+      </div>
+    </div>
+    <div>
+      <span class="status-badge">
+        <i class="fas fa-circle"></i> In Progress
+      </span>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SECTION 1: Contractor Information                           -->
+  <!-- ========================================================== -->
+  <div class="onboarding-card">
+    <div class="card-header-custom">
+      <div class="section-icon"><i class="fas fa-user-tie"></i></div>
+      <div class="header-content">
+        <h5 class="section-title">Contractor Information</h5>
+        <p class="section-subtitle">Details of the contractor being onboarded</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="contractor-info-grid">
+        <div class="contractor-info-item">
+          <span class="label">Contractor Code</span>
+          <span class="value">CM001</span>
+        </div>
+        <div class="contractor-info-item">
+          <span class="label">Company Name</span>
+          <span class="value">ABC Electricals Pvt Ltd</span>
+        </div>
+        <div class="contractor-info-item">
+          <span class="label">Company Type</span>
+          <span class="value">Electrical</span>
+        </div>
+        <div class="contractor-info-item">
+          <span class="label">Contact Person</span>
+          <span class="value">Rajesh Kumar</span>
+        </div>
+        <div class="contractor-info-item">
+          <span class="label">Contact Number</span>
+          <span class="value">+91 9876543210</span>
+        </div>
+        <div class="contractor-info-item">
+          <span class="label">EHS Officer</span>
+          <span class="value">Suresh Patil</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SECTION 2: Pre-Qualification Questions                      -->
+  <!-- ========================================================== -->
+  <div class="onboarding-card">
+    <div class="card-header-custom">
+      <div class="section-icon"><i class="fas fa-clipboard-check"></i></div>
+      <div class="header-content">
+        <h5 class="section-title">Pre-Qualification Questions</h5>
+        <p class="section-subtitle">Answer the following questions</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="question-item">
+        <div class="q-number">Q1</div>
+        <div class="q-text">Does the contractor have at least 5 years of experience in similar work?</div>
+        <div class="q-answer">
+          <textarea placeholder="Enter your answer..." class="form-control" rows="2"></textarea>
+        </div>
+        <div class="q-status pending"><i class="fas fa-clock"></i> Pending</div>
+      </div>
+      <div class="question-item">
+        <div class="q-number">Q2</div>
+        <div class="q-text">Has the contractor completed at least 3 similar projects in the last 3 years?</div>
+        <div class="q-answer">
+          <textarea placeholder="Enter your answer..." class="form-control" rows="2"></textarea>
+        </div>
+        <div class="q-status pending"><i class="fas fa-clock"></i> Pending</div>
+      </div>
+      <div class="question-item">
+        <div class="q-number">Q3</div>
+        <div class="q-text">Does the contractor have a proven track record with major clients?</div>
+        <div class="q-answer">
+          <textarea placeholder="Enter your answer..." class="form-control" rows="2"></textarea>
+        </div>
+        <div class="q-status pending"><i class="fas fa-clock"></i> Pending</div>
+      </div>
+      <div class="question-item">
+        <div class="q-number">Q4</div>
+        <div class="q-text">Has the contractor had any major accidents in the last 3 years?</div>
+        <div class="q-answer">
+          <textarea placeholder="Enter your answer..." class="form-control" rows="2"></textarea>
+        </div>
+        <div class="q-status pending"><i class="fas fa-clock"></i> Pending</div>
+      </div>
+      <div class="question-item">
+        <div class="q-number">Q5</div>
+        <div class="q-text">Does the contractor have a dedicated safety team/manager?</div>
+        <div class="q-answer">
+          <textarea placeholder="Enter your answer..." class="form-control" rows="2"></textarea>
+        </div>
+        <div class="q-status pending"><i class="fas fa-clock"></i> Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- SECTION 3: Document Checklist                               -->
+  <!-- ========================================================== -->
+  <div class="onboarding-card">
+    <div class="card-header-custom">
+      <div class="section-icon"><i class="fas fa-file-alt"></i></div>
+      <div class="header-content">
+        <h5 class="section-title">Document Checklist</h5>
+        <p class="section-subtitle">Upload the required documents</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <table class="document-table">
+        <thead>
+          <tr>
+            <th>Document Name</th>
+            <th>Upload</th>
+            <th style="text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Document Name">
+              <span class="doc-name">Company Registration Certificate</span>
+            </td>
+            <td data-label="Upload">
+              <div class="doc-upload">
+                <div class="file-input-wrapper">
+                  <button class="upload-btn"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                  <input type="file">
+                </div>
+                <span class="file-name">No file selected</span>
+              </div>
+            </td>
+            <td data-label="Status" class="doc-status">
+              <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+            </td>
+          </tr>
+          <tr>
+            <td data-label="Document Name">
+              <span class="doc-name">PAN Card Copy</span>
+            </td>
+            <td data-label="Upload">
+              <div class="doc-upload">
+                <div class="file-input-wrapper">
+                  <button class="upload-btn"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                  <input type="file">
+                </div>
+                <span class="file-name">No file selected</span>
+              </div>
+            </td>
+            <td data-label="Status" class="doc-status">
+              <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+            </td>
+          </tr>
+          <tr>
+            <td data-label="Document Name">
+              <span class="doc-name">GST Registration Certificate</span>
+            </td>
+            <td data-label="Upload">
+              <div class="doc-upload">
+                <div class="file-input-wrapper">
+                  <button class="upload-btn"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                  <input type="file">
+                </div>
+                <span class="file-name">No file selected</span>
+              </div>
+            </td>
+            <td data-label="Status" class="doc-status">
+              <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+            </td>
+          </tr>
+          <tr>
+            <td data-label="Document Name">
+              <span class="doc-name">Contractor License / Registration</span>
+            </td>
+            <td data-label="Upload">
+              <div class="doc-upload">
+                <div class="file-input-wrapper">
+                  <button class="upload-btn"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                  <input type="file">
+                </div>
+                <span class="file-name">No file selected</span>
+              </div>
+            </td>
+            <td data-label="Status" class="doc-status">
+              <span class="status-icon pending"><i class="fas fa-clock"></i></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM ACTIONS                                                -->
+  <!-- ========================================================== -->
+  <div class="form-actions">
+    <div class="action-info">
+      <i class="fas fa-info-circle"></i>
+      Please answer all questions and upload all documents before submitting.
+    </div>
+    <button type="button" class="btn-approve" onclick="alert('Onboarding submitted for approval!')">
+      <i class="fas fa-paper-plane"></i> Send for Approval
+    </button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check answer status on input
+    document.querySelectorAll('.question-item textarea').forEach(function(textarea) {
+      textarea.addEventListener('input', function() {
+        const statusEl = this.closest('.question-item').querySelector('.q-status');
+        if (this.value.trim().length > 0) {
+          statusEl.className = 'q-status answered';
+          statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Answered';
+          this.classList.add('answered');
+        } else {
+          statusEl.className = 'q-status pending';
+          statusEl.innerHTML = '<i class="fas fa-clock"></i> Pending';
+          this.classList.remove('answered');
+        }
+      });
+    });
+
+    // Upload document simulation
+    document.querySelectorAll('.document-table .file-input-wrapper input[type="file"]').forEach(function(input) {
+      input.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+          const fileNameEl = this.closest('.doc-upload').querySelector('.file-name');
+          const statusIcon = this.closest('tr').querySelector('.status-icon');
+          const uploadBtn = this.closest('.doc-upload').querySelector('.upload-btn');
+          
+          fileNameEl.textContent = file.name;
+          statusIcon.className = 'status-icon uploaded';
+          statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+          uploadBtn.classList.add('uploaded');
+          uploadBtn.innerHTML = '<i class="fas fa-check"></i> Uploaded';
+        }
+      });
+    });
+  });
+</script>
+
+{% endblock %}
