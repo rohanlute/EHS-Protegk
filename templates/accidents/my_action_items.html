@@ -223,16 +223,19 @@
     background: #fafbfc;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
-    padding: 14px 18px;
+    padding: 16px 20px;
     margin-bottom: 20px;
-    display: flex;
-    align-items: center;
+  }
+
+  .dash-filter-section .filter-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
     gap: 12px;
-    flex-wrap: wrap;
+    align-items: center;
   }
 
   .dash-filter-section .filter-select {
-    padding: 8px 14px;
+    padding: 9px 16px;
     border: 2px solid var(--border-color);
     border-radius: var(--radius-sm);
     font-size: 14px;
@@ -240,12 +243,12 @@
     transition: all 0.25s ease;
     background: white;
     color: var(--text-primary);
-    min-width: 200px;
+    width: 100%;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 36px;
+    background-position: right 14px center;
+    padding-right: 40px;
   }
 
   .dash-filter-section .filter-select:focus {
@@ -258,7 +261,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 20px;
+    padding: 9px 16px;
     border-radius: var(--radius-sm);
     border: none;
     background: var(--primary-teal);
@@ -268,19 +271,21 @@
     font-family: 'Inter', sans-serif;
     transition: all 0.25s ease;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .btn-filter-teal:hover {
     background: var(--primary-teal-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    color: white;
   }
 
   .btn-reset-teal {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 9px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: white;
@@ -290,6 +295,7 @@
     font-family: 'Inter', sans-serif;
     transition: all 0.25s ease;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .btn-reset-teal:hover {
@@ -519,13 +525,16 @@
     }
 
     .dash-filter-section {
-      flex-direction: column;
-      align-items: stretch;
-      padding: 12px 14px;
+      padding: 14px 16px;
+    }
+
+    .dash-filter-section .filter-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
     }
 
     .dash-filter-section .filter-select {
-      min-width: auto;
+      width: 100%;
     }
 
     .btn-filter-teal,
@@ -627,6 +636,10 @@
     .dash-link {
       font-size: 12px;
     }
+
+    .dash-filter-section {
+      padding: 12px 14px;
+    }
   }
 </style>
 {% endblock %}
@@ -654,37 +667,37 @@
   <!-- STATISTICS CARDS                                            -->
   <!-- ========================================================== -->
   <div class="dash-stats-grid">
-    <div class="dash-stat-card teal">
+    <a href="?status=" class="dash-stat-card teal">
       <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ total_assigned }}</div>
         <div class="stat-label">Total Assigned</div>
       </div>
-    </div>
+    </a>
 
-    <div class="dash-stat-card gold">
+    <a href="?status=PENDING" class="dash-stat-card gold">
       <div class="stat-icon"><i class="fas fa-clock"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ pending_count }}</div>
         <div class="stat-label">Pending</div>
       </div>
-    </div>
+    </a>
 
-    <div class="dash-stat-card blue">
+    <a href="?status=IN_PROGRESS" class="dash-stat-card blue">
       <div class="stat-icon"><i class="fas fa-spinner"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ in_progress_count|default:0 }}</div>
         <div class="stat-label">In Progress</div>
       </div>
-    </div>
+    </a>
 
-    <div class="dash-stat-card red">
+    <a href="?status=OVERDUE" class="dash-stat-card red">
       <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
       <div class="stat-info">
         <div class="stat-value">{{ overdue_count }}</div>
         <div class="stat-label">Overdue</div>
       </div>
-    </div>
+    </a>
   </div>
 
   <!-- ========================================================== -->
@@ -700,11 +713,11 @@
 
     <div class="card-body-custom">
 
-      <!-- Filters -->
+      <!-- Filters - Using Grid Layout -->
       <div class="dash-filter-section">
-        <form method="GET" class="d-flex flex-wrap align-items-center gap-2" style="width: 100%;">
+        <form method="GET" class="filter-row">
           <select name="status" class="filter-select">
-            <option value="">All Statuses</option>
+            <option value="">All Status</option>
             {% for key, value in status_choices %}
             <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ value }}</option>
             {% endfor %}
@@ -764,7 +777,7 @@
               </td>
 
               <td data-label="Created By" style="text-align: center; font-size: 13px;">
-                {{ item.created_by.get_full_name|default:"N/A" }}
+                {{ item.created_by.get_full_name|default:item.created_by.username }}
               </td>
 
               <td data-label="Actions" style="text-align: center;">

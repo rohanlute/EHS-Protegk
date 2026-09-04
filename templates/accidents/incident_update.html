@@ -454,14 +454,51 @@
   }
 
   /* ========================================================== */
-  /* BODY PARTS SECTION                                         */
+  /* BODY PARTS SELECTION                                       */
   /* ========================================================== */
-  .body-parts-wrapper {
+  .body-parts-selection-summary {
+    background: #fafbfc;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 16px;
-    background: #fafbfc;
-    margin-bottom: 16px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+
+  .body-parts-selection-summary .selected-count {
+    font-weight: 700;
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .body-parts-selection-summary .selected-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .body-parts-selection-summary .selected-part-badge {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .body-parts-selection-summary .selected-part-badge .remove-part {
+    cursor: pointer;
+    color: var(--secondary-red);
+    font-size: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .body-parts-selection-summary .selected-part-badge .remove-part:hover {
+    transform: scale(1.2);
   }
 
   /* ========================================================== */
@@ -612,6 +649,17 @@
     border-color: var(--primary-teal);
     color: var(--primary-teal);
     text-decoration: none;
+  }
+
+  .btn-dash-secondary {
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dash-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
   }
 
   /* ========================================================== */
@@ -1258,6 +1306,22 @@
 
         <div id="bodyPartsSection" style="display: none;">
           {% include 'accidents/body_diagram_interactive.html' %}
+          
+          <!-- Body Parts Selection Summary -->
+          <div class="body-parts-selection-summary">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Selected Body Parts:</span>
+                <span class="selected-count" id="selectedBodyPartsCount">0</span>
+              </div>
+              <button type="button" id="clearBodyPartsBtn" class="btn-dash btn-dash-secondary" style="font-size: 12px; padding: 4px 12px;">
+                <i class="fas fa-times"></i> Clear All
+              </button>
+            </div>
+            <div class="selected-parts" id="selectedBodyPartsList">
+              <span style="color: var(--text-muted); font-size: 13px;">No body parts selected</span>
+            </div>
+          </div>
         </div>
 
         <div class="row">
@@ -1414,6 +1478,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ageField.value = age;
     });
 
+    // Trigger age calculation on page load if date of birth is set
+    if (dateOfBirthField && dateOfBirthField.value) {
+        const age = calculateAge(dateOfBirthField.value);
+        ageField.value = age;
+    }
+
     // Initialize selected body parts
     const initialBodyPartsJSON = document.getElementById('initial-body-parts-data').textContent;
     const initialBodyPartsArray = JSON.parse(initialBodyPartsJSON);
@@ -1444,6 +1514,56 @@ document.addEventListener('DOMContentLoaded', function() {
     if (existingUnsafeConditions.includes('Other (explain)')) {
         document.getElementById('unsafeConditionsOtherBox').classList.add('show');
     }
+
+    // Update body parts display function
+    function updateBodyPartsDisplay() {
+        const countElement = document.getElementById('selectedBodyPartsCount');
+        const listElement = document.getElementById('selectedBodyPartsList');
+        
+        if (countElement && listElement) {
+            const selectedParts = window.selectedBodyParts || new Set();
+            countElement.textContent = selectedParts.size;
+            
+            if (selectedParts.size === 0) {
+                listElement.innerHTML = '<span style="color: var(--text-muted); font-size: 13px;">No body parts selected</span>';
+            } else {
+                listElement.innerHTML = Array.from(selectedParts).map(part => `
+                    <span class="selected-part-badge">
+                        ${part}
+                        <span class="remove-part" onclick="removeBodyPart('${part}')">
+                            <i class="fas fa-times-circle"></i>
+                        </span>
+                    </span>
+                `).join('');
+            }
+        }
+    }
+
+    // Function to remove a body part
+    window.removeBodyPart = function(part) {
+        if (window.selectedBodyParts) {
+            window.selectedBodyParts.delete(part);
+            updateBodyPartsDisplay();
+            // Uncheck the corresponding checkbox in the diagram if it exists
+            const checkbox = document.querySelector(`input[name="body_parts"][value="${part}"]`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+        }
+    };
+
+    // Clear all body parts
+    document.getElementById('clearBodyPartsBtn')?.addEventListener('click', function() {
+        if (window.selectedBodyParts) {
+            window.selectedBodyParts.clear();
+            updateBodyPartsDisplay();
+            // Uncheck all body part checkboxes
+            document.querySelectorAll('input[name="body_parts"]').forEach(cb => cb.checked = false);
+        }
+    });
+
+    // Call update function after initial load
+    updateBodyPartsDisplay();
 
     // Location cascading dropdowns
     if (plantSelect) {
@@ -1559,32 +1679,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const unsafeActOtherCheckbox = document.getElementById('ua13');
     const unsafeActsOtherBox = document.getElementById('unsafeActsOtherBox');
 
-    unsafeActOtherCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            unsafeActsOtherBox.classList.add('show');
-        } else {
-            unsafeActsOtherBox.classList.remove('show');
-            document.getElementById('unsafe_acts_other').value = '';
-        }
-    });
+    if (unsafeActOtherCheckbox) {
+        unsafeActOtherCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                unsafeActsOtherBox.classList.add('show');
+            } else {
+                unsafeActsOtherBox.classList.remove('show');
+                document.getElementById('unsafe_acts_other').value = '';
+            }
+        });
+    }
 
     const unsafeConditionOtherCheckbox = document.getElementById('uc14');
     const unsafeConditionsOtherBox = document.getElementById('unsafeConditionsOtherBox');
 
-    unsafeConditionOtherCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            unsafeConditionsOtherBox.classList.add('show');
-        } else {
-            unsafeConditionsOtherBox.classList.remove('show');
-            document.getElementById('unsafe_conditions_other').value = '';
-        }
-    });
+    if (unsafeConditionOtherCheckbox) {
+        unsafeConditionOtherCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                unsafeConditionsOtherBox.classList.add('show');
+            } else {
+                unsafeConditionsOtherBox.classList.remove('show');
+                document.getElementById('unsafe_conditions_other').value = '';
+            }
+        });
+    }
 
     // Form submission
     document.getElementById('incidentForm').addEventListener('submit', function(e) {
         const selectedType = incidentTypeSelect.value;
-        if ((selectedType === 'LTI' || selectedType === 'MTC' || selectedType === 'FA' || selectedType === 'HLFI' || selectedType === 'FATALITY') 
-            && !natureOfInjuryField.value.trim()) {
+        const selectedOption = incidentTypeSelect.options[incidentTypeSelect.selectedIndex];
+        const selectedCode = selectedOption ? selectedOption.getAttribute('data-code') : '';
+        const injuryTypes = ['LTI', 'MTC', 'FA', 'HLFI', 'FATALITY'];
+        
+        if (injuryTypes.includes(selectedCode) && !natureOfInjuryField.value.trim()) {
             e.preventDefault();
             alert('Nature of Injury is required for this type of incident.');
             natureOfInjuryField.focus();
@@ -1688,6 +1815,23 @@ document.addEventListener('DOMContentLoaded', function() {
             `).join('');
         }
     }
+
+    // If there's a function from body diagram that updates selected parts, hook into it
+    if (typeof window.updateSelectedParts === 'function') {
+        const originalUpdate = window.updateSelectedParts;
+        window.updateSelectedParts = function(parts) {
+            window.selectedBodyParts = new Set(parts);
+            updateBodyPartsDisplay();
+            originalUpdate(parts);
+        };
+    }
+
+    // Also check for checkbox clicks in body diagram
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.name === 'body_parts') {
+            setTimeout(updateBodyPartsDisplay, 100);
+        }
+    });
 });
 </script>
 {% endblock %}

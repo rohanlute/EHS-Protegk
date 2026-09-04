@@ -194,34 +194,26 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 
-# Email Configuration (Update with your SMTP settings)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-# DEFAULT_FROM_EMAIL = 'EHS-360 <your-email@gmail.com>'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 's702.bom.secure-web.cloud' #config('EMAIL_HOST') #'mail.fireinspector.co.in' #'s437.bom7.mysecurecloudhost.com'
-# EMAIL_USE_TLS = True               # Enable TLS
-# EMAIL_USE_SSL = False 
-# EMAIL_PORT = 587 
-# EMAIL_HOST_USER = 'support@fireinspector.co.in'
-# EMAIL_HOST_PASSWORD = 'Support@Fire'
-# DEFAULT_FROM_EMAIL = 'EHS-360 <support@fireinspector.co.in>'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 's702.bom.secure-web.cloud' #config('EMAIL_HOST') #'mail.fireinspector.co.in' #'s437.bom7.mysecurecloudhost.com'
+EMAIL_USE_TLS = True               # Enable TLS
+EMAIL_USE_SSL = False 
+EMAIL_PORT = 587 
+EMAIL_HOST_USER = 'support@fireinspector.co.in'
+EMAIL_HOST_PASSWORD = 'Support@Fire'
+DEFAULT_FROM_EMAIL = 'EHS-360 <support@fireinspector.co.in>'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 465
 
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = True
+# EMAIL_USE_TLS = False
 
-EMAIL_HOST_USER = 'rohanlute73@gmail.com'
-EMAIL_HOST_PASSWORD = 'ufcf okfw cark ewyw'
+# EMAIL_HOST_USER = 'rohanlute73@gmail.com'
+# EMAIL_HOST_PASSWORD = 'ufcf okfw cark ewyw'
 
-DEFAULT_FROM_EMAIL = 'rohanlute73@gmail.com'
+# DEFAULT_FROM_EMAIL = 'rohanlute73@gmail.com'
 
 
 

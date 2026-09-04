@@ -608,11 +608,12 @@
         <i class="fas fa-file-alt"></i>
         Incident Overview
       </h3>
+      <!-- In the INCIDENT OVERVIEW section, replace the buttons div -->
       <div>
         <a href="{% url 'accidents:incident_detail' incident.pk %}" class="btn-dash btn-dash-info" style="font-size: 13px; padding: 6px 16px;">
           <i class="fas fa-eye"></i> View Full Details
         </a>
-        <a href="{% url 'accidents:incident_update' incident.pk %}" class="btn-dash btn-dash-secondary" style="font-size: 13px; padding: 6px 16px;">
+        <a href="{% url 'accidents:incident_update' incident.pk %}" class="btn-dash btn-dash-secondary" style="font-size: 13px; padding: 6px 16px; background: #f1f5f9; color: var(--text-secondary); border: 1px solid var(--border-color);">
           <i class="fas fa-edit"></i> Edit Incident
         </a>
       </div>
@@ -660,8 +661,8 @@
         <i class="fas fa-search"></i>
         Investigation Findings
       </h4>
-      <a href="{% url 'accidents:investigation_detail' investigation_report.pk %}" class="btn-dash btn-dash-info" style="font-size: 13px; padding: 6px 16px;">
-        <i class="fas fa-eye"></i> View Full Report
+      <a href="{% url 'accidents:investigation_detail' investigation_report.pk %}" class="btn-dash btn-dash-info" style="font-size: 13px; padding: 6px 16px; color: white;">
+        <i class="fas fa-eye" style="color: white;"></i> View Full Report
       </a>
     </div>
     <div class="card-body-custom">
@@ -685,81 +686,83 @@
   </div>
 
   <!-- ========================================================== -->
-  <!-- ACTION ITEMS SUMMARY                                        -->
-  <!-- ========================================================== -->
-  <div class="dash-card">
-    <div class="card-header-custom card-header-info">
-      <h4>
-        <i class="fas fa-tasks"></i>
-        Proposed Action Items
-      </h4>
-    </div>
-    <div class="card-body-custom">
-      {% if incident.action_items.all %}
-        <div class="table-responsive">
-          <table class="dash-table">
-            <thead>
-              <tr>
-                <th>Action Taken</th>
-                <th>Responsible Person(s)</th>
-                <th>Target Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for action in incident.action_items.all %}
-              <tr>
-                <td data-label="Action Taken">{{ action.action_description }}</td>
-                <td data-label="Responsible Person(s)">
-                  {% for user in action.responsible_person.all %}
-                    <span class="dash-badge badge-secondary" style="font-size: 12px; padding: 2px 12px;">{{ user.email }}</span>
-                  {% empty %}
-                    <span class="text-muted">N/A</span>
-                  {% endfor %}
-                </td>
-                <td data-label="Target Date">{{ action.target_date|date:"d M Y" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="alert" style="background: #f1f5f9; border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text-muted);">
-          <i class="fas fa-info-circle"></i> No action items were created during the investigation.
-        </div>
-      {% endif %}
-    </div>
+<!-- ACTION ITEMS SUMMARY                                        -->
+<!-- ========================================================== -->
+<div class="dash-card">
+  <div class="card-header-custom card-header-info">
+    <h4>
+      <i class="fas fa-tasks"></i>
+      Proposed Action Items
+    </h4>
   </div>
-
-  <!-- ========================================================== -->
-  <!-- FINAL APPROVAL                                             -->
-  <!-- ========================================================== -->
-  <div class="dash-approval-card">
-    <div class="card-header-custom card-header-success">
-      <h4>
-        <i class="fas fa-check-double"></i>
-        Final Approval
-      </h4>
-    </div>
-    <div class="card-body-custom">
-      <p class="lead">Please review all information carefully before taking an action.</p>
-      <p class="sub-text">Approving this report will move the incident to the next stage. Rejecting it will require the investigator to make corrections.</p>
-      <hr class="divider">
-      <div class="d-flex justify-content-center gap-3 flex-wrap" style="gap: 12px;">
-        <form method="POST" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" name="approve_action" class="btn-dash btn-dash-success">
-            <i class="fas fa-check-circle"></i> Approve Investigation
-          </button>
-        </form>
-        <button type="button" class="btn-dash btn-dash-danger" data-toggle="modal" data-target="#rejectModal">
-          <i class="fas fa-times-circle"></i> Reject Investigation
-        </button>
+  <div class="card-body-custom" style="padding: 0; overflow-x: auto;">
+    {% if incident.action_items.all %}
+      <div style="width: 100%; overflow-x: auto;">
+        <table class="dash-table" style="width: 100%; min-width: 600px; table-layout: fixed;">
+          <thead>
+            <tr>
+              <th style="width: 45%;">Action Taken</th>
+              <th style="width: 30%;">Responsible Person(s)</th>
+              <th style="width: 25%;">Target Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for action in incident.action_items.all %}
+            <tr>
+              <td data-label="Action Taken" style="word-wrap: break-word;">{{ action.action_description }}</td>
+              <td data-label="Responsible Person(s)" style="word-wrap: break-word;">
+                {% for user in action.responsible_person.all %}
+                  <span class="dash-badge badge-secondary" style="font-size: 12px; padding: 2px 12px; margin: 2px 0; display: inline-block;">{{ user.email }}</span>
+                {% empty %}
+                  <span class="text-muted">N/A</span>
+                {% endfor %}
+              </td>
+              <td data-label="Target Date">{{ action.target_date|date:"d M Y" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </div>
+    {% else %}
+      <div class="alert" style="background: #f1f5f9; border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text-muted); margin: 0 20px 20px 20px;">
+        <i class="fas fa-info-circle"></i> No action items were created during the investigation.
+      </div>
+    {% endif %}
   </div>
-
 </div>
 
+<!-- ========================================================== -->
+<!-- FINAL APPROVAL                                             -->
+<!-- ========================================================== -->
+<div class="dash-approval-card">
+  <div class="card-header-custom card-header-success" style="padding-left: 18px;">
+    <h4>
+      <i class="fas fa-check-double"></i>
+      Final Approval
+    </h4>
+  </div>
+  <div class="card-body-custom" style="padding: 24px 28px; text-align: center;">
+    <p class="lead" style="font-size: 18px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">
+      <i class="fas fa-check-circle" style="color: var(--secondary-green); margin-right: 10px;"></i>
+      Please review all information carefully before taking an action.
+    </p>
+    <p class="sub-text" style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px; padding-left: 34px;">
+      Approving this report will move the incident to the next stage. Rejecting it will require the investigator to make corrections.
+    </p>
+    <hr class="divider" style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;">
+    <div class="d-flex justify-content-center gap-3 flex-wrap" style="gap: 12px;">
+      <form method="POST" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" name="approve_action" class="btn-dash btn-dash-success">
+          <i class="fas fa-check-circle"></i> Approve Investigation
+        </button>
+      </form>
+      <button type="button" class="btn-dash btn-dash-danger" data-toggle="modal" data-target="#rejectModal">
+        <i class="fas fa-times-circle"></i> Reject Investigation
+      </button>
+    </div>
+  </div>
+</div>
 <!-- ========================================================== -->
 <!-- REJECTION MODAL                                             -->
 <!-- ========================================================== -->
