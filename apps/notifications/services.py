@@ -237,43 +237,48 @@ class NotificationService:
             traceback.print_exc()
             return False
 
+    # Add this method to your NotificationService class
+
     @staticmethod
     def send_contractor_onboarding_email(
         portal_user,
         assignment,
         temporary_password,
         login_url,
-        cc_email=None
+        cc_email=None,
+        prequal_questions=None,
+        document_requirements=None
     ):
         """
-        Send Contractor Portal onboarding credentials.
-
-        Primary recipient:
-            Contractor Portal user / EHS Officer
-
-        CC:
-            Contractor Contact Person, when provided.
+        Send Contractor Portal onboarding credentials with full details.
+        
+        Args:
+            portal_user: ContractorPortalUser instance
+            assignment: ContractorAssignment instance
+            temporary_password: Generated password string
+            login_url: Full login URL with assignment token
+            cc_email: Optional CC email address
+            prequal_questions: List of pre-qualification questions with answers
+            document_requirements: List of document requirements
         """
-
+        
         if not portal_user or not portal_user.email:
-            logger.error(
-                "Contractor portal email cannot be sent: email is missing."
-            )
+            logger.error("Contractor portal email cannot be sent: email is missing.")
             return False
 
         if not assignment:
-            logger.error(
-                "Contractor portal email cannot be sent: assignment is missing."
-            )
+            logger.error("Contractor portal email cannot be sent: assignment is missing.")
             return False
 
         contractor = assignment.onboarding.contractor
+        onboarding = assignment.onboarding
 
         subject = (
             f"EHS-360 Contractor Portal Access - "
             f"{contractor.contractor_name}"
         )
 
+        # Build plain text message
         message = f"""
     Hello {portal_user.name},
 
@@ -281,23 +286,24 @@ class NotificationService:
 
     CONTRACTOR DETAILS
     --------------------------------------------------
-    Contractor Name : {contractor.contractor_name}
-    Contractor Code : {contractor.contractor_code}
+    Company Name         : {contractor.contractor_name}
+    Company Type         : {contractor.get_contractor_type_display()}
+    Address              : {contractor.address_line1}, {contractor.city}, {contractor.state}, {contractor.country} - {contractor.pincode}
+    Service Description  : {contractor.service_description[:200]}{'...' if contractor.service_description and len(contractor.service_description) > 200 else ''}
 
     PORTAL LOGIN DETAILS
     --------------------------------------------------
-    Login URL       : {login_url}
-    Email           : {portal_user.email}
-    Password        : {temporary_password}
+    Login URL           : {login_url}
+    Email               : {portal_user.email}
+    Password            : {temporary_password}
 
-    Please use the above credentials to log in to the Contractor Portal
-    and complete the assigned onboarding requirements.
-
-    The assignment will remain accessible only while the assignment is active.
-
-    IMPORTANT
+    IMPORTANT INSTRUCTIONS
     --------------------------------------------------
-    Please keep your login credentials confidential.
+    • Keep your login credentials confidential
+    • Complete all pre-qualification questions
+    • Upload all required documents
+    • Your assignment will expire if not completed within timeframe
+    • For assistance, contact your EHS administrator
 
     If you did not expect this email, please contact the EHS administrator.
 
@@ -306,77 +312,57 @@ class NotificationService:
     EHS Management System
     """
 
+        # Build context for HTML template
         context = {
             'portal_user': portal_user,
             'assignment': assignment,
             'contractor': contractor,
+            'onboarding': onboarding,
             'temporary_password': temporary_password,
             'login_url': login_url,
+            'prequal_questions': prequal_questions or [],
+            'document_requirements': document_requirements or [],
         }
 
         try:
-
-            html_content = select_template(
-                [
-                    'notifications/contractor_onboarding.html',
-                    'emails/notification.html',
-                ]
-            ).render(context)
-
-            # ---------------------------------------------------------
-            # CC EMAIL
-            # ---------------------------------------------------------
-
+            # Try to load the specific template
+            html_content = select_template([
+                'notifications/contractor_onboarding.html',
+                'emails/contractor_onboarding.html',
+                'emails/notification.html',
+            ]).render(context)
+            
             cc = []
-
             if cc_email:
                 cc_email = cc_email.strip().lower()
-
-                if (
-                    cc_email
-                    and cc_email.lower() != portal_user.email.lower()
-                ):
+                if cc_email and cc_email.lower() != portal_user.email.lower():
                     cc.append(cc_email)
-
-            # ---------------------------------------------------------
-            # SEND EMAIL
-            # ---------------------------------------------------------
 
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[portal_user.email],
-                cc=cc
+                cc=cc,
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
             )
-
-            email.attach_alternative(
-                html_content,
-                "text/html"
-            )
-
-            email.send(
-                fail_silently=False
-            )
+            email.attach_alternative(html_content, "text/html")
+            email.send(fail_silently=False)
 
             logger.info(
                 "Contractor onboarding email sent successfully to %s, CC: %s",
                 portal_user.email,
                 cc
             )
-
             return True
 
         except Exception as e:
-
             logger.exception(
                 "Failed to send contractor onboarding email to %s: %s",
                 portal_user.email,
                 e
             )
-
             return False
-
     @staticmethod
     def _resolve_email_template(notification_type, module):
         template = {
