@@ -780,10 +780,10 @@
                 <span class="form-text">Select one or more plants</span>
 
                 <div class="select-all-bar">
-                  <button type="button" class="btn-outline-primary" onclick="selectAll('plant-checkbox', updatePlantCount)">
+                  <button type="button" class="btn-outline-primary" onclick="selectAllPlants()">
                     <i class="fas fa-check-square"></i> Select All
                   </button>
-                  <button type="button" class="btn-outline-secondary" onclick="deselectAll('plant-checkbox', updatePlantCount)">
+                  <button type="button" class="btn-outline-secondary" onclick="deselectAllPlants()">
                     <i class="fas fa-square"></i> Deselect All
                   </button>
                 </div>
@@ -1031,6 +1031,30 @@ function deselectAll(cls, countFn) {
   if (countFn) countFn();
 }
 
+// ─── Plant Select All/Deselct All (FIXED) ───────────────────
+function selectAllPlants() {
+  document.querySelectorAll('.plant-checkbox').forEach(function (cb) { 
+    cb.checked = true; 
+  });
+  updatePlantCount();
+  // Load users and reviewers after selecting all plants
+  loadUsersForPlants();
+  loadReviewers();
+}
+
+function deselectAllPlants() {
+  document.querySelectorAll('.plant-checkbox').forEach(function (cb) { 
+    cb.checked = false; 
+  });
+  updatePlantCount();
+  // Clear users and reviewers when no plants are selected
+  document.getElementById('usersGrid').innerHTML = '<div class="loading-text">Please select plants first</div>';
+  document.getElementById('userSelectBar').style.display = 'none';
+  document.getElementById('reviewersGrid').innerHTML = '<div class="loading-text">Please select plants first</div>';
+  updateUserCount();
+  updateReviewerCount();
+}
+
 function updatePlantCount() {
   document.getElementById('plantCount').textContent =
     document.querySelectorAll('.plant-checkbox:checked').length;
@@ -1096,8 +1120,11 @@ function loadPlants() {
         }
       });
       updatePlantCount();
-      loadUsersForPlants();
-      loadReviewers();
+      // Load users and reviewers if plants are selected
+      if (selectedPlants.length > 0) {
+        loadUsersForPlants();
+        loadReviewers();
+      }
     })
     .catch(function () {
       grid.innerHTML = '<div class="loading-text text-danger">Error loading plants</div>';
@@ -1122,7 +1149,7 @@ function loadUsersForPlants() {
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
-      if (!data.users.length) {
+      if (!data.users || !data.users.length) {
         grid.innerHTML = '<div class="loading-text">No HOD or Safety Manager found</div>';
         bar.style.display = 'none';
         return;
@@ -1156,7 +1183,8 @@ function loadUsersForPlants() {
       bar.style.display = 'flex';
       updateUserCount();
     })
-    .catch(function () {
+    .catch(function (error) {
+      console.error('Error loading users:', error);
       grid.innerHTML = '<div class="loading-text text-danger">Error loading users</div>';
     });
 }
@@ -1177,7 +1205,7 @@ function loadReviewers() {
     .then(function (r) { return r.json(); })
     .then(function (data) {
       grid.innerHTML = '';
-      if (!data.users.length) {
+      if (!data.users || !data.users.length) {
         grid.innerHTML = '<div class="loading-text">No EHS reviewers found</div>';
         return;
       }
@@ -1210,7 +1238,8 @@ function loadReviewers() {
 
       updateReviewerCount();
     })
-    .catch(function () {
+    .catch(function (error) {
+      console.error('Error loading reviewers:', error);
       grid.innerHTML = '<div class="loading-text text-danger">Error loading reviewers</div>';
     });
 }
@@ -1224,4 +1253,4 @@ function getCheckedValues(selector) {
   return values;
 }
 </script>
-{% endblock %}
+{% endblock %}  
