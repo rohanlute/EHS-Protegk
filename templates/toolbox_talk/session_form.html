@@ -714,6 +714,14 @@
   const selectedSubLocations = [{% for sub in session.sublocations.all %}{{ sub.id }},{% endfor %}];
   const selectedTrainers = [{% for t in session.trainers.all %}{{ t.id }},{% endfor %}];
   const selectedIncharges = [{% for i in session.incharges.all %}{{ i.id }},{% endfor %}];
+  
+  // Store initial topic value for edit mode
+  const initialTopicId = "{{ session.topic.id|default:'' }}";
+  
+  // Get URLs from Django
+  const TOPICS_URL = "{% url 'toolbox_talk:topics_by_category' %}";
+  const TRAINERS_URL = "{% url 'toolbox_talk:get_trainers' %}";
+  const INCHARGES_URL = "{% url 'toolbox_talk:get_incharges' %}";
 </script>
 
 <div class="container-fluid" style="padding: 0;">
@@ -988,7 +996,6 @@
 
 {% block extra_js %}
 <script>
-
 // ─────────────────────────────────────────────
 // ACTION TYPE HANDLER
 // ─────────────────────────────────────────────
@@ -1377,7 +1384,7 @@ function loadSublocationsForLocations() {
 }
 
 // ─────────────────────────────────────────────
-// LOAD TRAINERS
+// LOAD TRAINERS (Using Django URL)
 // ─────────────────────────────────────────────
 
 function loadTrainersForPlants() {
@@ -1389,7 +1396,10 @@ function loadTrainersForPlants() {
     return;
   }
 
-  fetch('/toolbox_talk/ajax/trainers/?plant_ids=' + plantIds.join(','))
+  // Use the Django URL with the plant_ids parameter
+  var url = TRAINERS_URL + '?plant_ids=' + plantIds.join(',');
+
+  fetch(url)
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var grid = document.getElementById('trainersGrid');
@@ -1425,7 +1435,7 @@ function loadTrainersForPlants() {
 }
 
 // ─────────────────────────────────────────────
-// LOAD INCHARGES
+// LOAD INCHARGES (Using Django URL)
 // ─────────────────────────────────────────────
 
 function loadInchargesForPlants() {
@@ -1437,7 +1447,10 @@ function loadInchargesForPlants() {
     return;
   }
 
-  fetch('/toolbox_talk/ajax/incharges/?plant_ids=' + plantIds.join(','))
+  // Use the Django URL with the plant_ids parameter
+  var url = INCHARGES_URL + '?plant_ids=' + plantIds.join(',');
+
+  fetch(url)
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var grid = document.getElementById('inchargesGrid');
@@ -1473,26 +1486,72 @@ function loadInchargesForPlants() {
 }
 
 // ─────────────────────────────────────────────
-// CATEGORY → TOPIC AJAX
+// CATEGORY → TOPIC AJAX (Using Django URL)
 // ─────────────────────────────────────────────
 
-$(document).ready(function () {
-  $('#id_category').change(function () {
-    var categoryId = $(this).val();
-    $.ajax({
-      url: '/toolbox_talk/ajax/topics_by_category/',
-      data: { category_id: categoryId },
-      success: function (response) {
-        $('#id_topic').empty().append('<option value="">Select Topic</option>');
-        $.each(response, function (index, topic) {
-          $('#id_topic').append(
-            '<option value="' + topic.id + '">' + topic.topic_title + '</option>'
-          );
+function loadTopicsForCategory(categoryId, preserveTopicId) {
+    var topicSelect = document.getElementById('id_topic');
+    
+    // Clear topics
+    topicSelect.innerHTML = '<option value="">Select Topic</option>';
+    
+    if (!categoryId) {
+        return;
+    }
+    
+    // Show loading state
+    var loadingOption = document.createElement('option');
+    loadingOption.textContent = 'Loading topics...';
+    loadingOption.disabled = true;
+    loadingOption.selected = true;
+    topicSelect.appendChild(loadingOption);
+    
+    // Use the Django URL with the category_id parameter
+    var url = TOPICS_URL + '?category_id=' + encodeURIComponent(categoryId);
+    
+    fetch(url)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            // Remove loading option
+            var loadingOpt = topicSelect.querySelector('option[disabled]');
+            if (loadingOpt) loadingOpt.remove();
+            
+            if (data && data.length > 0) {
+                data.forEach(function(topic) {
+                    var option = document.createElement('option');
+                    option.value = topic.id;
+                    option.textContent = topic.topic_title;
+                    topicSelect.appendChild(option);
+                });
+            } else {
+                var noOption = document.createElement('option');
+                noOption.textContent = 'No topics available for this category';
+                noOption.disabled = true;
+                topicSelect.appendChild(noOption);
+            }
+            
+            // Preserve the selected topic if provided
+            if (preserveTopicId) {
+                topicSelect.value = preserveTopicId;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading topics:', error);
+            var loadingOpt = topicSelect.querySelector('option[disabled]');
+            if (loadingOpt) loadingOpt.remove();
+            
+            var errorOption = document.createElement('option');
+            errorOption.textContent = 'Error loading topics. Please refresh and try again.';
+            errorOption.disabled = true;
+            errorOption.style.color = '#dc2626';
+            topicSelect.appendChild(errorOption);
         });
-      }
-    });
-  });
-});
+}
 
 // ─────────────────────────────────────────────
 // PAGE INIT
@@ -1500,7 +1559,27 @@ $(document).ready(function () {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-  // Date constraint (create mode only)
+  // ── Category → Topic dropdown handler ──
+  var categorySelect = document.getElementById('id_category');
+  var topicSelect = document.getElementById('id_topic');
+  
+  if (categorySelect && topicSelect) {
+    // On category change, load topics
+    categorySelect.addEventListener('change', function() {
+      var categoryId = this.value;
+      // When changing category, clear the topic selection
+      loadTopicsForCategory(categoryId, null);
+    });
+    
+    // On page load, if a category is selected (edit mode or form error), load topics
+    if (categorySelect.value) {
+      // Get the currently selected topic value to preserve (for edit mode)
+      var currentTopicValue = initialTopicId || topicSelect.value;
+      loadTopicsForCategory(categorySelect.value, currentTopicValue);
+    }
+  }
+
+  // ── Date constraint (create mode only) ──
   if (!IS_EDIT) {
     var dateInput = document.getElementById('id_planned_date');
     if (dateInput) {
@@ -1508,16 +1587,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Auto-resize textarea
-  $('textarea').each(function () {
-    this.style.height = this.scrollHeight + 'px';
-    this.style.overflowY = 'hidden';
-  }).on('input', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
+  // ── Auto-resize textarea ──
+  document.querySelectorAll('textarea').forEach(function(textarea) {
+    textarea.style.height = textarea.scrollHeight + 'px';
+    textarea.style.overflowY = 'hidden';
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
   });
 
-  // Submit guard
+  // ── Submit guard ──
   var isSubmitting = false;
   document.getElementById('sessionForm').addEventListener('submit', function (e) {
     if (isSubmitting) { e.preventDefault(); return; }
@@ -1529,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', function () {
       : '<i class="fas fa-spinner fa-spin"></i> Creating...';
   });
 
-  // Load plants — cascades automatically in edit mode
+  // ── Load plants ──
   loadPlants();
 
 });

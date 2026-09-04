@@ -121,6 +121,13 @@
     line-height: 1.3;
   }
 
+  .dash-page-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   /* ===== EHS CARD ===== */
   .ehs-card {
     background: var(--bg-card);
@@ -358,6 +365,18 @@
     color: var(--primary-teal);
   }
 
+  .btn-primary {
+    background: var(--primary-teal);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 16px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
   .btn-warning {
     background: var(--secondary-gold);
     color: white;
@@ -381,6 +400,19 @@
     background: #2563eb;
     transform: translateY(-2px);
     box-shadow: 0 3px 16px rgba(59, 130, 246, 0.35);
+    color: white;
+  }
+
+  .btn-success {
+    background: var(--secondary-green);
+    color: white;
+    box-shadow: 0 3px 12px rgba(34, 197, 94, 0.2);
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 16px rgba(34, 197, 94, 0.35);
     color: white;
   }
 
@@ -442,6 +474,15 @@
 
     .dash-page-header .header-left .header-text .subtitle {
       font-size: 10px;
+    }
+
+    .dash-page-header .header-actions {
+      width: 100%;
+    }
+
+    .dash-page-header .header-actions .btn {
+      flex: 1;
+      justify-content: center;
     }
 
     .ehs-card .card-body {
@@ -512,6 +553,7 @@
       padding: 6px 10px;
       border: none;
       border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
     }
 
     .table tbody td:last-child {
@@ -523,6 +565,13 @@
       font-weight: 600;
       color: var(--text-primary);
       font-size: 0.65rem;
+      min-width: 100px;
+    }
+
+    .table tbody td .btn {
+      font-size: 0.65rem;
+      height: 26px;
+      padding: 2px 8px;
     }
   }
 
@@ -575,6 +624,7 @@
 
     .table tbody td::before {
       font-size: 0.6rem;
+      min-width: 80px;
     }
 
     .empty-state .empty-icon {
@@ -602,8 +652,16 @@
       </div>
       <div class="header-text">
         <h1>{{ topic.topic_title|default:"Toolbox Talk Topic" }}</h1>
-        <p class="subtitle">Toolbox Talk Topic Details</p>
+        <p class="subtitle">{{ topic.topic_code|default:"" }} • Toolbox Talk Topic Details</p>
       </div>
+    </div>
+    <div class="header-actions">
+      <a href="{% url 'toolbox_talk:topic_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      <a href="{% url 'toolbox_talk:topic_update' topic.id %}" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Edit Topic
+      </a>
     </div>
   </div>
 
@@ -646,7 +704,7 @@
         <div class="col-md-12">
           <div class="detail-item">
             <span class="detail-label">Description</span>
-            <span class="detail-value text-muted">{{ topic.description|default:"—" }}</span>
+            <span class="detail-value text-muted">{{ topic.description|default:"No description provided." }}</span>
           </div>
         </div>
       </div>
@@ -654,22 +712,6 @@
       <hr style="border-color: var(--border-color); margin: 14px 0;">
 
       <div class="row">
-        <div class="col-md-4">
-          <div class="detail-item">
-            <span class="detail-label">Status</span>
-            <span class="detail-value">
-              {% if topic.is_active %}
-                <span class="status-badge active">
-                  <i class="fas fa-check-circle"></i> Active
-                </span>
-              {% else %}
-                <span class="status-badge inactive">
-                  <i class="fas fa-circle"></i> Inactive
-                </span>
-              {% endif %}
-            </span>
-          </div>
-        </div>
         <div class="col-md-4">
           <div class="detail-item">
             <span class="detail-label">Created By</span>
@@ -680,6 +722,12 @@
           <div class="detail-item">
             <span class="detail-label">Created Date</span>
             <span class="detail-value text-muted">{{ topic.created_at|date:"d-M-Y H:i"|default:"—" }}</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-item">
+            <span class="detail-label">Last Updated</span>
+            <span class="detail-value text-muted">{{ topic.updated_at|date:"d-M-Y H:i"|default:"—" }}</span>
           </div>
         </div>
       </div>
@@ -694,7 +742,6 @@
       <h3 class="card-title">
         <i class="fas fa-list"></i> Toolbox Talk Details
       </h3>
-      <span class="header-badge badge-info">{{ topic_details|length }} item{{ topic_details|pluralize }}</span>
     </div>
 
     <div class="card-body">
@@ -728,9 +775,9 @@
                       {% endif %}
                     {% elif detail.attachment_type == 'URL' %}
                       {% if detail.attachment_url %}
-                        <a href="{{ detail.attachment_url }}" target="_blank" class="btn btn-primary btn-sm">
-                          <i class="fas fa-link"></i> Open Link
-                        </a>
+                        <button onclick="openLink('{{ detail.attachment_url }}')" class="btn btn-success btn-sm">
+                          <i class="fas fa-external-link-alt"></i> Open Link
+                        </button>
                       {% else %}
                         <span class="text-muted">No URL</span>
                       {% endif %}
@@ -752,18 +799,33 @@
     </div>
   </div>
 
-  <!-- ========================================================== -->
-  <!-- ACTION BUTTONS                                              -->
-  <!-- ========================================================== -->
-  <div class="action-buttons">
-    <a href="{% url 'toolbox_talk:topic_list' %}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left"></i> Back to List
-    </a>
-    <a href="{% url 'toolbox_talk:topic_update' topic.id %}" class="btn btn-warning">
-      <i class="fas fa-edit"></i> Edit Topic
-    </a>
-  </div>
-
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * Opens a link in a new tab with proper URL formatting
+ * Handles URLs with or without http:// or https:// protocol
+ */
+function openLink(url) {
+    if (!url) {
+        console.warn('No URL provided');
+        return;
+    }
+    
+    // Clean the URL - trim whitespace
+    url = url.trim();
+    
+    // Check if URL already has a protocol
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        // Add https:// by default for better security
+        url = 'https://' + url;
+    }
+    
+    // Open in new tab
+    window.open(url, '_blank');
+}
+</script>
 {% endblock %}

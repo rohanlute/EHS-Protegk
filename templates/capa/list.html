@@ -1,0 +1,873 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CAPA List{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item active">CAPA List</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== CAPA List - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER - REDUCED PADDING & MARGIN                     */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD - REDUCED PADDING                                 */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 5px;
+  }
+
+  .ehs-card .card-body {
+    padding: 12px 14px;
+  }
+
+  /* ========================================================== */
+  /* FILTER FORM                                                */
+  /* ========================================================== */
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  .form-group {
+    margin-bottom: 8px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-control,
+  .form-select,
+  .filter-grid input,
+  .filter-grid select,
+  .filter-grid textarea {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus,
+  .form-select:focus,
+  .filter-grid input:focus,
+  .filter-grid select:focus,
+  .filter-grid textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .filter-grid select {
+    appearance: auto;
+    background-color: #fff;
+    color: var(--text-primary);
+  }
+
+  .filter-grid .form-group {
+    min-width: 0;
+  }
+
+  .filter-grid .form-group > select,
+  .filter-grid .form-group > input {
+    display: block;
+    min-width: 0;
+  }
+
+  /* Filter form grid */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 12px;
+    align-items: end;
+  }
+
+  .filter-grid .form-group {
+    margin-bottom: 0;
+  }
+
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES - REDUCED PADDING                             */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.82rem;
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table tbody td .capa-link {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.82rem;
+    transition: color 0.2s ease;
+  }
+
+  .table tbody td .capa-link:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .table .text-center {
+    text-align: center;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .btn-action-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .btn-action:hover {
+    text-decoration: none;
+  }
+
+  .btn-action.view:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-action.edit:hover {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #d97706;
+  }
+
+  /* ========================================================== */
+  /* BADGES - REDUCED PADDING                                   */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+  }
+
+  .badge-info {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
+  .badge-primary {
+    background: rgba(13, 148, 136, 0.15);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+    border: 1px solid rgba(100, 116, 139, 0.15);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS - REDUCED PADDING                                  */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 32px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-sm {
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    height: 28px;
+  }
+
+  .btn i {
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 16px;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 2.5rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .empty-state h5 {
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin: 0;
+  }
+
+  /* ========================================================== */
+  /* COUNT BADGE                                                */
+  /* ========================================================== */
+  .count-badge {
+    font-size: 0.68rem;
+    padding: 3px 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 8px 12px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .dash-page-header .header-actions {
+      width: 100%;
+    }
+
+    .dash-page-header .header-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .filter-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .filter-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 4px 12px;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.75rem;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-action {
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      font-size: 10px;
+    }
+
+    .badge {
+      font-size: 0.58rem;
+      padding: 2px 8px;
+    }
+
+    .empty-state {
+      padding: 24px 12px;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 2rem;
+    }
+
+    .empty-state h5 {
+      font-size: 0.85rem;
+    }
+
+    .empty-state p {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 6px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 8px 10px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .filter-grid {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .btn {
+      font-size: 0.72rem;
+      height: 30px;
+      padding: 3px 10px;
+    }
+
+    .table tbody td {
+      padding: 4px 8px;
+      font-size: 0.7rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.58rem;
+    }
+
+    .btn-action {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      font-size: 9px;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 1.8rem;
+    }
+
+    .empty-state h5 {
+      font-size: 0.8rem;
+    }
+
+    .empty-state p {
+      font-size: 0.7rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="header-text">
+        <h1>CAPA List</h1>
+        <p class="subtitle">All corrective and preventive actions</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="{% url 'capa:create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create CAPA
+      </a>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FILTER CARD                                                -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-filter"></i> Filter CAPAs
+      </h3>
+    </div>
+    <div class="card-body">
+      <form method="get" novalidate>
+        <div class="filter-grid">
+          {% for field in filter_form %}
+          <div class="form-group">
+            <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="filter-actions mt-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Apply Filters
+          </button>
+          <a href="{% url 'capa:list' %}" class="btn btn-secondary">
+            <i class="fas fa-undo"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CAPA LIST                                                  -->
+  <!-- ========================================================== -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-list"></i> CAPA List
+      </h3>
+      <span class="count-badge">
+        {{ capas|length }} record{{ capas|length|pluralize }}
+      </span>
+    </div>
+
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width:12%;">CAPA</th>
+              <th style="width:25%;">Title</th>
+              <th style="width:15%;">Plant</th>
+              <th style="width:15%;">Status</th>
+              <th style="width:13%;">Priority</th>
+              <th style="width:20%;">Target Date</th>
+              <th style="width:10%;" class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for capa in capas %}
+            <tr>
+              <td data-label="CAPA">
+                <a href="{% url 'capa:detail' capa.pk %}" class="capa-link">
+                  {{ capa.capa_number }}
+                </a>
+              </td>
+              <td data-label="Title">{{ capa.title }}</td>
+              <td data-label="Plant">{{ capa.plant }}</td>
+              <td data-label="Status">
+                {% if capa.status == 'OPEN' %}
+                  <span class="badge badge-warning">Open</span>
+                {% elif capa.status == 'IN_PROGRESS' %}
+                  <span class="badge badge-info">In Progress</span>
+                {% elif capa.status == 'COMPLETED' %}
+                  <span class="badge badge-success">Completed</span>
+                {% elif capa.status == 'CLOSED' %}
+                  <span class="badge badge-secondary">Closed</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ capa.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td data-label="Priority">
+                {% if capa.priority == 'LOW' %}
+                  <span class="badge badge-secondary">Low</span>
+                {% elif capa.priority == 'MEDIUM' %}
+                  <span class="badge badge-info">Medium</span>
+                {% elif capa.priority == 'HIGH' %}
+                  <span class="badge badge-warning">High</span>
+                {% elif capa.priority == 'CRITICAL' %}
+                  <span class="badge badge-danger">Critical</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ capa.get_priority_display }}</span>
+                {% endif %}
+              </td>
+              <td data-label="Target Date">{{ capa.target_date|default:"—" }}</td>
+              <td data-label="Actions" class="text-center">
+                <div class="btn-action-group">
+                  <a href="{% url 'capa:detail' capa.pk %}" class="btn-action view" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'capa:edit' capa.pk %}" class="btn-action edit" title="Edit">
+                    <i class="fas fa-pen"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="padding: 0;">
+                <div class="empty-state">
+                  <span class="empty-icon"><i class="fas fa-clipboard-list"></i></span>
+                  <h5>No CAPAs Found</h5>
+                  <p>Try adjusting your filters or create a new CAPA.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

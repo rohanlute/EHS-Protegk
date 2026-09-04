@@ -975,89 +975,39 @@ def get_users_by_plants(request):
 
 @login_required
 def get_reviewers(request):
-
     plant_ids = request.GET.get('plant_ids', '')
 
     if not plant_ids:
+        return JsonResponse({'users': []})
 
-        return JsonResponse({
-            'users': []
-        })
-
-    ids = [
-
-        pid.strip()
-
-        for pid in plant_ids.split(',')
-
-        if pid.strip()
-    ]
+    ids = [pid.strip() for pid in plant_ids.split(',') if pid.strip()]
 
     users = (
-
         User.objects.filter(
-
             plant__id__in=ids,
-
-            department_id=2,
-            role__name__in=[
-                'ADMIN',
-                'HOD',
-                'SAFETY MANAGER'
-            ],
-
             is_active_employee=True,
-
             is_active=True
-
         )
-
-        .select_related(
-            'department',
-            'role',
-            'plant'
+        .filter(
+            Q(role__name__in=['ADMIN', 'HOD', 'SAFETY MANAGER']) |
+            Q(department__name__icontains='EHS')
         )
-
-        .order_by(
-            'plant__name',
-            'first_name'
-        )
+        .select_related('department', 'role', 'plant')
+        .order_by('plant__name', 'first_name')
     )
 
     users_data = []
-
     for u in users:
-
         users_data.append({
-
             'id': u.id,
-
             'full_name': u.get_full_name(),
-
-            'role': (
-                u.role.name
-                if u.role else ''
-            ),
-
-            'department': (
-                u.department.name
-                if u.department else ''
-            ),
-
-            'plant_name': (
-                u.plant.name
-                if u.plant else ''
-            ),
-
-            'plant_id': (
-                u.plant.id
-                if u.plant else None
-            ),
+            'role': u.role.name if u.role else '',
+            'department': u.department.name if u.department else '',
+            'plant_name': u.plant.name if u.plant else '',
+            'plant_id': u.plant.id if u.plant else None,
         })
 
-    return JsonResponse({
-        'users': users_data
-    })
+    return JsonResponse({'users': users_data})
 
 
 # =====================================================
@@ -2717,8 +2667,7 @@ def notice_detail(request, pk):
             )
 
         return redirect(
-            'legal_compliance:notice_detail',
-            pk=notice.id
+            'legal_compliance:my_regulatory_notices'
         )
 
     context = {

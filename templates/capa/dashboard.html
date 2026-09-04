@@ -1,0 +1,74 @@
+{% extends 'base/base.html' %}
+{% block title %}CAPA Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+  :root { --capa-teal: #0d9488; --capa-dark: #0f766e; --capa-soft: rgba(13,148,136,.08); --capa-border: #e2e8f0; }
+  .content-wrapper { background: #f8fafc !important; }
+  .capa-shell { max-width: 1420px; margin: 0 auto; }
+  .capa-page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; padding:18px 22px; background:#fff; border:1px solid var(--capa-border); border-radius:12px; box-shadow:0 1px 3px rgba(15,23,42,.06); }
+  .capa-page-heading { display:flex; align-items:center; gap:12px; }
+  .capa-page-heading .icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:11px; color:var(--capa-teal); background:var(--capa-soft); }
+  .capa-page-heading h1 { margin:0; color:#0f172a; font-size:1.2rem; font-weight:750; }
+  .capa-page-heading p { margin:3px 0 0; color:#64748b; font-size:.78rem; }
+  .capa-btn { display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:8px 17px; border-radius:6px; font-size:.8rem; font-weight:700; text-decoration:none; }
+  .capa-btn-primary { color:#fff; background:linear-gradient(135deg,var(--capa-teal),var(--capa-dark)); box-shadow:0 3px 12px rgba(13,148,136,.2); }
+  .capa-btn-primary:hover { color:#fff; transform:translateY(-1px); }
+  .capa-kpi { position:relative; min-height:100px; border-radius:12px; padding:17px 18px; background:#fff; border:1px solid var(--capa-border); box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; }
+  .capa-kpi .kpi-icon { width:34px; height:34px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; border-radius:9px; color:#fff; font-size:.9rem; }
+  .capa-kpi .kpi-icon.teal { background:linear-gradient(135deg,#0d9488,#0f766e); }
+  .capa-kpi .kpi-icon.blue { background:linear-gradient(135deg,#3b82f6,#2563eb); }
+  .capa-kpi .kpi-icon.gold { background:linear-gradient(135deg,#d97706,#f59e0b); }
+  .capa-kpi .kpi-icon.red { background:linear-gradient(135deg,#ef4444,#dc2626); }
+  .capa-kpi:after { content:""; position:absolute; right:-20px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:var(--capa-soft); }
+  .capa-kpi h4 { margin:0; font-size:1.45rem; font-weight:800; color:#0f172a; position:relative; z-index:1; }
+  .capa-kpi p { margin:5px 0 0; color:#64748b; font-size:.76rem; text-transform:uppercase; letter-spacing:.35px; position:relative; z-index:1; }
+  .capa-panel { background:#fff; border:1px solid var(--capa-border); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; }
+  .capa-panel-header { padding:11px 16px; color:#fff; background:var(--capa-teal); font-size:.92rem; font-weight:700; }
+  .capa-panel-body { padding:18px; }
+  .capa-filter-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px 16px; }
+  .capa-filter-grid p { margin:0; }
+  .capa-filter-grid label { display:block; margin-bottom:5px; color:#334155; font-size:.75rem; font-weight:700; }
+  .capa-filter-grid input, .capa-filter-grid select { width:100%; height:36px; padding:6px 10px; border:2px solid var(--capa-border); border-radius:6px; font-size:.8rem; }
+  .capa-filter-grid input:focus, .capa-filter-grid select:focus { outline:none; border-color:var(--capa-teal); box-shadow:0 0 0 3px rgba(13,148,136,.12); }
+  @media(max-width:900px) { .capa-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:520px) { .capa-page-header { padding:14px 16px; } .capa-filter-grid { grid-template-columns:1fr; } .capa-page-header .capa-btn { width:100%; justify-content:center; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid capa-shell">
+  <div class="capa-page-header">
+    <div class="capa-page-heading">
+      <span class="icon"><i class="fas fa-tools"></i></span>
+      <div><h1>CAPA Dashboard</h1><p>Corrective and Preventive Action overview</p></div>
+    </div>
+    <a class="capa-btn capa-btn-primary" href="{% url 'capa:create' %}"><i class="fas fa-plus"></i> New CAPA</a>
+  </div>
+  <div class="row g-3 mb-3">
+    {% for value, label, icon, color in dashboard_cards %}
+    <div class="col-6 col-lg-3">
+      <div class="capa-kpi">
+        <div class="kpi-icon {{ color }}"><i class="{{ icon }}"></i></div>
+        <h4>{{ value }}</h4>
+        <p>{{ label }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="capa-panel">
+    <div class="capa-panel-header"><i class="fas fa-filter mr-2"></i> Quick Filters</div>
+    <div class="capa-panel-body">
+      <form method="get">
+        <div class="capa-filter-grid">
+          {% for field in filters %}
+          <div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>
+          {% endfor %}
+        </div>
+        <div class="mt-3 d-flex gap-2 flex-wrap">
+          <button class="capa-btn capa-btn-primary" type="submit"><i class="fas fa-search"></i> Apply Filters</button>
+          <a class="capa-btn" style="border:2px solid #e2e8f0;color:#475569;" href="{% url 'capa:list' %}"><i class="fas fa-list"></i> Open Register</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CAPA Action{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:dashboard' %}">CAPA Management</a></li>
+<li class="breadcrumb-item"><a href="{{ cancel_url }}">CAPA Details</a></li>
+<li class="breadcrumb-item active">Action Plan</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== CAPA ACTION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --capa-teal: #0d9488;
+    --capa-teal-dark: #0f766e;
+    --capa-teal-light: rgba(13, 148, 136, .08);
+    --capa-text: #0f172a;
+    --capa-muted: #64748b;
+    --capa-border: #e2e8f0;
+    --capa-bg: #f8fafc;
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--capa-bg) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--capa-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--capa-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--capa-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* HEADER                                                     */
+  /* ========================================================== */
+  .action-header {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+  }
+
+  .action-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .action-heading .heading-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: var(--capa-teal);
+    background: var(--capa-teal-light);
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .action-heading h1 {
+    margin: 0;
+    color: var(--capa-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .action-heading p {
+    margin: 1px 0 0;
+    color: var(--capa-muted);
+    font-size: 0.7rem;
+  }
+
+  .action-number {
+    color: var(--capa-teal);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 12px;
+    background: var(--capa-teal-light);
+    border-radius: 14px;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .action-card {
+    background: #fff;
+    border: 1px solid var(--capa-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .action-card-header {
+    padding: 7px 14px;
+    color: #fff;
+    background: var(--capa-teal);
+  }
+
+  .action-card-header i {
+    margin-right: 5px;
+    font-size: 13px;
+  }
+
+  .action-card-header h3 {
+    display: inline;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .action-card-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM GRID                                                  */
+  /* ========================================================== */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+  }
+
+  .action-field {
+    min-width: 0;
+  }
+
+  .action-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                */
+  /* ========================================================== */
+  .action-field > label {
+    display: block;
+    margin-bottom: 3px;
+    color: #334155;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .action-field input:not([type="checkbox"]),
+  .action-field select,
+  .action-field textarea {
+    width: 100%;
+    border: 2px solid var(--capa-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--capa-text);
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .action-field input:not([type="checkbox"]),
+  .action-field select {
+    height: 32px;
+  }
+
+  .action-field textarea {
+    min-height: 65px;
+    resize: vertical;
+  }
+
+  .action-field input:focus,
+  .action-field select:focus,
+  .action-field textarea:focus {
+    outline: none;
+    border-color: var(--capa-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX - FIXED OVERLAPPING ISSUE                         */
+  /* ========================================================== */
+  .action-checkbox {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 6px 12px !important;
+    border: 1px solid rgba(13, 148, 136, .18);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(13, 148, 136, .06), rgba(13, 148, 136, .015));
+    min-height: 34px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .action-checkbox input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    margin: 2px 0 0 0 !important;
+    flex: 0 0 16px !important;
+    accent-color: var(--capa-teal);
+    cursor: pointer;
+    border: 2px solid var(--capa-border);
+    border-radius: 4px;
+    padding: 0 !important;
+    display: inline-block !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    float: none !important;
+    clear: none !important;
+    -webkit-appearance: checkbox !important;
+    appearance: checkbox !important;
+  }
+
+  .action-checkbox label {
+    margin: 0 !important;
+    color: #334155;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    cursor: pointer;
+    display: inline-block !important;
+    padding: 0 !important;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .action-checkbox label strong {
+    font-weight: 700;
+    color: var(--capa-text);
+  }
+
+  /* ========================================================== */
+  /* HELP TEXT & ERRORS                                         */
+  /* ========================================================== */
+  .helptext {
+    display: block;
+    margin-top: 2px;
+    color: var(--capa-muted);
+    font-size: 0.65rem;
+  }
+
+  .field-errors {
+    color: #dc2626;
+    font-size: 0.65rem;
+    margin-top: 2px;
+  }
+
+  .form-errors {
+    color: #dc2626;
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    background: rgba(220, 38, 38, .08);
+    border: 1px solid rgba(220, 38, 38, .2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+  }
+
+  /* ========================================================== */
+  /* ACTION BUTTONS                                             */
+  /* ========================================================== */
+  .action-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--capa-border);
+  }
+
+  .action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 32px;
+    padding: 4px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .action-button-primary {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, var(--capa-teal), var(--capa-teal-dark));
+    box-shadow: 0 3px 12px rgba(13, 148, 136, .2);
+  }
+
+  .action-button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, .35);
+  }
+
+  .action-button-muted {
+    border: 2px solid var(--capa-border);
+    color: #334155;
+    background: #fff;
+  }
+
+  .action-button-muted:hover {
+    background: var(--capa-teal-light);
+    border-color: var(--capa-teal);
+    color: var(--capa-teal);
+    text-decoration: none;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .action-header {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 10px 14px;
+    }
+
+    .action-heading h1 {
+      font-size: 0.85rem;
+    }
+
+    .action-card-body {
+      padding: 10px 12px;
+    }
+
+    .action-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .action-field-wide {
+      grid-column: auto;
+    }
+
+    .action-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .action-button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .action-checkbox {
+      padding: 5px 10px !important;
+      min-height: 32px;
+    }
+
+    .action-checkbox input[type="checkbox"] {
+      width: 15px !important;
+      height: 15px !important;
+      min-width: 15px !important;
+      flex: 0 0 15px !important;
+    }
+
+    .action-checkbox label {
+      font-size: 0.72rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .action-header {
+      padding: 8px 10px;
+    }
+
+    .action-heading .heading-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 13px;
+    }
+
+    .action-heading h1 {
+      font-size: 0.78rem;
+    }
+
+    .action-heading p {
+      font-size: 0.65rem;
+    }
+
+    .action-number {
+      font-size: 0.65rem;
+      padding: 2px 10px;
+    }
+
+    .action-card-body {
+      padding: 8px 10px;
+    }
+
+    .action-card-header {
+      padding: 5px 10px;
+    }
+
+    .action-card-header h3 {
+      font-size: 0.75rem;
+    }
+
+    .action-field > label {
+      font-size: 0.65rem;
+    }
+
+    .action-field input:not([type="checkbox"]),
+    .action-field select,
+    .action-field textarea {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+    }
+
+    .action-field input:not([type="checkbox"]),
+    .action-field select {
+      height: 30px;
+    }
+
+    .action-button {
+      font-size: 0.7rem;
+      min-height: 30px;
+      padding: 3px 12px;
+    }
+
+    .action-checkbox {
+      padding: 4px 8px !important;
+      min-height: 28px;
+      gap: 8px !important;
+    }
+
+    .action-checkbox input[type="checkbox"] {
+      width: 14px !important;
+      height: 14px !important;
+      min-width: 14px !important;
+      flex: 0 0 14px !important;
+    }
+
+    .action-checkbox label {
+      font-size: 0.7rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- HEADER                                                     -->
+  <!-- ========================================================== -->
+  <div class="action-header">
+    <div class="action-heading">
+      <span class="heading-icon"><i class="fas fa-tasks"></i></span>
+      <div>
+        <h1>CAPA Action Plan</h1>
+        <p>Add an accountable corrective or preventive action</p>
+      </div>
+    </div>
+    {% if capa %}<span class="action-number">{{ capa.capa_number }}</span>{% endif %}
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="action-card">
+    <div class="action-card-header">
+      <i class="fas fa-edit"></i><h3>Action Details</h3>
+    </div>
+    <div class="action-card-body">
+      <form method="post" action="" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="action-grid">
+          {% for field in form %}
+          <div class="action-field
+            {% if field.field.widget.input_type == 'checkbox' %}action-checkbox{% endif %}
+            {% if field.name == 'action_description' %}action-field-wide{% endif %}
+          ">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              {{ field }}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% else %}
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}<span style="color:#dc2626"> *</span>{% endif %}
+              </label>
+              {{ field }}
+            {% endif %}
+
+            {% if field.help_text %}
+              <span class="helptext">{{ field.help_text }}</span>
+            {% endif %}
+
+            {% if field.errors %}
+              <div class="field-errors">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="action-actions">
+          <button class="action-button action-button-primary" type="submit">
+            <i class="fas fa-save"></i> Save Action
+          </button>
+          <a class="action-button action-button-muted" href="{{ cancel_url }}">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

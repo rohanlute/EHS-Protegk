@@ -500,22 +500,11 @@ def toolbox_topic_list(request):
 
 
 @login_required
-def toolbox_topic_update(
-    request,
-    pk
-):
-
-    topic = get_object_or_404(
-        ToolboxTalkTopic,
-        pk=pk
-    )
+def toolbox_topic_update(request, pk):
+    topic = get_object_or_404(ToolboxTalkTopic, pk=pk)
 
     if request.method == 'POST':
-
-        form = ToolboxTalkTopicForm(
-            request.POST,
-            instance=topic
-        )
+        form = ToolboxTalkTopicForm(request.POST, instance=topic)
 
         if form.is_valid():
 
@@ -524,145 +513,66 @@ def toolbox_topic_update(
             # Remove existing detail rows
             topic.details.all().delete()
 
-            safety_points = request.POST.getlist(
-                'safety_point'
-            )
-
-            learning_objectives = request.POST.getlist(
-                'learning_objective'
-            )
-
-            reference_documents = request.POST.getlist(
-                'reference_document'
-            )
-
-            youtube_urls = request.POST.getlist(
-                'youtube_url'
-            )
-
-            attachments = request.FILES.getlist(
-                'attachment'
-            )
+            safety_points = request.POST.getlist('safety_point')
+            learning_objectives = request.POST.getlist('learning_objective')
+            reference_documents = request.POST.getlist('reference_document')
+            attachment_types = request.POST.getlist('attachment_type')
+            attachment_urls = request.POST.getlist('attachment_url')
+            attachment_files = request.FILES.getlist('attachment_file')
 
             total_rows = max(
                 len(safety_points),
                 len(learning_objectives),
                 len(reference_documents),
-                len(youtube_urls)
+                len(attachment_types)
             )
 
             file_index = 0
 
             for index in range(total_rows):
+                safety_point = safety_points[index].strip() if index < len(safety_points) else ''
+                learning_objective = learning_objectives[index].strip() if index < len(learning_objectives) else ''
+                reference_document = reference_documents[index].strip() if index < len(reference_documents) else ''
+                attachment_type = attachment_types[index] if index < len(attachment_types) else ''
 
-                safety_point = (
-                    safety_points[index].strip()
-                    if index < len(safety_points)
-                    else ''
-                )
-
-                learning_objective = (
-                    learning_objectives[index].strip()
-                    if index < len(learning_objectives)
-                    else ''
-                )
-
-                reference_document = (
-                    reference_documents[index].strip()
-                    if index < len(reference_documents)
-                    else ''
-                )
-
-                youtube_url = (
-                    youtube_urls[index].strip()
-                    if index < len(youtube_urls)
-                    else ''
-                )
-
-                if not any([
-                    safety_point,
-                    learning_objective,
-                    reference_document,
-                    youtube_url
-                ]):
+                if not any([safety_point, learning_objective, reference_document]):
                     continue
 
-                attachment = None
+                # Create the detail object
+                detail = ToolboxTalkTopicDetail()
+                detail.topic = topic
+                detail.safety_point = safety_point
+                detail.learning_objective = learning_objective
+                detail.reference_document = reference_document
+                detail.attachment_type = attachment_type
+                detail.display_order = index + 1
 
-                if file_index < len(attachments):
+                if attachment_type == 'FILE':
+                    if file_index < len(attachment_files):
+                        detail.attachment_file = attachment_files[file_index]
+                        file_index += 1
+                elif attachment_type == 'URL':
+                    if index < len(attachment_urls):
+                        detail.attachment_url = attachment_urls[index].strip()
 
-                    attachment = attachments[
-                        file_index
-                    ]
+                detail.save()
 
-                    file_index += 1
-
-                ToolboxTalkTopicDetail.objects.create(
-
-                    topic=topic,
-
-                    safety_point=safety_point,
-
-                    learning_objective=learning_objective,
-
-                    reference_document=reference_document,
-
-                    youtube_url=youtube_url,
-
-                    attachment=attachment,
-
-                    display_order=index + 1
-
-                )
-
-            messages.success(
-
-                request,
-
-                'Toolbox Talk Topic updated successfully.'
-
-            )
-
-            return redirect(
-                'toolbox_talk:topic_list'
-            )
+            messages.success(request, 'Toolbox Talk Topic updated successfully.')
+            return redirect('toolbox_talk:topic_list')
 
     else:
-        
-        form = ToolboxTalkTopicForm(
-            instance=topic
-        )
+        form = ToolboxTalkTopicForm(instance=topic)
 
-    topic_details = (
-        topic.details
-        .all()
-        .order_by(
-            'display_order'
-        )
-    )
+    topic_details = topic.details.all().order_by('display_order')
 
     context = {
-
         'form': form,
-
         'topic': topic,
-
         'topic_details': topic_details,
-
-        'page_title':
-        'Update Toolbox Talk Topic'
-
+        'page_title': 'Update Toolbox Talk Topic'
     }
 
-    return render(
-
-        request,
-
-        'toolbox_talk/topic_update.html',
-
-        context
-
-    )
+    return render(request, 'toolbox_talk/topic_update.html', context)
     
     
 @login_required
@@ -1603,10 +1513,12 @@ def my_sessions(request):
 
     stats = {
         'total':       all_assignments.count(),
+        'assigned':    all_assignments.count(),  # Total assigned
         'pending':     all_assignments.filter(status='PENDING').count(),
         'accepted':    all_assignments.filter(status='ACCEPTED').count(),
         'in_progress': all_assignments.filter(status='IN_PROGRESS').count(),
         'completed':   all_assignments.filter(status='COMPLETED').count(),
+        'rejected':    all_assignments.filter(status='REJECTED').count(),
     }
 
     context = {
@@ -1757,12 +1669,12 @@ def conduct_session(request, pk):
     )
 
     session = assignment.session
-    today   = timezone.now().date()
+    today = timezone.now().date()
 
-    edit_end_date     = session.planned_date + timedelta(days=7)
-    can_edit          = (session.planned_date <= today <= edit_end_date)
+    edit_end_date = session.planned_date + timedelta(days=7)
+    can_edit = (session.planned_date <= today <= edit_end_date)
     is_before_session = (today < session.planned_date)
-    is_expired        = (today > edit_end_date)
+    is_expired = (today > edit_end_date)
 
     topic_details = (
         ToolboxTalkTopicDetail.objects
@@ -1770,10 +1682,14 @@ def conduct_session(request, pk):
         .order_by('display_order')
     )
 
-    conduct, _ = ToolboxTalkConduct.objects.get_or_create(
-        session=session,
-        assignment=assignment,
-    )
+    # Fix: Use get_or_create but handle the unique constraint properly
+    try:
+        conduct = ToolboxTalkConduct.objects.get(session=session)
+    except ToolboxTalkConduct.DoesNotExist:
+        conduct = ToolboxTalkConduct.objects.create(
+            session=session,
+            assignment=assignment,
+        )
 
     if request.method == 'POST':
 
@@ -1795,7 +1711,7 @@ def conduct_session(request, pk):
             obj.save()
 
         # Mark trainer assignment as COMPLETED
-        assignment.status       = 'COMPLETED'
+        assignment.status = 'COMPLETED'
         assignment.completed_at = timezone.now()
         assignment.save()
 
@@ -1819,15 +1735,15 @@ def conduct_session(request, pk):
     }
 
     context = {
-        'assignment':        assignment,
-        'session':           session,
-        'topic_details':     topic_details,
-        'conduct':           conduct,
-        'existing_remarks':  existing_remarks,
-        'can_edit':          can_edit,
+        'assignment': assignment,
+        'session': session,
+        'topic_details': topic_details,
+        'conduct': conduct,
+        'existing_remarks': existing_remarks,
+        'can_edit': can_edit,
         'is_before_session': is_before_session,
-        'is_expired':        is_expired,
-        'edit_end_date':     edit_end_date,
+        'is_expired': is_expired,
+        'edit_end_date': edit_end_date,
     }
 
     return render(request, 'toolbox_talk/trainer_conduct_session.html', context)
@@ -1851,16 +1767,20 @@ def attendance_session(request, pk):
     assignment = get_object_or_404(
         ToolboxSessionAssignment,
         pk=pk,
-        user=request.user,          # security: only own assignment
+        user=request.user,
         role='INCHARGE',
     )
 
     session = assignment.session
 
-    attendance, _ = ToolboxTalkAttendance.objects.get_or_create(
-        session=session,
-        defaults={'created_by': request.user},
-    )
+    # Fix: Use get_or_create with proper handling for OneToOne
+    try:
+        attendance = ToolboxTalkAttendance.objects.get(session=session)
+    except ToolboxTalkAttendance.DoesNotExist:
+        attendance = ToolboxTalkAttendance.objects.create(
+            session=session,
+            created_by=request.user,
+        )
 
     employees = (
         User.objects
@@ -1895,12 +1815,12 @@ def attendance_session(request, pk):
                 user_id=user_id,
                 defaults={
                     'marked_by': request.user,
-                    'present':   True,
+                    'present': True,
                 },
             )
 
         # Mark incharge assignment as COMPLETED
-        assignment.status       = 'COMPLETED'
+        assignment.status = 'COMPLETED'
         assignment.completed_at = timezone.now()
         assignment.save()
 
@@ -1916,17 +1836,17 @@ def attendance_session(request, pk):
                 'Waiting for trainer to complete conduct.'
             )
 
-        return redirect('toolbox_talk:attendance_session', pk=assignment.pk)
+        return redirect('toolbox_talk:my_sessions')
 
     existing_users = list(
         attendance.attendees.values_list('user_id', flat=True)
     )
 
     context = {
-        'assignment':    assignment,
-        'session':       session,
-        'attendance':    attendance,
-        'employees':     employees,
+        'assignment': assignment,
+        'session': session,
+        'attendance': attendance,
+        'employees': employees,
         'existing_users': existing_users,
     }
 

@@ -1,0 +1,853 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit CAPA{% else %}{% block page_title %}Create CAPA{% endblock %}{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:dashboard' %}">CAPA Management</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:list' %}">CAPA List</a></li>
+<li class="breadcrumb-item active">{% if form.instance.pk %}Edit CAPA{% else %}{% block breadcrumb_label %}Create CAPA{% endblock %}{% endif %}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .capa-form-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 14px 22px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .capa-form-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .capa-form-heading .heading-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .capa-form-heading h1 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.15rem;
+    font-weight: 750;
+  }
+
+  .capa-form-heading .subtitle {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .capa-status-badge {
+    font-size: 0.75rem;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+  }
+
+  /* ========================================================== */
+  /* FORM CARD                                                  */
+  /* ========================================================== */
+  .capa-form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .capa-form-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .capa-form-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .capa-form-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .capa-form-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .capa-form-card .card-header .header-badge {
+    font-size: 0.7rem;
+    padding: 3px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+  }
+
+  .capa-form-card-body {
+    padding: 22px 24px;
+  }
+
+  /* ========================================================== */
+  /* FORM GRID                                                  */
+  /* ========================================================== */
+  .capa-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
+  }
+
+  .capa-field {
+    min-width: 0;
+  }
+
+  .capa-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  /* ========================================================== */
+  /* FORM FIELDS                                                */
+  /* ========================================================== */
+  .capa-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .capa-field label .required-mark {
+    color: var(--secondary-red);
+  }
+
+  .capa-field input:not([type="checkbox"]):not([type="file"]),
+  .capa-field select,
+  .capa-field textarea {
+    width: 100%;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-primary);
+    padding: 7px 11px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .capa-field input:not([type="checkbox"]):not([type="file"]),
+  .capa-field select {
+    height: 38px;
+  }
+
+  .capa-field textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .capa-field select[multiple] {
+    height: 112px;
+  }
+
+  .capa-field input:focus,
+  .capa-field select:focus,
+  .capa-field textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .capa-field input[type="file"] {
+    width: 100%;
+    padding: 6px 0;
+    font-size: 0.82rem;
+    border: none;
+  }
+
+  .capa-field input[type="date"] {
+    min-height: 38px;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX - Like the image example                          */
+  /* ========================================================== */
+  .capa-check-field {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    padding-top: 0;
+    padding: 8px 12px;
+    border: 1px solid rgba(13, 148, 136, 0.18);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.06), rgba(13, 148, 136, 0.015));
+  }
+
+  .capa-check-field .capa-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 38px;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Style checkbox like the image */
+  .capa-check-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    position: static;
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+  }
+
+  .capa-check-field label {
+    margin: 0;
+    font-weight: 400;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1.5;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* When label has bold text (like the image example) */
+  .capa-check-field label strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .capa-analysis-field {
+    padding: 12px;
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    background: #f2fbfa;
+  }
+
+  .capa-analysis-field textarea {
+    min-height: 112px;
+    background: #ffffff;
+    border-color: #b9ddd9;
+  }
+
+  /* ========================================================== */
+  /* STATUS SECTION - Like the image example                    */
+  /* ========================================================== */
+  .capa-status-section {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    background: var(--bg-page);
+  }
+
+  .capa-status-section .status-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .capa-status-section .status-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .capa-status-section .status-checkbox .status-text {
+    flex: 1;
+  }
+
+  .capa-status-section .status-checkbox .status-text .status-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    display: block;
+  }
+
+  .capa-status-section .status-checkbox .status-text .status-description {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX GROUP - For multiple checkboxes in one row       */
+  /* ========================================================== */
+  .capa-check-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    min-height: 38px;
+  }
+
+  .capa-check-group .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .capa-check-group .checkbox-item input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .capa-check-group .checkbox-item label {
+    margin: 0;
+    font-weight: 400;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  /* ========================================================== */
+  /* HELP TEXT & ERRORS                                         */
+  /* ========================================================== */
+  .capa-field .helptext {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .source-reference-picker { position: relative; }
+  .source-reference-picker .source-reference-search { width: 100%; }
+  .source-reference-options { position: absolute; z-index: 20; display: none; width: 100%; max-height: 230px; overflow-y: auto; margin-top: 4px; padding: 5px; background: #fff; border: 1px solid var(--primary-teal); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(27, 62, 87, .16); }
+  .source-reference-options.is-open { display: block; }
+  .source-reference-option { display: block; width: 100%; padding: 9px 10px; border: 0; border-radius: 5px; background: transparent; color: var(--text-primary); text-align: left; font-size: .78rem; cursor: pointer; }
+  .source-reference-option:hover, .source-reference-option.is-selected { background: var(--primary-teal-light); color: var(--primary-teal-dark); }
+  .source-reference-empty { padding: 10px; color: var(--text-muted); font-size: .76rem; }
+
+  .capa-field-errors {
+    color: var(--secondary-red);
+    font-size: 0.72rem;
+    margin-top: 4px;
+  }
+
+  .capa-form-errors {
+    color: var(--secondary-red);
+    font-size: 0.82rem;
+    padding: 10px 14px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM ACTIONS                                               */
+  /* ========================================================== */
+  .capa-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .capa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 7px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .capa-btn-primary {
+    color: white;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .capa-btn-primary:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+  }
+
+  .capa-btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .capa-btn-muted {
+    color: var(--text-secondary);
+    background: white;
+    border: 2px solid var(--border-color);
+  }
+
+  .capa-btn-muted:hover {
+    color: var(--primary-teal-dark);
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    text-decoration: none;
+  }
+
+  .capa-btn i {
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .capa-form-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .capa-form-heading .heading-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+    }
+
+    .capa-form-heading h1 {
+      font-size: 1rem;
+    }
+
+    .capa-form-heading .subtitle {
+      font-size: 0.72rem;
+    }
+
+    .capa-form-card-body {
+      padding: 15px 16px;
+    }
+
+    .capa-form-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .capa-field-wide {
+      grid-column: auto;
+    }
+
+    .capa-check-field {
+      min-height: auto;
+      padding: 4px 0;
+    }
+
+    .capa-check-group {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .capa-status-section .status-checkbox {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .capa-form-actions {
+      justify-content: stretch;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .capa-form-actions .capa-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .capa-form-header {
+      padding: 10px 12px;
+    }
+
+    .capa-form-heading .heading-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    .capa-form-heading h1 {
+      font-size: 0.9rem;
+    }
+
+    .capa-form-card-body {
+      padding: 12px 14px;
+    }
+
+    .capa-field label {
+      font-size: 0.72rem;
+    }
+
+    .capa-field input:not([type="checkbox"]):not([type="file"]),
+    .capa-field select,
+    .capa-field textarea {
+      font-size: 0.75rem;
+      padding: 5px 9px;
+    }
+
+    .capa-field input:not([type="checkbox"]):not([type="file"]),
+    .capa-field select {
+      height: 34px;
+    }
+
+    .capa-btn {
+      font-size: 0.75rem;
+      min-height: 34px;
+      padding: 5px 16px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="capa-form-header">
+    <div class="capa-form-heading">
+      <span class="heading-icon"><i class="fas fa-tools"></i></span>
+      <div>
+        <h1>{% if form.instance.pk %}Edit CAPA{% else %}{% block form_heading %}Create CAPA{% endblock %}{% endif %}</h1>
+        <p class="subtitle">{% if form.instance.pk %}Update the CAPA record{% else %}{% block form_subtitle %}Complete the required information and save the CAPA record{% endblock %}{% endif %}</p>
+      </div>
+    </div>
+    {% if form.instance.pk %}
+    <div>
+      <span class="capa-status-badge">
+        <i class="fas fa-circle" style="font-size: 8px; margin-right: 6px; color: var(--primary-teal);"></i>
+        {{ form.instance.get_status_display }}
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- FORM CARD                                                  -->
+  <!-- ========================================================== -->
+  <div class="capa-form-card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-edit"></i> 
+        {% if form.instance.pk %}Edit CAPA Details{% else %}{% block form_card_title %}CAPA Details{% endblock %}{% endif %}
+      </h3>
+      {% if form.instance.pk %}
+      <span class="header-badge">
+        {{ form.instance.capa_number }}
+      </span>
+      {% endif %}
+    </div>
+
+    <div class="capa-form-card-body">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="capa-form-errors">
+          {% for error in form.non_field_errors %}
+            {{ error }}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="capa-form-grid">
+          {% for field in form %}
+          <div class="capa-field 
+            {% if field.name in 'description reason_required capa_reason problem_statement what_happened impact_consequence what_was_affected sequence_of_events findings evidence_collected witness_statements existing_controls control_failure_reason control_gap_identified final_root_cause root_cause_details related_references existing_controls_summary risk_assessment_remarks management_system_impact_details investigation_conclusion investigator_recommendation action_description completion_remarks verification_findings deviation_deficiency additional_evidence_remarks rejection_reason additional_action_required effectiveness_evidence evidence_description review_findings observed_improvement remaining_risk_gap remarks closure_remarks lessons_learned final_recommendations comment' %}capa-field-wide{% endif %}
+             {% if field.field.widget.input_type == 'checkbox' %}capa-check-field{% endif %}
+             {% if field.name == 'contributing_factors' or field.name == 'extent_analysis' %}capa-analysis-field{% endif %}
+          ">
+            {% if field.field.widget.input_type != 'checkbox' %}
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}<span class="required-mark">*</span>{% endif %}
+              </label>
+            {% endif %}
+
+            {% if field.field.widget.input_type == 'checkbox' %}
+              <div class="capa-checkbox-wrapper">
+                {{ field }}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              </div>
+            {% else %}
+              {% if field.name == 'source_reference' %}
+                <div class="source-reference-picker" data-source-url="{% url 'capa:source_references' %}">
+                  <input type="hidden" name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|default:'' }}">
+                  <input type="text" class="source-reference-search" autocomplete="off" value="{{ field.value|default:'' }}" placeholder="Search and select a source record">
+                  <div class="source-reference-options" role="listbox"></div>
+                </div>
+              {% else %}
+                {{ field }}
+              {% endif %}
+            {% endif %}
+
+            {% if field.help_text %}
+              <span class="helptext">{{ field.help_text }}</span>
+            {% endif %}
+
+            {% if field.errors %}
+              <div class="capa-field-errors">
+                {% for error in field.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="capa-form-actions">
+          {% if show_draft_button %}
+          <button class="capa-btn capa-btn-muted" name="save_draft" value="1" type="submit">
+            <i class="fas fa-file-alt"></i> Save Draft
+          </button>
+          {% endif %}
+          <button class="capa-btn capa-btn-primary" type="submit" {% block submit_button_attrs %}{% endblock %}>
+            <i class="fas fa-check"></i> 
+            {% block submit_label %}{% if form.instance.pk %}Update{% else %}Save{% endif %}{% endblock %}
+          </button>
+          <a class="capa-btn capa-btn-muted" href="{% if form.instance.pk %}{% url 'capa:detail' form.instance.pk %}{% else %}{% url 'capa:list' %}{% endif %}">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Manual sources use free text; module sources use an AJAX searchable picker.
+  document.addEventListener('DOMContentLoaded', function() {
+    const sourceType = document.getElementById('id_source_type');
+    const picker = document.querySelector('.source-reference-picker');
+    if (!sourceType || !picker) return;
+
+    const hidden = picker.querySelector('input[type="hidden"]');
+    const search = picker.querySelector('.source-reference-search');
+    const options = picker.querySelector('.source-reference-options');
+    const manualValue = hidden.value;
+    let timer;
+
+    function isManual() { return sourceType.value === 'MANUAL' || !sourceType.value; }
+    function render(items) {
+      options.innerHTML = '';
+      if (!items.length) {
+        options.innerHTML = '<div class="source-reference-empty">No matching records found.</div>';
+        options.classList.add('is-open');
+        return;
+      }
+      items.forEach(function(item) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'source-reference-option';
+        button.textContent = item.label;
+        button.addEventListener('click', function() {
+          hidden.value = item.value;
+          search.value = item.label;
+          options.classList.remove('is-open');
+        });
+        options.appendChild(button);
+      });
+      options.classList.add('is-open');
+    }
+    function loadSources() {
+      if (isManual()) {
+        hidden.value = search.value === manualValue ? manualValue : search.value;
+        search.type = 'text';
+        search.placeholder = 'Enter a manual source reference';
+        options.classList.remove('is-open');
+        return;
+      }
+      search.type = 'text';
+      search.placeholder = 'Search source records';
+      fetch(picker.dataset.sourceUrl + '?source_type=' + encodeURIComponent(sourceType.value) + '&q=' + encodeURIComponent(search.value))
+        .then(function(response) { return response.json(); })
+        .then(function(data) { render(data.results || []); })
+        .catch(function() { render([]); });
+    }
+    sourceType.addEventListener('change', function() {
+      hidden.value = '';
+      search.value = '';
+      loadSources();
+    });
+    search.addEventListener('input', function() {
+      if (isManual()) { hidden.value = search.value; return; }
+      clearTimeout(timer);
+      timer = setTimeout(loadSources, 220);
+    });
+    search.addEventListener('focus', loadSources);
+    document.addEventListener('click', function(event) {
+      if (!picker.contains(event.target)) options.classList.remove('is-open');
+    });
+    if (isManual()) {
+      search.placeholder = 'Enter a manual source reference';
+    } else if (hidden.value) {
+      search.value = hidden.value;
+    }
+  });
+
+  // Auto-resize textareas
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.style.overflowY = 'hidden';
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+      });
+    });
+  });
+
+  // Prevent double submission
+  let formSubmitting = false;
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (formSubmitting) {
+      e.preventDefault();
+      return false;
+    }
+    if (submitBtn) {
+      formSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+  });
+</script>
+{% endblock %}

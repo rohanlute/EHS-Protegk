@@ -1,0 +1,80 @@
+{% extends 'base/base.html' %}
+{% block title %}Investigation - {{ capa.capa_number }}{% endblock %}
+{% block extra_css %}
+<style>
+  .investigation-shell { max-width: 1320px; margin: 0 auto; }
+  .investigation-hero, .investigation-section { background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(15,23,42,.06); overflow:hidden; margin-bottom:18px; }
+  .investigation-hero { border-top:4px solid #0d9488; padding:20px 22px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .investigation-hero h1 { margin:0; color:#0f172a; font-size:1.25rem; font-weight:750; }
+  .investigation-hero p { margin:4px 0 0; color:#64748b; font-size:.8rem; }
+  .investigation-section-header { padding:11px 17px; color:#fff; background:#0d9488; font-size:.9rem; font-weight:700; }
+  .investigation-section-body { padding:18px 20px; }
+  .investigation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 22px; }
+  .investigation-item { min-width:0; }
+  .investigation-item.wide { grid-column:1/-1; }
+  .investigation-item .label { display:block; margin-bottom:4px; color:#64748b; font-size:.7rem; font-weight:750; text-transform:uppercase; letter-spacing:.35px; }
+  .investigation-item .value { color:#334155; font-size:.84rem; line-height:1.6; white-space:pre-line; }
+  .investigation-empty { color:#64748b; font-size:.85rem; padding:12px 0; }
+  .investigation-btn { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border:1px solid #e2e8f0; border-radius:6px; color:#475569; background:#fff; font-size:.78rem; font-weight:700; text-decoration:none; }
+  .investigation-btn:hover { color:#0d9488; border-color:#0d9488; background:rgba(13,148,136,.06); }
+  @media(max-width:700px) { .investigation-grid { grid-template-columns:1fr; } .investigation-item.wide { grid-column:auto; } .investigation-section-body { padding:14px; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid investigation-shell">
+  <div class="investigation-hero">
+    <div>
+      <h1><i class="fas fa-search text-teal mr-2"></i> Investigation Report</h1>
+      <p>{{ capa.capa_number }} - {{ capa.title }}</p>
+    </div>
+    <a class="investigation-btn" href="{% url 'capa:detail' capa.pk %}"><i class="fas fa-arrow-left"></i> Back to CAPA</a>
+  </div>
+  {% if investigation %}
+  <div class="investigation-section">
+    <div class="investigation-section-header"><i class="fas fa-clipboard-check mr-2"></i> Investigation Summary</div>
+    <div class="investigation-section-body"><div class="investigation-grid">
+      <div class="investigation-item"><span class="label">Investigation Date</span><div class="value">{{ investigation.investigation_date|default:'-' }}</div></div>
+      <div class="investigation-item"><span class="label">Lead Investigator</span><div class="value">{{ investigation.lead_investigator|default:'-' }}</div></div>
+      <div class="investigation-item"><span class="label">Method</span><div class="value">{{ investigation.get_investigation_method_display }}</div></div>
+      <div class="investigation-item"><span class="label">Completed By</span><div class="value">{{ investigation.completed_by|default:'-' }}{% if investigation.completed_date %} on {{ investigation.completed_date }}{% endif %}</div></div>
+      <div class="investigation-item wide"><span class="label">Investigation Team</span><div class="value">{{ investigation.investigation_team|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Problem Statement</span><div class="value">{{ investigation.problem_statement|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">What Happened</span><div class="value">{{ investigation.what_happened|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Impact and Consequence</span><div class="value">{{ investigation.impact_consequence|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Sequence of Events</span><div class="value">{{ investigation.sequence_of_events|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Findings</span><div class="value">{{ investigation.findings|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Evidence Collected</span><div class="value">{{ investigation.evidence_collected|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Witness Statements</span><div class="value">{{ investigation.witness_statements|default:'-' }}</div></div>
+    </div></div>
+  </div>
+  <div class="investigation-section">
+    <div class="investigation-section-header"><i class="fas fa-bullseye mr-2"></i> Root Cause Analysis</div>
+    <div class="investigation-section-body"><div class="investigation-grid">
+      <div class="investigation-item"><span class="label">Root Cause Category</span><div class="value">{{ investigation.get_root_cause_category_display|default:'-' }}</div></div>
+      <div class="investigation-item"><span class="label">Root Cause Confirmed</span><div class="value">{{ investigation.root_cause_confirmed|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">5 Why Analysis</span><div class="value">Why 1: {{ investigation.why1|default:'-' }}
+Why 2: {{ investigation.why2|default:'-' }}
+Why 3: {{ investigation.why3|default:'-' }}
+Why 4: {{ investigation.why4|default:'-' }}
+Why 5: {{ investigation.why5|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Final Root Cause</span><div class="value">{{ investigation.final_root_cause|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Root Cause Details</span><div class="value">{{ investigation.root_cause_details|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Contributing Factors</span><div class="value">{{ investigation.contributing_factors|default:'-' }}</div></div>
+    </div></div>
+  </div>
+  <div class="investigation-section">
+    <div class="investigation-section-header"><i class="fas fa-shield-alt mr-2"></i> Risk and System Impact</div>
+    <div class="investigation-section-body"><div class="investigation-grid">
+      <div class="investigation-item"><span class="label">Initial Risk</span><div class="value">Likelihood: {{ investigation.initial_likelihood|default:'-' }} | Severity: {{ investigation.initial_severity|default:'-' }} | Score: {{ investigation.initial_risk_score|default:'-' }}</div></div>
+      <div class="investigation-item"><span class="label">Residual Risk</span><div class="value">Likelihood: {{ investigation.residual_likelihood|default:'-' }} | Severity: {{ investigation.residual_severity|default:'-' }} | Score: {{ investigation.residual_risk_score|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Risk Assessment Remarks</span><div class="value">{{ investigation.risk_assessment_remarks|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Management System Impact</span><div class="value">{{ investigation.management_system_impact_details|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Investigation Conclusion</span><div class="value">{{ investigation.investigation_conclusion|default:'-' }}</div></div>
+      <div class="investigation-item wide"><span class="label">Investigator Recommendation</span><div class="value">{{ investigation.investigator_recommendation|default:'-' }}</div></div>
+    </div></div>
+  </div>
+  {% else %}
+  <div class="investigation-section"><div class="investigation-section-body investigation-empty">No investigation has been recorded for this CAPA.</div></div>
+  {% endif %}
+</div>
+{% endblock %}
