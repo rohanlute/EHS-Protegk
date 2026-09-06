@@ -1,4 +1,1002 @@
-{% extends 'capa/form.html' %}
-{% block form_heading %}Effectiveness Review{% endblock %}
-{% block breadcrumb_label %}Effectiveness Review{% endblock %}
-{% block submit_label %}Save Review{% endblock %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Effectiveness Review{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:list' %}">CAPA</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:detail' capa.pk %}">{{ capa.capa_number }}</a></li>
+<li class="breadcrumb-item active">Effectiveness Review</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== EFFECTIVENESS REVIEW - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                              */
+  /* ========================================================== */
+  .form-section {
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .form-section .section-title {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section .section-title i {
+    color: var(--primary-teal);
+  }
+
+  .form-section .section-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .required-mark {
+    color: var(--secondary-red);
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  .form-error {
+    color: var(--secondary-red) !important;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 36px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .form-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* DETAIL ITEMS                                               */
+  /* ========================================================== */
+  .detail-item {
+    margin-bottom: 10px;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-item .detail-label {
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .detail-item .detail-value {
+    font-size: 0.88rem;
+    color: var(--text-primary);
+  }
+
+  .detail-item .detail-value strong {
+    font-weight: 700;
+  }
+
+  .detail-item .detail-value.text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+  }
+
+  .badge-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX (Custom - FIXED)                                  */
+  /* ========================================================== */
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.25s ease;
+    cursor: pointer;
+    min-height: 46px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .checkbox-wrapper:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-teal);
+    cursor: pointer;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 0 0 18px;
+    display: block !important;
+    position: static !important;
+    float: none !important;
+  }
+
+  .checkbox-wrapper .checkbox-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4;
+    flex: 1 1 auto;
+    min-width: 0;
+    display: block !important;
+    float: none !important;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .form-section .section-body {
+      padding: 10px 12px;
+    }
+
+    .form-section .section-title {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 10px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.68rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.8rem;
+    }
+
+    .checkbox-wrapper {
+      padding: 8px 12px;
+      min-height: 40px;
+    }
+
+    .checkbox-wrapper .checkbox-label {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .form-section .section-body {
+      padding: 8px 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 10px;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.65rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.75rem;
+    }
+
+    .checkbox-wrapper {
+      padding: 6px 10px;
+      min-height: 36px;
+      gap: 8px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox-wrapper .checkbox-label {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="header-text">
+        <h1>Effectiveness Review</h1>
+        <p class="subtitle">{{ capa.capa_number }} - {{ capa.title }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-md-11 mx-auto">
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-chart-line"></i> Effectiveness Review
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- ========================================================== -->
+            <!-- REVIEW DETAILS                                              -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-clipboard-check"></i> Review Details
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Review Date</label>
+                      {{ form.review_date }}
+                      {% if form.review_date.errors %}
+                        <div class="form-error">{{ form.review_date.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Result <span class="required-mark">*</span></label>
+                      {{ form.result }}
+                      {% if form.result.errors %}
+                        <div class="form-error">{{ form.result.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- EFFECTIVENESS CHECKLIST - FIXED                           -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-list-check"></i> Effectiveness Checklist
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="checkbox-wrapper">
+                        {{ form.corrective_working_as_intended }}
+                        <label class="checkbox-label" for="{{ form.corrective_working_as_intended.id_for_label }}">
+                          Corrective action working as intended
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="checkbox-wrapper">
+                        {{ form.preventive_working_as_intended }}
+                        <label class="checkbox-label" for="{{ form.preventive_working_as_intended.id_for_label }}">
+                          Preventive action working as intended
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="checkbox-wrapper">
+                        {{ form.risk_reduced_as_expected }}
+                        <label class="checkbox-label" for="{{ form.risk_reduced_as_expected.id_for_label }}">
+                          Risk reduced as expected
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="checkbox-wrapper">
+                        {{ form.controls_adequate }}
+                        <label class="checkbox-label" for="{{ form.controls_adequate.id_for_label }}">
+                          Controls are adequate
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <div class="checkbox-wrapper">
+                        {{ form.systemic_cause_addressed }}
+                        <label class="checkbox-label" for="{{ form.systemic_cause_addressed.id_for_label }}">
+                          Systemic cause addressed
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- EVIDENCE & FINDINGS                                        -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-file-alt"></i> Evidence & Findings
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Effectiveness Evidence</label>
+                      {{ form.effectiveness_evidence }}
+                      {% if form.effectiveness_evidence.errors %}
+                        <div class="form-error">{{ form.effectiveness_evidence.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Describe the evidence that demonstrates effectiveness</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Evidence Description</label>
+                      {{ form.evidence_description }}
+                      {% if form.evidence_description.errors %}
+                        <div class="form-error">{{ form.evidence_description.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Provide detailed description of the evidence</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Review Findings</label>
+                      {{ form.review_findings }}
+                      {% if form.review_findings.errors %}
+                        <div class="form-error">{{ form.review_findings.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Summarize the key findings from the review</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- OBSERVATIONS & REMARKS                                     -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-comment-dots"></i> Observations & Remarks
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Observed Improvement</label>
+                      {{ form.observed_improvement }}
+                      {% if form.observed_improvement.errors %}
+                        <div class="form-error">{{ form.observed_improvement.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Describe the improvements observed</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Remaining Risk / Gap</label>
+                      {{ form.remaining_risk_gap }}
+                      {% if form.remaining_risk_gap.errors %}
+                        <div class="form-error">{{ form.remaining_risk_gap.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Identify any remaining risks or gaps</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Remarks</label>
+                      {{ form.remarks }}
+                      {% if form.remarks.errors %}
+                        <div class="form-error">{{ form.remarks.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Additional remarks or comments</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- CAPA SUMMARY                                               -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-info-circle"></i> CAPA Summary
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">CAPA Number</span>
+                      <span class="detail-value"><strong>{{ capa.capa_number }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Title</span>
+                      <span class="detail-value"><strong>{{ capa.title }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Severity</span>
+                      <span class="detail-value">
+                        <span class="badge 
+                          {% if capa.severity == 'CRITICAL' %}
+                            badge-danger
+                          {% elif capa.severity == 'HIGH' %}
+                            badge-danger
+                          {% elif capa.severity == 'MEDIUM' %}
+                            badge-warning
+                          {% else %}
+                            badge-success
+                          {% endif %}
+                        ">
+                          {{ capa.get_severity_display }}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Priority</span>
+                      <span class="detail-value">
+                        <span class="badge 
+                          {% if capa.priority == 'URGENT' %}
+                            badge-danger
+                          {% elif capa.priority == 'HIGH' %}
+                            badge-danger
+                          {% elif capa.priority == 'MEDIUM' %}
+                            badge-warning
+                          {% else %}
+                            badge-success
+                          {% endif %}
+                        ">
+                          {{ capa.get_priority_display }}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Current Status</span>
+                      <span class="detail-value">
+                        <span class="badge badge-info">{{ capa.get_status_display }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Actions Summary</span>
+                      <span class="detail-value">
+                        <strong>{{ capa.actions.count }}</strong> total actions,
+                        <strong>{{ capa.action_summary.1 }}</strong> verified
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ACTION BUTTONS                                              -->
+            <!-- ========================================================== -->
+            <div class="form-actions">
+              <a href="{{ cancel_url }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save"></i> Save Review
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default review date to today if not set
+    const reviewDateInput = document.querySelector('input[name="review_date"]');
+    if (reviewDateInput && !reviewDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        reviewDateInput.value = today;
+    }
+
+    // Auto-resize textarea
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.style.overflowY = 'hidden';
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Prevent double submission
+    let isSubmitting = false;
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        const btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        return true;
+    });
+});
+</script>
+{% endblock %}
