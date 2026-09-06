@@ -1,8 +1,11 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, Q
+from django.db.models.functions import TruncMonth
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
@@ -35,7 +38,7 @@ from apps.capa.models import (
 )
 from apps.capa.services import CAPAService
 from apps.hazards.models import Hazard
-from apps.organizations.models import Plant
+from apps.organizations.models import Location, Plant, SubLocation, Zone
 
 
 def _accessible_plants(user):
@@ -57,6 +60,28 @@ def _capa_queryset_for_user(user):
         return CAPA.objects.none()
     return CAPA.objects.filter(plant_id__in=plant_ids)
 
+from apps.organizations.models import Location, Plant, SubLocation, Zone
+
+
+class CAPAAjaxGetZonesView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        plant_id = request.GET.get("plant_id")
+        zones = Zone.objects.filter(plant_id=plant_id).order_by("name") if plant_id else Zone.objects.none()
+        return JsonResponse(list(zones.values("id", "name")), safe=False)
+
+
+class CAPAAjaxGetLocationsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        zone_id = request.GET.get("zone_id")
+        locations = Location.objects.filter(zone_id=zone_id).order_by("name") if zone_id else Location.objects.none()
+        return JsonResponse(list(locations.values("id", "name")), safe=False)
+
+
+class CAPAAjaxGetSublocationsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        location_id = request.GET.get("location_id")
+        sublocations = SubLocation.objects.filter(location_id=location_id).order_by("name") if location_id else SubLocation.objects.none()
+        return JsonResponse(list(sublocations.values("id", "name")), safe=False)
 
 class CAPASourceReferenceView(LoginRequiredMixin, View):
     """Return searchable source records that the current user can access."""
@@ -96,33 +121,171 @@ class CAPAAccessMixin(PermissionRequiredMixin):
         ).prefetch_related("actions", "attachments", "comments", "audit_logs")
 
 
+STATUS_BADGE_MAP = {
+    CAPA.Status.DRAFT: "secondary",
+    CAPA.Status.OPEN: "info",
+    CAPA.Status.INVESTIGATION_IN_PROGRESS: "warning",
+    CAPA.Status.INVESTIGATION_SUBMITTED: "warning",
+    CAPA.Status.INVESTIGATION_APPROVED: "info",
+    CAPA.Status.INVESTIGATION_REJECTED: "danger",
+    CAPA.Status.ACTION_PLAN_IN_PROGRESS: "info",
+    CAPA.Status.ACTION_IMPLEMENTATION: "info",
+    CAPA.Status.VERIFICATION: "warning",
+    CAPA.Status.EFFECTIVENESS_REVIEW: "warning",
+    CAPA.Status.CLOSED: "success",
+    CAPA.Status.REOPENED: "danger",
+    CAPA.Status.CANCELLED: "secondary",
+}
+
+
 class CAPADashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     permission_required = "CAPA_VIEW"
     template_name = "capa/dashboard.html"
 
+    def get(self, request, *args, **kwargs):
+        self.filters = {
+            "plant": request.GET.get("plant", ""),
+            "zone": request.GET.get("zone", ""),
+            "location": request.GET.get("location", ""),
+            "sublocation": request.GET.get("sublocation", ""),
+            "month": request.GET.get("month", ""),
+        }
+        return super().get(request, *args, **kwargs)
+
+    def _filtered_queryset(self):
+        qs = _capa_queryset_for_user(self.request.user)
+        f = self.filters
+        if f["plant"]:
+            qs = qs.filter(plant_id=f["plant"])
+        if f["zone"]:
+            qs = qs.filter(zone_id=f["zone"])
+        if f["location"]:
+            qs = qs.filter(location_id=f["location"])
+        if f["sublocation"]:
+            qs = qs.filter(sublocation_id=f["sublocation"])
+        if f["month"]:
+            try:
+                year, month = (int(part) for part in f["month"].split("-"))
+                qs = qs.filter(created_at__year=year, created_at__month=month)
+            except (ValueError, TypeError):
+                pass
+        return qs
+
+    @staticmethod
+    def _month_options():
+        today = timezone.localdate()
+        options = []
+        year, month = today.year, today.month
+        for _ in range(12):
+            options.append({
+                "value": f"{year:04d}-{month:02d}",
+                "label": date(year, month, 1).strftime("%b %Y"),
+            })
+            month -= 1
+            if month == 0:
+                month, year = 12, year - 1
+        return options
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = _capa_queryset_for_user(self.request.user)
         today = timezone.localdate()
-        context["stats"] = {
+        qs = self._filtered_queryset()
+
+        # ---------------- KPI stats ----------------
+        stats = {
             "total": qs.count(),
             "open": qs.exclude(status=CAPA.Status.CLOSED).count(),
-            "investigation_pending": qs.filter(status__in=[CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS]).count(),
-            "action_plan_pending": qs.filter(status=CAPA.Status.INVESTIGATION_APPROVED).count(),
-            "actions_in_progress": qs.filter(actions__status=CAPAAction.Status.IN_PROGRESS).distinct().count(),
             "pending_verification": qs.filter(actions__status=CAPAAction.Status.PENDING_VERIFICATION).distinct().count(),
-            "closed": qs.filter(status=CAPA.Status.CLOSED).count(),
             "overdue": qs.filter(target_date__lt=today).exclude(status__in=[CAPA.Status.CLOSED, CAPA.Status.CANCELLED]).count(),
+            "closed": qs.filter(status=CAPA.Status.CLOSED).count(),
+            "critical": qs.filter(severity=CAPA.Severity.CRITICAL).count(),
+            "high": qs.filter(severity=CAPA.Severity.HIGH).count(),
         }
-        context["stats"]["critical"] = qs.filter(severity=CAPA.Severity.CRITICAL).count()
-        context["stats"]["high"] = qs.filter(severity=CAPA.Severity.HIGH).count()
+        context["stats"] = stats
         context["dashboard_cards"] = [
-            (context["stats"]["total"], "Total CAPAs", "fas fa-layer-group", "teal"),
-            (context["stats"]["open"], "Open CAPAs", "fas fa-folder-open", "blue"),
-            (context["stats"]["pending_verification"], "Pending Verification", "fas fa-user-check", "gold"),
-            (context["stats"]["overdue"], "Overdue", "fas fa-exclamation-triangle", "red"),
+            (stats["total"], "Total CAPAs", "fas fa-layer-group", "teal"),
+            (stats["open"], "Open CAPAs", "fas fa-folder-open", "blue"),
+            (stats["pending_verification"], "Pending Verification", "fas fa-user-check", "gold"),
+            (stats["overdue"], "Overdue", "fas fa-exclamation-triangle", "red"),
         ]
-        context["filters"] = CAPAFilterForm(self.request.GET or None)
+
+        # ---------------- Source type chart (doughnut) ----------------
+        source_labels_map = dict(CAPA.SourceType.choices)
+        source_rows = list(qs.values("source_type").annotate(count=Count("id")).order_by("-count"))
+        context["type_chart_labels"] = [source_labels_map.get(r["source_type"], r["source_type"]) for r in source_rows]
+        context["type_chart_data"] = [r["count"] for r in source_rows]
+
+        # ---------------- Monthly trend (last 6 months) ----------------
+        month_buckets = []
+        year, month = today.year, today.month
+        for _ in range(6):
+            month_buckets.append((year, month))
+            month -= 1
+            if month == 0:
+                month, year = 12, year - 1
+        month_buckets.reverse()
+
+        monthly_counts_qs = (
+            qs.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+        )
+        counts_by_month = {(m["month"].year, m["month"].month): m["count"] for m in monthly_counts_qs if m["month"]}
+        context["monthly_labels"] = [date(y, m, 1).strftime("%b %Y") for y, m in month_buckets]
+        context["monthly_data"] = [counts_by_month.get((y, m), 0) for y, m in month_buckets]
+
+        # ---------------- Severity distribution ----------------
+        severity_rows = {r["severity"]: r["count"] for r in qs.values("severity").annotate(count=Count("id"))}
+        context["severity_labels"] = [label for _, label in CAPA.Severity.choices]
+        context["severity_data"] = [severity_rows.get(code, 0) for code, _ in CAPA.Severity.choices]
+
+        # ---------------- Status distribution (clickable) ----------------
+        status_rows = {r["status"]: r["count"] for r in qs.values("status").annotate(count=Count("id"))}
+        status_labels, status_data = [], []
+        for code, label in CAPA.Status.choices:
+            count = status_rows.get(code, 0)
+            if not count:
+                continue
+            status_labels.append(label)
+            status_data.append({"count": count, "url": f"{reverse('capa:list')}?status={code}"})
+        context["status_labels"] = status_labels
+        context["status_data"] = status_data
+
+        # ---------------- Overdue alerts ----------------
+        overdue_capas = list(
+            qs.filter(target_date__lt=today)
+            .exclude(status__in=[CAPA.Status.CLOSED, CAPA.Status.CANCELLED])
+            .select_related("plant", "owner")
+            .order_by("target_date")[:5]
+        )
+        for c in overdue_capas:
+            c.status_badge_class = STATUS_BADGE_MAP.get(c.status, "secondary")
+        context["overdue_capas"] = overdue_capas
+
+        # ---------------- Recent CAPAs ----------------
+        recent_capas = list(qs.select_related("plant", "owner").order_by("-created_at")[:8])
+        for c in recent_capas:
+            c.status_badge_class = STATUS_BADGE_MAP.get(c.status, "secondary")
+        context["recent_capas"] = recent_capas
+
+        # ---------------- Filter bar data ----------------
+        f = self.filters
+        context["plants"] = _accessible_plants(self.request.user)
+        context["zones"] = Zone.objects.filter(plant_id=f["plant"]) if f["plant"] else Zone.objects.none()
+        context["locations"] = Location.objects.filter(zone_id=f["zone"]) if f["zone"] else Location.objects.none()
+        context["sublocations"] = SubLocation.objects.filter(location_id=f["location"]) if f["location"] else SubLocation.objects.none()
+        context["month_options"] = self._month_options()
+        context["selected_plant"] = f["plant"]
+        context["selected_zone"] = f["zone"]
+        context["selected_location"] = f["location"]
+        context["selected_sublocation"] = f["sublocation"]
+        context["selected_month"] = f["month"]
+        context["selected_plant_name"] = context["plants"].filter(pk=f["plant"]).values_list("name", flat=True).first() if f["plant"] else ""
+        context["selected_zone_name"] = context["zones"].filter(pk=f["zone"]).values_list("name", flat=True).first() if f["zone"] else ""
+        context["selected_location_name"] = context["locations"].filter(pk=f["location"]).values_list("name", flat=True).first() if f["location"] else ""
+        context["selected_sublocation_name"] = context["sublocations"].filter(pk=f["sublocation"]).values_list("name", flat=True).first() if f["sublocation"] else ""
+        context["selected_month_label"] = next((option["label"] for option in context["month_options"] if option["value"] == f["month"]), "")
+        context["has_active_filters"] = any(f.values())
         return context
 
 
