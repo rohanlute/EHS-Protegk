@@ -393,6 +393,76 @@
     text-decoration: underline;
   }
 
+  /* Action buttons inside table */
+  .capa-table .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .capa-table .btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+    height: 26px;
+    border: 0;
+  }
+
+  .capa-table .btn-sm:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  .capa-table .btn-sm-primary {
+    background: var(--capa-teal);
+    color: #fff;
+  }
+  .capa-table .btn-sm-primary:hover {
+    background: var(--capa-dark);
+    color: #fff;
+  }
+
+  .capa-table .btn-sm-success {
+    background: #22c55e;
+    color: #fff;
+  }
+  .capa-table .btn-sm-success:hover {
+    background: #16a34a;
+    color: #fff;
+  }
+
+  .capa-table .btn-sm-warning {
+    background: #d97706;
+    color: #fff;
+  }
+  .capa-table .btn-sm-warning:hover {
+    background: #b45309;
+    color: #fff;
+  }
+
+  .capa-table .btn-sm-secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid var(--capa-border);
+  }
+  .capa-table .btn-sm-secondary:hover {
+    background: var(--capa-soft);
+    color: var(--capa-teal);
+    border-color: var(--capa-teal);
+  }
+
+  .capa-table .ml-1 {
+    margin-left: 4px;
+  }
+
   /* ========================================================== */
   /* EMPTY STATE                                                */
   /* ========================================================== */
@@ -490,6 +560,10 @@
       text-align: left;
     }
 
+    .capa-table .action-buttons {
+      justify-content: flex-end;
+    }
+
     .badge-section .dash-badge-lg {
       font-size: 11px;
       padding: 3px 10px;
@@ -540,6 +614,12 @@
     .capa-table td {
       font-size: 11px;
       padding: 4px 2px;
+    }
+
+    .capa-table .btn-sm {
+      font-size: 9px;
+      padding: 2px 8px;
+      height: 22px;
     }
   }
 </style>
@@ -609,6 +689,12 @@
         {% if can_close and user|has_perm:'CAPA_CLOSE' %}
           <a href="{% url 'capa:close' capa.pk %}" class="btn-dash btn-dash-success">
             <i class="fas fa-check-circle"></i> Close CAPA
+          </a>
+        {% endif %}
+
+        {% if capa.status == 'CLOSED' and user|has_perm:'CAPA_REOPEN' %}
+          <a href="{% url 'capa:reopen' capa.pk %}" class="btn-dash btn-dash-warning">
+            <i class="fas fa-rotate-left"></i> Reopen CAPA
           </a>
         {% endif %}
 
@@ -746,7 +832,7 @@
       </div>
       {% endif %}
 
-      <!-- Action Plan -->
+      <!-- Action Plan - Separate action row -->
       <div class="dash-detail-card">
         <div class="card-header-custom bg-success">
           <h5><i class="fas fa-tasks"></i> Action Plan</h5>
@@ -760,6 +846,7 @@
                   <th>Assigned To</th>
                   <th>Target</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -774,18 +861,28 @@
                     <span class="dash-badge {% if action.status == 'VERIFIED' %}badge-success{% elif action.status == 'PENDING_VERIFICATION' %}badge-info{% elif action.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
                       {{ action.get_status_display }}
                     </span>
-                    {% if action.status == 'PENDING' or action.status == 'IN_PROGRESS' or action.status == 'REJECTED' %}
-                      {% if action.assigned_to and action.assigned_to.pk == user.pk %}
-                        <a class="btn-dash btn-dash-secondary ml-1" href="{% url 'capa:action_complete' action.pk %}">Submit</a>
+                  </td>
+                  <td data-label="Action">
+                    <div class="action-buttons">
+                      {% if action.status == 'PENDING' or action.status == 'IN_PROGRESS' or action.status == 'REJECTED' %}
+                        {% if action.assigned_to and action.assigned_to.pk == user.pk %}
+                          <a class="btn-sm btn-sm-success" href="{% url 'capa:action_complete' action.pk %}">
+                            <i class="fas fa-check"></i> Submit
+                          </a>
+                        {% endif %}
+                      {% elif action.status == 'PENDING_VERIFICATION' %}
+                        {% if user|has_perm:'CAPA_VERIFY_ACTION' %}
+                          <a class="btn-sm btn-sm-primary" href="{% url 'capa:action_verify' action.pk %}">
+                            <i class="fas fa-user-check"></i> Verify
+                          </a>
+                        {% endif %}
                       {% endif %}
-                    {% elif action.status == 'PENDING_VERIFICATION' and user|has_perm:'CAPA_VERIFY_ACTION' %}
-                      <a class="btn-dash btn-dash-primary ml-1" href="{% url 'capa:action_verify' action.pk %}">Verify</a>
-                    {% endif %}
+                    </div>
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="4">
+                  <td colspan="5">
                     <div class="capa-empty">No action items have been added.</div>
                   </td>
                 </tr>
@@ -825,22 +922,6 @@
             <span class="info-label">Created</span>
             <p class="info-value">{{ capa.created_at|date:'d/m/Y H:i' }}</p>
           </div>
-        </div>
-      </div>
-
-      <!-- Evidence -->
-      <div class="dash-detail-card">
-        <div class="card-header-custom">
-          <h5><i class="fas fa-paperclip"></i> Evidence</h5>
-        </div>
-        <div class="card-body-custom">
-          {% for attachment in capa.attachments.all %}
-            <p class="info-value mb-2">
-              <i class="fas fa-file text-teal mr-1"></i> {{ attachment.title|default:attachment.file.name }}
-            </p>
-          {% empty %}
-            <div class="capa-empty">No evidence uploaded.</div>
-          {% endfor %}
         </div>
       </div>
 

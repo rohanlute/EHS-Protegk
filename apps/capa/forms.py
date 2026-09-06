@@ -315,6 +315,20 @@ class CAPACommentForm(BaseEHSForm):
         widgets = {"comment": forms.Textarea(attrs={"rows": 3})}
 
 
+class CAPAReopenForm(forms.Form):
+    reason = forms.CharField(
+        label="Reason for reopening",
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 4,
+                "class": "form-control",
+                "placeholder": "Explain why this CAPA needs to be reopened",
+            }
+        ),
+    )
+
+
 class CAPAFilterForm(forms.Form):
     plant = forms.ModelChoiceField(queryset=Plant.objects.filter(is_active=True), required=False, empty_label="All")
     department = forms.ModelChoiceField(queryset=Department.objects.filter(is_active=True), required=False, empty_label="All")
