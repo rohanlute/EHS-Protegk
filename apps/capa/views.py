@@ -1,5 +1,4 @@
 from datetime import date
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
@@ -11,31 +10,10 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, FormView, ListView, TemplateView, UpdateView, View
-
 from apps.accidents.models import Incident
 from apps.accounts.mixins import PermissionRequiredMixin
-from apps.capa.forms import (
-    CAPAAttachmentForm,
-    CAPAActionCompletionForm,
-    CAPAActionForm,
-    CAPAActionVerificationForm,
-    CAPAClosureForm,
-    CAPACommentForm,
-    CAPAEffectivenessReviewForm,
-    CAPAFilterForm,
-    CAPAForm,
-    CAPAInvestigationForm,
-    CAPAReopenForm,
-)
-from apps.capa.models import (
-    CAPA,
-    CAPAAttachment,
-    CAPAAction,
-    CAPAActionCompletion,
-    CAPAActionVerification,
-    CAPAEffectivenessReview,
-    CAPAInvestigation,
-)
+from apps.capa.forms import *
+from apps.capa.models import *
 from apps.capa.services import CAPAService
 from apps.hazards.models import Hazard
 from apps.organizations.models import Location, Plant, SubLocation, Zone
@@ -53,14 +31,18 @@ def _accessible_plants(user):
 
 
 def _capa_queryset_for_user(user):
+    """
+    Return CAPAs accessible to the current user.
+    Superusers:
+        Can see all CAPAs.
+    Normal users:
+        Can see CAPAs from their accessible plants.
+        Can also see CAPAs they personally created
+    """
     if user.is_superuser:
         return CAPA.objects.all()
     plant_ids = list(_accessible_plants(user).values_list("id", flat=True))
-    if not plant_ids:
-        return CAPA.objects.none()
-    return CAPA.objects.filter(plant_id__in=plant_ids)
-
-from apps.organizations.models import Location, Plant, SubLocation, Zone
+    return CAPA.objects.filter(Q(plant_id__in=plant_ids) | Q(created_by=user)).distinct()
 
 
 class CAPAAjaxGetZonesView(LoginRequiredMixin, View):
@@ -122,7 +104,6 @@ class CAPAAccessMixin(PermissionRequiredMixin):
 
 
 STATUS_BADGE_MAP = {
-    CAPA.Status.DRAFT: "secondary",
     CAPA.Status.OPEN: "info",
     CAPA.Status.INVESTIGATION_IN_PROGRESS: "warning",
     CAPA.Status.INVESTIGATION_SUBMITTED: "warning",
@@ -320,11 +301,22 @@ class CAPAListView(CAPAAccessMixin, ListView):
                 qs = qs.filter(priority=data["priority"])
             if data.get("status"):
                 qs = qs.filter(status=data["status"])
-        return qs.order_by("-created_at")
+
+        qs = qs.filter(is_archived=False)
+
+        return qs.select_related(
+            "plant",
+            "zone",
+            "location",
+            "sublocation",
+            "department",
+            "owner",
+            "created_by",
+        ).order_by("-created_at")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["filter_form"] = getattr(self, "filter_form", CAPAFilterForm())
+        context["filter_form"] = getattr(self,"filter_form",CAPAFilterForm())
         return context
 
 
@@ -356,7 +348,7 @@ class CAPADetailView(CAPAAccessMixin, DetailView):
         ]
         status = self.object.status
         context.update({
-            "can_start_investigation": status in {CAPA.Status.DRAFT, CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED},
+            "can_start_investigation": status in {CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED},
             "can_review_investigation": status == CAPA.Status.INVESTIGATION_SUBMITTED,
             "can_add_action": status in {CAPA.Status.INVESTIGATION_APPROVED, CAPA.Status.ACTION_PLAN_IN_PROGRESS, CAPA.Status.ACTION_IMPLEMENTATION, CAPA.Status.REOPENED},
             "can_start_effectiveness": status in {CAPA.Status.VERIFICATION, CAPA.Status.EFFECTIVENESS_REVIEW},
@@ -419,7 +411,6 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_draft_button"] = True
         context["cancel_url"] = reverse("capa:list")
         return context
 
@@ -455,7 +446,6 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
             source_type=source_type,
             source_reference=source_reference,
             source_obj=source_obj,
-            status=CAPA.Status.DRAFT if self.request.POST.get("save_draft") else CAPA.Status.OPEN,
         )
         messages.success(self.request, f"CAPA {capa.capa_number} created successfully.")
         return redirect(reverse("capa:list"))
@@ -507,7 +497,7 @@ class CAPAInvestigationView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
                 return redirect(reverse("capa:investigation_detail", kwargs={"pk": self.capa.pk}))
         except CAPAInvestigation.DoesNotExist:
             pass
-        if self.capa.status not in {CAPA.Status.DRAFT, CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
+        if self.capa.status not in {CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
             messages.info(request, "This investigation has already been submitted. You are viewing the read-only investigation record.")
             return redirect(reverse("capa:investigation_detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
@@ -561,7 +551,7 @@ class CAPAInvestigationView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
             CAPAService.submit_investigation(user=self.request.user, capa=self.capa, investigation=investigation)
             messages.success(self.request, "Investigation submitted.")
             return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
-        if self.capa.status in {CAPA.Status.DRAFT, CAPA.Status.OPEN}:
+        if self.capa.status in {CAPA.Status.OPEN}:
             CAPAService._set_status(self.capa, CAPA.Status.INVESTIGATION_IN_PROGRESS, self.request.user, "INVESTIGATION_STARTED")
         messages.success(self.request, "Investigation saved.")
         return redirect(reverse("capa:investigation", kwargs={"pk": self.capa.pk}))

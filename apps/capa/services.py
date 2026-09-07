@@ -150,7 +150,7 @@ class CAPAService:
     @staticmethod
     def submit_investigation(*, user, capa, investigation):
         CAPAService._ensure_can(user, "CAPA_INVESTIGATE")
-        if capa.status not in {CAPA.Status.OPEN, CAPA.Status.DRAFT, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
+        if capa.status not in {CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
             raise ValidationError("Investigation cannot be submitted in the current CAPA status.")
         if investigation.completed_date and capa.status != CAPA.Status.INVESTIGATION_REJECTED:
             raise ValidationError("This investigation has already been submitted.")

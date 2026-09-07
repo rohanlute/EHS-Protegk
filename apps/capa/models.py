@@ -24,7 +24,6 @@ class CAPA(models.Model):
         MANUAL = "MANUAL", "Manual"
 
     class Status(models.TextChoices):
-        DRAFT = "DRAFT", "Draft"
         OPEN = "OPEN", "Open"
         INVESTIGATION_IN_PROGRESS = "INVESTIGATION_IN_PROGRESS", "Investigation in Progress"
         INVESTIGATION_SUBMITTED = "INVESTIGATION_SUBMITTED", "Investigation Submitted"
@@ -77,7 +76,7 @@ class CAPA(models.Model):
     capa_recommended = models.BooleanField(default=False)
     capa_reason = models.TextField(blank=True)
 
-    status = models.CharField(max_length=40, choices=Status.choices, default=Status.DRAFT, db_index=True)
+    status = models.CharField(max_length=40, choices=Status.choices, default=Status.OPEN, db_index=True)
     progress = models.PositiveSmallIntegerField(default=0)
 
     created_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="created_capas")
