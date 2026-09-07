@@ -682,7 +682,7 @@
             <div class="form-group-custom">
               <label for="{{ form.phone.id_for_label }}">Phone Number</label>
               {{ form.phone }}
-              <span class="form-helper-text"><i class="fas fa-info-circle"></i> Include country code if applicable</span>
+              <span class="form-helper-text"><i class="fas fa-info-circle"></i> Numbers only, include country code if applicable</span>
               {% if form.phone.errors %}
                 <span class="text-danger">{{ form.phone.errors }}</span>
               {% endif %}
@@ -1003,6 +1003,36 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Load plants on page load
     loadPlants();
+
+    // --- Phone number: digits only ---
+    var phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        // Prevent non-digit characters from being entered
+        phoneInput.addEventListener('keydown', function(e) {
+            // Allow: backspace, delete, tab, escape, enter, home, end, left, right, etc.
+            var key = e.key;
+            if (key === 'Backspace' || key === 'Delete' || key === 'Tab' || key === 'Escape' ||
+                key === 'Enter' || key === 'Home' || key === 'End' || key === 'ArrowLeft' ||
+                key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' ||
+                key === 'Control' || key === 'Meta' || key === 'Alt') {
+                return;
+            }
+            // Allow digits (0-9) and plus sign (+) for country code
+            if (!/^[0-9+]$/.test(key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Also clean on paste
+        phoneInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9+]/g, '');
+        });
+
+        // Clean on blur (extra safety)
+        phoneInput.addEventListener('blur', function(e) {
+            this.value = this.value.replace(/[^0-9+]/g, '');
+        });
+    }
 
     // Age Calculation
     var dobInput = document.getElementById('id_date_of_birth');
