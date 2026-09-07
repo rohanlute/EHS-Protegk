@@ -369,6 +369,8 @@ class DocumentType(models.Model):
         return self.name
 
 
+# apps/contractor/models.py
+
 class OnboardingRequest(models.Model):
     """Onboarding request for contractor with pre-qualification and documents"""
     
@@ -401,6 +403,15 @@ class OnboardingRequest(models.Model):
         default=dict,
         blank=True,
         help_text="Stores question_id: answer pairs (true/false or text)"
+    )
+    
+    # ==========================================================
+    # ADD THIS FIELD - Question Remarks from EHS Officer
+    # ==========================================================
+    question_remarks = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Stores question_id: remark pairs from EHS officer"
     )
     
     # Documents selected for this onboarding (Many-to-Many via through model)
@@ -860,3 +871,342 @@ class ContractorDocument(models.Model):
 
     def __str__(self):
         return f"{self.contractor} - {self.get_document_type_display()}"
+# apps/contractor/models.py - Corrected WorkOrder model
+
+class WorkOrder(models.Model):
+    """
+    Work Order / Contract for approved contractors.
+    After a contractor is approved, work orders can be created.
+    """
+    
+    STATUS_CHOICES = [
+        ('SUBMITTED', 'Submitted'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('CLOSED', 'Closed'),
+    ]
+    
+    RISK_LEVEL_CHOICES = [
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+        ('CRITICAL', 'Critical'),
+    ]
+    
+    # ==========================================================
+    # Basic Information
+    # ==========================================================
+    work_order_number = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True
+    )
+    
+    contract_number = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True
+    )
+    
+    # Link to Contractor (Only ONE definition)
+    contractor = models.ForeignKey(
+        Contractor,
+        on_delete=models.CASCADE,
+        related_name='work_orders',
+        limit_choices_to={'onboarding_requests__status': 'APPROVED'},
+    )
+    
+    # Link to Onboarding Request
+    onboarding = models.ForeignKey(
+        OnboardingRequest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_orders'
+    )
+    
+    # ==========================================================
+    # Work Details
+    # ==========================================================
+    work_description = models.TextField(
+        verbose_name="Work Description"
+    )
+    
+    # Work Category - Auto-filled from Contractor
+    work_category = models.CharField(
+        max_length=50,
+        verbose_name="Work Category"
+    )
+    
+    # Site/Plant Information
+    plant = models.ForeignKey(
+        'organizations.Plant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_orders',
+        verbose_name="Site / Plant"
+    )
+    
+    department = models.ForeignKey(
+        'organizations.Department',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_orders',
+        verbose_name="Department"
+    )
+    
+    location = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Work Location"
+    )
+    
+    # ==========================================================
+    # Personnel
+    # ==========================================================
+    
+    # CONTRACTOR SUPERVISOR - Auto-filled from Contractor's EHS Officer Name
+    contractor_supervisor = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Contractor Supervisor",
+        help_text="Auto-filled from contractor's EHS Officer Name"
+    )
+    
+    contractor_supervisor_contact = models.CharField(
+        max_length=15,
+        blank=True,
+        verbose_name="Supervisor Contact",
+        help_text="Auto-filled from contractor's EHS Mobile"
+    )
+    
+    contractor_supervisor_email = models.EmailField(
+        blank=True,
+        verbose_name="Supervisor Email",
+        help_text="Auto-filled from contractor's EHS Email"
+    )
+        
+    company_representative = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_orders_representative',
+        verbose_name="Company Representative"
+    )
+        
+    # ==========================================================
+    # Worker Information - MANUAL INPUT
+    # ==========================================================
+    number_of_workers = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Number of Workers"
+    )
+    
+    worker_details = models.TextField(
+        blank=True,
+        verbose_name="Worker Details"
+    )
+    
+    # ==========================================================
+    # Work Dates
+    # ==========================================================
+    start_date = models.DateField(
+        verbose_name="Start Date"
+    )
+    end_date = models.DateField(
+        verbose_name="End Date"
+    )
+    
+    # ==========================================================
+    # Risk Level - Dropdown
+    # ==========================================================
+    risk_level = models.CharField(
+        max_length=20,
+        choices=RISK_LEVEL_CHOICES,
+        default='MEDIUM',
+        verbose_name="Risk Level"
+    )
+    
+    # ==========================================================
+    # Attachments
+    # ==========================================================
+    attachment = models.FileField(
+        upload_to='work_orders/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        verbose_name="Work Order Attachment"
+    )
+    attachment_name = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Attachment Name"
+    )
+    
+    # ==========================================================
+    # Status and Approval
+    # ==========================================================
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='SUBMITTED'
+    )
+    
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_work_orders'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Approval fields
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_work_orders'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    # Closure fields
+    closed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='closed_work_orders'
+    )
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closure_remarks = models.TextField(blank=True)
+    
+    # ==========================================================
+    # Additional Info
+    # ==========================================================
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Work Order'
+        verbose_name_plural = 'Work Orders'
+    
+    def __str__(self):
+        return f"{self.work_order_number} - {self.contractor.contractor_name}"
+    
+    def save(self, *args, **kwargs):
+        # ==========================================================
+        # AUTO-GENERATE WORK ORDER NUMBER: WO-YYYY-XXXX
+        # ==========================================================
+        if not self.work_order_number:
+            year = timezone.now().year
+            last_wo = WorkOrder.objects.filter(
+                work_order_number__startswith=f'WO-{year}-'
+            ).order_by('-work_order_number').first()
+            
+            if last_wo and last_wo.work_order_number:
+                try:
+                    last_number = int(last_wo.work_order_number.split('-')[-1])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
+            else:
+                new_number = 1
+            
+            self.work_order_number = f'WO-{year}-{str(new_number).zfill(4)}'
+        
+        # ==========================================================
+        # AUTO-GENERATE CONTRACT NUMBER: CN-YY-XXX
+        # ==========================================================
+        if not self.contract_number:
+            current_year = timezone.now().year
+            year_short = str(current_year)[-2:]
+            
+            last_contract = WorkOrder.objects.filter(
+                contract_number__startswith=f'CN-{year_short}-'
+            ).order_by('-contract_number').first()
+            
+            if last_contract and last_contract.contract_number:
+                try:
+                    last_number = int(last_contract.contract_number.split('-')[-1])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
+            else:
+                new_number = 1
+            
+            self.contract_number = f'CN-{year_short}-{str(new_number).zfill(3)}'
+        
+        # ==========================================================
+        # AUTO-FILL FROM CONTRACTOR
+        # ==========================================================
+        if self.contractor:
+            # 1. Auto-fill Work Category
+            if not self.work_category:
+                self.work_category = self.contractor.work_category
+            
+            # 2. Auto-fill Contractor Supervisor (EHS Officer Name)
+            if not self.contractor_supervisor:
+                self.contractor_supervisor = self.contractor.ehs_officer_name or ''
+            
+            # 3. Auto-fill Supervisor Contact (EHS Mobile)
+            if not self.contractor_supervisor_contact:
+                self.contractor_supervisor_contact = self.contractor.ehs_mobile or ''
+            
+            # 4. Auto-fill Supervisor Email (EHS Email)
+            if not self.contractor_supervisor_email:
+                self.contractor_supervisor_email = self.contractor.ehs_email or ''
+        
+        super().save(*args, **kwargs)
+    
+    def get_status_display(self):
+        return dict(self.STATUS_CHOICES).get(self.status, self.status)
+    
+    def get_risk_level_display(self):
+        return dict(self.RISK_LEVEL_CHOICES).get(self.risk_level, self.risk_level)
+    
+    def get_work_category_display(self):
+        return dict(Contractor.WORK_CATEGORY_CHOICES).get(self.work_category, self.work_category)
+    
+    @property
+    def is_completed(self):
+        return self.status in ['CLOSED']
+    
+    @property
+    def is_active_work(self):
+        return self.status in ['APPROVED']
+    
+    @property
+    def is_pending(self):
+        return self.status in ['SUBMITTED']
+    
+    @property
+    def days_remaining(self):
+        if self.end_date:
+            delta = self.end_date - timezone.now().date()
+            return delta.days
+        return None
+    
+    @property
+    def plant_name(self):
+        return self.plant.name if self.plant else 'N/A'
+    
+    @property
+    def department_name(self):
+        return self.department.name if self.department else 'N/A'
+    
+    @property
+    def company_representative_name(self):
+        return self.company_representative.get_full_name() if self.company_representative else 'N/A'
+    
+    @property
+    def contractor_supervisor_name(self):
+        return self.contractor_supervisor if self.contractor_supervisor else 'N/A'
+    
+    @property
+    def contractor_workers(self):
+        return self.contractor.number_of_workers if self.contractor else 0
