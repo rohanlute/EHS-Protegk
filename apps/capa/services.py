@@ -150,9 +150,9 @@ class CAPAService:
     @staticmethod
     def submit_investigation(*, user, capa, investigation):
         CAPAService._ensure_can(user, "CAPA_INVESTIGATE")
-        if capa.status not in {CAPA.Status.OPEN, CAPA.Status.DRAFT, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.REOPENED}:
+        if capa.status not in {CAPA.Status.OPEN, CAPA.Status.DRAFT, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
             raise ValidationError("Investigation cannot be submitted in the current CAPA status.")
-        if investigation.completed_date:
+        if investigation.completed_date and capa.status != CAPA.Status.INVESTIGATION_REJECTED:
             raise ValidationError("This investigation has already been submitted.")
         investigation.completed_by = user
         investigation.completed_date = timezone.localdate()
@@ -187,7 +187,9 @@ class CAPAService:
         capa.investigation.reviewer = user
         capa.investigation.review_date = timezone.localdate()
         capa.investigation.reviewer_comments = remarks
-        capa.investigation.save()
+        capa.investigation.completed_by = None
+        capa.investigation.completed_date = None
+        capa.investigation.save(update_fields=["reviewer", "review_date", "reviewer_comments", "completed_by", "completed_date", "updated_at"])
         CAPAService._set_status(capa, CAPA.Status.INVESTIGATION_REJECTED, user, "INVESTIGATION_REJECTED", remarks)
         CAPAService._notify(capa, "CAPA_INVESTIGATION_REJECTED", [capa.owner] if capa.owner else None)
 
@@ -230,7 +232,7 @@ class CAPAService:
         action.status = CAPAAction.Status.PENDING_VERIFICATION
         action.save(update_fields=["completion_remarks", "status", "updated_at"])
         CAPAService._audit(action.capa, user, "ACTION_COMPLETED", "", action.pk, completion_remarks)
-        if action.capa.status == CAPA.Status.ACTION_PLAN_IN_PROGRESS:
+        if action.capa.status in {CAPA.Status.ACTION_PLAN_IN_PROGRESS, CAPA.Status.REOPENED}:
             CAPAService._set_status(action.capa, CAPA.Status.ACTION_IMPLEMENTATION, user, "ACTION_IMPLEMENTATION_STARTED")
         CAPAService._notify(action.capa, "CAPA_ACTION_SUBMITTED", [action.assigned_to] if action.assigned_to else None)
         return completion

@@ -1,8 +1,11 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, Q
+from django.db.models.functions import TruncMonth
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
@@ -22,6 +25,7 @@ from apps.capa.forms import (
     CAPAFilterForm,
     CAPAForm,
     CAPAInvestigationForm,
+    CAPAReopenForm,
 )
 from apps.capa.models import (
     CAPA,
@@ -34,7 +38,7 @@ from apps.capa.models import (
 )
 from apps.capa.services import CAPAService
 from apps.hazards.models import Hazard
-from apps.organizations.models import Plant
+from apps.organizations.models import Location, Plant, SubLocation, Zone
 
 
 def _accessible_plants(user):
@@ -56,6 +60,28 @@ def _capa_queryset_for_user(user):
         return CAPA.objects.none()
     return CAPA.objects.filter(plant_id__in=plant_ids)
 
+from apps.organizations.models import Location, Plant, SubLocation, Zone
+
+
+class CAPAAjaxGetZonesView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        plant_id = request.GET.get("plant_id")
+        zones = Zone.objects.filter(plant_id=plant_id).order_by("name") if plant_id else Zone.objects.none()
+        return JsonResponse(list(zones.values("id", "name")), safe=False)
+
+
+class CAPAAjaxGetLocationsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        zone_id = request.GET.get("zone_id")
+        locations = Location.objects.filter(zone_id=zone_id).order_by("name") if zone_id else Location.objects.none()
+        return JsonResponse(list(locations.values("id", "name")), safe=False)
+
+
+class CAPAAjaxGetSublocationsView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        location_id = request.GET.get("location_id")
+        sublocations = SubLocation.objects.filter(location_id=location_id).order_by("name") if location_id else SubLocation.objects.none()
+        return JsonResponse(list(sublocations.values("id", "name")), safe=False)
 
 class CAPASourceReferenceView(LoginRequiredMixin, View):
     """Return searchable source records that the current user can access."""
@@ -95,33 +121,171 @@ class CAPAAccessMixin(PermissionRequiredMixin):
         ).prefetch_related("actions", "attachments", "comments", "audit_logs")
 
 
+STATUS_BADGE_MAP = {
+    CAPA.Status.DRAFT: "secondary",
+    CAPA.Status.OPEN: "info",
+    CAPA.Status.INVESTIGATION_IN_PROGRESS: "warning",
+    CAPA.Status.INVESTIGATION_SUBMITTED: "warning",
+    CAPA.Status.INVESTIGATION_APPROVED: "info",
+    CAPA.Status.INVESTIGATION_REJECTED: "danger",
+    CAPA.Status.ACTION_PLAN_IN_PROGRESS: "info",
+    CAPA.Status.ACTION_IMPLEMENTATION: "info",
+    CAPA.Status.VERIFICATION: "warning",
+    CAPA.Status.EFFECTIVENESS_REVIEW: "warning",
+    CAPA.Status.CLOSED: "success",
+    CAPA.Status.REOPENED: "danger",
+    CAPA.Status.CANCELLED: "secondary",
+}
+
+
 class CAPADashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     permission_required = "CAPA_VIEW"
     template_name = "capa/dashboard.html"
 
+    def get(self, request, *args, **kwargs):
+        self.filters = {
+            "plant": request.GET.get("plant", ""),
+            "zone": request.GET.get("zone", ""),
+            "location": request.GET.get("location", ""),
+            "sublocation": request.GET.get("sublocation", ""),
+            "month": request.GET.get("month", ""),
+        }
+        return super().get(request, *args, **kwargs)
+
+    def _filtered_queryset(self):
+        qs = _capa_queryset_for_user(self.request.user)
+        f = self.filters
+        if f["plant"]:
+            qs = qs.filter(plant_id=f["plant"])
+        if f["zone"]:
+            qs = qs.filter(zone_id=f["zone"])
+        if f["location"]:
+            qs = qs.filter(location_id=f["location"])
+        if f["sublocation"]:
+            qs = qs.filter(sublocation_id=f["sublocation"])
+        if f["month"]:
+            try:
+                year, month = (int(part) for part in f["month"].split("-"))
+                qs = qs.filter(created_at__year=year, created_at__month=month)
+            except (ValueError, TypeError):
+                pass
+        return qs
+
+    @staticmethod
+    def _month_options():
+        today = timezone.localdate()
+        options = []
+        year, month = today.year, today.month
+        for _ in range(12):
+            options.append({
+                "value": f"{year:04d}-{month:02d}",
+                "label": date(year, month, 1).strftime("%b %Y"),
+            })
+            month -= 1
+            if month == 0:
+                month, year = 12, year - 1
+        return options
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = _capa_queryset_for_user(self.request.user)
         today = timezone.localdate()
-        context["stats"] = {
+        qs = self._filtered_queryset()
+
+        # ---------------- KPI stats ----------------
+        stats = {
             "total": qs.count(),
             "open": qs.exclude(status=CAPA.Status.CLOSED).count(),
-            "investigation_pending": qs.filter(status__in=[CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS]).count(),
-            "action_plan_pending": qs.filter(status=CAPA.Status.INVESTIGATION_APPROVED).count(),
-            "actions_in_progress": qs.filter(actions__status=CAPAAction.Status.IN_PROGRESS).distinct().count(),
             "pending_verification": qs.filter(actions__status=CAPAAction.Status.PENDING_VERIFICATION).distinct().count(),
-            "closed": qs.filter(status=CAPA.Status.CLOSED).count(),
             "overdue": qs.filter(target_date__lt=today).exclude(status__in=[CAPA.Status.CLOSED, CAPA.Status.CANCELLED]).count(),
+            "closed": qs.filter(status=CAPA.Status.CLOSED).count(),
+            "critical": qs.filter(severity=CAPA.Severity.CRITICAL).count(),
+            "high": qs.filter(severity=CAPA.Severity.HIGH).count(),
         }
-        context["stats"]["critical"] = qs.filter(severity=CAPA.Severity.CRITICAL).count()
-        context["stats"]["high"] = qs.filter(severity=CAPA.Severity.HIGH).count()
+        context["stats"] = stats
         context["dashboard_cards"] = [
-            (context["stats"]["total"], "Total CAPAs", "fas fa-layer-group", "teal"),
-            (context["stats"]["open"], "Open CAPAs", "fas fa-folder-open", "blue"),
-            (context["stats"]["pending_verification"], "Pending Verification", "fas fa-user-check", "gold"),
-            (context["stats"]["overdue"], "Overdue", "fas fa-exclamation-triangle", "red"),
+            (stats["total"], "Total CAPAs", "fas fa-layer-group", "teal"),
+            (stats["open"], "Open CAPAs", "fas fa-folder-open", "blue"),
+            (stats["pending_verification"], "Pending Verification", "fas fa-user-check", "gold"),
+            (stats["overdue"], "Overdue", "fas fa-exclamation-triangle", "red"),
         ]
-        context["filters"] = CAPAFilterForm(self.request.GET or None)
+
+        # ---------------- Source type chart (doughnut) ----------------
+        source_labels_map = dict(CAPA.SourceType.choices)
+        source_rows = list(qs.values("source_type").annotate(count=Count("id")).order_by("-count"))
+        context["type_chart_labels"] = [source_labels_map.get(r["source_type"], r["source_type"]) for r in source_rows]
+        context["type_chart_data"] = [r["count"] for r in source_rows]
+
+        # ---------------- Monthly trend (last 6 months) ----------------
+        month_buckets = []
+        year, month = today.year, today.month
+        for _ in range(6):
+            month_buckets.append((year, month))
+            month -= 1
+            if month == 0:
+                month, year = 12, year - 1
+        month_buckets.reverse()
+
+        monthly_counts_qs = (
+            qs.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(count=Count("id"))
+        )
+        counts_by_month = {(m["month"].year, m["month"].month): m["count"] for m in monthly_counts_qs if m["month"]}
+        context["monthly_labels"] = [date(y, m, 1).strftime("%b %Y") for y, m in month_buckets]
+        context["monthly_data"] = [counts_by_month.get((y, m), 0) for y, m in month_buckets]
+
+        # ---------------- Severity distribution ----------------
+        severity_rows = {r["severity"]: r["count"] for r in qs.values("severity").annotate(count=Count("id"))}
+        context["severity_labels"] = [label for _, label in CAPA.Severity.choices]
+        context["severity_data"] = [severity_rows.get(code, 0) for code, _ in CAPA.Severity.choices]
+
+        # ---------------- Status distribution (clickable) ----------------
+        status_rows = {r["status"]: r["count"] for r in qs.values("status").annotate(count=Count("id"))}
+        status_labels, status_data = [], []
+        for code, label in CAPA.Status.choices:
+            count = status_rows.get(code, 0)
+            if not count:
+                continue
+            status_labels.append(label)
+            status_data.append({"count": count, "url": f"{reverse('capa:list')}?status={code}"})
+        context["status_labels"] = status_labels
+        context["status_data"] = status_data
+
+        # ---------------- Overdue alerts ----------------
+        overdue_capas = list(
+            qs.filter(target_date__lt=today)
+            .exclude(status__in=[CAPA.Status.CLOSED, CAPA.Status.CANCELLED])
+            .select_related("plant", "owner")
+            .order_by("target_date")[:5]
+        )
+        for c in overdue_capas:
+            c.status_badge_class = STATUS_BADGE_MAP.get(c.status, "secondary")
+        context["overdue_capas"] = overdue_capas
+
+        # ---------------- Recent CAPAs ----------------
+        recent_capas = list(qs.select_related("plant", "owner").order_by("-created_at")[:8])
+        for c in recent_capas:
+            c.status_badge_class = STATUS_BADGE_MAP.get(c.status, "secondary")
+        context["recent_capas"] = recent_capas
+
+        # ---------------- Filter bar data ----------------
+        f = self.filters
+        context["plants"] = _accessible_plants(self.request.user)
+        context["zones"] = Zone.objects.filter(plant_id=f["plant"]) if f["plant"] else Zone.objects.none()
+        context["locations"] = Location.objects.filter(zone_id=f["zone"]) if f["zone"] else Location.objects.none()
+        context["sublocations"] = SubLocation.objects.filter(location_id=f["location"]) if f["location"] else SubLocation.objects.none()
+        context["month_options"] = self._month_options()
+        context["selected_plant"] = f["plant"]
+        context["selected_zone"] = f["zone"]
+        context["selected_location"] = f["location"]
+        context["selected_sublocation"] = f["sublocation"]
+        context["selected_month"] = f["month"]
+        context["selected_plant_name"] = context["plants"].filter(pk=f["plant"]).values_list("name", flat=True).first() if f["plant"] else ""
+        context["selected_zone_name"] = context["zones"].filter(pk=f["zone"]).values_list("name", flat=True).first() if f["zone"] else ""
+        context["selected_location_name"] = context["locations"].filter(pk=f["location"]).values_list("name", flat=True).first() if f["location"] else ""
+        context["selected_sublocation_name"] = context["sublocations"].filter(pk=f["sublocation"]).values_list("name", flat=True).first() if f["sublocation"] else ""
+        context["selected_month_label"] = next((option["label"] for option in context["month_options"] if option["value"] == f["month"]), "")
+        context["has_active_filters"] = any(f.values())
         return context
 
 
@@ -294,7 +458,7 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
             status=CAPA.Status.DRAFT if self.request.POST.get("save_draft") else CAPA.Status.OPEN,
         )
         messages.success(self.request, f"CAPA {capa.capa_number} created successfully.")
-        return redirect(capa.get_absolute_url())
+        return redirect(reverse("capa:list"))
 
 
 class CAPAUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -322,7 +486,7 @@ class CAPAUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
             form.instance.source_content_type = None
             form.instance.source_object_id = None
         messages.success(self.request, "CAPA updated successfully.")
-        return super().form_valid(form)
+        return redirect(reverse("capa:detail", kwargs={"pk": self.object.pk}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -338,14 +502,14 @@ class CAPAInvestigationView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
     def dispatch(self, request, *args, **kwargs):
         self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
         try:
-            if self.capa.investigation.completed_date:
+            if self.capa.investigation.completed_date and self.capa.status != CAPA.Status.INVESTIGATION_REJECTED:
                 messages.info(request, "This investigation has already been submitted and cannot be resubmitted.")
-                return redirect("capa:investigation_detail", pk=self.capa.pk)
+                return redirect(reverse("capa:investigation_detail", kwargs={"pk": self.capa.pk}))
         except CAPAInvestigation.DoesNotExist:
             pass
         if self.capa.status not in {CAPA.Status.DRAFT, CAPA.Status.OPEN, CAPA.Status.INVESTIGATION_IN_PROGRESS, CAPA.Status.INVESTIGATION_REJECTED, CAPA.Status.REOPENED}:
             messages.info(request, "This investigation has already been submitted. You are viewing the read-only investigation record.")
-            return redirect("capa:investigation_detail", pk=self.capa.pk)
+            return redirect(reverse("capa:investigation_detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
@@ -384,9 +548,9 @@ class CAPAInvestigationView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
     def form_valid(self, form):
         if self.request.POST.get("submit_investigation"):
             try:
-                if self.capa.investigation.completed_date:
+                if self.capa.investigation.completed_date and self.capa.status != CAPA.Status.INVESTIGATION_REJECTED:
                     messages.info(self.request, "This investigation has already been submitted and cannot be resubmitted.")
-                    return redirect("capa:investigation_detail", pk=self.capa.pk)
+                    return redirect(reverse("capa:investigation_detail", kwargs={"pk": self.capa.pk}))
             except CAPAInvestigation.DoesNotExist:
                 pass
         investigation = form.save(commit=False)
@@ -396,11 +560,11 @@ class CAPAInvestigationView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
         if self.request.POST.get("submit_investigation"):
             CAPAService.submit_investigation(user=self.request.user, capa=self.capa, investigation=investigation)
             messages.success(self.request, "Investigation submitted.")
-            return redirect(self.capa.get_absolute_url())
+            return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
         if self.capa.status in {CAPA.Status.DRAFT, CAPA.Status.OPEN}:
             CAPAService._set_status(self.capa, CAPA.Status.INVESTIGATION_IN_PROGRESS, self.request.user, "INVESTIGATION_STARTED")
         messages.success(self.request, "Investigation saved.")
-        return redirect("capa:investigation", pk=self.capa.pk)
+        return redirect(reverse("capa:investigation", kwargs={"pk": self.capa.pk}))
 
 
 class CAPAInvestigationReviewView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -411,18 +575,24 @@ class CAPAInvestigationReviewView(LoginRequiredMixin, PermissionRequiredMixin, T
         self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
         if self.capa.status != CAPA.Status.INVESTIGATION_SUBMITTED:
             messages.info(request, "Investigation review is available only after submission.")
-            return redirect("capa:detail", pk=self.capa.pk)
+            return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        remarks = request.POST.get("remarks", "")
+        remarks = request.POST.get("remarks", "").strip()
         if "approve" in request.POST:
             CAPAService.approve_investigation(user=request.user, capa=self.capa, remarks=remarks)
             messages.success(request, "Investigation approved.")
-        else:
+        elif "reject" in request.POST:
+            if not remarks:
+                messages.error(request, "Rejection reason is required.")
+                return redirect(reverse("capa:investigation_review", kwargs={"pk": self.capa.pk}))
             CAPAService.reject_investigation(user=request.user, capa=self.capa, remarks=remarks)
             messages.warning(request, "Investigation rejected.")
-        return redirect(self.capa.get_absolute_url())
+        else:
+            messages.error(request, "Select Approve or Reject before submitting the review.")
+            return redirect(reverse("capa:investigation_review", kwargs={"pk": self.capa.pk}))
+        return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -440,13 +610,13 @@ class CAPAActionCreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView
         self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
         if self.capa.status not in {CAPA.Status.INVESTIGATION_APPROVED, CAPA.Status.ACTION_PLAN_IN_PROGRESS, CAPA.Status.ACTION_IMPLEMENTATION, CAPA.Status.REOPENED}:
             messages.info(request, "Complete and approve the investigation before adding actions.")
-            return redirect("capa:detail", pk=self.capa.pk)
+            return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         action = CAPAService.create_action(user=self.request.user, capa=self.capa, **form.cleaned_data)
         messages.success(self.request, "Action added.")
-        return redirect(self.capa.get_absolute_url())
+        return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -464,10 +634,10 @@ class CAPAActionCompletionView(LoginRequiredMixin, FormView):
             raise Http404
         if self.action.assigned_to_id != request.user.pk:
             messages.error(request, "You are not assigned to this action.")
-            return redirect("capa:my_action_items")
+            return redirect(reverse("capa:my_action_items"))
         if self.action.status not in {CAPAAction.Status.PENDING, CAPAAction.Status.IN_PROGRESS, CAPAAction.Status.REJECTED}:
             messages.info(request, "This action has already been submitted for verification.")
-            return redirect("capa:action_detail", pk=self.action.pk)
+            return redirect(reverse("capa:action_detail", kwargs={"pk": self.action.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -478,10 +648,11 @@ class CAPAActionCompletionView(LoginRequiredMixin, FormView):
             evidence=form.cleaned_data.get("evidence"),
         )
         messages.success(self.request, "Action marked as completed.")
-        return redirect(self.action.capa.get_absolute_url())
+        return redirect(reverse("capa:my_action_items"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["action"] = self.action
         context["cancel_url"] = self.action.capa.get_absolute_url()
         return context
 
@@ -527,9 +698,9 @@ class CAPAActionVerificationView(LoginRequiredMixin, PermissionRequiredMixin, Fo
         self.action = get_object_or_404(CAPAAction.objects.select_related("capa"), pk=kwargs["pk"])
         if not _capa_queryset_for_user(request.user).filter(pk=self.action.capa_id).exists():
             raise Http404
-        if self.action.capa.status != CAPA.Status.ACTION_IMPLEMENTATION or self.action.status != CAPAAction.Status.PENDING_VERIFICATION:
+        if self.action.capa.status not in {CAPA.Status.ACTION_IMPLEMENTATION, CAPA.Status.REOPENED} or self.action.status != CAPAAction.Status.PENDING_VERIFICATION:
             messages.info(request, "Verification is available only after the action has been completed.")
-            return redirect("capa:action_detail", pk=self.action.pk)
+            return redirect(reverse("capa:action_detail", kwargs={"pk": self.action.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -537,10 +708,15 @@ class CAPAActionVerificationView(LoginRequiredMixin, PermissionRequiredMixin, Fo
         result = cleaned.pop("result")
         CAPAService.verify_action(user=self.request.user, action=self.action, result=result, **cleaned)
         messages.success(self.request, "Action verification saved.")
-        return redirect(self.action.capa.get_absolute_url())
+        return redirect(reverse("capa:detail", kwargs={"pk": self.action.capa.pk}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["action"] = self.action  # ADD THIS
+        try:
+            context["completion"] = self.action.completion  # ADD THIS
+        except CAPAActionCompletion.DoesNotExist:
+            context["completion"] = None
         context["cancel_url"] = self.action.capa.get_absolute_url()
         return context
 
@@ -554,23 +730,51 @@ class CAPAEffectivenessReviewView(LoginRequiredMixin, PermissionRequiredMixin, F
         self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
         if self.capa.status not in {CAPA.Status.VERIFICATION, CAPA.Status.EFFECTIVENESS_REVIEW}:
             messages.info(request, "Complete verification for all actions before starting effectiveness review.")
-            return redirect("capa:detail", pk=self.capa.pk)
+            return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        review, _ = CAPAEffectivenessReview.objects.get_or_create(capa=self.capa)
-        for field, value in form.cleaned_data.items():
-            setattr(review, field, value)
-        if self.capa.status == CAPA.Status.VERIFICATION:
-            CAPAService.start_effectiveness_review(user=self.request.user, capa=self.capa)
-        CAPAService.complete_effectiveness_review(user=self.request.user, capa=self.capa, review=review)
-        messages.success(self.request, "Effectiveness review saved.")
-        return redirect(self.capa.get_absolute_url())
+    def get_initial(self):
+        initial = super().get_initial()
+        try:
+            review = self.capa.effectiveness_review
+            if review:
+                # Populate initial data from existing review
+                fields = [
+                    'review_date', 'corrective_working_as_intended', 'preventive_working_as_intended',
+                    'risk_reduced_as_expected', 'controls_adequate', 'systemic_cause_addressed',
+                    'effectiveness_evidence', 'evidence_description', 'review_findings',
+                    'observed_improvement', 'remaining_risk_gap', 'result', 'remarks'
+                ]
+                for field in fields:
+                    value = getattr(review, field, None)
+                    if value is not None:
+                        initial[field] = value
+        except CAPAEffectivenessReview.DoesNotExist:
+            pass
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["capa"] = self.capa
+        try:
+            context["effectiveness_review"] = self.capa.effectiveness_review
+        except CAPAEffectivenessReview.DoesNotExist:
+            context["effectiveness_review"] = None
         context["cancel_url"] = self.capa.get_absolute_url()
         return context
+
+    def form_valid(self, form):
+        review, created = CAPAEffectivenessReview.objects.get_or_create(capa=self.capa)
+        for field, value in form.cleaned_data.items():
+            setattr(review, field, value)
+        review.reviewed_by = self.request.user
+        review.save()
+        
+        if self.capa.status == CAPA.Status.VERIFICATION:
+            CAPAService.start_effectiveness_review(user=self.request.user, capa=self.capa)
+        
+        messages.success(self.request, "Effectiveness review saved successfully.")
+        return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
 
 
 class CAPAClosureView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
@@ -582,19 +786,27 @@ class CAPAClosureView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
         self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
         if self.capa.status != CAPA.Status.EFFECTIVENESS_REVIEW:
             messages.info(request, "CAPA closure is available only after an effective review.")
-            return redirect("capa:detail", pk=self.capa.pk)
+            return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
-        return {
-            "closure_remarks": self.capa.closure_remarks,
-            "lessons_learned": self.capa.lessons_learned,
-            "final_recommendations": self.capa.final_recommendations,
-            "status": CAPA.Status.CLOSED,
-        }
+        initial = super().get_initial()
+        # Populate initial data from existing CAPA
+        initial["closure_remarks"] = self.capa.closure_remarks
+        initial["lessons_learned"] = self.capa.lessons_learned
+        initial["final_recommendations"] = self.capa.final_recommendations
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["capa"] = self.capa
+        try:
+            context["effectiveness_review"] = self.capa.effectiveness_review
+        except CAPAEffectivenessReview.DoesNotExist:
+            context["effectiveness_review"] = None
+        # Get all actions for summary
+        context["total_actions"] = self.capa.actions.count()
+        context["verified_actions"] = self.capa.actions.filter(status=CAPAAction.Status.VERIFIED).count()
         context["cancel_url"] = self.capa.get_absolute_url()
         return context
 
@@ -606,18 +818,32 @@ class CAPAClosureView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
             lessons_learned=form.cleaned_data.get("lessons_learned", ""),
             final_recommendations=form.cleaned_data.get("final_recommendations", ""),
         )
-        messages.success(self.request, "CAPA closed.")
-        return redirect(self.capa.get_absolute_url())
+        messages.success(self.request, f"CAPA {self.capa.capa_number} closed successfully.")
+        return redirect(reverse("capa:list"))
 
 
-class CAPAReopenView(LoginRequiredMixin, PermissionRequiredMixin, View):
+class CAPAReopenView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
     permission_required = "CAPA_REOPEN"
+    template_name = "capa/reopen_form.html"
+    form_class = CAPAReopenForm
 
-    def post(self, request, pk):
-        capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=pk)
-        CAPAService.reopen_capa(user=request.user, capa=capa, reason=request.POST.get("reason", "Reopened"))
-        messages.warning(request, "CAPA reopened.")
-        return redirect(capa.get_absolute_url())
+    def dispatch(self, request, *args, **kwargs):
+        self.capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
+        if self.capa.status != CAPA.Status.CLOSED:
+            messages.info(request, "Only closed CAPAs can be reopened.")
+            return redirect("capa:detail", pk=self.capa.pk)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["capa"] = self.capa
+        context["cancel_url"] = self.capa.get_absolute_url()
+        return context
+
+    def form_valid(self, form):
+        CAPAService.reopen_capa(user=self.request.user, capa=self.capa, reason=form.cleaned_data["reason"])
+        messages.warning(self.request, "CAPA reopened.")
+        return redirect(self.capa.get_absolute_url())
 
 
 class CAPAActionDetailView(LoginRequiredMixin, CAPAAccessMixin, DetailView):
@@ -656,7 +882,7 @@ class CAPAAttachmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, Form
         attachment.uploaded_by = self.request.user
         attachment.save()
         messages.success(self.request, "Attachment uploaded.")
-        return redirect(self.capa.get_absolute_url())
+        return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
 
 
 class CAPACommentCreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
@@ -674,7 +900,7 @@ class CAPACommentCreateView(LoginRequiredMixin, PermissionRequiredMixin, FormVie
         comment.author = self.request.user
         comment.save()
         messages.success(self.request, "Comment added.")
-        return redirect(self.capa.get_absolute_url())
+        return redirect(reverse("capa:detail", kwargs={"pk": self.capa.pk}))
 
 
 class CAPASourceCreateFromIncidentView(LoginRequiredMixin, PermissionRequiredMixin, View):
@@ -682,9 +908,9 @@ class CAPASourceCreateFromIncidentView(LoginRequiredMixin, PermissionRequiredMix
 
     def post(self, request, incident_id):
         incident = get_object_or_404(Incident, pk=incident_id)
-        CAPAService.create_from_incident(user=request.user, incident=incident, status=CAPA.Status.OPEN)
+        capa = CAPAService.create_from_incident(user=request.user, incident=incident, status=CAPA.Status.OPEN)
         messages.success(request, "CAPA created from incident.")
-        return redirect("capa:list")
+        return redirect(reverse("capa:detail", kwargs={"pk": capa.pk}))
 
 
 class CAPASourceCreateFromHazardView(LoginRequiredMixin, PermissionRequiredMixin, View):
@@ -692,6 +918,6 @@ class CAPASourceCreateFromHazardView(LoginRequiredMixin, PermissionRequiredMixin
 
     def post(self, request, hazard_id):
         hazard = get_object_or_404(Hazard, pk=hazard_id)
-        CAPAService.create_from_hazard(user=request.user, hazard=hazard, status=CAPA.Status.OPEN)
+        capa = CAPAService.create_from_hazard(user=request.user, hazard=hazard, status=CAPA.Status.OPEN)
         messages.success(request, "CAPA created from hazard.")
-        return redirect("capa:list")
+        return redirect(reverse("capa:detail", kwargs={"pk": capa.pk}))

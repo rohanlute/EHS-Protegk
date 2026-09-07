@@ -1,0 +1,89 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Reopen CAPA{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:dashboard' %}">CAPA Management</a></li>
+<li class="breadcrumb-item"><a href="{{ cancel_url }}">{{ capa.capa_number }}</a></li>
+<li class="breadcrumb-item active">Reopen CAPA</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --capa-teal: #0d9488;
+    --capa-teal-dark: #0f766e;
+    --capa-soft: rgba(13, 148, 136, .08);
+    --capa-ink: #0f172a;
+    --capa-muted: #64748b;
+    --capa-border: #e2e8f0;
+  }
+
+  .content-wrapper { background: #f8fafc !important; }
+  .reopen-page { max-width: 900px; margin: 0 auto; }
+  .reopen-header, .reopen-card { background: #fff; border: 1px solid var(--capa-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, .06); }
+  .reopen-header { display: flex; align-items: center; gap: 14px; padding: 18px 22px; margin-bottom: 18px; }
+  .reopen-icon { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--capa-teal); background: var(--capa-soft); font-size: 19px; flex-shrink: 0; }
+  .reopen-header h1 { margin: 0; color: var(--capa-ink); font-size: 1.2rem; font-weight: 700; }
+  .reopen-header p { margin: 3px 0 0; color: var(--capa-muted); font-size: .8rem; }
+  .reopen-card { overflow: hidden; }
+  .reopen-card-header { padding: 12px 18px; color: #fff; background: var(--capa-teal); font-size: .9rem; font-weight: 700; }
+  .reopen-card-body { padding: 22px 24px; }
+  .capa-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; padding: 14px; margin-bottom: 20px; background: #f8fafc; border: 1px solid var(--capa-border); border-radius: 6px; }
+  .summary-label { display: block; margin-bottom: 3px; color: var(--capa-muted); font-size: .68rem; font-weight: 700; text-transform: uppercase; }
+  .summary-value { color: var(--capa-ink); font-size: .84rem; font-weight: 600; }
+  .reopen-field label { display: block; margin-bottom: 6px; color: #334155; font-size: .82rem; font-weight: 700; }
+  .reopen-field textarea { width: 100%; min-height: 110px; padding: 9px 11px; border: 2px solid var(--capa-border); border-radius: 6px; color: var(--capa-ink); font-size: .84rem; resize: vertical; }
+  .reopen-field textarea:focus { outline: none; border-color: var(--capa-teal); box-shadow: 0 0 0 3px rgba(13, 148, 136, .12); }
+  .field-error { margin-top: 5px; color: #dc2626; font-size: .75rem; }
+  .reopen-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--capa-border); }
+  .reopen-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 7px 20px; border-radius: 6px; font-size: .8rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+  .reopen-button-primary { border: 0; color: #fff; background: linear-gradient(135deg, var(--capa-teal), var(--capa-teal-dark)); }
+  .reopen-button-muted { border: 2px solid var(--capa-border); color: #334155; background: #fff; }
+  @media (max-width: 600px) {
+    .reopen-header { padding: 14px 16px; }
+    .reopen-card-body { padding: 16px; }
+    .capa-summary { grid-template-columns: 1fr; }
+    .reopen-actions { flex-direction: column; }
+    .reopen-button { width: 100%; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid reopen-page">
+  <div class="reopen-header">
+    <span class="reopen-icon"><i class="fas fa-rotate-left"></i></span>
+    <div>
+      <h1>Reopen CAPA</h1>
+      <p>Provide a reason before returning this closed CAPA to active work.</p>
+    </div>
+  </div>
+
+  <div class="reopen-card">
+    <div class="reopen-card-header"><i class="fas fa-edit"></i> Reopen Details</div>
+    <div class="reopen-card-body">
+      <div class="capa-summary">
+        <div><span class="summary-label">CAPA Number</span><span class="summary-value">{{ capa.capa_number }}</span></div>
+        <div><span class="summary-label">Title</span><span class="summary-value">{{ capa.title }}</span></div>
+        <div><span class="summary-label">Current Status</span><span class="summary-value">{{ capa.get_status_display }}</span></div>
+        <div><span class="summary-label">Owner</span><span class="summary-value">{{ capa.owner|default:'Not assigned' }}</span></div>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="reopen-field">
+          <label for="{{ form.reason.id_for_label }}">{{ form.reason.label }} <span style="color:#dc2626">*</span></label>
+          {{ form.reason }}
+          {% if form.reason.errors %}<div class="field-error">{{ form.reason.errors }}</div>{% endif %}
+        </div>
+        <div class="reopen-actions">
+          <a class="reopen-button reopen-button-muted" href="{{ cancel_url }}"><i class="fas fa-times"></i> Cancel</a>
+          <button class="reopen-button reopen-button-primary" type="submit"><i class="fas fa-rotate-left"></i> Reopen CAPA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

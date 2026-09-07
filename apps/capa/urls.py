@@ -1,7 +1,5 @@
 from django.urls import path
-
 from apps.capa import views
-
 
 app_name = "capa"
 
@@ -12,6 +10,9 @@ urlpatterns = [
     path("create/from/incident/<int:incident_id>/", views.CAPASourceCreateFromIncidentView.as_view(), name="create_from_incident"),
     path("create/from/hazard/<int:hazard_id>/", views.CAPASourceCreateFromHazardView.as_view(), name="create_from_hazard"),
     path("source-references/", views.CAPASourceReferenceView.as_view(), name="source_references"),
+    path("ajax/zones/", views.CAPAAjaxGetZonesView.as_view(), name="ajax_get_zones"),
+    path("ajax/locations/", views.CAPAAjaxGetLocationsView.as_view(), name="ajax_get_locations"),
+    path("ajax/sublocations/", views.CAPAAjaxGetSublocationsView.as_view(), name="ajax_get_sublocations"),
     path("<int:pk>/", views.CAPADetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.CAPAUpdateView.as_view(), name="edit"),
     path("<int:pk>/investigation/", views.CAPAInvestigationView.as_view(), name="investigation"),
