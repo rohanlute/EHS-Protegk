@@ -195,8 +195,8 @@ class CAPAInvestigation(models.Model):
     existing_controls = models.TextField(blank=True)
 
     existing_control_in_place = models.BooleanField(default=False)
-    existing_control_followed = models.CharField(max_length=20, blank=True)
-    existing_control_adequate = models.CharField(max_length=20, blank=True)
+    existing_control_followed = models.CharField(max_length=200, blank=True)
+    existing_control_adequate = models.CharField(max_length=200, blank=True)
     control_failure_reason = models.TextField(blank=True)
     control_gap_identified = models.TextField(blank=True)
 
@@ -236,7 +236,7 @@ class CAPAInvestigation(models.Model):
     management_system_impact_details = models.TextField(blank=True)
 
     investigation_conclusion = models.TextField(blank=True)
-    root_cause_confirmed = models.CharField(max_length=20, blank=True)
+    root_cause_confirmed = models.CharField(max_length=200, blank=True)
     additional_investigation_required = models.BooleanField(default=False)
     systemic_issue_identified = models.BooleanField(default=False)
     extent_analysis_required = models.BooleanField(default=False)
