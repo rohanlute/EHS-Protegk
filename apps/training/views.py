@@ -389,6 +389,12 @@ class TrainingSessionCreateView(TrainingAccessMixin, CreateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
+        # Add action to distinguish create vs update
+        context['action'] = 'Create'
+        
+        # For create view, we don't have a session object
+        context['session'] = None
+
         context['user_assigned_plants'] = user.assigned_plants.filter(is_active=True)
 
         if context['user_assigned_plants'].count() == 1:
@@ -495,7 +501,7 @@ class TrainingSessionUpdateView(TrainingAccessMixin, UpdateView):
     """Update session — like IncidentUpdateView"""
     model = TrainingSession
     form_class = TrainingSessionForm
-    template_name = 'training/session_update.html'
+    template_name = 'training/session_create.html'  # Use same template
 
     def dispatch(self, request, *args, **kwargs):
         session = get_object_or_404(TrainingSession, pk=kwargs['pk'])
@@ -517,25 +523,50 @@ class TrainingSessionUpdateView(TrainingAccessMixin, UpdateView):
         kwargs['user'] = self.request.user
         return kwargs
 
-    def get_success_url(self):
-        return reverse_lazy('training:session_detail', kwargs={'pk': self.object.pk})
-
-    def form_valid(self, form):
-        messages.success(self.request, f'Session "{self.object.session_number}" updated successfully!')
-        return super().form_valid(form)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
+        # Add action to distinguish create vs update
+        context['action'] = 'Update'
+        # The session object is already available as 'object' or 'session'
+        # But we'll explicitly add it for clarity
+        context['session'] = self.object
+
         # Same location context as CreateView
         context['user_assigned_plants'] = user.assigned_plants.filter(is_active=True)
+        
+        # For update view, we need to handle the location hierarchy properly
+        # If the session already has a plant, zone, etc., we should pre-populate
+        if self.object.plant:
+            context['user_assigned_zones'] = user.assigned_zones.filter(is_active=True, plant=self.object.plant)
+            if self.object.zone:
+                context['user_assigned_locations'] = user.assigned_locations.filter(is_active=True, zone=self.object.zone)
+                if self.object.location:
+                    context['user_assigned_sublocations'] = user.assigned_sublocations.filter(is_active=True, location=self.object.location)
+                else:
+                    context['user_assigned_sublocations'] = user.assigned_sublocations.none()
+            else:
+                context['user_assigned_locations'] = user.assigned_locations.none()
+                context['user_assigned_sublocations'] = user.assigned_sublocations.none()
+        else:
+            context['user_assigned_zones'] = user.assigned_zones.none()
+            context['user_assigned_locations'] = user.assigned_locations.none()
+            context['user_assigned_sublocations'] = user.assigned_sublocations.none()
+
         context['active_topics'] = TrainingTopic.objects.filter(is_active=True).order_by('name')
         context['cancel_url'] = (
             self.request.GET.get('next') or
             self.request.META.get('HTTP_REFERER') or '/'
         )
         return context
+
+    def get_success_url(self):
+        return reverse_lazy('training:session_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Session "{self.object.session_number}" updated successfully!')
+        return super().form_valid(form)
 
 
 # ============================================================
