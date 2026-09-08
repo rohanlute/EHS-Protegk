@@ -1,4 +1,4 @@
-from apps.notifications.models import Notification
+from .notification_feed import get_notification_feed
 
 
 def notification_context(request):
@@ -8,13 +8,9 @@ def notification_context(request):
             "recent_notifications": [],
         }
 
-    notifications = (
-        Notification.objects.filter(recipient=request.user)
-        .select_related("content_type")
-        .order_by("-created_at")
-    )
+    notifications = get_notification_feed(request.user)
 
     return {
-        "notification_unread_count": notifications.filter(is_read=False).count(),
+        "notification_unread_count": sum(not notification.is_read for notification in notifications),
         "recent_notifications": notifications[:6],
     }

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -13,6 +14,7 @@ class NotificationMaster(models.Model):
         ('EMERGENCY', 'Emergency Management'),
         ('ENVIRONMENTAL', 'Environmental Data'),
         ('INSPECTION', 'Inspection Management'),
+        ('TOOLBOX_TALK', 'Toolbox Talk'),
         ('TRAINING', 'Training Management'),
         ('LEGAL_COMPLIANCE', 'Legal Compliance'),
     ]
@@ -40,6 +42,14 @@ class NotificationMaster(models.Model):
         ('INSPECTION_OVERDUE', 'Inspection Overdue'),
         ('NOTIFY_INSPECTION', 'Inspection Assigned / Reminder'),
         ('INSPECTION_NONCOMPLIANCE_ASSIGNED', 'Non-Compliance Assigned'),
+        ('AUDIT_SCHEDULE_CREATED', 'Audit Scheduled'),
+        ('AUDIT_COMPLETED', 'Audit Completed'),
+        ('AUDIT_FINDING_CREATED', 'Audit Finding Created'),
+        ('AUDIT_FINDING_REVIEWED', 'Audit Finding Reviewed'),
+        ('AUDIT_CAPA_ASSIGNED', 'Audit CAPA Assigned'),
+        ('AUDIT_CAPA_UPDATED', 'Audit CAPA Updated'),
+        ('TOOLBOX_SESSION_ASSIGNED', 'Toolbox Talk Assigned'),
+        ('TOOLBOX_SESSION_COMPLETED', 'Toolbox Talk Completed'),
         ('SESSION_SCHEDULED', 'Training Session Scheduled'),
         ('SESSION_REMINDER', 'Training Session Reminder'),
         ('SESSION_CANCELLED', 'Training Session Cancelled'),
@@ -146,3 +156,31 @@ class Notification(models.Model):
             self.is_read = True
             self.read_at = timezone.now()
             self.save(update_fields=['is_read', 'read_at'])
+
+    def get_target_url(self):
+        obj = self.content_object
+        if not obj:
+            return None
+
+        try:
+            get_absolute_url = getattr(obj, "get_absolute_url", None)
+            if callable(get_absolute_url):
+                return get_absolute_url()
+
+            if obj._meta.app_label == "audits":
+                if obj._meta.model_name == "auditschedule":
+                    return reverse("audits:schedule_detail", kwargs={"pk": obj.pk})
+                if obj._meta.model_name == "auditfinding":
+                    return reverse("audits:finding_detail", kwargs={"pk": obj.pk})
+                if obj._meta.model_name == "capa":
+                    return reverse(
+                        "audits:finding_detail",
+                        kwargs={"pk": obj.finding_id},
+                    )
+            if obj._meta.app_label == "toolbox_talk":
+                session = getattr(obj, "session", obj)
+                return reverse("toolbox_talk:session_view", kwargs={"pk": session.pk})
+        except Exception:
+            return None
+
+        return None

@@ -14,6 +14,7 @@ MODULE_CHOICES = [
     ('EMERGENCY', 'Emergency Management'),
     ('ENVIRONMENTAL', 'Environmental Data'),
     ('INSPECTION', 'Inspection Management'),
+    ('TOOLBOX_TALK', 'Toolbox Talk'),
     ('TRAINING', 'Training Management'),
     ('LEGAL_COMPLIANCE', 'Legal Compliance'),
 ]
@@ -41,6 +42,8 @@ NOTIFICATION_EVENT_CHOICES = [
     ('INSPECTION_OVERDUE', 'Inspection Overdue'),
     ('NOTIFY_INSPECTION', 'Inspection Assigned / Reminder'),
     ('INSPECTION_NONCOMPLIANCE_ASSIGNED', 'Non-Compliance Assigned'),
+    ('TOOLBOX_SESSION_ASSIGNED', 'Toolbox Talk Assigned'),
+    ('TOOLBOX_SESSION_COMPLETED', 'Toolbox Talk Completed'),
     ('SESSION_SCHEDULED', 'Training Session Scheduled'),
     ('SESSION_REMINDER', 'Training Session Reminder'),
     ('SESSION_CANCELLED', 'Training Session Cancelled'),
@@ -76,6 +79,8 @@ def _infer_module_from_event(event_code):
         return 'ENVIRONMENTAL'
     if event_code.startswith(('INSPECTION_',)) or event_code == 'NOTIFY_INSPECTION':
         return 'INSPECTION'
+    if event_code.startswith('TOOLBOX_'):
+        return 'TOOLBOX_TALK'
     if event_code.startswith(('SESSION_', 'CERTIFICATE_', 'EXPIRY_', 'TRAINING_')):
         return 'TRAINING'
     if event_code.startswith(('COMPLIANCE_',)) or event_code in ('CAPA', 'NOTICE'):
