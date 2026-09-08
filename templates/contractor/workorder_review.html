@@ -1,0 +1,936 @@
+<!-- apps/contractor/templates/contractor/workorder_review.html -->
+
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Review Work Order | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-hover: rgba(13, 148, 136, 0.12);
+        --success-green: #22c55e;
+        --pending-orange: #d97706;
+    }
+
+    .page-header-custom {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header-custom .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header-custom .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .page-header-custom .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .page-header-custom .header-left .subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .page-header-custom .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .page-header-custom .status-badge.submitted {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fcd34d;
+    }
+
+    .page-header-custom .status-badge.approved {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #6ee7b7;
+    }
+
+    .page-header-custom .status-badge.rejected {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+
+    .page-header-custom .status-badge.closed {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        background: transparent;
+        border: 2px solid #e2e8f0;
+        color: #334155;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-back:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        text-decoration: none;
+        color: #0f172a;
+    }
+
+    .btn-approve {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 32px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        border: none;
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(34, 197, 94, 0.2);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 16px rgba(34, 197, 94, 0.35);
+        color: white;
+    }
+
+    .btn-reject {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 32px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: none;
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 16px rgba(239, 68, 68, 0.35);
+        color: white;
+    }
+
+    .btn-status-disabled {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 32px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        opacity: 0.8;
+        cursor: default;
+        font-family: 'Inter', sans-serif;
+        color: white;
+    }
+
+    .btn-status-disabled.approved {
+        background: #22c55e;
+    }
+
+    .btn-status-disabled.rejected {
+        background: #dc2626;
+    }
+
+    .btn-status-disabled.closed {
+        background: #0d9488;
+    }
+
+    .btn-status-disabled.submitted {
+        background: #d97706;
+    }
+
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .review-card .card-header-custom {
+        background: var(--primary-teal-light);
+        padding: 14px 24px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .review-card .card-header-custom .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--primary-teal);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .review-card .card-header-custom .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .review-card .card-header-custom .section-subtitle {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .review-card .card-body {
+        padding: 24px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .info-item .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .info-item .value {
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+        margin-top: 2px;
+    }
+
+    .info-item .value .risk-badge-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .info-item .value .risk-badge-sm.low {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .info-item .value .risk-badge-sm.medium {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .info-item .value .risk-badge-sm.high {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .info-item .value .risk-badge-sm.critical {
+        background: #fef2f2;
+        color: #7f1d1d;
+        border: 1px solid #dc2626;
+    }
+
+    .description-box {
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 16px 20px;
+    }
+
+    .description-box p {
+        margin: 0;
+        font-size: 14px;
+        color: #0f172a;
+        line-height: 1.6;
+    }
+
+    .action-buttons {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 18px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .action-buttons .left-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-right: auto;
+    }
+
+    .action-buttons .right-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .attachment-box {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .attachment-box .file-icon {
+        font-size: 36px;
+        color: #dc2626;
+    }
+
+    .attachment-box .file-info {
+        flex: 1;
+    }
+
+    .attachment-box .file-info .file-name {
+        font-weight: 600;
+        color: var(--primary-teal);
+        font-size: 14px;
+    }
+
+    .attachment-box .file-info .file-meta {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .attachment-box .btn-view-file {
+        padding: 6px 20px;
+        background: var(--primary-teal);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .attachment-box .btn-view-file:hover {
+        background: var(--primary-teal-dark);
+        color: white;
+        text-decoration: none;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        border-bottom: 2px solid #dc2626;
+        padding: 16px 24px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 16px 24px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header-custom {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .left-actions,
+        .action-buttons .right-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn-approve,
+        .btn-reject,
+        .btn-back,
+        .btn-status-disabled {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .review-card .card-body {
+            padding: 16px;
+        }
+
+        .review-card .card-header-custom {
+            padding: 12px 16px;
+            flex-wrap: wrap;
+        }
+
+        .modal-dialog {
+            margin: 10px;
+        }
+
+        .attachment-box {
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header-custom .header-left h1 {
+            font-size: 18px;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-body {
+            padding: 16px;
+        }
+    }
+     /* Reject Modal - centered within content area, positioned via JS */
+#rejectModal .modal-dialog {
+    max-width: 600px;
+    margin: 1.75rem auto;
+}
+
+#rejectModal.modal.show .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+/* Bulletproof close button fix - inline SVG bypasses any global override */
+#rejectModal .btn-close {
+    opacity: 1 !important;
+    filter: none !important;
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23dc2626'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat !important;
+    width: 1.2em !important;
+    height: 1.2em !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0.5em !important;
+}
+
+#rejectModal .btn-close:hover {
+    opacity: 0.7 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- ========================================================== -->
+    <!-- PAGE HEADER -->
+    <!-- ========================================================== -->
+    <div class="page-header-custom">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div>
+                <h1>Review Work Order</h1>
+                <p class="subtitle">
+                    Review and take action on work order <strong>{{ work_order.work_order_number }}</strong>
+                </p>
+            </div>
+        </div>
+        <div>
+            {% if work_order.status == 'SUBMITTED' %}
+                <span class="status-badge submitted"><i class="fas fa-clock"></i> Pending Review</span>
+            {% elif work_order.status == 'APPROVED' %}
+                <span class="status-badge approved"><i class="fas fa-check-circle"></i> Approved</span>
+            {% elif work_order.status == 'REJECTED' %}
+                <span class="status-badge rejected"><i class="fas fa-times-circle"></i> Rejected</span>
+            {% elif work_order.status == 'CLOSED' %}
+                <span class="status-badge closed"><i class="fas fa-check-double"></i> Closed</span>
+            {% else %}
+                <span class="status-badge submitted"><i class="fas fa-hourglass-half"></i> In Progress</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- MESSAGES -->
+    <!-- ========================================================== -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="alert-icon">
+                        <i class="fas 
+                            {% if message.tags == 'success' %}fa-check-circle
+                            {% elif message.tags == 'error' %}fa-exclamation-circle
+                            {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                            {% else %}fa-info-circle{% endif %}"></i>
+                    </div>
+                    <div>{{ message }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ========================================================== -->
+    <!-- SECTION 1: Work Order Details -->
+    <!-- ========================================================== -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <div class="section-icon"><i class="fas fa-file-contract"></i></div>
+            <div>
+                <div class="section-title">Work Order Details</div>
+                <div class="section-subtitle">Complete work order information</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Work Order Number</span>
+                    <span class="value"><strong>{{ work_order.work_order_number }}</strong></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Contract Number</span>
+                    <span class="value">{{ work_order.contract_number|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Contractor</span>
+                    <span class="value">{{ work_order.contractor.contractor_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Work Category</span>
+                    <span class="value">{{ work_order.get_work_category_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Risk Level</span>
+                    <span class="value">
+                        <span class="risk-badge-sm {{ work_order.risk_level|lower }}">
+                            <i class="fas 
+                                {% if work_order.risk_level == 'LOW' %}fa-check-circle
+                                {% elif work_order.risk_level == 'MEDIUM' %}fa-exclamation-circle
+                                {% elif work_order.risk_level == 'HIGH' %}fa-exclamation-triangle
+                                {% elif work_order.risk_level == 'CRITICAL' %}fa-skull-crossbones
+                                {% else %}fa-circle{% endif %}"></i>
+                            {{ work_order.get_risk_level_display }}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Number of Workers</span>
+                    <span class="value">{{ work_order.number_of_workers }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Start Date</span>
+                    <span class="value">{{ work_order.start_date|date:"d M Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">End Date</span>
+                    <span class="value">{{ work_order.end_date|date:"d M Y" }}</span>
+                    {% if work_order.days_remaining != None %}
+                        <small class="text-muted">{{ work_order.days_remaining }} days remaining</small>
+                    {% endif %}
+                </div>
+                <div class="info-item">
+                    <span class="label">Plant / Site</span>
+                    <span class="value">{{ work_order.plant.name|default:"N/A" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Department</span>
+                    <span class="value">{{ work_order.department.name|default:"N/A" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 2: Work Description -->
+    <!-- ========================================================== -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <div class="section-icon"><i class="fas fa-tasks"></i></div>
+            <div>
+                <div class="section-title">Work Description</div>
+                <div class="section-subtitle">Detailed description of the work to be performed</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="description-box">
+                <p>{{ work_order.work_description }}</p>
+            </div>
+            {% if work_order.worker_details %}
+                <div class="mt-3">
+                    <span class="label text-muted small">Worker Details</span>
+                    <p class="mb-0 mt-1">{{ work_order.worker_details }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 3: Personnel -->
+    <!-- ========================================================== -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <div class="section-icon"><i class="fas fa-users"></i></div>
+            <div>
+                <div class="section-title">Personnel</div>
+                <div class="section-subtitle">Key contacts for this work order</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Contractor Supervisor</span>
+                    <span class="value">{{ work_order.contractor_supervisor|default:"N/A" }}</span>
+                    {% if work_order.contractor_supervisor_contact %}
+                        <small class="text-muted"><i class="fas fa-phone"></i> {{ work_order.contractor_supervisor_contact }}</small>
+                    {% endif %}
+                    {% if work_order.contractor_supervisor_email %}
+                        <small class="text-muted"><i class="fas fa-envelope"></i> {{ work_order.contractor_supervisor_email }}</small>
+                    {% endif %}
+                </div>
+                <div class="info-item">
+                    <span class="label">Company Representative</span>
+                    <span class="value">{{ work_order.company_representative_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 4: Attachment & Notes -->
+    <!-- ========================================================== -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <div class="section-icon"><i class="fas fa-paperclip"></i></div>
+            <div>
+                <div class="section-title">Attachment & Notes</div>
+                <div class="section-subtitle">Supporting documents and remarks</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <span class="label text-muted small">Attachment</span>
+                    {% if work_order.attachment %}
+                        <div class="attachment-box mt-1">
+                            <div class="file-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name">{{ work_order.attachment_name|default:"Document" }}</div>
+                                <div class="file-meta">
+                                    {% if work_order.attachment.size %}
+                                        {{ work_order.attachment.size|filesizeformat }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <a href="{{ work_order.attachment.url }}" target="_blank" class="btn-view-file">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-muted mt-1">No attachment uploaded</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <span class="label text-muted small">Notes</span>
+                    <div class="mt-1 p-3 bg-light rounded border">
+                        {% if work_order.notes %}
+                            <p class="mb-0">{{ work_order.notes }}</p>
+                        {% else %}
+                            <span class="text-muted">No notes</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTION 5: Audit Trail -->
+    <!-- ========================================================== -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <div class="section-icon"><i class="fas fa-history"></i></div>
+            <div>
+                <div class="section-title">Audit Trail</div>
+                <div class="section-subtitle">Creation and modification history</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Created By</span>
+                    <span class="value">{{ work_order.created_by.get_full_name|default:work_order.created_by.username|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Created At</span>
+                    <span class="value">{{ work_order.created_at|date:"d M Y, h:i A" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Last Updated</span>
+                    <span class="value">{{ work_order.updated_at|date:"d M Y, h:i A" }}</span>
+                </div>
+                {% if work_order.approved_by %}
+                <div class="info-item">
+                    <span class="label">Approved By</span>
+                    <span class="value">{{ work_order.approved_by.get_full_name|default:work_order.approved_by.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Approved At</span>
+                    <span class="value">{{ work_order.approved_at|date:"d M Y, h:i A" }}</span>
+                </div>
+                {% endif %}
+                {% if work_order.closed_by %}
+                <div class="info-item">
+                    <span class="label">Closed By</span>
+                    <span class="value">{{ work_order.closed_by.get_full_name|default:work_order.closed_by.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Closed At</span>
+                    <span class="value">{{ work_order.closed_at|date:"d M Y, h:i A" }}</span>
+                </div>
+                {% endif %}
+                {% if work_order.closure_remarks %}
+                <div class="info-item">
+                    <span class="label">Closure Remarks</span>
+                    <span class="value">{{ work_order.closure_remarks }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- ACTION BUTTONS -->
+    <!-- ========================================================== -->
+    {% if work_order.status == 'SUBMITTED' and can_review %}
+        <div class="action-buttons">
+            <div class="left-actions">
+                <a href="{% url 'contractor:workorder_review_list' %}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Review List
+                </a>
+            </div>
+            <div class="right-actions">
+                <button type="button" class="btn-reject" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+                <form method="post" action="{% url 'contractor:workorder_status_update' pk=work_order.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn-approve" onclick="return confirm('Are you sure you want to APPROVE this work order?');">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="action-buttons">
+            <div class="left-actions">
+                <a href="{% url 'contractor:workorder_review_list' %}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Review List
+                </a>
+            </div>
+            <div class="right-actions">
+                <span class="btn-status-disabled 
+                    {% if work_order.status == 'APPROVED' %}approved
+                    {% elif work_order.status == 'REJECTED' %}rejected
+                    {% elif work_order.status == 'CLOSED' %}closed
+                    {% else %}submitted{% endif %}">
+                    {% if work_order.status == 'APPROVED' %}
+                        <i class="fas fa-check-circle"></i> Already Approved
+                    {% elif work_order.status == 'REJECTED' %}
+                        <i class="fas fa-times-circle"></i> Already Rejected
+                    {% elif work_order.status == 'CLOSED' %}
+                        <i class="fas fa-check-double"></i> Closed
+                    {% else %}
+                        <i class="fas fa-lock"></i> {{ work_order.get_status_display }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+
+<!-- ========================================================== -->
+<!-- REJECTION MODAL -->
+<!-- ========================================================== -->
+{% if work_order.status == 'SUBMITTED' and can_review %}
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+     <div class="modal-dialog modal-lg" id="rejectModalDialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'contractor:workorder_status_update' pk=work_order.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+                <div class="modal-header" style="background: #fef2f2; border-bottom: 2px solid #dc2626;">
+                    <h5 class="modal-title" style="color: #dc2626;">
+                        <i class="fas fa-times-circle"></i> Reject Work Order
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-danger">
+                            <i class="fas fa-exclamation-circle"></i> Rejection Reason <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="rejection_reason" class="form-control" rows="4" 
+                            placeholder="Please provide a detailed reason for rejection..."
+                            required></textarea>
+                        <small class="text-muted">This reason will be stored in the work order notes.</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Work Order Details:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>WO Number:</strong> {{ work_order.work_order_number }}</li>
+                            <li><strong>Contractor:</strong> {{ work_order.contractor.contractor_name }}</li>
+                            <li><strong>Description:</strong> {{ work_order.work_description|truncatechars:100 }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Reject Work Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================================== -->
+<!-- SCRIPTS -->
+<!-- ========================================================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rejectModal = document.getElementById('rejectModal');
+    if (!rejectModal) return;
+
+    function centerModalInContent() {
+        const dialog = rejectModal.querySelector('.modal-dialog');
+        if (!dialog) return;
+
+        // Find the main content wrapper (excludes sidebar).
+        // Adjust this selector if your base.html uses a different wrapper class.
+        const contentArea = document.querySelector('.container-fluid') 
+                          || document.querySelector('main') 
+                          || document.body;
+
+        const rect = contentArea.getBoundingClientRect();
+        const contentCenterX = rect.left + rect.width / 2;
+
+        dialog.style.position = 'relative';
+        dialog.style.left = `${contentCenterX - (window.innerWidth / 2)}px`;
+    }
+
+    rejectModal.addEventListener('show.bs.modal', centerModalInContent);
+    window.addEventListener('resize', function () {
+        if (rejectModal.classList.contains('show')) {
+            centerModalInContent();
+        }
+    });
+});
+</script>
+{% endblock %}
