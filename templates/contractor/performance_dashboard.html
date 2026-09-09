@@ -1,0 +1,964 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Contractor Performance Dashboard | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-border: rgba(13, 148, 136, 0.2);
+    }
+
+    .page-header-custom {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header-custom .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header-custom .header-left .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .page-header-custom .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .page-header-custom .header-left .subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .btn-teal {
+        background: var(--primary-teal);
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .btn-teal:hover {
+        background: var(--primary-teal-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        text-decoration: none;
+        color: #0f172a;
+    }
+
+    /* ========================================================== */
+    /* STATISTICS CARDS */
+    /* ========================================================== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .stat-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .stat-item:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        transform: translateY(-3px);
+    }
+
+    .stat-item .stat-number {
+        font-size: 26px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    .stat-item .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .stat-item .stat-icon {
+        font-size: 18px;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .stat-item.teal::before { background: var(--primary-teal); }
+    .stat-item.teal .stat-number { color: var(--primary-teal); }
+    .stat-item.teal .stat-icon { color: var(--primary-teal); }
+
+    .stat-item.green::before { background: #22c55e; }
+    .stat-item.green .stat-number { color: #22c55e; }
+    .stat-item.green .stat-icon { color: #22c55e; }
+
+    .stat-item.yellow::before { background: #f59e0b; }
+    .stat-item.yellow .stat-number { color: #f59e0b; }
+    .stat-item.yellow .stat-icon { color: #f59e0b; }
+
+    .stat-item.red::before { background: #ef4444; }
+    .stat-item.red .stat-number { color: #ef4444; }
+    .stat-item.red .stat-icon { color: #ef4444; }
+
+    .stat-item.blue::before { background: #3b82f6; }
+    .stat-item.blue .stat-number { color: #3b82f6; }
+    .stat-item.blue .stat-icon { color: #3b82f6; }
+
+    /* ========================================================== */
+    /* RATING BADGE */
+    /* ========================================================== */
+    .rating-badge {
+        display: inline-block;
+        padding: 3px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .rating-excellent {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .rating-good {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .rating-needs-improvement {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .rating-poor {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* ========================================================== */
+    /* CHART CARDS */
+    /* ========================================================== */
+    .chart-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .chart-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .chart-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .chart-card .card-header-custom {
+        padding: 14px 20px;
+        background: var(--primary-teal-light);
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .chart-card .card-header-custom .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-card .card-header-custom .card-title i {
+        color: var(--primary-teal);
+    }
+
+    .chart-card .card-body {
+        padding: 16px 20px;
+    }
+
+    /* ========================================================== */
+    /* TABLE CARD */
+    /* ========================================================== */
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .table-card .card-header-custom {
+        background: var(--primary-teal-light);
+        padding: 14px 24px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .table-card .card-header-custom .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .table-card .card-header-custom .section-title .badge-count {
+        font-size: 12px;
+        background: #e2e8f0 !important;
+        color: #334155;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .table-card .card-body {
+        padding: 0;
+        overflow-x: auto;
+    }
+
+    /* ========================================================== */
+    /* TABLE STYLES */
+    /* ========================================================== */
+    .table {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .table thead th {
+        background: #f8fafc;
+        color: #334155;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+        white-space: nowrap;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .table .rank-number {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--primary-teal);
+    }
+
+    .table .contractor-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .table .contractor-code {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    .table .score-bar {
+        width: 100%;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+    }
+
+    .table .score-bar .bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+    }
+
+    .table .score-bar .bar.excellent { background: #22c55e; }
+    .table .score-bar .bar.good { background: #3b82f6; }
+    .table .score-bar .bar.needs-improvement { background: #f59e0b; }
+    .table .score-bar .bar.poor { background: #ef4444; }
+
+    /* ========================================================== */
+    /* FILTER BAR */
+    /* ========================================================== */
+    .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid #f1f5f9;
+        background: #fafbfc;
+    }
+
+    .filter-bar select {
+        padding: 8px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        transition: all 0.3s ease;
+        min-width: 150px;
+        cursor: pointer;
+    }
+
+    .filter-bar select:focus {
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+        outline: none;
+    }
+
+    .filter-bar .filter-btn {
+        padding: 8px 18px;
+        background: var(--primary-teal);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 13px;
+    }
+
+    .filter-bar .filter-btn:hover {
+        background: var(--primary-teal-dark);
+    }
+
+    /* ========================================================== */
+    /* EMPTY STATE */
+    /* ========================================================== */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 56px;
+        color: #d1d5db;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        color: #334155;
+        margin-bottom: 8px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #94a3b8;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+
+    /* ========================================================== */
+    /* SIMPLE BAR CHART FOR DASHBOARD */
+    /* ========================================================== */
+    .mini-chart {
+        display: flex;
+        align-items: flex-end;
+        height: 60px;
+        gap: 6px;
+        padding-top: 10px;
+    }
+
+    .mini-chart .bar-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .mini-chart .bar-item .bar {
+        width: 100%;
+        max-width: 30px;
+        border-radius: 4px 4px 0 0;
+        transition: height 0.6s ease;
+        min-height: 4px;
+    }
+
+    .mini-chart .bar-item .bar.excellent { background: #22c55e; }
+    .mini-chart .bar-item .bar.good { background: #3b82f6; }
+    .mini-chart .bar-item .bar.needs-improvement { background: #f59e0b; }
+    .mini-chart .bar-item .bar.poor { background: #ef4444; }
+
+    .mini-chart .bar-item .bar-label {
+        font-size: 9px;
+        color: #94a3b8;
+        text-align: center;
+        white-space: nowrap;
+        max-width: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ========================================================== */
+    /* PAGINATION */
+    /* ========================================================== */
+    .pagination-wrap {
+        padding: 16px 24px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: #fafbfc;
+    }
+
+    .pagination-wrap .pagination-info {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .pagination-wrap .pagination-links {
+        display: flex;
+        gap: 4px;
+    }
+
+    .pagination-wrap .pagination-links a,
+    .pagination-wrap .pagination-links span {
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .pagination-wrap .pagination-links a {
+        background: white;
+        border-color: #e2e8f0;
+        color: #64748b;
+    }
+
+    .pagination-wrap .pagination-links a:hover {
+        background: var(--primary-teal-light);
+        border-color: var(--primary-teal);
+        color: var(--primary-teal);
+    }
+
+    .pagination-wrap .pagination-links .active {
+        background: var(--primary-teal);
+        color: white;
+        border-color: var(--primary-teal);
+    }
+
+    /* ========================================================== */
+    /* RESPONSIVE */
+    /* ========================================================== */
+    @media (max-width: 1024px) {
+        .chart-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header-custom {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-item {
+            padding: 12px 14px;
+        }
+
+        .stat-item .stat-number {
+            font-size: 22px;
+        }
+
+        .chart-row {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px 16px;
+        }
+
+        .filter-bar select {
+            width: 100%;
+            min-width: unset;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .pagination-wrap {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .mini-chart {
+            height: 40px;
+        }
+
+        .mini-chart .bar-item .bar-label {
+            font-size: 7px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-item {
+            padding: 10px 12px;
+        }
+
+        .stat-item .stat-number {
+            font-size: 20px;
+        }
+
+        .page-header-custom .header-left h1 {
+            font-size: 18px;
+        }
+
+        .page-header-custom .header-left .header-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .table-card .card-header-custom {
+            padding: 12px 16px;
+        }
+
+        .table-card .card-header-custom .section-title {
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- ========================================================== -->
+    <!-- PAGE HEADER -->
+    <!-- ========================================================== -->
+    <div class="page-header-custom">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <h1>Contractor Performance Dashboard</h1>
+                <p class="subtitle">
+                    <i class="fas fa-building text-teal"></i> 
+                    Monitor and track contractor EHS performance
+                </p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'contractor:contractor_list' %}" class="btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Contractors
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- STATISTICS CARDS -->
+    <!-- ========================================================== -->
+    <div class="stats-row">
+        <div class="stat-item teal">
+            <span class="stat-icon"><i class="fas fa-users"></i></span>
+            <div class="stat-number">{{ total_contractors }}</div>
+            <div class="stat-label">Total Contractors</div>
+        </div>
+        <div class="stat-item green">
+            <span class="stat-icon"><i class="fas fa-star"></i></span>
+            <div class="stat-number">{{ excellent_count }}</div>
+            <div class="stat-label">Excellent</div>
+        </div>
+        <div class="stat-item blue">
+            <span class="stat-icon"><i class="fas fa-thumbs-up"></i></span>
+            <div class="stat-number">{{ good_count }}</div>
+            <div class="stat-label">Good</div>
+        </div>
+        <div class="stat-item yellow">
+            <span class="stat-icon"><i class="fas fa-exclamation-triangle"></i></span>
+            <div class="stat-number">{{ needs_improvement_count }}</div>
+            <div class="stat-label">Needs Improvement</div>
+        </div>
+        <div class="stat-item red">
+            <span class="stat-icon"><i class="fas fa-times-circle"></i></span>
+            <div class="stat-number">{{ poor_count }}</div>
+            <div class="stat-label">Poor</div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- CHARTS ROW -->
+    <!-- ========================================================== -->
+    <div class="chart-row">
+        <!-- Chart 1: Performance Distribution -->
+        <div class="chart-card">
+            <div class="card-header-custom">
+                <span class="card-title">
+                    <i class="fas fa-chart-pie"></i> Performance Distribution
+                </span>
+                <span style="font-size: 12px; color: #64748b;">
+                    {{ current_month }}/{{ current_year }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div style="text-align: center; padding: 8px; background: #dcfce7; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: 700; color: #166534;">{{ excellent_count }}</div>
+                        <div style="font-size: 11px; color: #166534;">Excellent</div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: #dbeafe; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: 700; color: #1e40af;">{{ good_count }}</div>
+                        <div style="font-size: 11px; color: #1e40af;">Good</div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: #fef3c7; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: 700; color: #92400e;">{{ needs_improvement_count }}</div>
+                        <div style="font-size: 11px; color: #92400e;">Needs Improvement</div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: #fee2e2; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: 700; color: #991b1b;">{{ poor_count }}</div>
+                        <div style="font-size: 11px; color: #991b1b;">Poor</div>
+                    </div>
+                </div>
+                <!-- Simple bar chart -->
+                <div class="mini-chart">
+                    {% if ranking %}
+                        {% for item in ranking|slice:":10" %}
+                            <div class="bar-item">
+                                <div class="bar 
+                                    {% if item.score >= 90 %}excellent
+                                    {% elif item.score >= 75 %}good
+                                    {% elif item.score >= 60 %}needs-improvement
+                                    {% else %}poor{% endif %}" 
+                                    style="height: {{ item.score|floatformat:0 }}%;"></div>
+                                <span class="bar-label" title="{{ item.contractor_name }}">{{ item.contractor_name|truncatechars:8 }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; width: 100%; color: #94a3b8; padding: 20px 0;">
+                            <i class="fas fa-chart-bar"></i> No data available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Average Scores -->
+        <div class="chart-card">
+            <div class="card-header-custom">
+                <span class="card-title">
+                    <i class="fas fa-chart-bar"></i> Average Scores
+                </span>
+                <span style="font-size: 12px; color: #64748b;">
+                    {{ current_month }}/{{ current_year }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                            <span style="font-weight: 500; color: #334155;">Overall Performance</span>
+                            <span style="font-weight: 700; color: var(--primary-teal);">{{ avg_score|default:0|floatformat:1 }}%</span>
+                        </div>
+                        <div class="score-bar">
+                            <div class="bar {% if avg_score >= 90 %}excellent{% elif avg_score >= 75 %}good{% elif avg_score >= 60 %}needs-improvement{% else %}poor{% endif %}" 
+                                 style="width: {{ avg_score|default:0 }}%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                            <span style="font-weight: 500; color: #334155;">Highest Score</span>
+                            <span style="font-weight: 700; color: #22c55e;">{{ max_score|default:0|floatformat:1 }}%</span>
+                        </div>
+                        <div class="score-bar">
+                            <div class="bar excellent" style="width: {{ max_score|default:0 }}%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                            <span style="font-weight: 500; color: #334155;">Lowest Score</span>
+                            <span style="font-weight: 700; color: #ef4444;">{{ min_score|default:0|floatformat:1 }}%</span>
+                        </div>
+                        <div class="score-bar">
+                            <div class="bar poor" style="width: {{ min_score|default:0 }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- TABLE: CONTRACTOR RANKING -->
+    <!-- ========================================================== -->
+    <div class="table-card">
+        <div class="card-header-custom">
+            <div class="section-title">
+                <i class="fas fa-list text-teal"></i> Contractor Performance Ranking
+                <span class="badge-count">{{ ranking|length }}</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="font-size: 13px; color: #64748b;">
+                    <i class="fas fa-calendar-alt"></i> 
+                    {{ current_month }}/{{ current_year }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <div class="filter-bar">
+                <form method="get" style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; align-items: center;">
+                    <select name="month" onchange="this.form.submit()">
+                        {% for month in month_options %}
+                            <option value="{{ month.value }}" {% if current_month == month.value %}selected{% endif %}>
+                                {{ month.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="year" onchange="this.form.submit()">
+                        {% for y in year_options %}
+                            <option value="{{ y }}" {% if current_year == y %}selected{% endif %}>
+                                {{ y }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+
+                    {% if request.GET.month or request.GET.year %}
+                        <a href="{% url 'contractor:performance_dashboard' %}" class="btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+
+            {% if ranking %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th>Contractor</th>
+                        <th>Risk Level</th>
+                        <th>Inspections</th>
+                        <th style="text-align: center;">Score</th>
+                        <th>Rating</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ranking %}
+                    <tr>
+                        <td>
+                            <span class="rank-number">#{{ item.rank }}</span>
+                        </td>
+                        <td>
+                            <div class="contractor-name">{{ item.contractor_name }}</div>
+                            <div class="contractor-code">{{ item.contractor_code }}</div>
+                        </td>
+                        <td>
+                            <span class="rating-badge 
+                                {% if item.risk_level == 'LOW' %}rating-good
+                                {% elif item.risk_level == 'MEDIUM' %}rating-needs-improvement
+                                {% elif item.risk_level == 'HIGH' or item.risk_level == 'CRITICAL' %}rating-poor
+                                {% else %}rating-needs-improvement{% endif %}">
+                                {{ item.risk_level|title }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            {{ item.inspections_count|default:0 }}
+                        </td>
+                        <td style="text-align: center; min-width: 120px;">
+                            <div style="font-weight: 700; font-size: 18px; color: #0f172a;">
+                                {{ item.score|floatformat:1 }}%
+                            </div>
+                            <div class="score-bar">
+                                <div class="bar 
+                                    {% if item.score >= 90 %}excellent
+                                    {% elif item.score >= 75 %}good
+                                    {% elif item.score >= 60 %}needs-improvement
+                                    {% else %}poor{% endif %}" 
+                                    style="width: {{ item.score }}%;">
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="rating-badge 
+                                {% if item.rating == 'Excellent' %}rating-excellent
+                                {% elif item.rating == 'Good' %}rating-good
+                                {% elif item.rating == 'Needs Improvement' %}rating-needs-improvement
+                                {% else %}rating-poor{% endif %}">
+                                {{ item.rating }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="{% url 'contractor:performance_detail' item.id %}" class="btn-teal" style="padding: 4px 12px; font-size: 12px;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="pagination-wrap">
+                <span class="pagination-info">
+                    Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                </span>
+                <div class="pagination-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&month={{ current_month }}&year={{ current_year }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="active">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}&month={{ current_month }}&year={{ current_year }}">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&month={{ current_month }}&year={{ current_year }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>No Performance Data Available</h3>
+                <p>Run the performance calculation to see contractor performance.</p>
+                <p class="text-muted" style="font-size: 13px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Run: <code>python manage.py calculate_contractor_performance</code>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

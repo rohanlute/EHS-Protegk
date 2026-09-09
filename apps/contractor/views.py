@@ -2,26 +2,34 @@
 
 import secrets
 import string
+import json
+import logging
+from datetime import datetime, date, timedelta
+
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db import transaction
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, TemplateView
 from django.utils import timezone
-import logging
-from apps.notifications.services import NotificationService
-from datetime import datetime, date, timedelta
 from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
-from apps.contractor.models import (
+# Apps imports
+from apps.notifications.services import NotificationService
+from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
+from apps.toolbox_talk.models import ToolboxTalkSessionPlan
+
+# Local imports
+from .models import (
     Contractor,
     OnboardingRequest,
     OnboardingDocumentRequirement,
@@ -31,25 +39,26 @@ from apps.contractor.models import (
     ContractorAssignment,
     WorkOrder,
     TrainingSignOff,
+    ContractorInspection,
+    ContractorInspectionQuestion,
+    ContractorInspectionResponse,
 )
-from apps.contractor.forms import (
+from .forms import (
     ContractorForm,
     WorkOrderForm,
     WorkOrderStatusForm,
     TrainingSignOffForm,
+    ContractorInspectionForm,
+    ContractorInspectionResponseForm,
 )
-from django.contrib.auth import get_user_model
-from apps.notifications.services import NotificationService
-from apps.organizations.models import Plant, Department
-
-# >>> ADJUST THIS IMPORT to match your actual toolbox talk app <<<
-from apps.toolbox_talk.models import ToolboxTalkSessionPlan
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.core.exceptions import PermissionDenied
 
+
+# ==========================================================
+# ADMIN REQUIRED MIXIN
+# ==========================================================
 
 class AdminRequiredMixin(UserPassesTestMixin):
     """
@@ -57,7 +66,7 @@ class AdminRequiredMixin(UserPassesTestMixin):
     """
     def test_func(self):
         user = self.request.user
-        return user.is_superuser or user.is_admin_user
+        return user.is_superuser or getattr(user, 'is_admin_user', False)
 
     def handle_no_permission(self):
         messages.error(self.request, "You do not have permission to access this page. Admin access only.")
@@ -1795,82 +1804,6 @@ class WorkOrderReviewView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
 
 
 # ==========================================================
-# API VIEWS
-# ==========================================================
-
-class GetContractorDetailsView(LoginRequiredMixin, View):
-    """
-    API view to get contractor details for preview.
-    """
-    def get(self, request, pk):
-        try:
-            contractor = get_object_or_404(Contractor, pk=pk)
-            data = {
-                'contractor_code': contractor.contractor_code,
-                'contractor_name': contractor.contractor_name,
-                'contractor_type': contractor.get_contractor_type_display(),
-                'contact_person': contractor.contact_person,
-                'designation': contractor.designation,
-                'mobile': contractor.mobile,
-                'email': contractor.email,
-                'address': f"{contractor.address_line1}, {contractor.city}, {contractor.state}, {contractor.country} - {contractor.pincode}",
-                'ehs_officer_name': contractor.ehs_officer_name,
-                'ehs_mobile': contractor.ehs_mobile,
-                'ehs_email': contractor.ehs_email,
-                'work_category': contractor.work_category,
-                'work_category_display': contractor.get_work_category_display(),
-                'years_of_experience': contractor.years_of_experience,
-                'number_of_workers': contractor.number_of_workers,
-                'nature_of_business': contractor.nature_of_business,
-                'service_description': contractor.service_description,
-            }
-            return JsonResponse(data)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=404)
-
-
-class GetContractorWorkOrdersView(LoginRequiredMixin, View):
-    """
-    API view to get work orders for a specific contractor.
-    """
-    def get(self, request, contractor_id):
-        try:
-            contractor = get_object_or_404(Contractor, id=contractor_id)
-            work_orders = WorkOrder.objects.filter(
-                contractor=contractor,
-                is_active=True
-            ).values('id', 'work_order_number', 'work_description', 'status', 'start_date', 'end_date')
-            
-            data = {
-                'status': 'success',
-                'work_orders': list(work_orders)
-            }
-            return JsonResponse(data)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=404)
-
-
-class GetApprovedContractorsView(LoginRequiredMixin, View):
-    """
-    API view to get approved contractors for work order creation.
-    """
-    def get(self, request):
-        try:
-            contractors = Contractor.objects.filter(
-                onboarding_requests__status='APPROVED',
-                is_active=True
-            ).distinct().values('id', 'contractor_code', 'contractor_name', 'work_category')
-            
-            data = {
-                'status': 'success',
-                'contractors': list(contractors)
-            }
-            return JsonResponse(data)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
-# ==========================================================
 # TRAINING SIGN-OFF VIEWS
 # ==========================================================
 
@@ -1989,8 +1922,6 @@ class TrainingSignOffListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-# apps/contractor/views.py - Update TrainingSignOffDetailView
-
 class TrainingSignOffDetailView(LoginRequiredMixin, DetailView):
     """
     Display detailed view of a training sign-off.
@@ -2080,9 +2011,875 @@ class UploadSignOffSignatureView(LoginRequiredMixin, View):
             }, status=500)
 
 
+class UploadSupportingDocumentView(LoginRequiredMixin, View):
+    """
+    Upload supporting document for a training sign-off via AJAX.
+    """
+    def post(self, request, pk):
+        try:
+            signoff = get_object_or_404(TrainingSignOff, pk=pk)
+            
+            # Check if user has permission
+            if signoff.created_by != request.user and not request.user.is_superuser:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'You do not have permission to upload this document.'
+                }, status=403)
+            
+            # Check if file is in request
+            if 'supporting_document' not in request.FILES:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'No file uploaded.'
+                }, status=400)
+            
+            file = request.FILES['supporting_document']
+            
+            # Validate file type
+            valid_types = [
+                'application/pdf', 
+                'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'image/jpeg', 
+                'image/jpg', 
+                'image/png'
+            ]
+            if file.content_type not in valid_types:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG.'
+                }, status=400)
+            
+            # Validate file size (max 5MB)
+            if file.size > 5 * 1024 * 1024:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'File size exceeds 5MB limit.'
+                }, status=400)
+            
+            # Save the file
+            signoff.supporting_documents = file
+            
+            # ==========================================================
+            # CHANGE STATUS TO COMPLETED WHEN DOCUMENT IS SUBMITTED
+            # ==========================================================
+            action = request.POST.get('action', '')
+            if action == 'submit':
+                signoff.status = 'COMPLETED'
+            else:
+                signoff.status = 'SUBMITTED'
+            
+            signoff.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Document uploaded successfully!' if action != 'submit' else 'Sign-Off submitted successfully!'
+            })
+            
+        except Exception as e:
+            logger.error(f"Error uploading supporting document: {str(e)}")
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=500)
+
+
 # ==========================================================
-# AJAX ENDPOINTS (used by the create form's JS)
+# CONTRACTOR INSPECTION VIEWS
 # ==========================================================
+# apps/contractor/views.py - Add these views (add to existing file)
+
+# ==========================================================
+# CONTRACTOR INSPECTION VIEWS
+# ==========================================================
+
+class ContractorInspectionListView(LoginRequiredMixin, ListView):
+    """Display list of all contractor inspections with filters and pagination"""
+    model = ContractorInspection
+    template_name = 'contractor/inspection_list.html'
+    context_object_name = 'inspections'
+    paginate_by = 15
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related(
+            'contractor', 'assigned_to', 'plant', 'zone', 'location'
+        ).prefetch_related('selected_questions', 'responses')
+
+        if not (self.request.user.is_superuser or getattr(self.request.user, 'is_admin_user', False)):
+            queryset = queryset.filter(assigned_to=self.request.user)
+
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(inspection_code__icontains=search) |
+                Q(contractor__contractor_name__icontains=search) |
+                Q(contractor__contractor_code__icontains=search)
+            )
+
+        status = self.request.GET.get('status', '')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        contractor_id = self.request.GET.get('contractor', '')
+        if contractor_id:
+            queryset = queryset.filter(contractor_id=contractor_id)
+
+        plant_id = self.request.GET.get('plant', '')
+        if plant_id:
+            queryset = queryset.filter(plant_id=plant_id)
+
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        context['status_choices'] = ContractorInspection.STATUS_CHOICES
+        context['contractors'] = Contractor.objects.filter(is_active=True)
+        context['plants'] = Plant.objects.filter(is_active=True)
+        context['search'] = self.request.GET.get('search', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['selected_contractor'] = self.request.GET.get('contractor', '')
+        context['selected_plant'] = self.request.GET.get('plant', '')
+        context['total'] = queryset.count()
+        context['scheduled'] = queryset.filter(status='SCHEDULED').count()
+        context['in_progress'] = queryset.filter(status='IN_PROGRESS').count()
+        context['closed'] = queryset.filter(status='CLOSED').count()
+        context['overdue'] = queryset.filter(status='OVERDUE').count()
+        context['cancelled'] = queryset.filter(status='CANCELLED').count()
+        return context
+
+
+# apps/contractor/views.py - Update ContractorInspectionCreateView
+
+class ContractorInspectionCreateView(LoginRequiredMixin, CreateView):
+    """
+    Create a new contractor inspection with question selection
+    """
+    model = ContractorInspection
+    form_class = ContractorInspectionForm
+    template_name = 'contractor/inspection_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action'] = 'Create'
+        context['title'] = 'Schedule Contractor Inspection'
+
+        questions = ContractorInspectionQuestion.objects.filter(
+            is_active=True
+        ).order_by('category', 'display_order')
+
+        questions_by_section = {}
+        for q in questions:
+            if q.category not in questions_by_section:
+                questions_by_section[q.category] = []
+            questions_by_section[q.category].append(q)
+
+        context['questions_by_section'] = questions_by_section
+        context['section_display'] = dict(ContractorInspectionQuestion.CATEGORY_CHOICES)
+        context['total_questions'] = questions.count()
+        context['selected_question_ids'] = []
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        today = timezone.now().date()
+        initial['inspection_start_date'] = today
+        initial['inspection_end_date'] = today + timedelta(days=7)
+        initial['due_date_offset_days'] = 7
+        return initial
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests with proper error handling
+        """
+        form = self.get_form()
+        
+        # Validate the form
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            # Log the errors for debugging
+            logger.error(f"Form errors: {form.errors}")
+            
+            # Re-render the form with errors
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                inspection = form.save(commit=False)
+                inspection.assigned_by = self.request.user
+                
+                # Get selected questions from POST
+                selected_question_ids = self.request.POST.getlist('selected_questions')
+                
+                # Validate that questions are selected
+                if not selected_question_ids:
+                    messages.error(self.request, 'Please select at least one question for the inspection.')
+                    return self.form_invalid(form)
+                
+                # Handle zone, location, sublocation - they are optional
+                plant = form.cleaned_data.get('plant')
+                zone = form.cleaned_data.get('zone')
+                location = form.cleaned_data.get('location')
+                sublocation = form.cleaned_data.get('sublocation')
+                
+                # If plant is selected but zone is not, clear zone
+                if plant and not zone:
+                    inspection.zone = None
+                if zone and not location:
+                    inspection.location = None
+                if location and not sublocation:
+                    inspection.sublocation = None
+                
+                # If auto-schedule is enabled, calculate end date from start date + offset
+                if inspection.enable_auto_schedule:
+                    if not inspection.due_date_offset_days:
+                        inspection.due_date_offset_days = 7
+                    # End date = start date + offset - 1
+                    start_date = inspection.inspection_start_date
+                    inspection.inspection_end_date = start_date + timedelta(days=inspection.due_date_offset_days - 1)
+                
+                # Save the inspection
+                inspection.save()
+                
+                # Save selected questions (Many-to-Many)
+                if selected_question_ids:
+                    inspection.selected_questions.set(selected_question_ids)
+                
+                # If auto-schedule is enabled, create first recurring copy
+                if inspection.enable_auto_schedule:
+                    try:
+                        next_month_copy = inspection.create_recurring_copy()
+                        if next_month_copy:
+                            messages.info(
+                                self.request,
+                                f'Recurring inspection scheduled for {next_month_copy.inspection_start_date} '
+                                f'to {next_month_copy.inspection_end_date}'
+                            )
+                    except Exception as e:
+                        logger.error(f"Error creating recurring copy: {e}")
+
+                # Send notification
+                try:
+                    from apps.notifications.services import NotificationService
+                    NotificationService.notify(
+                        content_object=inspection,
+                        notification_type='INSPECTION_SCHEDULE',
+                        module='CONTRACTOR_INSPECTION'
+                    )
+                except Exception as e:
+                    logger.error(f"Notification error: {e}")
+
+                messages.success(
+                    self.request,
+                    f'Inspection "{inspection.inspection_code}" scheduled successfully! '
+                    f'{len(selected_question_ids)} question(s) selected.'
+                )
+                return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        except Exception as e:
+            logger.error(f"Error creating inspection: {e}")
+            messages.error(self.request, f'Error creating inspection: {str(e)}')
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        # Log form errors for debugging
+        logger.error(f"Form errors: {form.errors}")
+        
+        # Display specific error messages
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        
+        # Re-render the form with errors
+        context = self.get_context_data(form=form)
+        
+        # Re-populate the questions_by_section in context
+        questions = ContractorInspectionQuestion.objects.filter(
+            is_active=True
+        ).order_by('category', 'display_order')
+        
+        questions_by_section = {}
+        for q in questions:
+            if q.category not in questions_by_section:
+                questions_by_section[q.category] = []
+            questions_by_section[q.category].append(q)
+        
+        context['questions_by_section'] = questions_by_section
+        context['total_questions'] = questions.count()
+        
+        return self.render_to_response(context)
+class ContractorInspectionDetailView(LoginRequiredMixin, DetailView):
+    """Display detailed view of a contractor inspection"""
+    model = ContractorInspection
+    template_name = 'contractor/inspection_detail.html'
+    context_object_name = 'inspection'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        inspection = self.get_object()
+
+        responses = inspection.responses.select_related('question').all()
+        responses_by_section = {}
+        for response in responses:
+            section = response.question.category
+            if section not in responses_by_section:
+                responses_by_section[section] = []
+            responses_by_section[section].append(response)
+        context['responses_by_section'] = responses_by_section
+
+        selected_questions = inspection.selected_questions.filter(is_active=True).order_by('category', 'display_order')
+        questions_by_section = {}
+        for q in selected_questions:
+            if q.category not in questions_by_section:
+                questions_by_section[q.category] = []
+            questions_by_section[q.category].append(q)
+        context['questions_by_section'] = questions_by_section
+        context['section_display'] = dict(ContractorInspectionQuestion.CATEGORY_CHOICES)
+
+        total_questions = selected_questions.count()
+        answered_questions = responses.count()
+        yes_count = responses.filter(answer='YES').count()
+        no_count = responses.filter(answer='NO').count()
+        na_count = responses.filter(answer='NA').count()
+        
+        context['total_questions'] = total_questions
+        context['answered_questions'] = answered_questions
+        context['yes_count'] = yes_count
+        context['no_count'] = no_count
+        context['na_count'] = na_count
+        context['compliance_score'] = round((yes_count / total_questions) * 100, 1) if total_questions > 0 else 0
+
+        context['can_start'] = (
+            inspection.status in ['SCHEDULED', 'OVERDUE'] and
+            (self.request.user == inspection.assigned_to or self.request.user.is_superuser)
+        )
+        context['can_cancel'] = (
+            inspection.status in ['SCHEDULED', 'IN_PROGRESS'] and
+            (self.request.user == inspection.assigned_by or self.request.user.is_superuser)
+        )
+        return context
+
+
+# apps/contractor/views.py
+
+class ContractorInspectionConductView(LoginRequiredMixin, View):
+    """Conduct the inspection - show only selected questions"""
+    template_name = 'contractor/inspection_conduct.html'
+
+    def get(self, request, pk):
+        inspection = get_object_or_404(ContractorInspection, pk=pk)
+        
+        # Check permission
+        if request.user != inspection.assigned_to and not request.user.is_superuser:
+            messages.error(request, 'You are not authorized to conduct this inspection.')
+            return redirect('contractor:inspection_list')
+
+        # Check if already closed
+        if inspection.status == 'CLOSED':
+            messages.warning(request, 'This inspection is already closed.')
+            return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        # Update status to IN_PROGRESS
+        if inspection.status == 'SCHEDULED':
+            inspection.status = 'IN_PROGRESS'
+            inspection.started_at = timezone.now()
+            inspection.save(update_fields=['status', 'started_at'])
+
+        # Get ONLY selected questions grouped by section
+        selected_questions = inspection.selected_questions.filter(
+            is_active=True
+        ).order_by('category', 'display_order')
+
+        questions_by_section = {}
+        responses_dict = {r.question_id: r for r in inspection.responses.all()}
+        
+        for q in selected_questions:
+            if q.category not in questions_by_section:
+                questions_by_section[q.category] = []
+            
+            questions_by_section[q.category].append({
+                'question': q,
+                'response': responses_dict.get(q.id),
+                'has_response': q.id in responses_dict
+            })
+
+        context = {
+            'inspection': inspection,
+            'questions_by_section': questions_by_section,
+            'section_display': dict(ContractorInspectionQuestion.CATEGORY_CHOICES),
+            'total_questions': selected_questions.count(),
+            'answered_questions': len(responses_dict),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        inspection = get_object_or_404(ContractorInspection, pk=pk)
+        
+        # Check permission
+        if request.user != inspection.assigned_to and not request.user.is_superuser:
+            messages.error(request, 'You are not authorized to submit this inspection.')
+            return redirect('contractor:inspection_list')
+
+        # Get selected questions only
+        selected_questions = inspection.selected_questions.filter(is_active=True)
+
+        if not selected_questions.exists():
+            messages.error(request, 'No questions found for this inspection.')
+            return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        # Process responses
+        with transaction.atomic():
+            for question in selected_questions:
+                answer = request.POST.get(f'answer_{question.id}')
+                remarks = request.POST.get(f'remarks_{question.id}', '').strip()
+
+                if answer:
+                    # Update or create response
+                    response, created = ContractorInspectionResponse.objects.get_or_create(
+                        inspection=inspection,
+                        question=question
+                    )
+                    response.answer = answer
+                    response.remarks = remarks
+
+                    # Handle photo upload
+                    if f'photo_{question.id}' in request.FILES:
+                        response.photo = request.FILES[f'photo_{question.id}']
+
+                    response.save()
+
+            # Check if all questions answered
+            all_answered = True
+            unanswered_questions = []
+            for question in selected_questions:
+                try:
+                    response = ContractorInspectionResponse.objects.get(
+                        inspection=inspection,
+                        question=question
+                    )
+                    if not response.answer:
+                        all_answered = False
+                        unanswered_questions.append(question)
+                except ContractorInspectionResponse.DoesNotExist:
+                    all_answered = False
+                    unanswered_questions.append(question)
+
+            if not all_answered:
+                messages.warning(
+                    request, 
+                    f'Please answer all questions before submitting. {len(unanswered_questions)} question(s) remaining.'
+                )
+                return redirect('contractor:inspection_conduct', pk=inspection.pk)
+
+            # Close inspection
+            inspection.status = 'CLOSED'
+            inspection.closed_at = timezone.now()
+            inspection.save(update_fields=['status', 'closed_at'])
+
+            # Send notification
+            try:
+                from apps.notifications.services import NotificationService
+                NotificationService.notify(
+                    content_object=inspection,
+                    notification_type='INSPECTION_COMPLETED',
+                    module='CONTRACTOR_INSPECTION'
+                )
+            except Exception as e:
+                logger.error(f"Notification error: {e}")
+
+        messages.success(
+            request, 
+            f'Inspection "{inspection.inspection_code}" completed successfully!'
+        )
+
+        return redirect('contractor:inspection_detail', pk=inspection.pk)
+class ContractorInspectionCancelView(LoginRequiredMixin, View):
+    """
+    Cancel an inspection (POST only)
+    """
+    def post(self, request, pk):
+        inspection = get_object_or_404(ContractorInspection, pk=pk)
+
+        # Check permission
+        if (inspection.status in ['CLOSED', 'CANCELLED']):
+            messages.error(request, 'This inspection cannot be cancelled.')
+            return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        if (request.user != inspection.assigned_by and 
+            not request.user.is_superuser and 
+            not getattr(request.user, 'is_admin_user', False)):
+            messages.error(request, 'You do not have permission to cancel this inspection.')
+            return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, 'Please provide a reason for cancellation.')
+            return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        inspection.status = 'CANCELLED'
+        inspection.notes = f"Cancelled: {reason}" if inspection.notes else f"Cancelled: {reason}"
+        inspection.save(update_fields=['status', 'notes'])
+
+        messages.success(request, f'Inspection "{inspection.inspection_code}" cancelled successfully.')
+        return redirect('contractor:inspection_list')
+
+
+class ContractorInspectionDeleteView(LoginRequiredMixin, DeleteView):
+    """
+    Delete an inspection (Admin only)
+    """
+    model = ContractorInspection
+    template_name = 'contractor/inspection_confirm_delete.html'
+    context_object_name = 'inspection'
+    success_url = reverse_lazy('contractor:inspection_list')
+
+    def get_queryset(self):
+        # Only superusers and admins can delete
+        if self.request.user.is_superuser or getattr(self.request.user, 'is_admin_user', False):
+            return super().get_queryset()
+        return ContractorInspection.objects.none()
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        inspection_code = self.object.inspection_code
+        
+        with transaction.atomic():
+            # Delete responses
+            self.object.responses.all().delete()
+            # Clear selected questions
+            self.object.selected_questions.clear()
+            # Delete the inspection
+            response = super().delete(request, *args, **kwargs)
+        
+        messages.success(request, f'Inspection "{inspection_code}" deleted successfully.')
+        return response
+
+
+class ContractorInspectionUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    Edit an existing contractor inspection
+    """
+    model = ContractorInspection
+    form_class = ContractorInspectionForm
+    template_name = 'contractor/inspection_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action'] = 'Edit'
+        context['title'] = f'Edit Inspection: {self.object.inspection_code}'
+        context['form_mode'] = 'edit'
+
+        # Get all active questions grouped by section
+        questions = ContractorInspectionQuestion.objects.filter(
+            is_active=True
+        ).order_by('category', 'display_order')
+
+        questions_by_section = {}
+        for q in questions:
+            if q.category not in questions_by_section:
+                questions_by_section[q.category] = []
+            questions_by_section[q.category].append(q)
+
+        context['questions_by_section'] = questions_by_section
+        context['section_choices'] = ContractorInspectionQuestion.CATEGORY_CHOICES
+        context['section_display'] = dict(ContractorInspectionQuestion.CATEGORY_CHOICES)
+        
+        # Get selected question IDs
+        context['selected_question_ids'] = list(
+            self.object.selected_questions.values_list('id', flat=True)
+        )
+        context['total_questions'] = questions.count()
+
+        return context
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                inspection = form.save()
+
+                # Update selected questions
+                selected_question_ids = self.request.POST.getlist('selected_questions')
+                if selected_question_ids:
+                    inspection.selected_questions.set(selected_question_ids)
+                else:
+                    messages.warning(
+                        self.request,
+                        'No questions were selected. Please select at least one question.'
+                    )
+                    return self.form_invalid(form)
+
+                messages.success(
+                    self.request,
+                    f'Inspection "{inspection.inspection_code}" updated successfully!'
+                )
+
+                return redirect('contractor:inspection_detail', pk=inspection.pk)
+
+        except Exception as e:
+            logger.error(f"Error updating inspection: {e}")
+            messages.error(self.request, f'Error updating inspection: {str(e)}')
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Please correct the errors below.')
+        return super().form_invalid(form)
+
+
+class MyContractorInspectionsView(LoginRequiredMixin, ListView):
+    """
+    View for assigned users to see their inspections
+    """
+    model = ContractorInspection
+    template_name = 'contractor/my_inspections.html'
+    context_object_name = 'inspections'
+    paginate_by = 15
+
+    def get_queryset(self):
+        queryset = ContractorInspection.objects.filter(
+            assigned_to=self.request.user
+        ).select_related(
+            'contractor', 'plant'
+        ).prefetch_related('selected_questions')
+
+        # Status filter
+        status = self.request.GET.get('status', '')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Search
+        search = self.request.GET.get('search', '')
+        if search:
+            queryset = queryset.filter(
+                Q(inspection_code__icontains=search) |
+                Q(contractor__contractor_name__icontains=search)
+            )
+
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+
+        context['status_choices'] = ContractorInspection.STATUS_CHOICES
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['search'] = self.request.GET.get('search', '')
+
+        # Statistics
+        context['total'] = queryset.count()
+        context['pending'] = queryset.filter(status='SCHEDULED').count()
+        context['in_progress'] = queryset.filter(status='IN_PROGRESS').count()
+        context['completed'] = queryset.filter(status='CLOSED').count()
+        context['overdue'] = queryset.filter(status='OVERDUE').count()
+
+        return context
+
+
+# ==========================================================
+# API VIEWS (AJAX)
+# ==========================================================
+# apps/contractor/views.py - Fixed GetContractorDetailsAPIView
+
+class GetContractorDetailsAPIView(LoginRequiredMixin, View):
+    """
+    API: Get contractor details including work orders, plant, zone, location, sublocation, department
+    """
+    def get(self, request, contractor_id):
+        try:
+            contractor = get_object_or_404(Contractor, pk=contractor_id)
+            
+            # Get the latest approved work order with all location details
+            # Note: WorkOrder has plant as ForeignKey, but zone, location, sublocation are CharFields
+            latest_work_order = WorkOrder.objects.filter(
+                contractor=contractor,
+                status='APPROVED'
+            ).select_related(
+                'plant', 
+                'department',
+                'company_representative'
+            ).order_by('-created_at').first()
+            
+            # Get department from contractor's work orders or onboarding
+            department = None
+            if latest_work_order and latest_work_order.department:
+                department = {
+                    'id': latest_work_order.department.id,
+                    'name': latest_work_order.department.name,
+                }
+            else:
+                # Try to get department from onboarding
+                onboarding = OnboardingRequest.objects.filter(
+                    contractor=contractor,
+                    status='APPROVED'
+                ).select_related('ehs_officer').first()
+                
+                if onboarding and hasattr(onboarding, 'department') and onboarding.department:
+                    department = {
+                        'id': onboarding.department.id,
+                        'name': onboarding.department.name,
+                    }
+            
+            # Get plant details from work order
+            plant = None
+            if latest_work_order and latest_work_order.plant:
+                plant = {
+                    'id': latest_work_order.plant.id,
+                    'name': latest_work_order.plant.name,
+                }
+            
+            # Get zone, location, sublocation from work order (these are CharFields, not ForeignKeys)
+            # So we need to get them from the plant's zones/locations or from the work order's stored values
+            zone = None
+            location = None
+            sublocation = None
+            
+            if latest_work_order:
+                # If work order has zone/location stored as foreign keys, check that
+                # Otherwise, we need to look up from the plant
+                if hasattr(latest_work_order, 'zone') and latest_work_order.zone:
+                    # If zone is a ForeignKey
+                    if hasattr(latest_work_order.zone, 'id'):
+                        zone = {
+                            'id': latest_work_order.zone.id,
+                            'name': latest_work_order.zone.name,
+                        }
+                elif latest_work_order.plant:
+                    # Get first zone from the plant
+                    first_zone = Zone.objects.filter(plant=latest_work_order.plant, is_active=True).first()
+                    if first_zone:
+                        zone = {
+                            'id': first_zone.id,
+                            'name': first_zone.name,
+                        }
+                
+                # Location
+                if hasattr(latest_work_order, 'location') and latest_work_order.location:
+                    if hasattr(latest_work_order.location, 'id'):
+                        location = {
+                            'id': latest_work_order.location.id,
+                            'name': latest_work_order.location.name,
+                        }
+                elif zone and zone.get('id'):
+                    first_location = Location.objects.filter(zone_id=zone['id'], is_active=True).first()
+                    if first_location:
+                        location = {
+                            'id': first_location.id,
+                            'name': first_location.name,
+                        }
+                
+                # Sub-location
+                if hasattr(latest_work_order, 'sublocation') and latest_work_order.sublocation:
+                    if hasattr(latest_work_order.sublocation, 'id'):
+                        sublocation = {
+                            'id': latest_work_order.sublocation.id,
+                            'name': latest_work_order.sublocation.name,
+                        }
+                elif location and location.get('id'):
+                    first_sublocation = SubLocation.objects.filter(location_id=location['id'], is_active=True).first()
+                    if first_sublocation:
+                        sublocation = {
+                            'id': first_sublocation.id,
+                            'name': first_sublocation.name,
+                        }
+
+            data = {
+                'success': True,
+                'contractor': {
+                    'id': contractor.id,
+                    'name': contractor.contractor_name,
+                    'code': contractor.contractor_code,
+                    'work_category': contractor.work_category,
+                    'work_category_display': contractor.get_work_category_display(),
+                    'nature_of_business': contractor.nature_of_business,
+                    'service_description': contractor.service_description,
+                    'years_of_experience': contractor.years_of_experience,
+                    'number_of_workers': contractor.number_of_workers or 0,
+                    
+                    # EHS Officer details (Contractor Supervisor)
+                    'supervisor_name': contractor.ehs_officer_name or '',
+                    'supervisor_designation': contractor.ehs_designation or '',
+                    'supervisor_mobile': contractor.ehs_mobile or '',
+                    'supervisor_email': contractor.ehs_email or '',
+                    
+                    # Contact Person
+                    'contact_person': contractor.contact_person or '',
+                    'contact_mobile': contractor.mobile or '',
+                    'contact_email': contractor.email or '',
+                    
+                    # Address
+                    'address': f"{contractor.address_line1}, {contractor.city}, {contractor.state}" if contractor.address_line1 else '',
+                    
+                    # Location details from latest work order
+                    'plant': plant,
+                    'zone': zone,
+                    'location': location,
+                    'sublocation': sublocation,
+                    'department': department,
+                    
+                    # Work order info (for reference)
+                    'latest_work_order': {
+                        'id': latest_work_order.id if latest_work_order else None,
+                        'number': latest_work_order.work_order_number if latest_work_order else None,
+                    } if latest_work_order else None,
+                }
+            }
+            return JsonResponse(data)
+        except Exception as e:
+            logger.error(f"Error getting contractor details: {e}")
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetContractorWorkOrdersView(LoginRequiredMixin, View):
+    """
+    API view to get work orders for a specific contractor.
+    """
+    def get(self, request, contractor_id):
+        try:
+            contractor = get_object_or_404(Contractor, id=contractor_id)
+            work_orders = WorkOrder.objects.filter(
+                contractor=contractor,
+                is_active=True
+            ).values('id', 'work_order_number', 'work_description', 'status', 'start_date', 'end_date')
+            
+            data = {
+                'status': 'success',
+                'work_orders': list(work_orders)
+            }
+            return JsonResponse(data)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=404)
+
+
+class GetApprovedContractorsView(LoginRequiredMixin, View):
+    """
+    API view to get approved contractors for work order creation.
+    """
+    def get(self, request):
+        try:
+            contractors = Contractor.objects.filter(
+                onboarding_requests__status='APPROVED',
+                is_active=True
+            ).distinct().values('id', 'contractor_code', 'contractor_name', 'work_category')
+            
+            data = {
+                'status': 'success',
+                'contractors': list(contractors)
+            }
+            return JsonResponse(data)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 class GetContractorApprovedWorkOrdersView(LoginRequiredMixin, View):
     """
@@ -2237,74 +3034,200 @@ class GetTrainingSessionDetailsView(LoginRequiredMixin, View):
         }
 
         return JsonResponse(data)
-class UploadSupportingDocumentView(LoginRequiredMixin, View):
+
+
+class GetPlantZonesAPIView(LoginRequiredMixin, View):
     """
-    Upload supporting document for a training sign-off via AJAX.
+    API: Get zones for a plant
     """
-    def post(self, request, pk):
+    def get(self, request, plant_id):
         try:
-            signoff = get_object_or_404(TrainingSignOff, pk=pk)
-            
-            # Check if user has permission
-            if signoff.created_by != request.user and not request.user.is_superuser:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': 'You do not have permission to upload this document.'
-                }, status=403)
-            
-            # Check if file is in request
-            if 'supporting_document' not in request.FILES:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': 'No file uploaded.'
-                }, status=400)
-            
-            file = request.FILES['supporting_document']
-            
-            # Validate file type
-            valid_types = [
-                'application/pdf', 
-                'application/msword', 
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'image/jpeg', 
-                'image/jpg', 
-                'image/png'
-            ]
-            if file.content_type not in valid_types:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': 'Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG.'
-                }, status=400)
-            
-            # Validate file size (max 5MB)
-            if file.size > 5 * 1024 * 1024:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': 'File size exceeds 5MB limit.'
-                }, status=400)
-            
-            # Save the file
-            signoff.supporting_documents = file
-            
-            # ==========================================================
-            # CHANGE STATUS TO COMPLETED WHEN DOCUMENT IS SUBMITTED
-            # ==========================================================
-            action = request.POST.get('action', '')
-            if action == 'submit':
-                signoff.status = 'COMPLETED'  # This changes status from SUBMITTED to COMPLETED
-            else:
-                signoff.status = 'SUBMITTED'
-            
-            signoff.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Document uploaded successfully!' if action != 'submit' else 'Sign-Off submitted successfully!'
-            })
-            
+            zones = Zone.objects.filter(
+                plant_id=plant_id, 
+                is_active=True
+            ).values('id', 'name', 'code')
+            return JsonResponse({'success': True, 'zones': list(zones)})
         except Exception as e:
-            logger.error(f"Error uploading supporting document: {str(e)}")
-            return JsonResponse({
-                'status': 'error', 
-                'message': str(e)
-            }, status=500)
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetZoneLocationsAPIView(LoginRequiredMixin, View):
+    """
+    API: Get locations for a zone
+    """
+    def get(self, request, zone_id):
+        try:
+            locations = Location.objects.filter(
+                zone_id=zone_id, 
+                is_active=True
+            ).values('id', 'name', 'code')
+            return JsonResponse({'success': True, 'locations': list(locations)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetLocationSublocationsAPIView(LoginRequiredMixin, View):
+    """
+    API: Get sublocations for a location
+    """
+    def get(self, request, location_id):
+        try:
+            sublocations = SubLocation.objects.filter(
+                location_id=location_id, 
+                is_active=True
+            ).values('id', 'name', 'code')
+            return JsonResponse({'success': True, 'sublocations': list(sublocations)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetPlantUsersAPIView(LoginRequiredMixin, View):
+    """
+    API: Get Safety Managers and Plant Heads for a plant
+    """
+    def get(self, request, plant_id):
+        try:
+            users = User.objects.filter(
+                plant_id=plant_id,
+                role__name__in=['SAFETY MANAGER', 'PLANT HEAD'],
+                is_active=True
+            ).select_related('role').order_by('first_name', 'last_name')
+            
+            user_list = []
+            for user in users:
+                user_list.append({
+                    'id': user.id,
+                    'name': user.get_full_name() or user.username,
+                    'role': user.role.name if user.role else '',
+                })
+            
+            return JsonResponse({'success': True, 'users': user_list})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetContractorWorkOrdersAPIView(LoginRequiredMixin, View):
+    """
+    API: Get approved work orders for a contractor
+    """
+    def get(self, request, contractor_id):
+        try:
+            work_orders = WorkOrder.objects.filter(
+                contractor_id=contractor_id,
+                status='APPROVED'
+            ).values('id', 'work_order_number', 'contract_number', 'work_description')
+            return JsonResponse({'success': True, 'work_orders': list(work_orders)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+# apps/contractor/views.py - Add these views at the end of the file
+
+# ==========================================================
+# PERFORMANCE VIEWS
+# ==========================================================
+
+from django.views.generic import TemplateView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime
+from .models import Contractor, ContractorPerformanceMetric
+from .services.performance_service import BulkPerformanceCalculator
+
+
+# apps/contractor/views.py
+
+class ContractorPerformanceDashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Contractor Performance Dashboard.
+    """
+    template_name = 'contractor/performance_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get current period
+        today = timezone.now().date()
+        month = int(self.request.GET.get('month', today.month))
+        year = int(self.request.GET.get('year', today.year))
+        
+        # Get performance metrics
+        from .services.performance_service import BulkPerformanceCalculator
+        
+        # Get ranking - this now includes 'id' field
+        ranking = BulkPerformanceCalculator.get_contractor_ranking(month, year)
+        context['ranking'] = ranking
+        
+        # Calculate summary statistics
+        if ranking:
+            scores = [r['score'] for r in ranking]
+            context['avg_score'] = round(sum(scores) / len(scores), 1) if scores else 0
+            context['max_score'] = max(scores) if scores else 0
+            context['min_score'] = min(scores) if scores else 0
+            context['total_contractors'] = len(ranking)
+            context['excellent_count'] = len([r for r in ranking if r['rating'] == 'Excellent'])
+            context['good_count'] = len([r for r in ranking if r['rating'] == 'Good'])
+            context['needs_improvement_count'] = len([r for r in ranking if r['rating'] == 'Needs Improvement'])
+            context['poor_count'] = len([r for r in ranking if r['rating'] == 'Poor'])
+        else:
+            context['total_contractors'] = 0
+            context['excellent_count'] = 0
+            context['good_count'] = 0
+            context['needs_improvement_count'] = 0
+            context['poor_count'] = 0
+        
+        context['current_month'] = month
+        context['current_year'] = year
+        
+        # Month options for filter
+        context['month_options'] = [
+            {'value': i, 'label': datetime(2000, i, 1).strftime('%B')}
+            for i in range(1, 13)
+        ]
+        
+        # Year options for filter - generate dynamically
+        current_year = timezone.now().year
+        context['year_options'] = list(range(current_year - 5, current_year + 2))
+        
+        return context
+
+# apps/contractor/views.py - ContractorPerformanceDetailView
+
+class ContractorPerformanceDetailView(LoginRequiredMixin, DetailView):
+    """
+    Detailed performance view for a single contractor.
+    """
+    model = Contractor
+    template_name = 'contractor/performance_detail.html'
+    context_object_name = 'contractor'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        contractor = self.get_object()
+        
+        # Get all performance metrics for this contractor
+        metrics = ContractorPerformanceMetric.objects.filter(
+            contractor=contractor
+        ).order_by('-period_year', '-period_month')
+        
+        context['metrics'] = metrics
+        
+        # Get latest metric
+        latest = metrics.first()
+        if latest:
+            context['latest_score'] = latest.overall_performance_score
+            context['latest_rating'] = latest.rating
+            context['latest_risk'] = latest.risk_level
+            context['latest_inspection_score'] = latest.inspection_compliance_score
+            context['latest_training_score'] = latest.training_compliance_score
+            context['latest_onboarding_score'] = latest.document_compliance_score  # Renamed variable
+            context['latest_work_order_score'] = latest.work_order_completion_score
+            context['inspections_count'] = latest.inspections_count
+        else:
+            context['latest_score'] = 0
+            context['latest_rating'] = 'N/A'
+            context['latest_risk'] = 'N/A'
+            context['latest_inspection_score'] = 0
+            context['latest_training_score'] = 0
+            context['latest_onboarding_score'] = 0
+            context['latest_work_order_score'] = 0
+            context['inspections_count'] = 0
+        
+        return context

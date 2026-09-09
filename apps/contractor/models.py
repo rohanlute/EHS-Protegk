@@ -1415,3 +1415,398 @@ class TrainingSignOff(models.Model):
     def has_documents(self):
         """Check if supporting documents are uploaded."""
         return bool(self.supporting_documents)
+# apps/contractor/models.py - Add these models at the end of the file
+
+class ContractorInspectionQuestion(models.Model):
+    """
+    Pre-defined questions for contractor inspections
+    """
+    CATEGORY_CHOICES = [
+        ('PPE', 'PPE'),
+        ('SAFETY', 'Safety'),
+        ('HOUSEKEEPING', 'Housekeeping'),
+        ('CONTRACTOR_MANAGEMENT', 'Contractor Management'),
+    ]
+    
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    question_text = models.TextField()
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['category', 'display_order']
+        verbose_name = 'Contractor Inspection Question'
+        verbose_name_plural = 'Contractor Inspection Questions'
+    
+    def __str__(self):
+        return f"{self.get_category_display()} - {self.question_text[:50]}"
+
+
+class ContractorInspection(models.Model):
+    """
+    Contractor Inspection Schedule
+    """
+    STATUS_CHOICES = [
+        ('SCHEDULED', 'Scheduled'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('CLOSED', 'Closed'),
+        ('CANCELLED', 'Cancelled'),
+        ('OVERDUE', 'Overdue'),
+    ]
+    
+    # Basic Info
+    inspection_code = models.CharField(max_length=50, unique=True, blank=True)
+    
+    # Contractor
+    contractor = models.ForeignKey(
+        'Contractor',
+        on_delete=models.CASCADE,
+        related_name='inspections'
+    )
+    
+    # Work Order (optional)
+    work_order = models.ForeignKey(
+        'WorkOrder',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inspections'
+    )
+    
+    # Location Details
+    plant = models.ForeignKey(
+        'organizations.Plant',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='contractor_inspections'
+    )
+    zone = models.ForeignKey(
+        'organizations.Zone',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contractor_inspections'
+    )
+    location = models.ForeignKey(
+        'organizations.Location',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contractor_inspections'
+    )
+    sublocation = models.ForeignKey(
+        'organizations.SubLocation',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contractor_inspections'
+    )
+    department = models.ForeignKey(
+        'organizations.Department',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contractor_inspections'
+    )
+    
+    # Contractor Details (snapshot at time of inspection)
+    contractor_work_category = models.CharField(max_length=50, blank=True)
+    contractor_supervisor = models.CharField(max_length=150, blank=True)
+    contractor_supervisor_designation = models.CharField(max_length=150, blank=True)
+    contractor_supervisor_mobile = models.CharField(max_length=15, blank=True)
+    contractor_supervisor_email = models.EmailField(blank=True)
+    number_of_workers = models.PositiveIntegerField(default=0)
+    
+    # Selected Questions (many-to-many)
+    selected_questions = models.ManyToManyField(
+        ContractorInspectionQuestion,
+        related_name='inspections',
+        blank=True
+    )
+    
+    # Assignment
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='assigned_contractor_inspections'
+    )
+    assigned_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_contractor_inspections'
+    )
+    
+    # Dates
+    inspection_start_date = models.DateField()
+    inspection_end_date = models.DateField()
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SCHEDULED')
+    
+    # Notes
+    notes = models.TextField(blank=True)
+    
+    # Auto Schedule
+    enable_auto_schedule = models.BooleanField(default=False)
+    due_date_offset_days = models.PositiveIntegerField(
+        default=7,
+        help_text="Number of days from start date to end date for each recurring inspection"
+    )
+    parent_inspection = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='child_inspections',
+        help_text="Parent inspection for auto-scheduled recurring inspections"
+    )
+    is_recurring_copy = models.BooleanField(
+        default=False,
+        help_text="Indicates if this inspection was auto-generated from a parent"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contractor Inspection'
+        verbose_name_plural = 'Contractor Inspections'
+    
+    def __str__(self):
+        return f"{self.inspection_code} - {self.contractor.contractor_name}"
+    
+    def save(self, *args, **kwargs):
+        if not self.inspection_code:
+            year = timezone.now().year
+            last = ContractorInspection.objects.filter(
+                inspection_code__startswith=f'CI-{year}-'
+            ).order_by('-inspection_code').first()
+            
+            if last and last.inspection_code:
+                try:
+                    last_number = int(last.inspection_code.split('-')[-1])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
+            else:
+                new_number = 1
+            
+            self.inspection_code = f'CI-{year}-{str(new_number).zfill(4)}'
+        
+        # Auto-fill contractor details
+        if self.contractor:
+            if not self.contractor_work_category:
+                self.contractor_work_category = self.contractor.work_category
+            if not self.contractor_supervisor:
+                self.contractor_supervisor = self.contractor.ehs_officer_name
+            if not self.contractor_supervisor_designation:
+                self.contractor_supervisor_designation = self.contractor.ehs_designation
+            if not self.contractor_supervisor_mobile:
+                self.contractor_supervisor_mobile = self.contractor.ehs_mobile
+            if not self.contractor_supervisor_email:
+                self.contractor_supervisor_email = self.contractor.ehs_email
+            if not self.number_of_workers and self.contractor.number_of_workers:
+                self.number_of_workers = self.contractor.number_of_workers
+        
+        super().save(*args, **kwargs)
+    
+    def create_recurring_copy(self):
+        """Create a copy of this inspection for next month with same questions and offset"""
+        today = timezone.now().date()
+        
+        # Calculate next month's start date (1st of next month)
+        if today.month == 12:
+            next_month_start = today.replace(year=today.year + 1, month=1, day=1)
+        else:
+            next_month_start = today.replace(month=today.month + 1, day=1)
+        
+        # Calculate end date based on user-configured offset
+        next_month_end = next_month_start + timedelta(days=self.due_date_offset_days - 1)
+        
+        # Create the new inspection
+        new_inspection = ContractorInspection(
+            contractor=self.contractor,
+            work_order=self.work_order,
+            plant=self.plant,
+            zone=self.zone,
+            location=self.location,
+            sublocation=self.sublocation,
+            department=self.department,
+            contractor_work_category=self.contractor_work_category,
+            contractor_supervisor=self.contractor_supervisor,
+            contractor_supervisor_designation=self.contractor_supervisor_designation,
+            contractor_supervisor_mobile=self.contractor_supervisor_mobile,
+            contractor_supervisor_email=self.contractor_supervisor_email,
+            number_of_workers=self.number_of_workers,
+            assigned_to=self.assigned_to,
+            assigned_by=self.assigned_by,
+            inspection_start_date=next_month_start,
+            inspection_end_date=next_month_end,
+            enable_auto_schedule=True,
+            due_date_offset_days=self.due_date_offset_days,
+            parent_inspection=self,
+            is_recurring_copy=True,
+            status='SCHEDULED',
+            notes=f"Auto-generated recurring from {self.inspection_code} (Offset: {self.due_date_offset_days} days)"
+        )
+        new_inspection.save()
+        new_inspection.selected_questions.set(self.selected_questions.all())
+        return new_inspection
+
+
+class ContractorInspectionResponse(models.Model):
+    """
+    Response to inspection questions
+    """
+    ANSWER_CHOICES = [
+        ('YES', 'Yes'),
+        ('NO', 'No'),
+    ]
+    
+    inspection = models.ForeignKey(
+        ContractorInspection,
+        on_delete=models.CASCADE,
+        related_name='responses'
+    )
+    question = models.ForeignKey(
+        ContractorInspectionQuestion,
+        on_delete=models.CASCADE
+    )
+    answer = models.CharField(max_length=10, choices=ANSWER_CHOICES)
+    remarks = models.TextField(blank=True)
+    photo = models.ImageField(
+        upload_to='contractor_inspections/%Y/%m/%d/',
+        null=True,
+        blank=True
+    )
+    answered_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['inspection', 'question']
+        ordering = ['question__category', 'question__display_order']
+    
+    def __str__(self):
+        return f"{self.inspection.inspection_code} - {self.question.question_text[:30]}"
+    # apps/contractor/models.py - Add these models
+
+class ContractorPerformanceMetric(models.Model):
+    """
+    Stores performance metrics for a contractor for a specific period.
+    """
+    PERIOD_CHOICES = [
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('YEARLY', 'Yearly'),
+    ]
+    
+    contractor = models.ForeignKey(
+        Contractor,
+        on_delete=models.CASCADE,
+        related_name='performance_metrics'
+    )
+    
+    # Period information
+    period_type = models.CharField(max_length=20, choices=PERIOD_CHOICES, default='MONTHLY')
+    period_month = models.IntegerField(help_text="Month (1-12)")
+    period_year = models.IntegerField(help_text="Year")
+    
+    # ==========================================================
+    # INDIVIDUAL SCORES (0-100)
+    # ==========================================================
+    # From Pre-Qualification
+    pre_qualification_score = models.FloatField(default=0, help_text="Pre-qualification score")
+    risk_level = models.CharField(max_length=20, choices=ContractorPreQualification.RISK_LEVEL_CHOICES, default='MEDIUM')
+    
+    # From Document Management
+    document_compliance_score = models.FloatField(default=0, help_text="% of documents verified/valid")
+    
+    # From Training
+    training_compliance_score = models.FloatField(default=0, help_text="% of required training completed")
+    
+    # From Inspection
+    inspection_compliance_score = models.FloatField(default=0, help_text="Average inspection compliance score")
+    inspections_count = models.IntegerField(default=0, help_text="Number of inspections conducted")
+    
+    # From Work Orders
+    work_order_completion_score = models.FloatField(default=0, help_text="% of work orders completed on time")
+    work_orders_count = models.IntegerField(default=0, help_text="Number of work orders")
+    
+    # Overall Performance
+    overall_performance_score = models.FloatField(default=0, help_text="Weighted overall score (0-100)")
+    rating = models.CharField(max_length=30, blank=True, help_text="Excellent, Good, Needs Improvement, Poor")
+    
+    # Tracking
+    calculated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-period_year', '-period_month']
+        verbose_name = 'Contractor Performance Metric'
+        verbose_name_plural = 'Contractor Performance Metrics'
+        unique_together = ['contractor', 'period_type', 'period_month', 'period_year']
+    
+    def __str__(self):
+        return f"{self.contractor.contractor_name} - {self.period_type} {self.period_month}/{self.period_year}"
+
+
+class PerformanceWeightConfig(models.Model):
+    """
+    Configurable weights for performance calculation.
+    """
+    name = models.CharField(max_length=100, default='Default Configuration')
+    weight_pre_qualification = models.FloatField(default=15)
+    weight_document_compliance = models.FloatField(default=15)
+    weight_training_compliance = models.FloatField(default=20)
+    weight_inspection_compliance = models.FloatField(default=25)
+    weight_work_order_completion = models.FloatField(default=15)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Performance Weight Configuration'
+        verbose_name_plural = 'Performance Weight Configurations'
+    
+    def __str__(self):
+        return f"{self.name} (Active: {self.is_active})"
+    
+    def get_total_weight(self):
+        return (
+            self.weight_pre_qualification +
+            self.weight_document_compliance +
+            self.weight_training_compliance +
+            self.weight_inspection_compliance +
+            self.weight_work_order_completion
+        )
+
+
+class PerformanceScoreHistory(models.Model):
+    """
+    Historical record of performance scores for trend analysis.
+    """
+    contractor = models.ForeignKey(
+        Contractor,
+        on_delete=models.CASCADE,
+        related_name='performance_history'
+    )
+    metric = models.ForeignKey(
+        ContractorPerformanceMetric,
+        on_delete=models.CASCADE,
+        related_name='history_entries'
+    )
+    overall_score = models.FloatField()
+    rating = models.CharField(max_length=30)
+    calculated_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-calculated_at']
+        verbose_name = 'Performance Score History'
+        verbose_name_plural = 'Performance Score Histories'

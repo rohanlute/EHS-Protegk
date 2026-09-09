@@ -717,3 +717,234 @@ class TrainingSignOffForm(forms.ModelForm):
             cleaned_data['company_representative'] = work_order.company_representative
 
         return cleaned_data
+# apps/contractor/forms.py - Add these forms
+
+from django import forms
+from .models import (
+    ContractorInspection, 
+    ContractorInspectionQuestion
+)
+from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
+# apps/contractor/forms.py - Add these forms
+# apps/contractor/forms.py
+
+from django import forms
+from .models import (
+    Contractor, ContractorInspection, ContractorInspectionQuestion,
+    WorkOrder
+)
+from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+# apps/contractor/forms.py
+
+from django import forms
+from .models import (
+    Contractor, ContractorInspection, ContractorInspectionQuestion,
+    WorkOrder
+)
+from apps.organizations.models import Plant, Zone, Location, SubLocation, Department
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class ContractorInspectionForm(forms.ModelForm):
+    """Form for scheduling contractor inspections"""
+    
+    class Meta:
+        model = ContractorInspection
+        fields = [
+            'contractor',
+            'plant',
+            'zone',
+            'location',
+            'sublocation',
+            'department',
+            'inspection_start_date',
+            'inspection_end_date',
+            'assigned_to',
+            'notes',
+            'enable_auto_schedule',
+            'due_date_offset_days',
+        ]
+        widgets = {
+            'contractor': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_contractor',
+            }),
+            'plant': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_plant',
+            }),
+            'zone': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_zone',
+            }),
+            'location': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_location',
+            }),
+            'sublocation': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_sublocation'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_department'
+            }),
+            'inspection_start_date': forms.DateInput(attrs={
+                'class': 'form-control', 
+                'type': 'date',
+                'id': 'id_inspection_start_date'
+            }),
+            'inspection_end_date': forms.DateInput(attrs={
+                'class': 'form-control', 
+                'type': 'date',
+                'id': 'id_inspection_end_date'
+            }),
+            'assigned_to': forms.Select(attrs={
+                'class': 'form-control', 
+                'id': 'id_assigned_to'
+            }),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'enable_auto_schedule': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'id': 'id_enable_auto_schedule',
+            }),
+            'due_date_offset_days': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'id': 'id_due_date_offset_days',
+                'min': 1,
+                'max': 31,
+                'placeholder': 'Enter days (e.g., 7)'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Only show contractors with completed sign-off
+        self.fields['contractor'].queryset = Contractor.objects.filter(
+            training_signoffs__status='COMPLETED',
+            is_active=True
+        ).distinct()
+        
+        # Filter plants
+        self.fields['plant'].queryset = Plant.objects.filter(is_active=True)
+        
+        # Get the current instance or POST data
+        plant_id = None
+        zone_id = None
+        location_id = None
+        
+        # If this is a POST request with data, get the selected values
+        if self.data:
+            plant_id = self.data.get('plant')
+            zone_id = self.data.get('zone')
+            location_id = self.data.get('location')
+        elif self.instance and self.instance.pk:
+            # If editing an existing instance
+            plant_id = self.instance.plant_id
+            zone_id = self.instance.zone_id
+            location_id = self.instance.location_id
+        
+        # Filter zones based on plant selection
+        if plant_id:
+            self.fields['zone'].queryset = Zone.objects.filter(
+                plant_id=plant_id,
+                is_active=True
+            )
+        else:
+            self.fields['zone'].queryset = Zone.objects.none()
+        
+        # Filter locations based on zone selection
+        if zone_id:
+            self.fields['location'].queryset = Location.objects.filter(
+                zone_id=zone_id,
+                is_active=True
+            )
+        else:
+            self.fields['location'].queryset = Location.objects.none()
+        
+        # Filter sublocations based on location selection
+        if location_id:
+            self.fields['sublocation'].queryset = SubLocation.objects.filter(
+                location_id=location_id,
+                is_active=True
+            )
+        else:
+            self.fields['sublocation'].queryset = SubLocation.objects.none()
+        
+        # Filter departments
+        self.fields['department'].queryset = Department.objects.filter(is_active=True)
+        
+        # Filter assigned users (Safety Managers and Plant Heads)
+        self.fields['assigned_to'].queryset = User.objects.filter(
+            role__name__in=['SAFETY MANAGER', 'PLANT HEAD'],
+            is_active=True
+        ).order_by('first_name', 'last_name')
+        
+        # If plant is selected, filter users by plant
+        if plant_id:
+            self.fields['assigned_to'].queryset = self.fields['assigned_to'].queryset.filter(
+                plant_id=plant_id
+            )
+        
+        # Set default offset days
+        if not self.instance.pk and not self.data:
+            self.fields['due_date_offset_days'].initial = 7
+        
+        # Make fields not required for validation - we'll handle this in the view
+        self.fields['zone'].required = False
+        self.fields['location'].required = False
+        self.fields['sublocation'].required = False
+
+
+class ContractorInspectionResponseForm(forms.Form):
+    """
+    Form for conducting inspection - dynamic questions with YES/NO options
+    Only includes selected questions
+    """
+    def __init__(self, inspection, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Get only selected questions for this inspection
+        questions = inspection.selected_questions.filter(is_active=True).order_by('category', 'display_order')
+        
+        for question in questions:
+            # Answer field (Yes/No/NA)
+            self.fields[f'answer_{question.id}'] = forms.ChoiceField(
+                choices=[('', 'Select'), ('YES', 'Yes'), ('NO', 'No'), ('NA', 'N/A')],
+                widget=forms.Select(attrs={
+                    'class': 'form-control answer-select',
+                    'data-question-id': question.id
+                }),
+                required=True,
+                label=question.question_text
+            )
+            
+            # Remarks field (optional)
+            self.fields[f'remarks_{question.id}'] = forms.CharField(
+                widget=forms.Textarea(attrs={
+                    'class': 'form-control',
+                    'rows': 2,
+                    'placeholder': 'Optional remarks...'
+                }),
+                required=False,
+                label='Remarks'
+            )
+            
+            # Photo field (optional)
+            self.fields[f'photo_{question.id}'] = forms.FileField(
+                widget=forms.FileInput(attrs={
+                    'class': 'form-control',
+                    'accept': 'image/*'
+                }),
+                required=False,
+                label='Photo Evidence'
+            )
