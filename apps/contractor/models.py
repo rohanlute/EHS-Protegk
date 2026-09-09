@@ -1210,3 +1210,208 @@ class WorkOrder(models.Model):
     @property
     def contractor_workers(self):
         return self.contractor.number_of_workers if self.contractor else 0
+# apps/contractor/models.py - TrainingSignOff model (without remarks and doc description)
+
+# ==========================================================
+# TRAINING SIGN-OFF MODEL
+# ==========================================================
+
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from apps.contractor.models import Contractor, WorkOrder
+from apps.toolbox_talk.models import ToolboxTalkSessionPlan
+
+User = get_user_model()
+
+
+class TrainingSignOff(models.Model):
+    """
+    Post-training confirmation / sign-off record.
+    """
+
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('SUBMITTED', 'Submitted'),
+        ('COMPLETED', 'Completed'),
+    ]
+
+    signoff_number = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        editable=False,
+        verbose_name="Sign-Off Number"
+    )
+
+    # ==========================================================
+    # SECTION 1 - Contractor / Work Order / Training Session
+    # ==========================================================
+    contractor = models.ForeignKey(
+        Contractor,
+        on_delete=models.PROTECT,
+        related_name='training_signoffs',
+        verbose_name="Contractor"
+    )
+
+    work_order = models.ForeignKey(
+        WorkOrder,
+        on_delete=models.PROTECT,
+        related_name='training_signoffs',
+        verbose_name="Work Order",
+        limit_choices_to={'status': 'APPROVED'},
+        help_text="Only Approved work orders are eligible for training sign-off"
+    )
+
+    session = models.ForeignKey(
+        ToolboxTalkSessionPlan,
+        on_delete=models.PROTECT,
+        related_name='contractor_signoffs',
+        verbose_name="Training Session"
+    )
+
+    # ---- Snapshot fields ----
+    contractor_representative = models.CharField(
+        max_length=150,
+        verbose_name="Contractor Representative",
+        help_text="Auto-filled from the Work Order's Contractor Supervisor"
+    )
+    contractor_representative_designation = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Designation (EHS Officer)",
+        help_text="Auto-filled from the Contractor's EHS Designation"
+    )
+    number_of_workers = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Number of Workers",
+        help_text="Auto-filled from the Work Order"
+    )
+
+    # ==========================================================
+    # SECTION 2 - Company Sign-Off
+    # ==========================================================
+    company_declaration = models.BooleanField(
+        default=False,
+        verbose_name="Company Declaration",
+        help_text=(
+            "I confirm that the above listed contractor and its workers have "
+            "received the required safety training and have been made aware "
+            "of the applicable EHS requirements."
+        )
+    )
+    company_representative = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='training_signoffs_as_company_rep',
+        verbose_name="Company Representative",
+        help_text="Auto-filled from the Work Order's Company Representative"
+    )
+    company_representative_designation = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Designation",
+        help_text="Auto-filled from system (e.g. Safety Manager role)"
+    )
+    company_signature = models.FileField(
+        upload_to='training_signoff/signatures/company/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        verbose_name="Company Representative Signature"
+    )
+
+    # ==========================================================
+    # SECTION 3 - Contractor Sign-Off
+    # ==========================================================
+    contractor_declaration = models.BooleanField(
+        default=False,
+        verbose_name="Contractor Declaration",
+        help_text=(
+            "I confirm that the above listed workers have received the "
+            "required safety training and have understood the applicable "
+            "EHS requirements."
+        )
+    )
+    contractor_supervisor = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Contractor Supervisor",
+        help_text="Auto-filled from the Work Order's Contractor Supervisor"
+    )
+    contractor_supervisor_designation = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Designation",
+        help_text="Auto-filled from the Contractor's EHS Designation"
+    )
+
+    # ==========================================================
+    # SECTION 4 - Supporting Documents
+    # ==========================================================
+    supporting_documents = models.FileField(
+        upload_to='training_signoff/documents/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        verbose_name="Supporting Documents",
+        help_text="Upload any supporting documents related to the training (e.g., attendance sheet, training material, etc.)"
+    )
+
+    # ==========================================================
+    # Meta info
+    # ==========================================================
+    signoff_date = models.DateField(default=timezone.now, verbose_name="Date")
+    signoff_time = models.TimeField(default=timezone.now, verbose_name="Time")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUBMITTED')
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_training_signoffs'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Training Sign-Off'
+        verbose_name_plural = 'Training Sign-Offs'
+
+    def __str__(self):
+        return f"{self.signoff_number} - {self.contractor.contractor_name}"
+
+    def save(self, *args, **kwargs):
+        # AUTO-GENERATE SIGN-OFF NUMBER: TSO-YYYY-XXXX
+        if not self.signoff_number:
+            year = timezone.now().year
+            last = TrainingSignOff.objects.filter(
+                signoff_number__startswith=f'TSO-{year}-'
+            ).order_by('-signoff_number').first()
+
+            if last and last.signoff_number:
+                try:
+                    last_number = int(last.signoff_number.split('-')[-1])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
+            else:
+                new_number = 1
+
+            self.signoff_number = f'TSO-{year}-{str(new_number).zfill(4)}'
+
+        super().save(*args, **kwargs)
+
+    @property
+    def is_fully_signed(self):
+        return bool(
+            self.company_declaration and self.company_signature and
+            self.contractor_declaration
+        )
+    
+    @property
+    def has_documents(self):
+        """Check if supporting documents are uploaded."""
+        return bool(self.supporting_documents)

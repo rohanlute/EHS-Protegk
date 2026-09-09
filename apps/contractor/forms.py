@@ -3,7 +3,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from apps.contractor.models import Contractor, WorkOrder, OnboardingRequest
+from django.utils import timezone  
+from apps.contractor.models import Contractor, WorkOrder, OnboardingRequest, TrainingSignOff
 from apps.organizations.models import Plant, Department
 import re
 
@@ -518,4 +519,201 @@ class WorkOrderStatusForm(forms.ModelForm):
         if status == 'CLOSED' and not closure_remarks:
             self.add_error('closure_remarks', 'Closure remarks are required when closing a work order.')
         
+        return cleaned_data
+
+# apps/contractor/forms.py - Corrected TrainingSignOffForm
+
+from django import forms
+from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from apps.contractor.models import Contractor, WorkOrder, OnboardingRequest, TrainingSignOff
+from apps.organizations.models import Plant, Department
+from apps.toolbox_talk.models import ToolboxTalkSessionPlan
+import re
+
+User = get_user_model()
+
+
+class TrainingSignOffForm(forms.ModelForm):
+    """
+    Form for creating a Training Sign-Off record.
+    """
+
+    class Meta:
+        model = TrainingSignOff
+        fields = [
+            'contractor',
+            'work_order',
+            'session',
+            'contractor_representative',
+            'contractor_representative_designation',
+            'number_of_workers',
+            'company_declaration',
+            'company_representative',
+            'company_representative_designation',
+            'company_signature',
+            'contractor_declaration',
+            'contractor_supervisor',
+            'contractor_supervisor_designation',
+            'signoff_date',
+            'signoff_time',
+            'supporting_documents',
+            # REMOVED: company_remarks, contractor_supervisor_remarks, supporting_documents_description
+        ]
+        widgets = {
+            'contractor': forms.Select(attrs={
+                'class': 'form-select', 'id': 'id_contractor', 'required': 'required'
+            }),
+            'work_order': forms.Select(attrs={
+                'class': 'form-select', 'id': 'id_work_order'
+            }),
+            'session': forms.Select(attrs={
+                'class': 'form-select', 'id': 'id_session', 'required': 'required'
+            }),
+            'contractor_representative': forms.TextInput(attrs={
+                'class': 'form-control', 'id': 'id_contractor_representative', 'readonly': 'readonly'
+            }),
+            'contractor_representative_designation': forms.TextInput(attrs={
+                'class': 'form-control', 'id': 'id_contractor_representative_designation', 'readonly': 'readonly'
+            }),
+            'number_of_workers': forms.NumberInput(attrs={
+                'class': 'form-control', 'id': 'id_number_of_workers', 'readonly': 'readonly'
+            }),
+            'company_declaration': forms.CheckboxInput(attrs={
+                'class': 'form-check-input', 'id': 'id_company_declaration'
+            }),
+            'company_representative': forms.Select(attrs={
+                'class': 'form-select', 'id': 'id_company_representative'
+            }),
+            'company_representative_designation': forms.TextInput(attrs={
+                'class': 'form-control', 'id': 'id_company_representative_designation', 'readonly': 'readonly'
+            }),
+            'company_signature': forms.ClearableFileInput(attrs={
+                'class': 'form-control', 'id': 'id_company_signature'
+            }),
+            'contractor_declaration': forms.CheckboxInput(attrs={
+                'class': 'form-check-input', 'id': 'id_contractor_declaration'
+            }),
+            'contractor_supervisor': forms.TextInput(attrs={
+                'class': 'form-control', 'id': 'id_contractor_supervisor', 'readonly': 'readonly'
+            }),
+            'contractor_supervisor_designation': forms.TextInput(attrs={
+                'class': 'form-control', 'id': 'id_contractor_supervisor_designation', 'readonly': 'readonly'
+            }),
+            'signoff_date': forms.DateInput(attrs={
+                'type': 'date', 'class': 'form-control', 'id': 'id_signoff_date'
+            }),
+            'signoff_time': forms.TimeInput(attrs={
+                'type': 'time', 'class': 'form-control', 'id': 'id_signoff_time'
+            }),
+            'supporting_documents': forms.ClearableFileInput(attrs={
+                'class': 'form-control', 
+                'id': 'id_supporting_documents',
+                'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
+            }),
+        }
+        labels = {
+            'company_declaration': "I confirm the above statement.",
+            'contractor_declaration': "I confirm the above statement.",
+            'supporting_documents': "Supporting Documents",
+        }
+
+    def __init__(self, *args, **kwargs):
+        # Pop request from kwargs before calling super()
+        self.request = kwargs.pop('request', None)
+        
+        super().__init__(*args, **kwargs)
+
+        # Make signature and documents fields NOT required at the field level
+        self.fields['company_signature'].required = False
+        self.fields['supporting_documents'].required = False
+
+        # Contractor queryset
+        self.fields['contractor'].queryset = Contractor.objects.filter(
+            is_active=True,
+            work_orders__status='APPROVED'
+        ).distinct().order_by('contractor_name')
+        self.fields['contractor'].empty_label = "-- Select Contractor --"
+
+        # Work Order - queryset will be filtered by contractor in clean()
+        self.fields['work_order'].queryset = WorkOrder.objects.filter(status='APPROVED')
+        self.fields['work_order'].empty_label = "-- Select Work Order --"
+        self.fields['work_order'].required = True
+
+        # Session queryset
+        self.fields['session'].queryset = ToolboxTalkSessionPlan.objects.filter(
+            status='COMPLETED'
+        ).order_by('-planned_date', '-planned_time')
+        self.fields['session'].empty_label = "-- Select Training Session --"
+
+        # Company representative
+        self.fields['company_representative'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
+        self.fields['company_representative'].empty_label = "-- Select Plant Representative --"
+        self.fields['company_representative'].required = True
+
+        # Make readonly fields not required
+        for f in [
+            'contractor_representative', 'contractor_representative_designation',
+            'number_of_workers', 'contractor_supervisor',
+            'contractor_supervisor_designation', 'company_representative_designation',
+        ]:
+            self.fields[f].required = False
+
+        # Set initial values for date and time
+        if not self.instance.pk:
+            self.fields['signoff_date'].initial = timezone.now().date()
+            self.fields['signoff_time'].initial = timezone.now().time()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        work_order = cleaned_data.get('work_order')
+        contractor = cleaned_data.get('contractor')
+        session = cleaned_data.get('session')
+
+        # Validate work_order belongs to contractor
+        if work_order and contractor:
+            if work_order.contractor_id != contractor.id:
+                self.add_error('work_order', "The selected Work Order does not belong to the selected Contractor.")
+        elif work_order and not contractor:
+            self.add_error('contractor', "Please select a contractor first.")
+
+        # Validate work order is approved
+        if work_order and work_order.status != 'APPROVED':
+            self.add_error('work_order', "Training sign-off can only be created for an Approved Work Order.")
+
+        # Validate session exists
+        if session and not session:
+            self.add_error('session', "Please select a valid training session.")
+
+        # Validate declarations
+        if not cleaned_data.get('company_declaration'):
+            self.add_error('company_declaration', "Company declaration must be confirmed.")
+
+        if not cleaned_data.get('contractor_declaration'):
+            self.add_error('contractor_declaration', "Contractor declaration must be confirmed.")
+
+        # Validate Company Signature
+        company_signature = None
+        
+        # Get files from request if available
+        if hasattr(self, 'request') and self.request:
+            if 'company_signature' in self.request.FILES:
+                company_signature = self.request.FILES['company_signature']
+        
+        # Also check files attribute as fallback
+        if not company_signature and hasattr(self, 'files'):
+            if 'company_signature' in self.files:
+                company_signature = self.files['company_signature']
+
+        # Validate company signature
+        if not company_signature:
+            self.add_error('company_signature', "Company representative signature is required. Please upload a signature file.")
+        elif hasattr(company_signature, 'size') and company_signature.size == 0:
+            self.add_error('company_signature', "The uploaded signature file is empty. Please upload a valid file.")
+
+        # Auto-fill company_representative from work_order if not set
+        if work_order and not cleaned_data.get('company_representative'):
+            cleaned_data['company_representative'] = work_order.company_representative
+
         return cleaned_data

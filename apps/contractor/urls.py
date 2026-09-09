@@ -54,4 +54,25 @@ urlpatterns = [
     path('api/approved-contractors/', views.GetApprovedContractorsView.as_view(), name='api_approved_contractors'),
     path('workorders/review/', views.WorkOrderReviewListView.as_view(), name='workorder_review_list'),
     path('workorders/<int:pk>/review/', views.WorkOrderReviewView.as_view(), name='workorder_review'),
+    path('training-signoff/', views.TrainingSignOffListView.as_view(), name='training_signoff_list'),
+    path('training-signoff/create/', views.TrainingSignOffCreateView.as_view(), name='training_signoff_create'),
+    path('training-signoff/<int:pk>/', views.TrainingSignOffDetailView.as_view(), name='training_signoff_detail'),
+    path('training-signoff/<int:pk>/upload-signature/', views.UploadSignOffSignatureView.as_view(), name='upload_signoff_signature'),
+    path(
+        'api/contractor/<int:contractor_id>/approved-workorders/',
+        views.GetContractorApprovedWorkOrdersView.as_view(),
+        name='api_contractor_approved_workorders'
+    ),
+    path(
+        'api/workorder/<int:pk>/signoff-details/',
+        views.GetWorkOrderSignoffDetailsView.as_view(),
+        name='api_workorder_signoff_details'
+    ),
+    path(
+        'api/training-session/<int:pk>/details/',
+        views.GetTrainingSessionDetailsView.as_view(),
+        name='api_training_session_details'
+    ),
+    path('training-signoff/<int:pk>/upload-signature/', views.UploadSignOffSignatureView.as_view(), name='upload_signoff_signature'),
+    path('training-signoff/<int:pk>/upload-supporting-document/', views.UploadSupportingDocumentView.as_view(), name='upload_supporting_document'),
 ]

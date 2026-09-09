@@ -520,7 +520,224 @@ EHS-360 Team
         except Exception as e:
             logger.exception(f"Failed to send rejection email to {portal_user.email}: {e}")
             return False
+    # Add this to apps/notifications/services.py - inside NotificationService class
 
+   # apps/notifications/services.py - Update send_training_signoff_email method
+
+    @staticmethod
+    def send_training_signoff_email(signoff, cc_email=None):
+        """
+        Send email with PDF attachment to contractor representative.
+        
+        Args:
+            signoff: TrainingSignOff instance
+            cc_email: Optional CC email address (contact person)
+        
+        Returns:
+            bool: True if email sent successfully
+        """
+        try:
+            # Import PDF generator
+            from apps.contractor.utils.pdf_generator import generate_training_signoff_pdf
+            
+            # ==========================================================
+            # GET PLANT NAME
+            # ==========================================================
+            plant_name = 'the Plant'  # Default fallback
+            
+            # Try to get plant name from work_order
+            if hasattr(signoff, 'work_order') and signoff.work_order:
+                if hasattr(signoff.work_order, 'plant') and signoff.work_order.plant:
+                    if hasattr(signoff.work_order.plant, 'name'):
+                        plant_name = signoff.work_order.plant.name
+            
+            # If still no plant name, try to get from contractor
+            if plant_name == 'the Plant' and hasattr(signoff, 'contractor') and signoff.contractor:
+                if hasattr(signoff.contractor, 'plant') and signoff.contractor.plant:
+                    if hasattr(signoff.contractor.plant, 'name'):
+                        plant_name = signoff.contractor.plant.name
+            
+            # Generate PDF with plant name
+            pdf_buffer = generate_training_signoff_pdf(signoff, plant_name)
+            
+            # Get contractor representative email (EHS Officer/Contact Person)
+            to_email = signoff.contractor.ehs_email or signoff.contractor.email
+            
+            if not to_email:
+                logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
+                return False
+            
+            # Get CC email - contact person from registration
+            if not cc_email:
+                cc_email = signoff.contractor.email or signoff.contractor.ehs_email
+            
+            # Prepare email context
+            context = {
+                'signoff': signoff,
+                'contractor': signoff.contractor,
+                'work_order': signoff.work_order,
+                'session': signoff.session,
+                'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
+                'plant_name': plant_name,
+            }
+            
+            # Render email body
+            try:
+                from django.template.loader import select_template
+                html_content = select_template([
+                    'contractor/emails/training_signoff_email.html',
+                    'emails/training_signoff_email.html',
+                ]).render(context)
+            except:
+                html_content = None
+            
+            # Create subject
+            subject = f'📋 Training Sign-Off Completed - {signoff.signoff_number}'
+            
+            # Plain text message
+            plain_message = f"""
+Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
+
+Training sign-off has been completed successfully.
+
+SIGN-OFF DETAILS
+--------------------------------------------------
+Sign-Off Number   : {signoff.signoff_number}
+Contractor        : {signoff.contractor.contractor_name}
+Work Order        : {signoff.work_order.work_order_number if signoff.work_order else 'N/A'}
+Training Session  : {signoff.session.session_no if signoff.session else 'N/A'}
+Training Topic    : {signoff.session.topic.topic_title if signoff.session and signoff.session.topic else 'N/A'}
+Date              : {signoff.signoff_date} {signoff.signoff_time}
+Plant             : {plant_name}
+
+STATUS
+--------------------------------------------------
+Plant Sign-Off    : {'✅ Confirmed' if signoff.company_declaration else '⏳ Pending'}
+Contractor Sign-Off: {'✅ Confirmed' if signoff.contractor_declaration else '⏳ Pending'}
+
+Please find attached the PDF with complete sign-off details.
+
+ACTION REQUIRED
+--------------------------------------------------
+1. Review the attached PDF document
+2. If you are the contractor representative, please sign the document
+3. Return the signed copy to the EHS department
+
+For any questions, please contact your EHS administrator.
+
+Regards,
+EHS-360 Team
+EHS Management System
+"""
+            
+            # Create email with attachment
+            from django.core.mail import EmailMultiAlternatives
+            
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+                cc=[cc_email] if cc_email and cc_email != to_email else [],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+            
+            # Attach HTML version if available
+            if html_content:
+                email.attach_alternative(html_content, "text/html")
+            
+            # Attach PDF
+            email.attach(
+                f'Training_SignOff_{signoff.signoff_number}.pdf',
+                pdf_buffer.getvalue(),
+                'application/pdf'
+            )
+            
+            # Send email
+            email.send(fail_silently=False)
+            
+            logger.info(f"Training sign-off email sent to {to_email} with CC to {cc_email}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Error sending training sign-off email: {str(e)}")
+            return False
+
+    @staticmethod
+    def send_training_signoff_reminder_email(signoff, cc_email=None):
+        """
+        Send reminder email to contractor representative for sign-off.
+        """
+        try:
+            from apps.contractor.utils.pdf_generator import generate_training_signoff_pdf
+            
+            # Generate PDF
+            pdf_buffer = generate_training_signoff_pdf(signoff)
+            
+            # Get contractor representative email
+            to_email = signoff.contractor.ehs_email or signoff.contractor.email
+            
+            if not to_email:
+                logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
+                return False
+            
+            # Get CC email
+            if not cc_email:
+                cc_email = signoff.contractor.email or signoff.contractor.ehs_email
+            
+            context = {
+                'signoff': signoff,
+                'contractor': signoff.contractor,
+                'work_order': signoff.work_order,
+                'session': signoff.session,
+                'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
+            }
+            
+            subject = f'⏰ Reminder: Training Sign-Off Pending - {signoff.signoff_number}'
+            
+            plain_message = f"""
+Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
+
+This is a reminder that training sign-off is pending for the following:
+
+SIGN-OFF DETAILS
+--------------------------------------------------
+Sign-Off Number   : {signoff.signoff_number}
+Contractor        : {signoff.contractor.contractor_name}
+Work Order        : {signoff.work_order.work_order_number if signoff.work_order else 'N/A'}
+Training Session  : {signoff.session.session_no if signoff.session else 'N/A'}
+
+Please review the attached PDF and complete the sign-off process.
+
+Regards,
+EHS-360 Team
+"""
+            
+            from django.core.mail import EmailMultiAlternatives
+            
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+                cc=[cc_email] if cc_email and cc_email != to_email else [],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+            
+            email.attach(
+                f'Training_SignOff_{signoff.signoff_number}.pdf',
+                pdf_buffer.getvalue(),
+                'application/pdf'
+            )
+            
+            email.send(fail_silently=False)
+            
+            logger.info(f"Training sign-off reminder email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Error sending training sign-off reminder email: {str(e)}")
+            return False
     @staticmethod
     def _resolve_email_template(notification_type, module):
         template = {
