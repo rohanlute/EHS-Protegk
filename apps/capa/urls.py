@@ -28,4 +28,5 @@ urlpatterns = [
     path("<int:pk>/comments/add/", views.CAPACommentCreateView.as_view(), name="comment_add"),
     path("<int:pk>/attachments/add/", views.CAPAAttachmentCreateView.as_view(), name="attachment_add"),
     path("actions/<int:pk>/", views.CAPAActionDetailView.as_view(), name="action_detail"),
+    path("<int:pk>/pdf/", views.CAPAPDFExportView.as_view(), name="pdf_export"),
 ]

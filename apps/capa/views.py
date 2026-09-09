@@ -17,6 +17,7 @@ from apps.capa.models import *
 from apps.capa.services import CAPAService
 from apps.hazards.models import Hazard
 from apps.organizations.models import Location, Plant, SubLocation, Zone
+from .utils import generate_capa_pdf
 
 
 def _accessible_plants(user):
@@ -911,3 +912,9 @@ class CAPASourceCreateFromHazardView(LoginRequiredMixin, PermissionRequiredMixin
         capa = CAPAService.create_from_hazard(user=request.user, hazard=hazard, status=CAPA.Status.OPEN)
         messages.success(request, "CAPA created from hazard.")
         return redirect(reverse("capa:detail", kwargs={"pk": capa.pk}))
+
+class CAPAPDFExportView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "CAPA_VIEW"
+    def get(self, request, *args, **kwargs):
+        capa = get_object_or_404(_capa_queryset_for_user(request.user), pk=kwargs["pk"])
+        return generate_capa_pdf(capa)

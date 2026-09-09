@@ -50,6 +50,8 @@ class CAPA(models.Model):
         URGENT = "URGENT", "Urgent"
 
     capa_number = models.CharField(max_length=30, unique=True, editable=False, db_index=True)
+    doc_no = models.CharField(max_length=50, blank=True, editable=False)
+    rev_info = models.CharField(max_length=100, blank=True, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
@@ -120,6 +122,12 @@ class CAPA(models.Model):
                 if last and last.capa_number.rsplit("-", 1)[-1].isdigit():
                     next_num = int(last.capa_number.rsplit("-", 1)[-1]) + 1
                 self.capa_number = f"{prefix}-{next_num:05d}"
+
+        if not self.doc_no:
+            self.doc_no = f"DOC-{self.capa_number}"
+        revision_number = self.capa_number.rsplit("-", 1)[-1]
+        if not self.rev_info or self.rev_info.startswith("REV NO: 00"):
+            self.rev_info = f"REV NO: {revision_number} & DATE: {timezone.localdate():%d-%m-%Y}"
 
         if self.status == self.Status.CLOSED and not self.closed_date:
             self.closed_date = timezone.now()
