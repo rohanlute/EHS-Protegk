@@ -6,6 +6,14 @@ from apps.contractor.views import (
     # ... other imports ...
     ContractorPerformanceDashboardView,
     ContractorPerformanceDetailView,
+    ContractorReportsView,
+    GenerateContractorOverallReportView,
+    ContractorOverviewDashboardView,
+     ContractorPerformanceDashboardView,
+    ContractorPerformanceDetailView,
+    ContractorReportsView,
+    GenerateContractorOverallReportView,
+    ContractorOverviewDashboardView,
 )
 
 app_name = 'contractor'
@@ -99,5 +107,18 @@ urlpatterns = [
     path('api/workorder/<int:pk>/signoff-details/', views.GetWorkOrderSignoffDetailsView.as_view(), name='api_workorder_signoff_details'),
     path('api/training-session/<int:pk>/details/', views.GetTrainingSessionDetailsView.as_view(), name='api_training_session_details'),
     path('performance/', ContractorPerformanceDashboardView.as_view(), name='performance_dashboard'),
-    path('performance/<int:pk>/', ContractorPerformanceDetailView.as_view(), name='performance_detail'),    
+    path('performance/<int:pk>/', ContractorPerformanceDetailView.as_view(), name='performance_detail'),
+    # apps/contractor/urls.py
+
+    # Reports URLs
+    path('reports/', ContractorReportsView.as_view(), name='reports_list'),
+    path('reports/generate/', GenerateContractorOverallReportView.as_view(), name='generate_report'),
+    path('reports/dashboard/', ContractorOverviewDashboardView.as_view(), name='overview_dashboard'),
+    path('pdf/contractor/<int:pk>/', views.contractor_pdf_view, name='contractor_pdf'),
+    path('pdf/workorder/<int:pk>/', views.work_order_pdf_view, name='workorder_pdf'),
+    path('pdf/training-signoff/<int:pk>/', views.training_signoff_pdf_view, name='training_signoff_pdf'),
+    path('pdf/inspection/<int:pk>/', views.inspection_pdf_view, name='inspection_pdf'),
+    path('pdf/logbook/<int:year>/', views.contractor_logbook_pdf_view, name='contractor_logbook_pdf'),
+    path('pdf/performance/<int:pk>/', views.performance_pdf_view, name='performance_pdf'),
+    path('pdf/onboarding/<int:pk>/', views.onboarding_pdf_view, name='onboarding_pdf'),
 ]

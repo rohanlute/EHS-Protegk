@@ -136,13 +136,13 @@
     }
 
     /* ========================================================== */
-    /* SCORE CARDS */
+    /* SCORE CARDS — 4 in one row on desktop */
     /* ========================================================== */
     .score-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 14px;
-        margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
     }
 
     .score-item {
@@ -152,6 +152,7 @@
         padding: 16px 20px;
         text-align: center;
         transition: all 0.3s ease;
+        min-width: 0;
     }
 
     .score-item:hover {
@@ -164,6 +165,7 @@
         font-weight: 700;
         color: #0f172a;
         line-height: 1.2;
+        word-break: break-word;
     }
 
     .score-item .score-label {
@@ -241,12 +243,17 @@
     /* TABS */
     /* ========================================================== */
     .tabs-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-bottom: 24px;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 0;
+    display: flex;
+    flex-wrap: nowrap;          /* was: wrap */
+    gap: 0;                     /* was: 4px */
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+    overflow-x: auto;           /* graceful fallback on very narrow screens */
+    scrollbar-width: none;      /* hide scrollbar in Firefox */
+    }
+    .tabs-container::-webkit-scrollbar {
+        display: none;              /* hide scrollbar in Chrome/Safari */
     }
 
     .tab-btn {
@@ -383,36 +390,14 @@
     }
 
     /* ========================================================== */
-    /* HISTORY TABLE */
-    /* ========================================================== */
-    .history-table {
-        font-size: 13px;
-        width: 100%;
-    }
-
-    .history-table thead th {
-        background: #f8fafc;
-        color: #334155;
-        font-weight: 600;
-        padding: 10px 14px;
-        border-bottom: 2px solid #e2e8f0;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .history-table tbody td {
-        padding: 10px 14px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .history-table tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    /* ========================================================== */
     /* RESPONSIVE */
     /* ========================================================== */
+    @media (max-width: 992px) {
+        .score-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @media (max-width: 768px) {
         .page-header-custom {
             flex-direction: column;
@@ -421,6 +406,7 @@
 
         .score-row {
             grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
         .tabs-container {
@@ -547,7 +533,7 @@
     <!-- TAB CONTENT: OVERALL PERFORMANCE -->
     <!-- ========================================================== -->
     <div id="tab-overall" class="tab-content active">
-        <!-- Score Cards -->
+        <!-- Score Cards - 4 in one row -->
         <div class="score-row">
             <div class="score-item teal">
                 <span class="score-icon"><i class="fas fa-chart-line"></i></span>
@@ -568,6 +554,11 @@
                 <span class="score-icon"><i class="fas fa-file-alt"></i></span>
                 <div class="score-number">{{ latest_onboarding_score|floatformat:1 }}%</div>
                 <div class="score-label">Onboarding Compliance</div>
+            </div>
+            <div class="score-item purple">
+                <span class="score-icon"><i class="fas fa-file-contract"></i></span>
+                <div class="score-number">{{ latest_work_order_score|floatformat:1 }}%</div>
+                <div class="score-label">Work Order Completion</div>
             </div>
         </div>
 
@@ -599,7 +590,7 @@
             </div>
             <div class="info-badge">
                 <span class="label">Work Orders:</span>
-                <span class="value">{{ latest_work_order_score|floatformat:1 }}%</span>
+                <span class="value">{{ work_orders_count|default:0 }}</span>
             </div>
             <div class="info-badge">
                 <span class="label">Inspections:</span>
@@ -817,73 +808,6 @@
         </div>
     </div>
 
-    <!-- ========================================================== -->
-    <!-- PERFORMANCE HISTORY -->
-    <!-- ========================================================== -->
-    <div class="detail-card">
-        <div class="card-header-custom">
-            <div class="section-icon"><i class="fas fa-history"></i></div>
-            <div class="section-title">Performance History</div>
-        </div>
-        <div class="card-body">
-            {% if metrics %}
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Period</th>
-                        <th>Overall Score</th>
-                        <th>Rating</th>
-                        <th>Inspection</th>
-                        <th>Training</th>
-                        <th>Onboarding</th>
-                        <th>Work Order</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for metric in metrics %}
-                    <tr>
-                        <td>
-                            <strong>{{ metric.period_month }}/{{ metric.period_year }}</strong>
-                            <br>
-                            <span style="font-size: 11px; color: #94a3b8;">{{ metric.get_period_type_display }}</span>
-                        </td>
-                        <td>
-                            <span style="font-weight: 700; color: #0f172a;">
-                                {{ metric.overall_performance_score|floatformat:1 }}%
-                            </span>
-                        </td>
-                        <td>
-                            <span class="rating-badge 
-                                {% if metric.rating == 'Excellent' %}rating-excellent
-                                {% elif metric.rating == 'Good' %}rating-good
-                                {% elif metric.rating == 'Needs Improvement' %}rating-needs-improvement
-                                {% else %}rating-poor{% endif %}"
-                                style="font-size: 11px; padding: 2px 12px;">
-                                {{ metric.rating }}
-                            </span>
-                        </td>
-                        <td>{{ metric.inspection_compliance_score|floatformat:1 }}%</td>
-                        <td>{{ metric.training_compliance_score|floatformat:1 }}%</td>
-                        <td>{{ metric.document_compliance_score|floatformat:1 }}%</td>
-                        <td>{{ metric.work_order_completion_score|floatformat:1 }}%</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div style="text-align: center; padding: 30px 20px;">
-                <div style="font-size: 40px; color: #d1d5db; margin-bottom: 12px;">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <h5 style="color: #334155; margin-bottom: 4px;">No History Available</h5>
-                <p style="color: #94a3b8; font-size: 13px;">
-                    Performance metrics have not been calculated yet.
-                </p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
 </div>
 
 {% endblock %}
@@ -894,23 +818,19 @@
     // TAB SWITCHING
     // ==========================================================
     function switchTab(tabId) {
-        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(function(content) {
             content.classList.remove('active');
         });
-        
-        // Remove active class from all tab buttons
+
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
             btn.classList.remove('active');
         });
-        
-        // Show the selected tab content
+
         var selectedTab = document.getElementById('tab-' + tabId);
         if (selectedTab) {
             selectedTab.classList.add('active');
         }
-        
-        // Add active class to the clicked tab button
+
         var buttons = document.querySelectorAll('.tab-btn');
         buttons.forEach(function(btn) {
             if (btn.getAttribute('data-tab') === tabId) {
@@ -919,13 +839,8 @@
         });
     }
 
-    // ==========================================================
-    // INITIALIZE ON LOAD
-    // ==========================================================
     document.addEventListener('DOMContentLoaded', function() {
-        // Set default active tab
-        var defaultTab = 'overall';
-        switchTab(defaultTab);
+        switchTab('overall');
     });
 </script>
 {% endblock %}
