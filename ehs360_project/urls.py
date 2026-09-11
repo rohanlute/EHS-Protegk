@@ -46,6 +46,7 @@ urlpatterns = [
     path('contractor/', include('apps.contractor.urls', namespace='contractor')),
     path('benchmarking/', include('apps.benchmarking.urls')),
     #path('observations/', include('apps.observations.urls')),
+    path("reports/", include("apps.reports.urls", namespace="reports")),
 
     # Redirect root to login
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),
