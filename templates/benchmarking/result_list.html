@@ -1,0 +1,655 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Site Comparison{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="#">Site Benchmarking</a>
+</li>
+<li class="breadcrumb-item active">Site Comparison</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ========================================================== */
+  /* SITE COMPARISON - Premium Teal Theme                        */
+  /* ========================================================== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* PAGE CONTAINER                                              */
+  /* ========================================================== */
+  .benchmark-page {
+    max-width: 1200px;
+    margin: 0 auto 18px;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .benchmark-header {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 14px 20px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .benchmark-header .header-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .benchmark-header .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .benchmark-header h1 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .benchmark-header .subtitle {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .bm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 7px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+    min-height: 36px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .bm-btn:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    text-decoration: none;
+  }
+
+  .bm-btn i {
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .bm-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .bm-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .bm-card .bm-card-header {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border-bottom: none;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title i {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+  }
+
+  .bm-card .bm-card-header .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.72rem;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.82rem;
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* RANK & SCORE PILLS                                         */
+  /* ========================================================== */
+  .rank-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+  }
+
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+  }
+
+  /* ========================================================== */
+  /* TREND INDICATORS                                           */
+  /* ========================================================== */
+  .trend-up {
+    color: var(--secondary-green);
+    font-weight: 600;
+  }
+
+  .trend-down {
+    color: var(--secondary-red);
+    font-weight: 600;
+  }
+
+  .trend-stable {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .trend-up::before {
+    content: "▲ ";
+    font-size: 0.65rem;
+  }
+
+  .trend-down::before {
+    content: "▼ ";
+    font-size: 0.65rem;
+  }
+
+  .trend-stable::before {
+    content: "● ";
+    font-size: 0.65rem;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .empty-state i {
+    font-size: 2.5rem;
+    color: var(--primary-teal-light);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .empty-state strong {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+  }
+
+  /* ========================================================== */
+  /* DATA NOTE                                                  */
+  /* ========================================================== */
+  .data-note {
+    background: var(--primary-teal-light);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .data-note i {
+    color: var(--primary-teal);
+    margin-right: 4px;
+  }
+
+  .data-note strong {
+    color: var(--text-primary);
+  }
+
+  /* ========================================================== */
+  /* UTILITY                                                    */
+  /* ========================================================== */
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  .small {
+    font-size: 0.72rem;
+  }
+
+  .mr-1 {
+    margin-right: 4px !important;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .benchmark-header {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .benchmark-header h1 {
+      font-size: 0.95rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.72rem;
+    }
+
+    .bm-btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 0.78rem;
+      min-height: 34px;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 8px 14px;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.82rem;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 4px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.75rem;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .data-note {
+      font-size: 0.72rem;
+      padding: 10px 14px;
+    }
+
+    .empty-state {
+      padding: 30px 16px;
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+    }
+
+    .empty-state strong {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .benchmark-header {
+      padding: 10px 14px;
+    }
+
+    .benchmark-header .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .benchmark-header h1 {
+      font-size: 0.85rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.68rem;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 6px 12px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.78rem;
+    }
+
+    .bm-card .bm-card-header .text-muted {
+      font-size: 0.65rem;
+    }
+
+    .table tbody td {
+      padding: 4px 8px;
+      font-size: 0.7rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.58rem;
+    }
+
+    .rank-pill {
+      min-width: 30px;
+      height: 22px;
+      font-size: 0.62rem;
+      padding: 0 8px;
+    }
+
+    .score-pill {
+      font-size: 0.65rem;
+      padding: 2px 10px;
+    }
+
+    .data-note {
+      font-size: 0.68rem;
+      padding: 8px 12px;
+    }
+
+    .bm-btn {
+      font-size: 0.75rem;
+      padding: 5px 14px;
+      min-height: 32px;
+    }
+
+    .empty-state i {
+      font-size: 1.8rem;
+    }
+
+    .empty-state strong {
+      font-size: 0.8rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="benchmark-page">
+
+  <!-- Page Header -->
+  <div class="benchmark-header">
+    <div class="header-main">
+      <div class="header-icon">
+        <i class="fas fa-ranking-star"></i>
+      </div>
+      <div>
+        <h1>Site Performance Comparison</h1>
+        <p class="subtitle">Only sites within your assigned access scope are shown.</p>
+      </div>
+    </div>
+    <a class="bm-btn" href="{% url 'benchmarking:export_excel' %}">
+      <i class="fas fa-download mr-1"></i> Export
+    </a>
+  </div>
+
+  <!-- Main Table Card -->
+  <div class="bm-card">
+    <div class="bm-card-header">
+      <h2 class="bm-card-title">
+        <i class="fas fa-list"></i> Calculated Benchmark Results
+      </h2>
+      <span class="text-muted small">Scores are out of 100</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Rank</th>
+            <th>Plant</th>
+            <th>Score</th>
+            <th>Performance Level</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in results %}
+          <tr>
+            <td data-label="Period">{{ result.period.end_date|date:'d M Y' }}</td>
+            <td data-label="Rank">
+              <span class="rank-pill">#{{ result.rank|default:'—' }}</span>
+            </td>
+            <td data-label="Plant">
+              <strong>{{ result.plant.name }}</strong>
+              <br>
+              <small class="text-muted">{{ result.plant.code }}</small>
+            </td>
+            <td data-label="Score">
+              <span class="score-pill">{{ result.overall_score }}</span>
+            </td>
+            <td data-label="Performance Level">
+              {{ result.performance_level.name|default:'Not configured' }}
+            </td>
+            <td data-label="Trend" class="trend-{{ result.trend|lower }}">
+              {{ result.get_trend_display }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="fas fa-chart-line"></i>
+                <strong>No accessible calculated results.</strong>
+                Calculate a benchmark period to populate this view.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Data Note -->
+  <div class="data-note">
+    <i class="fas fa-lock mr-1"></i>
+    <strong>Access note:</strong>
+    site results are filtered server-side using your primary and assigned plants;
+    changing a URL cannot reveal another site's results.
+  </div>
+
+</div>
+{% endblock %}

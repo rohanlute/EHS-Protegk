@@ -44,6 +44,7 @@ urlpatterns = [
     path('PPE/',include('apps.PPE.urls')),
     path('capa/',include('apps.capa.urls')),
     path('contractor/', include('apps.contractor.urls', namespace='contractor')),
+    path('benchmarking/', include('apps.benchmarking.urls')),
     #path('observations/', include('apps.observations.urls')),
 
     # Redirect root to login

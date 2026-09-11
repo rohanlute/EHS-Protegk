@@ -1,0 +1,97 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Performance Ranking{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:dashboard' %}">Site / Plant Benchmarking</a></li>
+<li class="breadcrumb-item active">Performance Ranking</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ranking-page { max-width: 1200px; margin: 0 auto 24px; }
+  .ranking-header, .ranking-card, .ranking-stat {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  }
+  .ranking-header { padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .ranking-title { display: flex; align-items: center; gap: 12px; }
+  .ranking-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; background: #ecfdf5; color: #047857; font-size: 18px; }
+  .ranking-header h1 { margin: 0; color: #0f172a; font-size: 1.15rem; font-weight: 750; }
+  .ranking-header p { margin: 4px 0 0; color: #64748b; font-size: .8rem; }
+  .ranking-date { color: #047857; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+  .ranking-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .ranking-stat { padding: 14px 16px; }
+  .ranking-stat-label { color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .ranking-stat-value { color: #0f172a; font-size: 1.45rem; font-weight: 800; margin-top: 4px; }
+  .ranking-card { overflow: hidden; }
+  .ranking-card-header { background: linear-gradient(135deg, #047857, #065f46); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .ranking-card-header h2 { margin: 0; font-size: .92rem; }
+  .ranking-card-header span { color: rgba(255,255,255,.8); font-size: .72rem; }
+  .table { margin: 0; font-size: .82rem; }
+  .table th { background: #ecfdf5; color: #334155; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; border-bottom: 2px solid #10b981; white-space: nowrap; }
+  .table td, .table th { padding: 11px 14px; vertical-align: middle; }
+  .table td { color: #334155; border-color: #e2e8f0; }
+  .rank-badge { display: inline-grid; place-items: center; min-width: 34px; height: 26px; padding: 0 8px; border-radius: 14px; background: #d1fae5; color: #047857; font-weight: 800; }
+  .score { color: #047857; font-weight: 800; }
+  .trend-improving { color: #16a34a; font-weight: 700; }
+  .trend-declining { color: #dc2626; font-weight: 700; }
+  .trend-stable { color: #64748b; font-weight: 700; }
+  .empty-ranking { padding: 42px 20px; text-align: center; color: #64748b; }
+  .empty-ranking i { display: block; margin-bottom: 10px; color: #10b981; font-size: 2rem; }
+  @media (max-width: 700px) {
+    .ranking-header { align-items: flex-start; flex-direction: column; padding: 15px; }
+    .ranking-stats { grid-template-columns: 1fr; }
+    .table thead { display: none; }
+    .table tbody tr { display: block; border-bottom: 1px solid #e2e8f0; padding: 6px 0; }
+    .table tbody td { display: flex; justify-content: space-between; gap: 12px; border: 0; padding: 6px 12px; }
+    .table tbody td::before { content: attr(data-label); color: #0f172a; font-size: .66rem; font-weight: 700; text-transform: uppercase; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ranking-page">
+  <section class="ranking-header">
+    <div class="ranking-title">
+      <div class="ranking-icon"><i class="fas fa-ranking-star"></i></div>
+      <div>
+        <h1>Performance Ranking</h1>
+        <p>Plants ranked by their latest benchmark score within your access scope.</p>
+      </div>
+    </div>
+    {% if latest_date %}<div class="ranking-date">Period ending {{ latest_date|date:'d M Y' }}</div>{% endif %}
+  </section>
+
+  <section class="ranking-stats">
+    <div class="ranking-stat"><div class="ranking-stat-label">Ranked plants</div><div class="ranking-stat-value">{{ site_count }}</div></div>
+    <div class="ranking-stat"><div class="ranking-stat-label">Average score</div><div class="ranking-stat-value">{% if average_score %}{{ average_score|floatformat:1 }}{% else %}--{% endif %}</div></div>
+    <div class="ranking-stat"><div class="ranking-stat-label">Top performer</div><div class="ranking-stat-value">{% if top_result %}{{ top_result.plant.name }}{% else %}--{% endif %}</div></div>
+  </section>
+
+  <section class="ranking-card">
+    <div class="ranking-card-header"><h2><i class="fas fa-trophy mr-1"></i> Latest Performance Ranking</h2><span>Scores are out of 100</span></div>
+    {% if results %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead><tr><th>Rank</th><th>Plant</th><th>Score</th><th>Performance level</th><th>Trend</th></tr></thead>
+        <tbody>
+          {% for result in results %}
+          <tr>
+            <td data-label="Rank"><span class="rank-badge">#{{ result.rank|default:'--' }}</span></td>
+            <td data-label="Plant"><strong>{{ result.plant.name }}</strong><br><small class="text-muted">{{ result.plant.code }}</small></td>
+            <td data-label="Score"><span class="score">{{ result.overall_score|floatformat:1 }}</span></td>
+            <td data-label="Performance level">{{ result.performance_level.name|default:'Not assessed' }}</td>
+            <td data-label="Trend" class="trend-{{ result.trend|lower }}">{{ result.get_trend_display }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-ranking"><i class="fas fa-chart-column"></i><strong>No ranking data is available.</strong><br>Calculate a benchmark period to create performance rankings.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
