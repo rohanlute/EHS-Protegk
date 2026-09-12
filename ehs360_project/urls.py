@@ -45,7 +45,10 @@ urlpatterns = [
     path('capa/',include('apps.capa.urls')),
     path('contractor/', include('apps.contractor.urls', namespace='contractor')),
     path('benchmarking/', include('apps.benchmarking.urls')),
+    path('hira/', include('apps.hira.urls')),
     #path('observations/', include('apps.observations.urls')),
+    path("reports/", include("apps.reports.urls", namespace="reports")),
+    path("ergonomics/", include("apps.ergonomics.urls", namespace="ergonomics")),
 
     # Redirect root to login
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),

@@ -1827,3 +1827,145 @@ EHS Management System
             'capa': capa,
             'capa_url': capa_url,
         }
+        # ---------------------------------------------------------------------------
+# Add to apps/notifications/services.py
+# ---------------------------------------------------------------------------
+
+# 1. In NotificationService.notify(), inside the context-building if/elif
+#    chain (right after the `elif notification_type.startswith('CAPA_') ...`
+#    branch), add:
+#
+#     elif notification_type.startswith('ERGONOMIC_'):
+#         context = NotificationService._build_ergonomic_context(content_object, notification_type)
+#
+# 2. `notify()` resolves plant/location/zone generically for any object with
+#    those attributes (the final `else` branch already does
+#    `getattr(content_object, 'plant', None)` etc.) — ErgonomicAssessment,
+#    ErgonomicCorrectiveAction and MSDDiscomfort don't have `plant` directly
+#    in all cases (MSDDiscomfort only has `department`), so add one more
+#    branch near the top of notify() alongside the existing
+#    hasattr(content_object, 'incident') chain:
+#
+#     elif hasattr(content_object, 'assessment') and content_object.assessment:
+#         # ErgonomicCorrectiveAction / ErgonomicReassessment
+#         plant = content_object.assessment.plant
+#         location = getattr(content_object.assessment, 'location', None)
+#         zone = getattr(content_object.assessment, 'zone', None)
+#
+# 3. Add this method next to _build_capa_context:
+
+    @staticmethod
+    def _build_ergonomic_context(content_object, notification_type):
+        from apps.ergonomics.models import ErgonomicAssessment, ErgonomicCorrectiveAction, MSDDiscomfort
+
+        if isinstance(content_object, ErgonomicAssessment):
+            assessment = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[assessment.id])}"
+            risk_label = assessment.get_risk_level_display() if assessment.risk_level else "N/A"
+            title = f"Ergonomic Risk: {risk_label} | {assessment.assessment_id}"
+            subject = f"⚠️ Ergonomic Assessment - {risk_label} Risk - {assessment.assessment_id}"
+            message = f"""
+Hello,
+
+An ergonomic assessment has returned a {risk_label} risk result.
+
+ASSESSMENT DETAILS
+--------------------------------------------------
+Assessment ID   : {assessment.assessment_id}
+Plant           : {assessment.plant.name}
+Department      : {assessment.department.name}
+Job / Task      : {assessment.job_role} / {assessment.task}
+Method          : {assessment.assessment_method.name}
+Score           : {assessment.score}
+Risk Level      : {risk_label}
+Recommended Action: {assessment.recommended_action}
+
+Please review and initiate corrective action if not already assigned.
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "assessment": assessment, "detail_url": detail_url}
+
+        if isinstance(content_object, ErgonomicCorrectiveAction):
+            action = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[action.assessment_id])}"
+            label = "Overdue" if notification_type == "ERGONOMIC_ACTION_OVERDUE" else "Assigned"
+            title = f"Ergonomic Action {label} | {action.action_id}"
+            subject = f"Ergonomic Corrective Action {label} - {action.action_id}"
+            message = f"""
+Hello,
+
+An ergonomic corrective action requires your attention.
+
+ACTION DETAILS
+--------------------------------------------------
+Action ID        : {action.action_id}
+Assessment       : {action.assessment.assessment_id}
+Description      : {action.action_description}
+Responsible      : {action.responsible_person.get_full_name()}
+Priority         : {action.get_priority_display()}
+Target Date      : {action.target_date}
+Status           : {action.get_status_display()}
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "action": action, "detail_url": detail_url}
+
+        if isinstance(content_object, MSDDiscomfort):
+            case = content_object
+            title = f"MSD/Discomfort Reported | {case.worker.get_full_name() if case.worker else 'Worker'}"
+            subject = f"MSD/Discomfort Report - {case.get_body_part_display()}"
+            message = f"""
+Hello,
+
+A musculoskeletal discomfort case has been reported and requires review.
+
+CASE DETAILS
+--------------------------------------------------
+Worker          : {case.worker.get_full_name() if case.worker else 'N/A'}
+Department      : {case.department.name if case.department else 'N/A'}
+Body Part       : {case.get_body_part_display()}
+Severity        : {case.get_severity_display()}
+Date Reported   : {case.date_reported}
+Medical Referral: {'Yes' if case.medical_referral else 'No'}
+
+Please review and link to an ergonomic assessment if warranted.
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "msd_case": case}
+
+        # ERGONOMIC_REASSESSMENT_INEFFECTIVE — content_object is ErgonomicReassessment
+        reassessment = content_object
+        detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[reassessment.assessment_id])}"
+        title = f"Ergonomic Control Not Effective | {reassessment.assessment.assessment_id}"
+        subject = f"Control Not Effective - Additional Action Needed - {reassessment.assessment.assessment_id}"
+        message = f"""
+Hello,
+
+A reassessment found the implemented ergonomic control was NOT EFFECTIVE.
+
+REASSESSMENT DETAILS
+--------------------------------------------------
+Assessment      : {reassessment.assessment.assessment_id}
+Previous Score  : {reassessment.previous_score} ({reassessment.previous_risk})
+New Score       : {reassessment.new_score} ({reassessment.new_risk})
+Residual Risk   : {reassessment.residual_risk}
+
+An additional corrective action is required.
+
+Regards,
+EHS Management System
+"""
+        return {"title": title, "subject": subject, "message": message, "reassessment": reassessment, "detail_url": detail_url}
+
+# 4. NotificationMaster rows: an admin configures which Role receives each
+#    of these event types via the existing "Notifications Master Create"
+#    screen — no schema change needed there since notification_event is
+#    free-text. Event codes to configure:
+#      ERGONOMIC_HIGH_RISK, ERGONOMIC_VERY_HIGH_RISK, ERGONOMIC_ACTION_ASSIGNED,
+#      ERGONOMIC_ACTION_OVERDUE, ERGONOMIC_REASSESSMENT_INEFFECTIVE,
+#      ERGONOMIC_MSD_REPORTED

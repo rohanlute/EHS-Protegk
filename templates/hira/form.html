@@ -1,0 +1,732 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} HIRA | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'hira:register' %}">HIRA Register</a></li>
+<li class="breadcrumb-item active">{{ action }} HIRA</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --bg-subtle: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --info-blue: #0ea5e9;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .alert i {
+    margin-top: 2px;
+    font-size: 14px;
+  }
+
+  .alert-info {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.25);
+    color: #075985;
+  }
+
+  .alert-info i { color: var(--info-blue); }
+
+  .alert-success {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #166534;
+  }
+
+  .alert-success i { color: var(--success-green); }
+
+  .alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #991b1b;
+  }
+
+  .alert-danger i { color: var(--danger-red); }
+
+  .alert a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    margin-left: 6px;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ehs-card .card-header strong i {
+    color: var(--primary-teal);
+  }
+
+  .ehs-card .card-body {
+    padding: 24px;
+  }
+
+  .ehs-card .card-footer {
+    background: var(--bg-subtle);
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                               */
+  /* ========================================================== */
+  .ehs-card label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+
+  .ehs-card input[type="text"],
+  .ehs-card input[type="number"],
+  .ehs-card input[type="date"],
+  .ehs-card input[type="email"],
+  .ehs-card input[type="url"],
+  .ehs-card select,
+  .ehs-card textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .ehs-card input:focus,
+  .ehs-card select:focus,
+  .ehs-card textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .ehs-card textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .ehs-card input[type="checkbox"] {
+    width: auto;
+    margin-right: 6px;
+    accent-color: var(--primary-teal);
+  }
+
+  .ehs-card .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    font-size: 11px;
+    color: var(--danger-red);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* HAZARD ROW (accordion-style block)                          */
+  /* ========================================================== */
+  .hazard-form {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .hazard-form:hover {
+    border-color: rgba(13, 148, 136, 0.3);
+    box-shadow: 0 2px 12px rgba(13, 148, 136, 0.08);
+  }
+
+  .hazard-form .hira-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-teal);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .hazard-form .hira-section-title::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    background: var(--primary-teal);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .hazard-form .delete-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--danger-red);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(220, 38, 38, 0.08);
+    transition: all 0.2s ease;
+  }
+
+  .hazard-form .delete-label:hover {
+    background: rgba(220, 38, 38, 0.15);
+  }
+
+  /* ========================================================== */
+  /* RISK CALC PILLS                                             */
+  /* ========================================================== */
+  .calc-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1.5px solid rgba(13, 148, 136, 0.2);
+    white-space: nowrap;
+    width: 100%;
+  }
+
+  .calc-pill.risk-low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .calc-pill.risk-medium {
+    background: rgba(217, 119, 6, 0.1);
+    color: #92400e;
+    border-color: rgba(217, 119, 6, 0.3);
+  }
+
+  .calc-pill.risk-high {
+    background: rgba(234, 88, 12, 0.1);
+    color: #9a3412;
+    border-color: rgba(234, 88, 12, 0.3);
+  }
+
+  .calc-pill.risk-critical {
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
+    border-color: rgba(220, 38, 38, 0.3);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* SECTION DIVIDER INSIDE HAZARD ROW                           */
+  /* ========================================================== */
+  .hazard-form .subsection-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 10px 0;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hazard-form .subsection-label i {
+    color: var(--primary-teal);
+    font-size: 12px;
+  }
+
+  .hazard-form .subsection-label:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ehs-card .card-body { padding: 16px; }
+    .ehs-card .card-header { padding: 12px 16px; }
+    .ehs-card .card-footer { padding: 12px 16px; }
+    .hazard-form { padding: 14px; }
+    .hira-header { flex-direction: column; align-items: stretch; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <h1><i class="fas fa-clipboard-list" style="color: var(--primary-teal); margin-right: 10px;"></i>{{ action }} HIRA</h1>
+      <p>One assessment can contain multiple activity and hazard rows.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SOURCE INFO                                                  -->
+  <!-- ============================================================ -->
+  {% if source_info %}
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    <div>
+      <strong>Source:</strong> {{ source_info.module_name }} | {{ source_info.record_label }}
+      {% if source_info.status %}| Current status: {{ source_info.status }}{% endif %}
+      {% if source_info.url %}<a href="{{ source_info.url }}">View Source Record</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if master_suggestions %}
+  <div class="alert alert-success">
+    <i class="fas fa-check-circle"></i>
+    <div>
+      <strong>Master suggestions loaded:</strong>
+      {% for rule in master_suggestions %}
+        {{ rule.activity }} / {{ rule.hazard_category }}{% if not forloop.last %}; {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <form method="post" id="hiraForm">
+    {% csrf_token %}
+
+    <!-- ========================================================== -->
+    <!-- SECTION A - BASIC INFORMATION                              -->
+    <!-- ========================================================== -->
+    <div class="ehs-card">
+      <div class="card-header">
+        <strong><i class="fas fa-file-alt"></i> Section A — Basic Information</strong>
+      </div>
+      <div class="card-body">
+        {% if form.errors or hazard_formset.errors %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>Please correct the highlighted fields before saving.</div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+          {% for field in form %}
+          <div class="col-md-4 mb-3">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SECTIONS B-F - HAZARD ROWS                                 -->
+    <!-- ========================================================== -->
+    <div class="ehs-card">
+      <div class="card-header">
+        <strong><i class="fas fa-exclamation-triangle"></i> Sections B–F — Activity, Hazard, Controls, Initial & Residual Risk</strong>
+        <button type="button" class="btn btn-sm btn-primary" id="addHazard">
+          <i class="fas fa-plus"></i> Add Hazard
+        </button>
+      </div>
+      <div class="card-body">
+        {{ hazard_formset.management_form }}
+        <div id="hazardForms">
+          {% for hazard_form in hazard_formset %}
+          <div class="hazard-form">
+            {% for hidden in hazard_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+            <!-- Row header -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="hira-section-title mb-0">Hazard Row {{ forloop.counter }}</div>
+              {% if hazard_form.DELETE %}
+              <label class="delete-label mb-0">
+                {{ hazard_form.DELETE }} Delete this row
+              </label>
+              {% endif %}
+            </div>
+
+            <!-- Activity & Hazard identification -->
+            <div class="subsection-label"><i class="fas fa-search"></i> Hazard Identification</div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label>Activity</label>
+                {{ hazard_form.activity }}{{ hazard_form.activity.errors }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label>Hazard Category</label>
+                {{ hazard_form.hazard_category }}{{ hazard_form.hazard_category.errors }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label>Persons Exposed</label>
+                {{ hazard_form.persons_exposed }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Hazard</label>
+                {{ hazard_form.hazard }}{{ hazard_form.hazard.errors }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Potential Consequence</label>
+                {{ hazard_form.potential_consequence }}{{ hazard_form.potential_consequence.errors }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Unsafe Act</label>
+                {{ hazard_form.unsafe_act }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Unsafe Condition</label>
+                {{ hazard_form.unsafe_condition }}
+              </div>
+            </div>
+
+            <!-- Existing controls & initial risk -->
+            <div class="subsection-label"><i class="fas fa-shield-alt"></i> Existing Controls & Initial Risk</div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label>Existing Controls</label>
+                {{ hazard_form.existing_controls }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Control Hierarchy</label>
+                {{ hazard_form.control_hierarchy }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Likelihood</label>
+                {{ hazard_form.likelihood }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Severity</label>
+                {{ hazard_form.severity }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Initial Risk</label>
+                <div class="calc-pill js-initial">0</div>
+              </div>
+            </div>
+
+            <!-- Additional controls & residual risk -->
+            <div class="subsection-label"><i class="fas fa-plus-circle"></i> Additional Controls & Residual Risk</div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label>Additional Controls</label>
+                {{ hazard_form.additional_controls }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Additional Control Hierarchy</label>
+                {{ hazard_form.additional_control_hierarchy }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Residual L</label>
+                {{ hazard_form.residual_likelihood }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Residual S</label>
+                {{ hazard_form.residual_severity }}
+              </div>
+              <div class="col-md-2 mb-3">
+                <label>Residual Risk</label>
+                <div class="calc-pill js-residual">0</div>
+              </div>
+            </div>
+
+            <!-- Action & follow-up -->
+            <div class="subsection-label"><i class="fas fa-tasks"></i> Action & Follow-up</div>
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label>Action Required</label>
+                {{ hazard_form.action_required }}
+              </div>
+              <div class="col-md-3 mb-3">
+                <label>Responsible Person</label>
+                {{ hazard_form.responsible_person }}
+              </div>
+              <div class="col-md-3 mb-3">
+                <label>Target Date</label>
+                {{ hazard_form.target_date }}
+              </div>
+              <div class="col-md-3 mb-3">
+                <label>Related Training Session</label>
+                {{ hazard_form.linked_training_session }}
+              </div>
+              <div class="col-md-12 mb-3">
+                <label>Evidence / Remarks</label>
+                {{ hazard_form.evidence_remarks }}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-primary" type="submit">
+          <i class="fas fa-save"></i> Save HIRA
+        </button>
+        <a class="btn btn-outline-secondary" href="{% url 'hira:register' %}">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const riskMatrixLevels = [
+  {% for level in risk_matrix_levels %}
+  {min: {{ level.min_score }}, max: {{ level.max_score }}, label: "{{ level.risk_level }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+function riskLevel(score) {
+  if (!score) return "";
+  const match = riskMatrixLevels.find(level => score >= level.min && score <= level.max);
+  return match ? match.label : "";
+}
+
+function riskClass(label) {
+  if (!label) return "";
+  const l = label.toLowerCase();
+  if (l.includes('critical')) return 'risk-critical';
+  if (l.includes('high')) return 'risk-high';
+  if (l.includes('medium')) return 'risk-medium';
+  if (l.includes('low')) return 'risk-low';
+  return '';
+}
+
+function updateRisk(container) {
+  const l  = parseInt(container.querySelector('[name$="-likelihood"]')?.value || "0", 10);
+  const s  = parseInt(container.querySelector('[name$="-severity"]')?.value || "0", 10);
+  const rl = parseInt(container.querySelector('[name$="-residual_likelihood"]')?.value || "0", 10);
+  const rs = parseInt(container.querySelector('[name$="-residual_severity"]')?.value || "0", 10);
+
+  const initial  = l && s ? l * s : 0;
+  const residual = rl && rs ? rl * rs : 0;
+
+  const initLabel = riskLevel(initial);
+  const resLabel  = riskLevel(residual);
+
+  const initEl = container.querySelector('.js-initial');
+  const resEl  = container.querySelector('.js-residual');
+
+  initEl.textContent = initial ? `${initial} — ${initLabel}` : "0";
+  initEl.className = 'calc-pill js-initial ' + riskClass(initLabel);
+
+  resEl.textContent = residual ? `${residual} — ${resLabel}` : "0";
+  resEl.className = 'calc-pill js-residual ' + riskClass(resLabel);
+}
+
+// Bind existing rows
+document.querySelectorAll('.hazard-form').forEach(form => {
+  form.addEventListener('input', () => updateRisk(form));
+  form.addEventListener('change', () => updateRisk(form));
+  updateRisk(form);
+});
+
+// Add new hazard row
+document.getElementById('addHazard').addEventListener('click', function () {
+  const total = document.getElementById('id_hazards-TOTAL_FORMS');
+  const forms = document.querySelectorAll('.hazard-form');
+  const template = forms[forms.length - 1];
+  const clone = template.cloneNode(true);
+  const index = parseInt(total.value, 10);
+
+  // Replace form index in names/ids
+  clone.innerHTML = clone.innerHTML.replaceAll(`-${index - 1}-`, `-${index}-`);
+
+  // Reset values
+  clone.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false;
+    else if (!el.name.endsWith('-id') && !el.name.endsWith('-DELETE')) el.value = '';
+  });
+
+  // Reset the row title
+  const title = clone.querySelector('.hira-section-title');
+  if (title) title.textContent = `Hazard Row ${index + 1}`;
+
+  document.getElementById('hazardForms').appendChild(clone);
+
+  clone.addEventListener('input', () => updateRisk(clone));
+  clone.addEventListener('change', () => updateRisk(clone));
+  total.value = index + 1;
+
+  updateRisk(clone);
+
+  // Smooth scroll to the new row
+  clone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+{% endblock %}
