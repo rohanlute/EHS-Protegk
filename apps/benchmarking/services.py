@@ -78,10 +78,8 @@ def calculate_period(period, plants=None):
 
 def _rank(period, framework):
     results = list(BenchmarkResult.objects.filter(period=period, framework=framework, scope_type="PLANT").order_by("-overall_score", "plant__name"))
-    last_score = None; rank = 0
     for position, result in enumerate(results, 1):
-        if result.overall_score != last_score: rank = position; last_score = result.overall_score
-        result.rank = rank
+        result.rank = position
     BenchmarkResult.objects.bulk_update(results, ["rank"])
     best = results[0].overall_score if results else None
     if best is not None:

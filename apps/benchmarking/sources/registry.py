@@ -1,4 +1,4 @@
-"""Controlled KPI calculators. Unsupported codes deliberately return unavailable."""
+"""Live KPI calculators backed by the application's source records."""
 from decimal import Decimal
 from django.db.models import Avg
 
@@ -22,6 +22,40 @@ def _hazard_closure_rate(plant, department, start, end):
     return (Decimal(closed) * 100 / total if total else None), total
 
 
+def _incident_count(plant, department, start, end):
+    from apps.accidents.models import Incident
+    qs = Incident.objects.filter(incident_date__range=(start, end))
+    if plant: qs = qs.filter(plant=plant)
+    if department: qs = qs.filter(affected_person_department=department)
+    total = qs.count()
+    return Decimal(total), total
+
+
+def _incident_closure_rate(plant, department, start, end):
+    from apps.accidents.models import Incident
+    qs = Incident.objects.filter(incident_date__range=(start, end))
+    if plant: qs = qs.filter(plant=plant)
+    if department: qs = qs.filter(affected_person_department=department)
+    total = qs.count(); closed = qs.filter(status="CLOSED").count()
+    return (Decimal(closed) * 100 / total if total else None), total
+
+
+def _hazard_count(plant, department, start, end):
+    from apps.hazards.models import Hazard
+    qs = Hazard.objects.filter(incident_datetime__date__range=(start, end))
+    if plant: qs = qs.filter(plant=plant)
+    if department: qs = qs.filter(behalf_person_dept=department)
+    return Decimal(qs.count()), qs.count()
+
+
+def _inspection_count(plant, department, start, end):
+    from apps.inspections.models import InspectionSubmission
+    qs = InspectionSubmission.objects.filter(submitted_at__date__range=(start, end))
+    if plant: qs = qs.filter(schedule__plants=plant)
+    if department: qs = qs.filter(schedule__department=department)
+    return Decimal(qs.count()), qs.count()
+
+
 def _inspection_score(plant, department, start, end):
     from apps.inspections.models import InspectionSubmission
     qs = InspectionSubmission.objects.filter(submitted_at__date__range=(start, end))
@@ -33,7 +67,11 @@ def _inspection_score(plant, department, start, end):
 
 registered_calculators = {
     "CAPA_CLOSURE_RATE": _capa_closure_rate,
+    "INCIDENT_COUNT": _incident_count,
+    "INCIDENT_CLOSURE_RATE": _incident_closure_rate,
+    "HAZARD_COUNT": _hazard_count,
     "HAZARD_CLOSURE_RATE": _hazard_closure_rate,
+    "INSPECTION_COUNT": _inspection_count,
     "INSPECTION_SCORE": _inspection_score,
 }
 
