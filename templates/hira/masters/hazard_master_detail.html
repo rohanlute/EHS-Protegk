@@ -1,0 +1,537 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ rule.activity }} | Hazard & Risk Master | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'hira:hazard_master' %}">Hazard & Risk Master</a></li>
+<li class="breadcrumb-item active">Detail</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --bg-subtle: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --info-blue: #0ea5e9;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hira-header .hira-title .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  .hira-header .hira-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    max-width: 1100px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ehs-card .card-header strong i {
+    color: var(--primary-teal);
+  }
+
+  .ehs-card .card-body {
+    padding: 24px;
+  }
+
+  /* ========================================================== */
+  /* SECTION DIVIDERS (inside card)                              */
+  /* ========================================================== */
+  .detail-section {
+    margin-bottom: 24px;
+  }
+
+  .detail-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 14px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .detail-section-label i {
+    color: var(--primary-teal);
+    font-size: 12px;
+  }
+
+  /* ========================================================== */
+  /* INFO GRID                                                   */
+  /* ========================================================== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+  }
+
+  .info-item:hover {
+    border-color: rgba(13, 148, 136, 0.3);
+    background: var(--primary-teal-light);
+  }
+
+  .info-item .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .info-item .value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  .info-item .value.empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Multi-line content: preserve linebreaks but tighter spacing */
+  .info-item .value.multiline {
+    white-space: pre-line;
+    line-height: 1.7;
+  }
+
+  /* ========================================================== */
+  /* RISK PILL (for Default Risk)                                */
+  /* ========================================================== */
+  .risk-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border: 1.5px solid rgba(13, 148, 136, 0.2);
+    white-space: nowrap;
+  }
+
+  .risk-pill.risk-Low,
+  .risk-pill.risk-low {
+    background: rgba(34, 197, 94, 0.12);
+    color: #166534;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .risk-pill.risk-Medium,
+  .risk-pill.risk-medium {
+    background: rgba(217, 119, 6, 0.12);
+    color: #92400e;
+    border-color: rgba(217, 119, 6, 0.3);
+  }
+
+  .risk-pill.risk-High,
+  .risk-pill.risk-high {
+    background: rgba(234, 88, 12, 0.12);
+    color: #9a3412;
+    border-color: rgba(234, 88, 12, 0.3);
+  }
+
+  .risk-pill.risk-Critical,
+  .risk-pill.risk-critical {
+    background: rgba(220, 38, 38, 0.12);
+    color: #991b1b;
+    border-color: rgba(220, 38, 38, 0.3);
+  }
+
+  /* ========================================================== */
+  /* STATUS BADGE                                                */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .status-badge.status-active,
+  .status-badge.status-Active,
+  .status-badge.status-APPROVED,
+  .status-badge.status-approved {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .status-badge.status-inactive,
+  .status-badge.status-Inactive,
+  .status-badge.status-DRAFT,
+  .status-badge.status-draft {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 992px) {
+    .hira-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .hira-header .hira-actions {
+      justify-content: stretch;
+    }
+
+    .hira-header .hira-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .ehs-card .card-body {
+      padding: 16px;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <div class="header-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div>
+        <h1>{{ rule.activity }}</h1>
+        <p>
+          {{ rule.module.name|default:"All Modules" }}
+          &nbsp;·&nbsp;
+          {{ rule.hazard_category }}
+          &nbsp;·&nbsp;
+          <span class="status-badge {% if rule.is_active %}status-active{% else %}status-inactive{% endif %}">
+            {% if rule.is_active %}Active{% else %}Inactive{% endif %}
+          </span>
+        </p>
+      </div>
+    </div>
+    <div class="hira-actions">
+      <a class="btn btn-outline-secondary" href="{% url 'hira:hazard_master_edit' rule.pk %}">
+        <i class="fas fa-edit"></i> Edit
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'hira:hazard_master' %}">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DETAIL CARD                                                  -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <strong><i class="fas fa-info-circle"></i> Master Rule Details</strong>
+    </div>
+    <div class="card-body">
+
+      <!-- === Classification === -->
+      <div class="detail-section">
+        <div class="detail-section-label">
+          <i class="fas fa-tags"></i> Classification
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Module</span>
+            <span class="value">{{ rule.module.name|default:"All Modules (Common Rules)" }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Process</span>
+            <span class="value {% if not rule.process %}empty{% endif %}">
+              {{ rule.process|default:"Not specified" }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Activity</span>
+            <span class="value">{{ rule.activity }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Hazard Category</span>
+            <span class="value">{{ rule.hazard_category }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- === Default Risk === -->
+      <div class="detail-section">
+        <div class="detail-section-label">
+          <i class="fas fa-calculator"></i> Default Risk
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Likelihood</span>
+            <span class="value">{{ rule.default_likelihood }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Severity</span>
+            <span class="value">{{ rule.default_severity }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Computed Risk Score</span>
+            <span class="value">
+              {% widthratio rule.default_likelihood 1 rule.default_severity as risk_score %}
+              <span class="risk-pill
+                {% if risk_score <= 4 %}risk-Low
+                {% elif risk_score <= 9 %}risk-Medium
+                {% elif risk_score <= 16 %}risk-High
+                {% else %}risk-Critical{% endif %}">
+                {{ risk_score }}
+                {% if risk_score <= 4 %}— Low
+                {% elif risk_score <= 9 %}— Medium
+                {% elif risk_score <= 16 %}— High
+                {% else %}— Critical{% endif %}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- === Hazard Identification === -->
+      <div class="detail-section">
+        <div class="detail-section-label">
+          <i class="fas fa-exclamation-triangle"></i> Hazard Identification
+        </div>
+        <div class="info-grid">
+          <div class="info-item" style="grid-column: span 2;">
+            <span class="label">Hazard</span>
+            <span class="value multiline">{{ rule.hazard|default:"Not specified" }}</span>
+          </div>
+          <div class="info-item" style="grid-column: span 2;">
+            <span class="label">Potential Consequence</span>
+            <span class="value multiline {% if not rule.consequence %}empty{% endif %}">
+              {{ rule.consequence|default:"Not specified" }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Unsafe Act</span>
+            <span class="value multiline {% if not rule.unsafe_act %}empty{% endif %}">
+              {{ rule.unsafe_act|default:"Not specified" }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Unsafe Condition</span>
+            <span class="value multiline {% if not rule.unsafe_condition %}empty{% endif %}">
+              {{ rule.unsafe_condition|default:"Not specified" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- === Controls === -->
+      <div class="detail-section">
+        <div class="detail-section-label">
+          <i class="fas fa-shield-alt"></i> Controls
+        </div>
+        <div class="info-grid">
+          <div class="info-item" style="grid-column: span 2;">
+            <span class="label">Existing Controls</span>
+            <span class="value multiline {% if not rule.existing_controls %}empty{% endif %}">
+              {{ rule.existing_controls|default:"Not specified" }}
+            </span>
+          </div>
+          <div class="info-item" style="grid-column: span 2;">
+            <span class="label">Suggested Additional Controls</span>
+            <span class="value multiline {% if not rule.suggested_additional_controls %}empty{% endif %}">
+              {{ rule.suggested_additional_controls|default:"Not specified" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

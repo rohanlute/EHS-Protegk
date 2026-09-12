@@ -228,6 +228,23 @@ def build_training_for_request(request):
     return build_training_spec(qs, hira_qs=hira_qs, request=request)
 
 
+# ════════════════════════════════════════════════════════════════════════
+# 6A. HIRA MANAGEMENT
+# ════════════════════════════════════════════════════════════════════════
+@register("hira", "HIRA Management")
+def build_hira_for_request(request):
+    from apps.hira.forms import HIRAReportFilterForm
+    from apps.hira.reports import filter_hira_queryset, filter_source_queryset, source_first_workbook_response, workbook_response
+
+    form = HIRAReportFilterForm(request.GET or None, user=request.user)
+    adapter, source_records = filter_source_queryset(request, form)
+    if adapter:
+        data = form.cleaned_data if form.is_valid() else request.GET
+        return source_first_workbook_response(adapter, source_records, data=data)
+    qs = filter_hira_queryset(request, form)
+    return workbook_response(qs)
+
+
 # ══════════════════════════════════════════════════════════════
 # 7. LEGAL COMPLIANCE
 # ══════════════════════════════════════════════════════════════

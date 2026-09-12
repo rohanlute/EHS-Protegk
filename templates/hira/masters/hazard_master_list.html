@@ -1,0 +1,630 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Hazard & Risk Master | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'hira:dashboard' %}">HIRA</a></li>
+<li class="breadcrumb-item active">Hazard & Risk Master</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --bg-subtle: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --info-blue: #0ea5e9;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hira-header .hira-title .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  .hira-header .hira-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-outline-danger {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(220, 38, 38, 0.35);
+    color: var(--danger-red);
+  }
+
+  .btn-outline-danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: var(--danger-red);
+    color: var(--danger-red);
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .btn-block {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ehs-card .card-header strong i {
+    color: var(--primary-teal);
+  }
+
+  .ehs-card .card-body {
+    padding: 20px;
+  }
+
+  .ehs-card .card-body.p-0 {
+    padding: 0;
+  }
+
+  /* ========================================================== */
+  /* FILTER BAR                                                  */
+  /* ========================================================== */
+  .filter-bar {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+
+  .filter-bar .form-control,
+  .filter-bar select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%2364748b' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 10px;
+    padding-right: 30px;
+  }
+
+  .filter-bar input.form-control {
+    background-image: none;
+    padding-right: 12px;
+  }
+
+  .filter-bar .form-control:focus,
+  .filter-bar select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .filter-bar .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .table tbody tr {
+    transition: background 0.15s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Module cell */
+  .table tbody td.module-cell {
+    font-weight: 600;
+    color: var(--primary-teal);
+    white-space: nowrap;
+  }
+
+  /* Hazard text */
+  .table tbody td.hazard-text {
+    max-width: 320px;
+    color: var(--text-secondary);
+  }
+
+  /* Default Risk cell */
+  .table tbody td.default-risk {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .table tbody td.default-risk .l-val,
+  .table tbody td.default-risk .s-val {
+    display: inline-block;
+    min-width: 14px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .table tbody td.default-risk .x-sep {
+    color: var(--text-muted);
+    margin: 0 4px;
+    font-weight: 400;
+  }
+
+  /* Actions cell */
+  .table tbody td.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .table tbody td.actions-cell .btn {
+    margin: 0 2px;
+  }
+
+  /* ========================================================== */
+  /* STATUS BADGES                                               */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .status-badge.status-APPROVED,
+  .status-badge.status-approved,
+  .status-badge.status-active,
+  .status-badge.status-Active {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .status-badge.status-DRAFT,
+  .status-badge.status-draft,
+  .status-badge.status-inactive,
+  .status-badge.status-Inactive {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state i {
+    font-size: 42px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    margin: 0 0 4px 0;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .empty-state span {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 992px) {
+    .hira-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .hira-header .hira-actions {
+      justify-content: stretch;
+    }
+
+    .hira-header .hira-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+      text-align: right;
+      gap: 12px;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      flex-shrink: 0;
+      text-align: left;
+    }
+
+    .table tbody td.hazard-text {
+      max-width: 100%;
+    }
+
+    .filter-bar {
+      padding: 14px 16px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <div class="header-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div>
+        <h1>Hazard & Risk Master</h1>
+        <p>Reusable hazard rules and default risk references for all HIRA source modules.</p>
+      </div>
+    </div>
+    <div class="hira-actions">
+      <a class="btn btn-outline-secondary" href="{% url 'hira:risk_matrix_master' %}">
+        <i class="fas fa-table"></i> Risk Matrix
+      </a>
+      <a class="btn btn-primary" href="{% url 'hira:hazard_master_create' %}">
+        <i class="fas fa-plus"></i> Add Hazard
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FILTER BAR                                                   -->
+  <!-- ============================================================ -->
+  <div class="filter-bar">
+    <form method="get" class="row">
+      <div class="col-md-3 mb-2">
+        <input class="form-control" name="search" value="{{ request.GET.search }}" placeholder="Search hazard, activity, process…">
+      </div>
+      <div class="col-md-2 mb-2">
+        <select class="form-control" name="module">
+          <option value="">All Modules</option>
+          <option value="ALL" {% if request.GET.module == 'ALL' %}selected{% endif %}>Common Rules</option>
+          {% for module in modules %}
+          <option value="{{ module.pk }}" {% if request.GET.module == module.pk|stringformat:'s' %}selected{% endif %}>{{ module.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 mb-2">
+        <input class="form-control" name="activity" value="{{ request.GET.activity }}" placeholder="Activity">
+      </div>
+      <div class="col-md-2 mb-2">
+        <select class="form-control" name="hazard_category">
+          <option value="">All Categories</option>
+          {% for value,label in hazard_categories %}
+          <option value="{{ value }}" {% if request.GET.hazard_category == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 mb-2">
+        <select class="form-control" name="active">
+          <option value="">Any Status</option>
+          <option value="1" {% if request.GET.active == '1' %}selected{% endif %}>Active</option>
+          <option value="0" {% if request.GET.active == '0' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+      <div class="col-md-1 mb-2">
+        <button class="btn btn-primary btn-block" type="submit" title="Apply filters">
+          <i class="fas fa-filter"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MASTER RULES TABLE                                           -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Process</th>
+              <th>Activity</th>
+              <th>Category</th>
+              <th>Hazard</th>
+              <th>Default Risk</th>
+              <th>Status</th>
+              <th style="text-align: center;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rule in rules %}
+            <tr>
+              <td data-label="Module" class="module-cell">{{ rule.module.name|default:"All Modules" }}</td>
+              <td data-label="Process">{{ rule.process|default:"—" }}</td>
+              <td data-label="Activity">{{ rule.activity }}</td>
+              <td data-label="Category">{{ rule.hazard_category }}</td>
+              <td data-label="Hazard" class="hazard-text">{{ rule.hazard|truncatechars:80 }}</td>
+              <td data-label="Default Risk" class="default-risk">
+                <span class="l-val">{{ rule.default_likelihood }}</span>
+                <span class="x-sep">×</span>
+                <span class="s-val">{{ rule.default_severity }}</span>
+              </td>
+              <td data-label="Status">
+                {% if rule.is_active %}
+                  <span class="status-badge status-active">Active</span>
+                {% else %}
+                  <span class="status-badge status-inactive">Inactive</span>
+                {% endif %}
+              </td>
+              <td data-label="" class="actions-cell">
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{% url 'hira:hazard_master_detail' rule.pk %}"
+                   title="View">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{% url 'hira:hazard_master_edit' rule.pk %}"
+                   title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form class="d-inline" method="post" action="{% url 'hira:hazard_master_toggle' rule.pk %}" style="display: inline-block; margin: 0;">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-secondary"
+                          type="submit"
+                          title="{% if rule.is_active %}Deactivate{% else %}Activate{% endif %}">
+                    <i class="fas fa-power-off"></i>
+                  </button>
+                </form>
+                <a class="btn btn-sm btn-outline-danger"
+                   href="{% url 'hira:hazard_master_delete' rule.pk %}"
+                   title="Delete"
+                   onclick="return confirm('Delete this master rule? This cannot be undone.');">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">
+                  <i class="fas fa-layer-group"></i>
+                  <p>No master rules found.</p>
+                  <span>Try adjusting the filters or add a new hazard rule.</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
