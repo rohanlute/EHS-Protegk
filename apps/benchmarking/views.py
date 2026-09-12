@@ -84,11 +84,13 @@ class PerformanceRankingView(BenchmarkAccessMixin, ListView):
     def get_queryset(self):
         refresh_live_results(self.request.user)
         results = accessible_results(self.request.user).filter(scope_type="PLANT")
-        latest_date = results.order_by("-period__end_date").values_list("period__end_date", flat=True).first()
-        self.latest_date = latest_date
-        if not latest_date:
+        latest_period_id = results.order_by("-period__end_date", "-period_id").values_list("period_id", flat=True).first()
+        if not latest_period_id:
+            self.latest_date = None
             return results.none()
-        return results.filter(period__end_date=latest_date).select_related(
+        latest_period = results.filter(period_id=latest_period_id).values_list("period__end_date", flat=True).first()
+        self.latest_date = latest_period
+        return results.filter(period_id=latest_period_id).select_related(
             "period", "plant", "performance_level"
         ).order_by("rank", "-overall_score", "plant__name")
 
