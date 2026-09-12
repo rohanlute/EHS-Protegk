@@ -44,14 +44,27 @@
     </div>
     <div class="col-lg-4 mb-3">
       <div class="metric-card">
-        <div class="metric-label">Next step</div>
-        <div class="metric-value" style="font-size:18px">Configure KPIs</div>
-        <p class="metric-note mt-2">KPIs use controlled calculator codes; values
-          are read from real source modules only.</p><a
-          href="{% url 'benchmarking:kpi_list' object.pk %}"
-          class="bm-btn mt-3 d-inline-block"><i class="fas fa-list mr-1"></i>KPI
-          library</a>
+        <div class="metric-label">Configuration</div>
+        <div class="metric-value" style="font-size:18px">{{ object.categories.count }} categories</div>
+        <p class="metric-note mt-2">Add categories first, then assign KPIs and configured weights.</p>
+        <a href="{% url 'benchmarking:category_create' object.pk %}" class="bm-btn mt-3 d-inline-block"><i class="fas fa-plus mr-1"></i>Add category</a>
+        <a href="{% url 'benchmarking:kpi_list' object.pk %}" class="bm-btn bm-btn-muted mt-2 d-inline-block"><i class="fas fa-list mr-1"></i>KPI library</a>
       </div>
+    </div>
+  </div>
+  <div class="bm-card mb-3">
+    <div class="bm-card-header"><h2 class="bm-card-title">Configured KPI weights</h2><span class="text-muted small">{{ object.results.count|default:0 }} results</span></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr><th>Category</th><th>KPI</th><th>Weight</th><th>Direction</th></tr></thead>
+        <tbody>
+          {% for category in object.categories.all %}
+            {% for kpi in category.kpis.all %}
+            <tr><td>{{ category.name }}</td><td><strong>{{ kpi.name }}</strong><br><small class="text-muted">{{ kpi.code }}</small></td><td><span class="score-pill">{{ kpi.weightage }}%</span></td><td>{{ kpi.get_direction_display }}</td></tr>
+            {% empty %}<tr><td colspan="4" class="text-muted">No KPIs configured for {{ category.name }}.</td></tr>{% endfor %}
+          {% empty %}<tr><td colspan="4"><div class="empty-state">No categories configured. Add a category to begin.</div></td></tr>{% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
   <div class="data-note"><i class="fas fa-circle-info mr-1"></i>Changes to this
