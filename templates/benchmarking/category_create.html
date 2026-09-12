@@ -1,29 +1,24 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Edit Framework{% else %}Create Framework{% endif %}{% endblock %}
+{% block title %}{{ page_title|default:'Add Benchmark Category' }}{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item">
-    <a href="{% url 'dashboards:home' %}">Home</a>
+    <a href="{% url 'benchmarking:framework_list' %}">Benchmark Frameworks</a>
 </li>
+{% if framework %}
 <li class="breadcrumb-item">
-    <a href="{% url 'benchmarking:framework_list' %}">Frameworks</a>
+    <a href="{% url 'benchmarking:framework_detail' framework.pk %}">{{ framework.name }}</a>
 </li>
-{% if form.instance.pk %}
-<li class="breadcrumb-item">
-    <a href="{% url 'benchmarking:framework_detail' form.instance.pk %}">{{ form.instance.name|truncatechars:30 }}</a>
-</li>
-<li class="breadcrumb-item active">Edit</li>
-{% else %}
-<li class="breadcrumb-item active">Create Framework</li>
 {% endif %}
+<li class="breadcrumb-item active">{{ page_title|default:'Add Category' }}</li>
 {% endblock %}
 
 {% block extra_css %}
 <style>
   /* ========================================================== */
-  /* FRAMEWORK FORM - Premium Teal Theme (Create + Edit)         */
+  /* ADD BENCHMARK CATEGORY - Premium Teal Theme                 */
   /* ========================================================== */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -106,11 +101,6 @@
     box-shadow: var(--shadow-card);
     padding: 14px 20px;
     margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
   }
 
   .benchmark-header .header-main {
@@ -145,22 +135,19 @@
     color: var(--text-muted);
   }
 
-  /* Edit Mode Badge */
-  .edit-badge {
+  /* Framework badge */
+  .framework-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 14px;
+    gap: 6px;
+    padding: 4px 12px;
     border-radius: 16px;
     font-size: 0.72rem;
     font-weight: 600;
     background: var(--primary-teal-light);
     color: var(--primary-teal);
     border: 1px solid rgba(13, 148, 136, 0.2);
-  }
-
-  .edit-badge i {
-    font-size: 10px;
+    margin-top: 6px;
   }
 
   /* ========================================================== */
@@ -303,43 +290,35 @@
   }
 
   /* ========================================================== */
-  /* CHECKBOX                                                   */
+  /* CHECKBOX - PROPERLY ALIGNED                                */
   /* ========================================================== */
-  .form-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+  .form-group .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 6px 12px;
+    border: 1px solid rgba(13, 148, 136, 0.18);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.06), rgba(13, 148, 136, 0.015));
+  }
+
+  .form-group .checkbox-wrapper input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    min-width: 17px;
+    margin: 0;
+    flex: 0 0 17px;
     accent-color: var(--primary-teal);
     cursor: pointer;
+  }
+
+  .form-group .checkbox-wrapper label {
     margin: 0;
-    display: inline-block;
-    vertical-align: middle;
-  }
-
-  .form-group input[type="checkbox"] + label,
-  .form-group label + input[type="checkbox"] {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 6px;
-  }
-
-  /* ========================================================== */
-  /* DATE INPUT                                                 */
-  /* ========================================================== */
-  .form-group input[type="date"] {
-    min-height: 38px;
-    padding: 7px 11px;
+    font-weight: 500;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
     cursor: pointer;
-  }
-
-  .form-group input[type="date"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    opacity: 0.5;
-    padding: 4px;
-    transition: opacity 0.2s;
-  }
-
-  .form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
-    opacity: 1;
   }
 
   /* ========================================================== */
@@ -424,8 +403,6 @@
   @media (max-width: 768px) {
     .benchmark-header {
       padding: 12px 16px;
-      flex-direction: column;
-      align-items: flex-start;
     }
 
     .benchmark-header h1 {
@@ -496,6 +473,11 @@
       font-size: 0.68rem;
     }
 
+    .framework-badge {
+      font-size: 0.65rem;
+      padding: 3px 10px;
+    }
+
     .form-card .form-card-body {
       padding: 12px 14px;
     }
@@ -541,34 +523,25 @@
   <div class="benchmark-header">
     <div class="header-main">
       <div class="header-icon">
-        <i class="fas {% if form.instance.pk %}fa-pen{% else %}fa-plus-circle{% endif %}"></i>
+        <i class="fas fa-folder-plus"></i>
       </div>
       <div>
-        <h1>{% if form.instance.pk %}Edit Framework{% else %}Create Framework{% endif %}</h1>
-        <p class="subtitle">
-          {% if form.instance.pk %}
-            Update the framework configuration and effective dates.
-          {% else %}
-            Define a new benchmark framework with effective dates and reporting frequency.
-          {% endif %}
-        </p>
+        <h1>{{ page_title|default:'Add Benchmark Category' }}</h1>
+        <p class="subtitle">{{ form_subtitle|default:'Configure a scoring category for this framework.' }}</p>
+        {% if framework %}
+        <span class="framework-badge">
+          <i class="fas fa-layer-group"></i> {{ framework.name }}
+        </span>
+        {% endif %}
       </div>
     </div>
-    {% if form.instance.pk %}
-    <div>
-      <span class="edit-badge">
-        <i class="fas fa-circle"></i> {{ form.instance.get_status_display }}
-      </span>
-    </div>
-    {% endif %}
   </div>
 
   <!-- Form Card -->
   <div class="form-card">
     <div class="form-card-header">
       <h2>
-        <i class="fas fa-pen-to-square mr-2"></i>
-        {% if form.instance.pk %}Framework Details{% else %}Framework Details{% endif %}
+        <i class="fas fa-pen-to-square mr-2"></i>{{ form_title|default:'Category Details' }}
       </h2>
     </div>
     <div class="form-card-body">
@@ -583,14 +556,23 @@
 
         {% for field in form %}
         <div class="form-group">
-          <label for="{{ field.id_for_label }}">
-            {{ field.label }}
-            {% if field.field.required %}<span class="text-danger"> *</span>{% endif %}
-          </label>
-          {{ field }}
+          {% if field.field.widget.input_type == 'checkbox' %}
+            <div class="checkbox-wrapper">
+              {{ field }}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+          {% else %}
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}<span class="text-danger"> *</span>{% endif %}
+            </label>
+            {{ field }}
+          {% endif %}
+
           {% if field.help_text %}
           <div class="form-help">{{ field.help_text }}</div>
           {% endif %}
+
           {% if field.errors %}
           <ul class="errorlist">
             {% for error in field.errors %}
@@ -604,8 +586,8 @@
         <hr>
 
         <div class="d-flex justify-content-end gap-2">
-          {% if form.instance.pk %}
-          <a class="bm-btn bm-btn-muted" href="{% url 'benchmarking:framework_detail' form.instance.pk %}">
+          {% if framework %}
+          <a class="bm-btn bm-btn-muted" href="{% url 'benchmarking:framework_detail' framework.pk %}">
             <i class="fas fa-times mr-1"></i>Cancel
           </a>
           {% else %}
@@ -613,10 +595,8 @@
             <i class="fas fa-times mr-1"></i>Cancel
           </a>
           {% endif %}
-
           <button class="bm-btn" type="submit">
-            <i class="fas fa-save mr-1"></i>
-            {% if form.instance.pk %}Update Framework{% else %}Create Framework{% endif %}
+            <i class="fas fa-save mr-1"></i>Save Category
           </button>
         </div>
       </form>

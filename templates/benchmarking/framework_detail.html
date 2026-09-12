@@ -1,25 +1,767 @@
 {% extends 'base/base.html' %}
+{% load static %}
+
 {% block title %}{{ object.name }}{% endblock %}
-{% block extra_css %}{% include 'benchmarking/partials/ui_styles.html' %}{% endblock %}
-{% block content %}<div class="benchmark-page">
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:dashboard' %}">Site / Plant Benchmarking</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:framework_list' %}">Frameworks</a></li>
+<li class="breadcrumb-item active">{{ object.name|truncatechars:30 }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ========================================================== */
+  /* FRAMEWORK DETAIL - Premium Teal Theme                       */
+  /* ========================================================== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 6px 24px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* PAGE CONTAINER                                              */
+  /* ========================================================== */
+  .benchmark-page {
+    max-width: 1200px;
+    margin: 0 auto 18px;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER - GRADIENT HERO                                */
+  /* ========================================================== */
+  .benchmark-header {
+    background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+    border-radius: var(--radius-card);
+    box-shadow: 0 6px 24px rgba(13, 148, 136, 0.25);
+    padding: 20px 24px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .benchmark-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .benchmark-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .benchmark-header .header-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .benchmark-header .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .benchmark-header h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.2px;
+  }
+
+  .benchmark-header .subtitle {
+    margin: 3px 0 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS - WHITE ON TEAL                                    */
+  /* ========================================================== */
+  .bm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--primary-teal-dark);
+    background: white;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    min-height: 38px;
+    text-decoration: none;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  .bm-btn:hover {
+    color: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+
+  .bm-btn i {
+    font-size: 13px;
+  }
+
+  .bm-btn-muted {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    box-shadow: none;
+  }
+
+  .bm-btn-muted:hover {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .bm-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .bm-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .bm-card.mt-0 {
+    margin-top: 0;
+  }
+
+  .bm-card .bm-card-header {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border-bottom: none;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title i {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+  }
+
+  .bm-card .bm-card-header .text-muted {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* CARD BODY                                                  */
+  /* ========================================================== */
+  .bm-card .p-4 {
+    padding: 20px 24px !important;
+  }
+
+  .bm-card .p-4 p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  /* ========================================================== */
+  /* METRIC LABEL / VALUE                                       */
+  /* ========================================================== */
+  .metric-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .bm-card strong {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* METRIC CARD - SIDEBAR                                      */
+  /* ========================================================== */
+  .metric-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 20px 22px;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-teal), var(--primary-teal-dark));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .metric-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-teal);
+    transform: translateY(-4px);
+  }
+
+  .metric-card:hover::before {
+    opacity: 1;
+  }
+
+  .metric-card .metric-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .metric-card .metric-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+
+  .metric-card .bm-btn {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  /* ========================================================== */
+  /* SCORE PILL                                                 */
+  /* ========================================================== */
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(13, 148, 136, 0.08));
+    color: var(--primary-teal-dark);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 12px 16px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.82rem;
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* DATA NOTE - REFINED                                        */
+  /* ========================================================== */
+  .data-note {
+    background: linear-gradient(135deg, var(--primary-teal-light), rgba(13, 148, 136, 0.03));
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .data-note i {
+    color: var(--primary-teal);
+    font-size: 1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .data-note strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .empty-state strong {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* UTILITY                                                    */
+  /* ========================================================== */
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  .small {
+    font-size: 0.72rem;
+  }
+
+  .mr-1 {
+    margin-right: 4px !important;
+  }
+
+  .mt-2 {
+    margin-top: 8px !important;
+  }
+
+  .mt-3 {
+    margin-top: 12px !important;
+  }
+
+  .mb-0 {
+    margin-bottom: 0 !important;
+  }
+
+  .mb-3 {
+    margin-bottom: 16px !important;
+  }
+
+  .d-inline-block {
+    display: inline-block !important;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .benchmark-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .benchmark-header h1 {
+      font-size: 1rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.72rem;
+    }
+
+    .benchmark-header .header-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+
+    .bm-btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 0.78rem;
+      min-height: 36px;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 10px 14px;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.85rem;
+    }
+
+    .bm-card .p-4 {
+      padding: 16px 18px !important;
+    }
+
+    .metric-card {
+      padding: 16px 18px;
+    }
+
+    .metric-card .metric-value {
+      font-size: 1.4rem;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 6px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.75rem;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .data-note {
+      font-size: 0.72rem;
+      padding: 12px 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .benchmark-header {
+      padding: 14px 16px;
+    }
+
+    .benchmark-header .header-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+    }
+
+    .benchmark-header h1 {
+      font-size: 0.9rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.68rem;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 8px 12px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.8rem;
+    }
+
+    .bm-card .p-4 {
+      padding: 12px 14px !important;
+    }
+
+    .metric-card {
+      padding: 14px 16px;
+    }
+
+    .metric-card .metric-value {
+      font-size: 1.3rem;
+    }
+
+    .table tbody td {
+      padding: 6px 10px;
+      font-size: 0.7rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.58rem;
+    }
+
+    .score-pill {
+      font-size: 0.65rem;
+      padding: 3px 10px;
+    }
+
+    .data-note {
+      font-size: 0.68rem;
+      padding: 10px 12px;
+    }
+
+    .bm-btn {
+      font-size: 0.75rem;
+      padding: 6px 16px;
+      min-height: 34px;
+    }
+  }
+
+  /* ========================================================== */
+  /* BOOTSTRAP GRID OVERRIDES                                   */
+  /* ========================================================== */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -8px;
+  }
+
+  .col-lg-8,
+  .col-lg-4,
+  .col-sm-4 {
+    padding: 0 8px;
+  }
+
+  .col-lg-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+  }
+
+  .col-lg-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+
+  .col-sm-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+
+  @media (max-width: 992px) {
+    .col-lg-8,
+    .col-lg-4 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .col-sm-4 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="benchmark-page">
+
+  <!-- Page Header - Gradient Hero -->
   <div class="benchmark-header">
     <div class="header-main">
-      <div class="header-icon"><i class="fas fa-layer-group"></i></div>
+      <div class="header-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
       <div>
         <h1>{{ object.name }}</h1>
-        <p class="subtitle">{{ object.code }} ·
-          {{ object.get_reporting_frequency_display }} reporting ·
-          {{ object.get_status_display }}</p>
+        <p class="subtitle">
+          {{ object.code }} · {{ object.get_reporting_frequency_display }} reporting · {{ object.get_status_display }}
+        </p>
       </div>
-    </div><a class="bm-btn"
-      href="{% url 'benchmarking:framework_update' object.pk %}"><i
-        class="fas fa-pen mr-1"></i>Edit framework</a>
+    </div>
+    <a class="bm-btn" href="{% url 'benchmarking:framework_update' object.pk %}">
+      <i class="fas fa-pen mr-1"></i> Edit Framework
+    </a>
   </div>
+
+  <!-- Overview Row -->
   <div class="row">
     <div class="col-lg-8 mb-3">
       <div class="bm-card mt-0">
         <div class="bm-card-header">
-          <h2 class="bm-card-title">Framework overview</h2>
+          <h2 class="bm-card-title">
+            <i class="fas fa-info-circle"></i> Framework Overview
+          </h2>
         </div>
         <div class="p-4">
           <p class="mb-3">
@@ -27,48 +769,104 @@
           </p>
           <div class="row">
             <div class="col-sm-4">
-              <div class="metric-label">Effective from</div>
+              <div class="metric-label">Effective From</div>
               <strong>{{ object.effective_from|date:'d M Y' }}</strong>
             </div>
             <div class="col-sm-4">
-              <div class="metric-label">Effective to</div>
+              <div class="metric-label">Effective To</div>
               <strong>{{ object.effective_to|date:'d M Y'|default:'Open ended' }}</strong>
             </div>
             <div class="col-sm-4">
-              <div class="metric-label">Status</div><span
-                class="score-pill">{{ object.get_status_display }}</span>
+              <div class="metric-label">Status</div>
+              <span class="score-pill">{{ object.get_status_display }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
+
     <div class="col-lg-4 mb-3">
       <div class="metric-card">
         <div class="metric-label">Configuration</div>
-        <div class="metric-value" style="font-size:18px">{{ object.categories.count }} categories</div>
-        <p class="metric-note mt-2">Add categories first, then assign KPIs and configured weights.</p>
-        <a href="{% url 'benchmarking:category_create' object.pk %}" class="bm-btn mt-3 d-inline-block"><i class="fas fa-plus mr-1"></i>Add category</a>
-        <a href="{% url 'benchmarking:kpi_list' object.pk %}" class="bm-btn bm-btn-muted mt-2 d-inline-block"><i class="fas fa-list mr-1"></i>KPI library</a>
+        <div class="metric-value">{{ object.categories.count }} categories</div>
+        <p class="metric-note">
+          Add categories first, then assign KPIs and configured weights.
+        </p>
+        <a href="{% url 'benchmarking:category_create' object.pk %}" class="bm-btn">
+          <i class="fas fa-plus mr-1"></i> Add Category
+        </a>
+        <a href="{% url 'benchmarking:kpi_list' object.pk %}" class="bm-btn bm-btn-muted">
+          <i class="fas fa-list mr-1"></i> KPI Library
+        </a>
       </div>
     </div>
   </div>
+
+  <!-- KPI Weights Table -->
   <div class="bm-card mb-3">
-    <div class="bm-card-header"><h2 class="bm-card-title">Configured KPI weights</h2><span class="text-muted small">{{ object.results.count|default:0 }} results</span></div>
+    <div class="bm-card-header">
+      <h2 class="bm-card-title">
+        <i class="fas fa-chart-bar"></i> Configured KPI Weights
+      </h2>
+      <span class="text-muted small">
+        <i class="fas fa-info-circle"></i> {{ object.results.count|default:0 }} results
+      </span>
+    </div>
+
     <div class="table-responsive">
       <table class="table table-hover mb-0">
-        <thead><tr><th>Category</th><th>KPI</th><th>Weight</th><th>Direction</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>KPI</th>
+            <th>Weight</th>
+            <th>Direction</th>
+          </tr>
+        </thead>
         <tbody>
           {% for category in object.categories.all %}
             {% for kpi in category.kpis.all %}
-            <tr><td>{{ category.name }}</td><td><strong>{{ kpi.name }}</strong><br><small class="text-muted">{{ kpi.code }}</small></td><td><span class="score-pill">{{ kpi.weightage }}%</span></td><td>{{ kpi.get_direction_display }}</td></tr>
-            {% empty %}<tr><td colspan="4" class="text-muted">No KPIs configured for {{ category.name }}.</td></tr>{% endfor %}
-          {% empty %}<tr><td colspan="4"><div class="empty-state">No categories configured. Add a category to begin.</div></td></tr>{% endfor %}
+            <tr>
+              <td data-label="Category">{{ category.name }}</td>
+              <td data-label="KPI">
+                <strong>{{ kpi.name }}</strong>
+                <br>
+                <small class="text-muted">{{ kpi.code }}</small>
+              </td>
+              <td data-label="Weight">
+                <span class="score-pill">{{ kpi.weightage }}%</span>
+              </td>
+              <td data-label="Direction">{{ kpi.get_direction_display }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-muted">
+                No KPIs configured for {{ category.name }}.
+              </td>
+            </tr>
+            {% endfor %}
+          {% empty %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <strong>No categories configured.</strong>
+                Add a category to begin.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
-  <div class="data-note"><i class="fas fa-circle-info mr-1"></i>Changes to this
-    framework affect future calculations. Published periods retain their stored
-    result snapshots.</div>
+
+  <!-- Data Note -->
+  <div class="data-note">
+    <i class="fas fa-circle-info"></i>
+    <div>
+      Changes to this framework affect future calculations. Published periods retain their stored result snapshots.
+    </div>
+  </div>
+
 </div>
 {% endblock %}
