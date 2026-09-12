@@ -1,27 +1,663 @@
 {% extends 'base/base.html' %}
+{% load static %}
+
 {% block title %}KPI Library{% endblock %}
-{% block extra_css %}{% include 'benchmarking/partials/ui_styles.html' %}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:dashboard' %}">Site / Plant Benchmarking</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:framework_list' %}">Frameworks</a></li>
+<li class="breadcrumb-item"><a href="{% url 'benchmarking:framework_detail' view.kwargs.framework_id %}">Framework</a></li>
+<li class="breadcrumb-item active">KPI Library</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ========================================================== */
+  /* KPI LIBRARY - Premium Teal Theme                            */
+  /* ========================================================== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 6px 24px rgba(13, 148, 136, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.3rem 0;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  /* ========================================================== */
+  /* PAGE CONTAINER                                              */
+  /* ========================================================== */
+  .benchmark-page {
+    max-width: 1200px;
+    margin: 0 auto 18px;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER - GRADIENT HERO                                */
+  /* ========================================================== */
+  .benchmark-header {
+    background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+    border-radius: var(--radius-card);
+    box-shadow: 0 6px 24px rgba(13, 148, 136, 0.25);
+    padding: 20px 24px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .benchmark-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .benchmark-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .benchmark-header .header-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .benchmark-header .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .benchmark-header h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.2px;
+  }
+
+  .benchmark-header .subtitle {
+    margin: 3px 0 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+  }
+
+  /* Header Actions Group */
+  .benchmark-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .bm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--primary-teal-dark);
+    background: white;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    min-height: 38px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .bm-btn:hover {
+    color: var(--primary-teal-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+
+  .bm-btn i {
+    font-size: 13px;
+  }
+
+  .bm-btn-muted {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: none;
+  }
+
+  .bm-btn-muted:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* ========================================================== */
+  /* MAIN CARD                                                  */
+  /* ========================================================== */
+  .bm-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .bm-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .bm-card .bm-card-header {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border-bottom: none;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bm-card .bm-card-header .bm-card-title i {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+  }
+
+  .bm-card .bm-card-header .text-muted {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* TABLE STYLES                                               */
+  /* ========================================================== */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--primary-teal);
+    padding: 12px 16px;
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.82rem;
+  }
+
+  .table tbody tr {
+    transition: background 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Code styling */
+  .table code {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    border: 1px solid rgba(13, 148, 136, 0.15);
+  }
+
+  /* ========================================================== */
+  /* SCORE PILL - FOR STATUS DISPLAY                            */
+  /* ========================================================== */
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(13, 148, 136, 0.08));
+    color: var(--primary-teal-dark);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+  }
+
+  /* Weightage Pill */
+  .weight-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(13, 148, 136, 0.06));
+    color: var(--primary-teal-dark);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+  }
+
+  /* ========================================================== */
+  /* DATA NOTE - REFINED                                        */
+  /* ========================================================== */
+  .data-note {
+    background: linear-gradient(135deg, var(--primary-teal-light), rgba(13, 148, 136, 0.03));
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .data-note i {
+    color: var(--primary-teal);
+    font-size: 1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .data-note strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: var(--border-color);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .empty-state strong {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  /* ========================================================== */
+  /* UTILITY                                                    */
+  /* ========================================================== */
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  .small {
+    font-size: 0.72rem;
+  }
+
+  .mr-1 {
+    margin-right: 4px !important;
+  }
+
+  .mr-2 {
+    margin-right: 8px !important;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .benchmark-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .benchmark-header h1 {
+      font-size: 1rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.72rem;
+    }
+
+    .benchmark-header .header-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+
+    .benchmark-header .header-actions {
+      width: 100%;
+    }
+
+    .benchmark-header .header-actions .bm-btn {
+      flex: 1;
+      justify-content: center;
+      font-size: 0.78rem;
+      min-height: 36px;
+      padding: 7px 14px;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 10px 14px;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.85rem;
+    }
+
+    .table {
+      font-size: 0.75rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+      padding: 6px 0;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.75rem;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .data-note {
+      font-size: 0.72rem;
+      padding: 12px 14px;
+    }
+
+    .empty-state {
+      padding: 35px 16px;
+    }
+
+    .empty-state i {
+      font-size: 2.5rem;
+    }
+
+    .empty-state strong {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .benchmark-header {
+      padding: 14px 16px;
+    }
+
+    .benchmark-header .header-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+    }
+
+    .benchmark-header h1 {
+      font-size: 0.9rem;
+    }
+
+    .benchmark-header .subtitle {
+      font-size: 0.68rem;
+    }
+
+    .benchmark-header .header-actions {
+      flex-direction: column;
+    }
+
+    .benchmark-header .header-actions .bm-btn {
+      width: 100%;
+    }
+
+    .bm-card .bm-card-header {
+      padding: 8px 12px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .bm-card .bm-card-header .bm-card-title {
+      font-size: 0.8rem;
+    }
+
+    .table tbody td {
+      padding: 6px 10px;
+      font-size: 0.7rem;
+    }
+
+    .table tbody td::before {
+      font-size: 0.58rem;
+    }
+
+    .score-pill,
+    .weight-pill {
+      font-size: 0.65rem;
+      padding: 3px 10px;
+    }
+
+    .table code {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+    }
+
+    .data-note {
+      font-size: 0.68rem;
+      padding: 10px 12px;
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+    }
+
+    .empty-state strong {
+      font-size: 0.8rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="benchmark-page">
+
+  <!-- Page Header - Gradient Hero -->
   <div class="benchmark-header">
     <div class="header-main">
-      <div class="header-icon"><i class="fas fa-gauge-high"></i></div>
-      <div>
-        <h1>KPI library</h1>
-        <p class="subtitle">Configured measures for this framework. Only
-          registered calculators can generate source values.</p>
+      <div class="header-icon">
+        <i class="fas fa-gauge-high"></i>
       </div>
-    </div><a class="bm-btn bm-btn-muted mr-2"
-      href="{% url 'benchmarking:category_create' view.kwargs.framework_id %}"><i class="fas fa-folder-plus mr-1"></i>Add category</a><a class="bm-btn"
-      href="{% url 'benchmarking:kpi_create' view.kwargs.framework_id %}"><i
-        class="fas fa-plus mr-1"></i>Create KPI</a>
+      <div>
+        <h1>KPI Library</h1>
+        <p class="subtitle">Configured measures for this framework. Only registered calculators can generate source values.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="bm-btn bm-btn-muted" href="{% url 'benchmarking:category_create' view.kwargs.framework_id %}">
+        <i class="fas fa-folder-plus mr-1"></i> Add Category
+      </a>
+      <a class="bm-btn" href="{% url 'benchmarking:kpi_create' view.kwargs.framework_id %}">
+        <i class="fas fa-plus mr-1"></i> Create KPI
+      </a>
+    </div>
   </div>
+
+  <!-- Main Table Card -->
   <div class="bm-card">
     <div class="bm-card-header">
-      <h2 class="bm-card-title">KPI configuration</h2><span
-        class="text-muted small">{{ object_list|length }}
-        KPI{{ object_list|pluralize }}</span>
+      <h2 class="bm-card-title">
+        <i class="fas fa-chart-bar"></i> KPI Configuration
+      </h2>
+      <span class="text-muted small">
+        <i class="fas fa-info-circle"></i> {{ object_list|length }} KPI{{ object_list|pluralize }}
+      </span>
     </div>
+
     <div class="table-responsive">
       <table class="table table-hover">
         <thead>
@@ -30,36 +666,61 @@
             <th>Category</th>
             <th>Calculator</th>
             <th>Direction</th>
-            <th>Configured KPI weight</th>
+            <th>Configured KPI Weight</th>
             <th>State</th>
           </tr>
         </thead>
-        <tbody>{% for object in object_list %}<tr>
-            <td><strong>{{ object.name }}</strong><br><small
-                class="text-muted">{{ object.code }}{% if object.unit %} ·
-                {{ object.unit }}{% endif %}</small></td>
-            <td>{{ object.category.name }}</td>
-            <td><code>{{ object.calculator_code }}</code></td>
-            <td>{{ object.get_direction_display }}</td>
-            <td>{{ object.weightage }}%</td>
-            <td>{% if object.is_active %}<span
-                class="score-pill">Active</span>{% else %}<span
-                class="text-muted">Inactive</span>{% endif %}</td>
-          </tr>{% empty %}<tr>
-            <td colspan="6">
-              <div class="empty-state"><i
-                  class="fas fa-gauge-high"></i><strong>No KPIs
-                  configured</strong><br>Add KPIs after defining categories for
-                the framework.</div>
+        <tbody>
+          {% for object in object_list %}
+          <tr>
+            <td data-label="KPI">
+              <strong>{{ object.name }}</strong>
+              <br>
+              <small class="text-muted">
+                {{ object.code }}{% if object.unit %} · {{ object.unit }}{% endif %}
+              </small>
             </td>
-          </tr>{% endfor %}</tbody>
+            <td data-label="Category">{{ object.category.name }}</td>
+            <td data-label="Calculator">
+              <code>{{ object.calculator_code }}</code>
+            </td>
+            <td data-label="Direction">{{ object.get_direction_display }}</td>
+            <td data-label="Weight">
+              <span class="weight-pill">{{ object.weightage }}%</span>
+            </td>
+            <td data-label="State">
+              {% if object.is_active %}
+                <span class="score-pill">Active</span>
+              {% else %}
+                <span class="text-muted">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="fas fa-gauge-high"></i>
+                <strong>No KPIs configured</strong>
+                Add KPIs after defining categories for the framework.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
   </div>
-  <div class="data-note"><i class="fas fa-circle-info mr-1"></i>Current
-    supported calculators: <strong>CAPA_CLOSURE_RATE</strong>,
-    <strong>HAZARD_CLOSURE_RATE</strong>, and <strong>INSPECTION_SCORE</strong>.
-    An unregistered code is retained for configuration but yields no calculated
-    value.</div>
+
+  <!-- Data Note -->
+  <div class="data-note">
+    <i class="fas fa-circle-info"></i>
+    <div>
+      Current supported calculators:
+      <strong>CAPA_CLOSURE_RATE</strong>, <strong>HAZARD_CLOSURE_RATE</strong>, and <strong>INSPECTION_SCORE</strong>.
+      An unregistered code is retained for configuration but yields no calculated value.
+    </div>
+  </div>
+
 </div>
 {% endblock %}
