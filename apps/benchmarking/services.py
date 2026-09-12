@@ -57,13 +57,16 @@ def calculate_period(period, plants=None):
             for category in categories:
                 kpi_scores = []
                 for kpi in category.kpis.filter(is_active=True):
-                    raw, count = calculate_kpi_value(kpi.calculator_code, plant, None, period.start_date, period.end_date)
+                    raw, count = calculate_kpi_value(kpi.calculator_code, plant, None, period.start_date, period.end_date, kpi.source_module)
                     target = target_for(kpi, framework, plant, period.end_date)
                     score = calculate_kpi_score(raw, target, kpi.direction)
                     weighted = (score * kpi.weightage / 100) if score is not None else None
                     BenchmarkKPIResult.objects.update_or_create(benchmark_result=result, kpi=kpi, defaults={"raw_value": raw, "target_value": target, "score": score, "weightage": kpi.weightage, "weighted_score": weighted, "direction": kpi.direction, "gap": (raw-target if raw is not None and target is not None else None), "source_record_count": count})
                     if score is not None: kpi_scores.append((score, kpi.weightage))
-                category_scores.append((calculate_overall_score(kpi_scores), category.weightage))
+                # Do not convert unavailable source data into a zero score.
+                # Only categories with actual calculated KPI values participate.
+                if kpi_scores:
+                    category_scores.append((calculate_overall_score(kpi_scores), category.weightage))
             overall = calculate_overall_score(category_scores)
             previous = BenchmarkResult.objects.filter(framework=framework, scope_type="PLANT", plant=plant, period__end_date__lt=period.start_date).order_by("-period__end_date").first()
             result.overall_score = overall; result.target_score = Decimal("100"); result.target_gap = overall - 100; result.previous_score = previous.overall_score if previous else None; result.previous_gap = overall - previous.overall_score if previous else None

@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView, View
 from apps.accounts.mixins import PermissionRequiredMixin
 from apps.organizations.models import Plant
-from .forms import FrameworkForm, KPIForm, PeriodForm, TargetForm, PerformanceLevelForm
+from .forms import CategoryForm, FrameworkForm, KPIForm, PeriodForm, TargetForm, PerformanceLevelForm
 from .models import *
 from .services import accessible_results, calculate_period, refresh_live_results
 
@@ -31,13 +31,42 @@ class FrameworkCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVie
 class FrameworkUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     permission_required = "MANAGE_BENCHMARK_FRAMEWORK"; model = BenchmarkFramework; form_class = FrameworkForm; template_name = "benchmarking/form.html"; success_url = reverse_lazy("benchmarking:framework_list")
     def form_valid(self, form): form.instance.updated_by = self.request.user; return super().form_valid(form)
-class FrameworkDetailView(BenchmarkAccessMixin, DetailView): model = BenchmarkFramework; template_name = "benchmarking/framework_detail.html"
+class FrameworkDetailView(BenchmarkAccessMixin, DetailView):
+    model = BenchmarkFramework; template_name = "benchmarking/framework_detail.html"
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("categories__kpis")
+
+class CategoryCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    permission_required = "MANAGE_BENCHMARK_FRAMEWORK"
+    model = BenchmarkCategory; form_class = CategoryForm; template_name = "benchmarking/form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.framework = get_object_or_404(BenchmarkFramework, pk=kwargs["framework_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"page_title": "Add benchmark category", "form_title": "Category details", "form_subtitle": f"Configure a scoring category for {self.framework.name}."})
+        return context
+
+    def form_valid(self, form):
+        form.instance.framework = self.framework
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("benchmarking:framework_detail", kwargs={"pk": self.framework.pk})
 
 class KPIListView(BenchmarkAccessMixin, ListView):
     model = BenchmarkKPI; template_name = "benchmarking/kpi_list.html"
     def get_queryset(self): return super().get_queryset().filter(category__framework_id=self.kwargs["framework_id"]).select_related("category")
 class KPICreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = "MANAGE_BENCHMARK_KPI"; model = BenchmarkKPI; form_class = KPIForm; template_name = "benchmarking/form.html"
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        if self.kwargs.get("framework_id"):
+            form.fields["category"].queryset = BenchmarkCategory.objects.filter(framework_id=self.kwargs["framework_id"], is_active=True)
+        return form
     def get_success_url(self): return reverse_lazy("benchmarking:kpi_list", kwargs={"framework_id": self.object.category.framework_id})
     def form_valid(self, form): form.instance.created_by = form.instance.updated_by = self.request.user; return super().form_valid(form)
 class KPIUpdateView(KPICreateView, UpdateView):
