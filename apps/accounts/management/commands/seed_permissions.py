@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from apps.accounts.models import Permissions
 
+
 class Command(BaseCommand):
     help = 'Seeds Permission Master with hierarchical structure'
 
@@ -293,6 +294,34 @@ class Command(BaseCommand):
 
             ('EXPORT_LEGAL_COMPLIANCE', 'Export Legal Compliance', 'Can export legal compliance reports',
             'LEGAL_COMPLIANCE', 'EXPORT', 13),
+
+            # === BENCHMARKING MODULE ===
+            ('ACCESS_BENCHMARKING', 'Access benchmarking', 'Can access benchmarking module',
+            'BENCHMARKING', 'MODULE_ACCESS', 0),
+            ('VIEW_BENCHMARKING', 'View benchmarking', 'Can view benchmarking data',
+            'BENCHMARKING', 'VIEW', 1),
+            ('MANAGE_BENCHMARK_FRAMEWORK', 'Manage benchmark frameworks', 'Can manage benchmark frameworks',
+            'BENCHMARKING', 'MANAGE', 2),
+            ('MANAGE_BENCHMARK_KPI', 'Manage benchmark KPIs', 'Can manage benchmark KPIs',
+            'BENCHMARKING', 'MANAGE', 3),
+            ('MANAGE_BENCHMARK_TARGET', 'Manage benchmark targets', 'Can manage benchmark targets',
+            'BENCHMARKING', 'MANAGE', 4),
+            ('MANAGE_PERFORMANCE_LEVEL', 'Manage performance levels', 'Can manage performance levels',
+            'BENCHMARKING', 'MANAGE', 5),
+            ('CALCULATE_BENCHMARK', 'Calculate benchmark', 'Can calculate benchmark results',
+            'BENCHMARKING', 'MANAGE', 6),
+            ('PUBLISH_BENCHMARK', 'Publish benchmark', 'Can publish benchmark results',
+            'BENCHMARKING', 'APPROVE', 7),
+            ('VIEW_ALL_BENCHMARK_SITES', 'View all benchmark sites', 'Can view benchmarks across all sites',
+            'BENCHMARKING', 'VIEW', 8),
+            ('VIEW_SITE_BENCHMARK', 'View site benchmark', 'Can view site-level benchmark',
+            'BENCHMARKING', 'VIEW', 9),
+            ('VIEW_DEPARTMENT_BENCHMARK', 'View department benchmark', 'Can view department-level benchmark',
+            'BENCHMARKING', 'VIEW', 10),
+            ('VIEW_GAP_ANALYSIS', 'View gap analysis', 'Can view benchmark gap analysis',
+            'BENCHMARKING', 'VIEW', 11),
+            ('EXPORT_BENCHMARK_REPORT', 'Export benchmark report', 'Can export benchmark reports',
+            'BENCHMARKING', 'EXPORT', 12),
         ]
 
         created = 0
