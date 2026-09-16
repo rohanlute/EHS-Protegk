@@ -621,17 +621,260 @@
 
         <hr style="border-color: var(--border-color);">
 
-        <!-- Safety Data Sheet -->
-        <h5 class="section-title"><i class="fas fa-file-pdf"></i> Safety Data Sheet (SDS)</h5>
-        {% if chemical.sds_file %}
-          <a href="{{ chemical.sds_file.url }}" target="_blank" class="btn-success-custom">
-            <i class="fas fa-file-pdf"></i> View SDS
-          </a>
-        {% else %}
-          <p class="text-muted" style="font-size: 0.85rem;">No SDS uploaded</p>
+        <!-- ========================================================== -->
+        <!-- SAFETY DATA SHEET                                          -->
+        <!-- ========================================================== -->
+        <h5 class="section-title">
+        <i class="fas fa-file-pdf"></i> Safety Data Sheet (SDS)
+        </h5>
+
+        {% if has_active_sds %}
+            <div class="info-box">
+                <div class="info-label">SDS Number</div>
+                <div class="info-value">{{ active_sds.sds_number }}</div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Product Name</div>
+                <div class="info-value">{{ active_sds.product_name }}</div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge-lg badge-success">
+                        {{ active_sds.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Current Version</div>
+                <div class="info-value">
+                    {% if active_sds_version %}
+                        Version {{ active_sds_version.version_number }}
+                    {% else %}
+                        Not Available
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Issue Date</div>
+                <div class="info-value">
+                    {{ active_sds.issue_date|date:"d M Y"|default:"-" }}
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Revision Date</div>
+                <div class="info-value">
+                    {{ active_sds.revision_date|date:"d M Y"|default:"-" }}
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">Next Review Date</div>
+                <div class="info-value">
+                    {{ active_sds.next_review_date|date:"d M Y"|default:"-" }}
+                </div>
+            </div>
+
+            <a
+                href="{% url 'sds:sds_detail' active_sds.pk %}"
+                class="btn-success-custom"
+            >
+                <i class="fas fa-file-pdf"></i> View Active SDS
+            </a>
+            {% else %}
+            <div class="info-box">
+                <div class="info-label">SDS Status</div>
+                <div class="info-value">
+                    <span class="badge-lg badge-warning">
+                        Not Available
+                    </span>
+                </div>
+            </div>
+
+            <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                No active Safety Data Sheet is currently available for this chemical.
+            </p>
         {% endif %}
 
-      </div>
+        <!-- =========================================================
+            ACTIVE SDS - GHS HAZARD INFORMATION
+            ========================================================= -->
+        {% if has_active_sds and has_active_sds_hazard %}
+        <div class="mt-4">
+            <h5 class="section-title">
+                <i class="fas fa-triangle-exclamation"></i>
+                GHS Hazard Information
+            </h5>
+            <div class="info-box">
+                <div class="info-label">Signal Word</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.signal_word %}
+                        <span class="badge-lg badge-danger">
+                            {{ active_sds_hazard.signal_word }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Hazard Classification</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.hazard_classification %}
+                        {{ active_sds_hazard.hazard_classification|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Hazard Statements</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.hazard_statements %}
+                        {{ active_sds_hazard.hazard_statements|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Precautionary Statements</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.precautionary_statements %}
+                        {{ active_sds_hazard.precautionary_statements|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">GHS Pictograms</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.ghs_pictograms %}
+                        {{ active_sds_hazard.ghs_pictograms|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Other Hazards</div>
+                <div class="info-value">
+                    {% if active_sds_hazard.other_hazards %}
+                        {{ active_sds_hazard.other_hazards|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">Not Specified</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if active_sds_hazard.additional_information %}
+            <div class="info-box">
+                <div class="info-label">Additional Information</div>
+                <div class="info-value">
+                    {{ active_sds_hazard.additional_information|linebreaksbr }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% elif has_active_sds %}
+        <div class="mt-4">
+            <h5 class="section-title">
+                <i class="fas fa-triangle-exclamation"></i>
+                GHS Hazard Information
+            </h5>
+            <div class="info-box">
+                <div class="info-label">Hazard Information</div>
+                <div class="info-value">
+                    <span class="text-muted">
+                        Section 2 hazard information is not available for the active SDS version.
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ========================================================== -->
+        <!-- SDS HISTORY                                                -->
+        <!-- ========================================================== -->
+        {% if sds_records %}
+        <hr style="border-color: var(--border-color);">
+
+        <h5 class="section-title">
+            <i class="fas fa-clock-rotate-left"></i> SDS History
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                <th>SDS Number</th>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Current Version</th>
+                <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sds in sds_records %}
+                <tr>
+                    <td>
+                    <strong>{{ sds.sds_number }}</strong>
+                    </td>
+                    <td>
+                    {{ sds.product_name }}
+                    </td>
+                    <td>
+                    {% if sds.status == 'ACTIVE' %}
+                        <span class="badge-lg badge-success">
+                        Active
+                        </span>
+                    {% elif sds.status == 'SUPERSEDED' %}
+                        <span class="badge-lg badge-secondary">
+                        Superseded
+                        </span>
+                    {% elif sds.status == 'APPROVED' %}
+                        <span class="badge-lg badge-success">
+                        Approved
+                        </span>
+                    {% elif sds.status == 'REJECTED' %}
+                        <span class="badge-lg badge-danger">
+                        Rejected
+                        </span>
+                    {% else %}
+                        <span class="badge-lg badge-warning">
+                        {{ sds.get_status_display }}
+                        </span>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {% if sds.current_version %}
+                        Version {{ sds.current_version.version_number }}
+                    {% else %}
+                        <span class="text-muted">Not Available</span>
+                    {% endif %}
+                    </td>
+                    <td class="text-right">
+                    <a
+                        href="{% url 'sds:sds_detail' sds.pk %}"
+                        class="btn-secondary-custom"
+                    >
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        </div>
     </div>
   </div>
 
