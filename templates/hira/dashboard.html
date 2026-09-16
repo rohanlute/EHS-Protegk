@@ -1,0 +1,541 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}HIRA Management | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">HIRA Management</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  .hira-header .hira-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* METRIC CARDS                                                */
+  /* ========================================================== */
+  .metric {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .metric:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--primary-teal);
+  }
+
+  .metric strong {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary-teal);
+    line-height: 1.1;
+  }
+
+  .metric span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .ehs-card .card-body {
+    padding: 0;
+  }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table a {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .table a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* STATUS BADGES                                               */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  /* Map common HIRA statuses to teal-theme colors */
+  .status-badge.status-draft,
+  .status-badge.status-pending,
+  .status-badge.status-open {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--pending-orange);
+  }
+
+  .status-badge.status-approved,
+  .status-badge.status-completed,
+  .status-badge.status-closed,
+  .status-badge.status-active {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .status-badge.status-rejected,
+  .status-badge.status-expired,
+  .status-badge.status-failed,
+  .status-badge.status-critical {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+
+  .status-badge.status-in-progress,
+  .status-badge.status-review {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* SMALL ACTION BUTTONS IN TABLE                               */
+  /* ========================================================== */
+  .btn-sm.btn-outline-secondary {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .text-center.text-muted {
+    color: var(--text-muted) !important;
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .hira-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .hira-header .hira-actions {
+      justify-content: stretch;
+    }
+
+    .hira-header .hira-actions .btn-primary,
+    .hira-header .hira-actions .btn-outline-secondary {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .metric strong {
+      font-size: 22px;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <h1>HIRA Management</h1>
+      <p>Hazard identification, risk assessment, actions, approvals, and Excel reporting.</p>
+    </div>
+    <div class="hira-actions">
+      <a class="btn btn-primary" href="{% url 'hira:create' %}">
+        <i class="fas fa-database"></i> Create HIRA
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'hira:create' %}?standalone=1">
+        <i class="fas fa-pen"></i> Standalone
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'hira:register' %}">
+        <i class="fas fa-list"></i> Register
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'hira:hazard_master' %}">
+        <i class="fas fa-layer-group"></i> Masters
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'hira:excel_export' %}">
+        <i class="fas fa-file-excel"></i> Export
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KPI METRICS                                                  -->
+  <!-- ============================================================ -->
+  <div class="row mb-3">
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ total_source_records }}</strong>
+        <span>Source Records</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ total_hiras }}</strong>
+        <span>HIRA Assessments</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ not_assessed_source_records }}</strong>
+        <span>Not Assessed</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ critical_hazards }}</strong>
+        <span>Critical Hazards</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ high_hazards }}</strong>
+        <span>High Hazards</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ open_actions }}</strong>
+        <span>Open Actions</span>
+      </div>
+    </div>
+    <div class="col-md-2 col-6 mb-2">
+      <div class="metric">
+        <strong>{{ closed_actions }}</strong>
+        <span>Closed Actions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SOURCE MODULE COVERAGE                                       -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <i class="fas fa-layer-group" style="color: var(--primary-teal);"></i>
+      <strong>Source Module Coverage</strong>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Total Source Records</th>
+              <th>Assessed</th>
+              <th>Not Assessed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in source_module_stats %}
+            <tr>
+              <td>{{ row.module }}</td>
+              <td>{{ row.total }}</td>
+              <td>{{ row.assessed }}</td>
+              <td>{{ row.not_assessed }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                <i class="fas fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
+                No source records available.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RECENT HIRA ASSESSMENTS                                      -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <i class="fas fa-history" style="color: var(--primary-teal);"></i>
+      <strong>Recent HIRA Assessments</strong>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>HIRA No.</th>
+              <th>Plant</th>
+              <th>Department</th>
+              <th>Module</th>
+              <th>Process</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hira in recent_hiras %}
+            <tr>
+              <td>
+                <a href="{% url 'hira:detail' hira.pk %}">{{ hira.hira_number }}</a>
+              </td>
+              <td>{{ hira.plant.name }}</td>
+              <td>{{ hira.department.name }}</td>
+              <td>{{ hira.module.name }}</td>
+              <td>{{ hira.process }}</td>
+              <td>
+                <span class="status-badge status-{{ hira.status }}">
+                  {{ hira.get_status_display }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'hira:detail' hira.pk %}"
+                   class="btn btn-sm btn-outline-secondary"
+                   title="View">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">
+                <i class="fas fa-clipboard-list" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
+                No HIRA records yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

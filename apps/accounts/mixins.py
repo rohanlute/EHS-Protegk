@@ -12,6 +12,9 @@ class PermissionRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not self.permission_required:
             raise ValueError("permission_required must be set")
+
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         
         # Check permission
         if not (request.user.has_permission(self.permission_required) or request.user.is_superuser):

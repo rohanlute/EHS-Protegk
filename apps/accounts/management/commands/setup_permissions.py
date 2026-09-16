@@ -82,6 +82,15 @@ class Command(BaseCommand):
             ('CAPA_CLOSE', 'Close CAPA', 'Can close CAPA records'),
             ('CAPA_REOPEN', 'Reopen CAPA', 'Can reopen CAPA records'),
             ('CAPA_EXPORT', 'Export CAPA', 'Can export CAPA reports'),
+
+            # Benchmarking Permissions
+            ('ACCESS_BENCHMARKING_MODULE', 'Access Benchmarking Module', 'Can access site/plant benchmarking module'),
+            ('VIEW_BENCHMARKING_DASHBOARD', 'View Benchmarking Dashboard', 'Can view benchmarking dashboard and comparisons'),
+            ('VIEW_BENCHMARKING_REPORTS', 'View Benchmarking Reports', 'Can view benchmarking reports'),
+            ('CREATE_BENCHMARKING', 'Create Benchmarking', 'Can create benchmarking entries'),
+            ('EDIT_BENCHMARKING', 'Edit Benchmarking', 'Can edit benchmarking entries'),
+            ('MANAGE_BENCHMARKING_CONFIGURATION', 'Manage Benchmarking Configuration', 'Can manage benchmarking configuration and metrics'),
+            ('EXPORT_BENCHMARKING', 'Export Benchmarking', 'Can export benchmarking reports'),
         ]
         
         for code, name, description in permissions_data:
@@ -157,6 +166,12 @@ class Command(BaseCommand):
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
                 'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE',
                 # 'ACCESS_AUDIT_MODULE','ACCESS_REPORTS_MODULE',
+
+                # Benchmarking access
+                'ACCESS_BENCHMARKING_MODULE', 'VIEW_BENCHMARKING_DASHBOARD',
+                'VIEW_BENCHMARKING_REPORTS', 'CREATE_BENCHMARKING',
+                'EDIT_BENCHMARKING', 'MANAGE_BENCHMARKING_CONFIGURATION',
+                'EXPORT_BENCHMARKING',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)
@@ -183,6 +198,10 @@ class Command(BaseCommand):
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
                 'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE', #'ACCESS_REPORTS_MODULE',
+
+                # Benchmarking access (view only)
+                'ACCESS_BENCHMARKING_MODULE', 'VIEW_BENCHMARKING_DASHBOARD',
+                'VIEW_BENCHMARKING_REPORTS', 'EXPORT_BENCHMARKING',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)
@@ -213,6 +232,11 @@ class Command(BaseCommand):
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE',
                 'ACCESS_INSPECTION_MODULE', 'ACCESS_CAPA_MODULE',
                 #'ACCESS_PERMIT_MODULE','ACCESS_REPORTS_MODULE',
+
+                # Benchmarking access (full within plant)
+                'ACCESS_BENCHMARKING_MODULE', 'VIEW_BENCHMARKING_DASHBOARD',
+                'VIEW_BENCHMARKING_REPORTS', 'CREATE_BENCHMARKING',
+                'EDIT_BENCHMARKING', 'EXPORT_BENCHMARKING',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)
@@ -234,6 +258,10 @@ class Command(BaseCommand):
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE', 'ACCESS_CAPA_MODULE',
                 #'ACCESS_OBSERVATION_MODULE',
+
+                # Benchmarking access (view only)
+                'ACCESS_BENCHMARKING_MODULE', 'VIEW_BENCHMARKING_DASHBOARD',
+                'VIEW_BENCHMARKING_REPORTS',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)
@@ -255,6 +283,9 @@ class Command(BaseCommand):
                 # Module access
                 'ACCESS_INJURY_MODULE', 'ACCESS_HAZARD_MODULE', 'ACCESS_CAPA_MODULE',
                 # 'ACCESS_OBSERVATION_MODULE', 'ACCESS_TRAINING_MODULE',
+
+                # Benchmarking access (view dashboard only)
+                'ACCESS_BENCHMARKING_MODULE', 'VIEW_BENCHMARKING_DASHBOARD',
             ]
             perms = Permissions.objects.filter(code__in=perm_codes)
             role.permissions.set(perms)

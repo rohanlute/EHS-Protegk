@@ -1,74 +1,534 @@
 {% extends 'base/base.html' %}
+{% load static %}
 {% block title %}CAPA Dashboard{% endblock %}
+
 {% block extra_css %}
 <style>
-  :root { --capa-teal: #0d9488; --capa-dark: #0f766e; --capa-soft: rgba(13,148,136,.08); --capa-border: #e2e8f0; }
-  .content-wrapper { background: #f8fafc !important; }
-  .capa-shell { max-width: 1420px; margin: 0 auto; }
-  .capa-page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; padding:18px 22px; background:#fff; border:1px solid var(--capa-border); border-radius:12px; box-shadow:0 1px 3px rgba(15,23,42,.06); }
-  .capa-page-heading { display:flex; align-items:center; gap:12px; }
-  .capa-page-heading .icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:11px; color:var(--capa-teal); background:var(--capa-soft); }
-  .capa-page-heading h1 { margin:0; color:#0f172a; font-size:1.2rem; font-weight:750; }
-  .capa-page-heading p { margin:3px 0 0; color:#64748b; font-size:.78rem; }
-  .capa-btn { display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:8px 17px; border-radius:6px; font-size:.8rem; font-weight:700; text-decoration:none; }
-  .capa-btn-primary { color:#fff; background:linear-gradient(135deg,var(--capa-teal),var(--capa-dark)); box-shadow:0 3px 12px rgba(13,148,136,.2); }
-  .capa-btn-primary:hover { color:#fff; transform:translateY(-1px); }
-  .capa-kpi { position:relative; min-height:100px; border-radius:12px; padding:17px 18px; background:#fff; border:1px solid var(--capa-border); box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; }
-  .capa-kpi .kpi-icon { width:34px; height:34px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; border-radius:9px; color:#fff; font-size:.9rem; }
-  .capa-kpi .kpi-icon.teal { background:linear-gradient(135deg,#0d9488,#0f766e); }
-  .capa-kpi .kpi-icon.blue { background:linear-gradient(135deg,#3b82f6,#2563eb); }
-  .capa-kpi .kpi-icon.gold { background:linear-gradient(135deg,#d97706,#f59e0b); }
-  .capa-kpi .kpi-icon.red { background:linear-gradient(135deg,#ef4444,#dc2626); }
-  .capa-kpi:after { content:""; position:absolute; right:-20px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:var(--capa-soft); }
-  .capa-kpi h4 { margin:0; font-size:1.45rem; font-weight:800; color:#0f172a; position:relative; z-index:1; }
-  .capa-kpi p { margin:5px 0 0; color:#64748b; font-size:.76rem; text-transform:uppercase; letter-spacing:.35px; position:relative; z-index:1; }
-  .capa-panel { background:#fff; border:1px solid var(--capa-border); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; }
-  .capa-panel-header { padding:11px 16px; color:#fff; background:var(--capa-teal); font-size:.92rem; font-weight:700; }
-  .capa-panel-body { padding:18px; }
-  .capa-filter-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px 16px; }
-  .capa-filter-grid p { margin:0; }
-  .capa-filter-grid label { display:block; margin-bottom:5px; color:#334155; font-size:.75rem; font-weight:700; }
-  .capa-filter-grid input, .capa-filter-grid select { width:100%; height:36px; padding:6px 10px; border:2px solid var(--capa-border); border-radius:6px; font-size:.8rem; }
-  .capa-filter-grid input:focus, .capa-filter-grid select:focus { outline:none; border-color:var(--capa-teal); box-shadow:0 0 0 3px rgba(13,148,136,.12); }
-  @media(max-width:900px) { .capa-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media(max-width:520px) { .capa-page-header { padding:14px 16px; } .capa-filter-grid { grid-template-columns:1fr; } .capa-page-header .capa-btn { width:100%; justify-content:center; } }
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --secondary-gold: #d97706;
+    --secondary-red: #ef4444;
+    --secondary-green: #22c55e;
+    --secondary-blue: #3b82f6;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+
+  .content-wrapper { background: #f1f5f9 !important; }
+  .capa-dash-shell { max-width: 1420px; margin: 0 auto; }
+
+  /* ---------- HEADER ---------- */
+  .dash-page-header {
+    background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color); padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .dash-page-header .header-left { display: flex; align-items: center; gap: 14px; }
+  .dash-page-header .header-icon {
+    width: 44px; height: 44px; border-radius: 12px; background: var(--primary-teal-light);
+    color: var(--primary-teal); display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .dash-page-header h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0; }
+  .dash-page-header .subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+  .dash-btn-primary {
+    display: inline-flex; align-items: center; gap: 8px; color: #fff !important;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700;
+    font-size: 14px; text-decoration: none; box-shadow: 0 3px 12px rgba(13,148,136,.25);
+    transition: all .2s ease;
+  }
+  .dash-btn-primary:hover { color: #fff !important; transform: translateY(-2px); text-decoration: none; }
+
+  /* ---------- FILTER SECTION ---------- */
+  .dash-filter-section {
+    background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color); padding: 20px 24px; margin-bottom: 24px; transition: all .3s ease;
+  }
+  .dash-filter-section:hover { box-shadow: var(--shadow-hover); }
+  .dash-filter-section .form-label {
+    font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .3px;
+  }
+  .dash-filter-section .form-control, .dash-filter-section .form-select {
+    border-radius: var(--radius-sm); border: 2px solid var(--border-color); padding: 8px 12px;
+    font-size: 14px; background: #fafbfc; color: var(--text-primary); width: 100%;
+  }
+  .dash-filter-section .form-control:focus, .dash-filter-section .form-select:focus {
+    outline: none; border-color: var(--primary-teal); box-shadow: 0 0 0 4px rgba(13,148,136,.08); background: #fff;
+  }
+  .btn-filter {
+    background: #0d9488 !important; color: #fff !important; border: none !important; padding: 9px 24px !important;
+    border-radius: var(--radius-sm) !important; font-weight: 600 !important; font-size: 14px !important;
+    cursor: pointer !important; width: 100% !important; display: flex !important; align-items: center !important;
+    justify-content: center !important; gap: 8px !important; transition: all .25s ease !important;
+  }
+  .btn-filter:hover { background: #0f766e !important; transform: translateY(-2px) !important; box-shadow: 0 4px 16px rgba(13,148,136,.3) !important; }
+  .btn-filter:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+  .active-filter-badge {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--primary-teal-light);
+    color: var(--primary-teal); padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1px solid rgba(13,148,136,.12); margin: 4px 6px 4px 0;
+  }
+  .active-filter-badge i { cursor: pointer; font-size: 12px; opacity: .6; }
+  .active-filter-badge i:hover { opacity: 1; }
+  .btn-clear-filters {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; border: 1px solid #fca5a5; background: #fef2f2; color: #dc2626;
+    text-decoration: none;
+  }
+  .btn-clear-filters:hover { background: #fee2e2; border-color: #dc2626; text-decoration: none; }
+
+  /* ---------- STAT CARDS ---------- */
+  .dash-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .dash-stat-card {
+    background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color); padding: 20px 22px; display: flex; align-items: center; gap: 16px;
+    transition: all .3s ease; position: relative; overflow: hidden; text-decoration: none;
+  }
+  .dash-stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: rgba(13,148,136,.15); text-decoration: none; }
+  .dash-stat-card .stat-icon {
+    width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #fff; flex-shrink: 0;
+  }
+  .dash-stat-card .stat-icon.teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .dash-stat-card .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  .dash-stat-card .stat-icon.gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dash-stat-card .stat-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .dash-stat-card .stat-info .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+  .dash-stat-card .stat-info .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .dash-stat-card .stat-info .stat-change {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
+    padding: 2px 10px; border-radius: 12px; margin-top: 2px; color: #64748b; background: #f1f5f9;
+  }
+
+  /* ---------- CHART CARDS ---------- */
+  .dash-chart-card {
+    background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color); overflow: hidden; transition: all .3s ease; height: 100%;
+  }
+  .dash-chart-card:hover { box-shadow: var(--shadow-hover); }
+  .dash-chart-card .card-header-custom { padding: 16px 20px; border-bottom: 1px solid var(--border-color); background: var(--primary-teal-light); }
+  .dash-chart-card .card-header-custom h5 {
+    font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;
+  }
+  .dash-chart-card .card-header-custom h5 i { color: var(--primary-teal); }
+  .dash-chart-card .card-body-custom { padding: 20px; }
+  .dash-chart-container { position: relative; height: 280px; }
+
+  /* ---------- ALERTS ---------- */
+  .dash-alert-card { border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px; border-left: 4px solid; transition: all .2s ease; }
+  .dash-alert-card:hover { transform: translateX(4px); }
+  .dash-alert-card.alert-danger { border-left-color: #dc2626; background: #fef2f2; }
+  .dash-alert-card .alert-title { font-weight: 600; color: var(--text-primary); margin: 0 0 2px 0; font-size: 14px; }
+  .dash-alert-card .alert-text { font-size: 13px; color: var(--text-secondary); margin: 0; }
+  .dash-alert-card .alert-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .dash-alert-card .alert-action { float: right; margin-top: -6px; }
+  .dash-alert-card .alert-action.btn-danger {
+    background: #dc2626 !important; color: #fff !important; border: none !important; padding: 4px 12px !important;
+    border-radius: var(--radius-sm) !important; font-weight: 600 !important; font-size: 12px !important; cursor: pointer !important;
+  }
+  .dash-alert-card .alert-action.btn-danger:hover { background: #b91c1c !important; transform: scale(1.05) !important; }
+
+  /* ---------- TABLE ---------- */
+  .dash-capa-table { font-size: 14px; }
+  .dash-capa-table thead th {
+    background: var(--primary-teal-light); border-bottom: 2px solid var(--border-color); font-weight: 600;
+    text-transform: uppercase; font-size: 11px; letter-spacing: .5px; color: var(--text-secondary); padding: 10px 14px;
+  }
+  .dash-capa-table tbody td { padding: 10px 14px; vertical-align: middle; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); }
+  .dash-capa-table tbody tr:hover { background: var(--primary-teal-light); }
+  .dash-capa-table tbody tr:last-child td { border-bottom: none; }
+  .btn-view-all {
+    background: #0d9488 !important; color: #fff !important; border: none !important; border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important; font-size: 14px !important; padding: 8px 24px !important; text-decoration: none !important;
+  }
+  .btn-view-all:hover { background: #0f766e !important; color: #fff !important; transform: translateY(-2px) !important; text-decoration: none !important; }
+  .btn-view-detail {
+    border-radius: var(--radius-sm) !important; border: 1px solid #0d9488 !important; color: #0d9488 !important;
+    background: transparent !important; padding: 4px 10px !important; text-decoration: none !important;
+  }
+  .btn-view-detail:hover { background: #0d9488 !important; color: #fff !important; text-decoration: none !important; }
+
+  .dash-badge { padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 20px; }
+  .dash-badge.danger { background: #fef2f2; color: #dc2626; }
+  .dash-badge.warning { background: #fffbeb; color: #d97706; }
+  .dash-badge.info { background: #ecfdf5; color: #0d9488; }
+  .dash-badge.success { background: #dcfce7; color: #16a34a; }
+  .dash-badge.secondary { background: #f1f5f9; color: #64748b; }
+
+  @media (max-width: 1024px) { .dash-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) {
+    .dash-page-header { padding: 16px 18px; flex-direction: column; align-items: flex-start; }
+    .dash-stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dash-stat-card { padding: 14px 16px; }
+    .dash-stat-card .stat-info .stat-value { font-size: 22px; }
+    .dash-filter-section { padding: 16px 18px; }
+    .btn-filter { width: 100%; }
+    .dash-chart-container { height: 220px; }
+    .dash-capa-table thead { display: none; }
+    .dash-capa-table tbody tr { display: block; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff; }
+    .dash-capa-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border-color); }
+    .dash-capa-table tbody td:last-child { border-bottom: none; }
+    .dash-capa-table tbody td::before { content: attr(data-label); font-weight: 600; color: var(--text-primary); font-size: 12px; }
+    .btn-view-all { width: 100%; justify-content: center; display: flex; }
+  }
+  @media (max-width: 480px) {
+    .dash-stats-grid { grid-template-columns: 1fr; }
+    .dash-chart-container { height: 200px; }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="container-fluid capa-shell">
-  <div class="capa-page-header">
-    <div class="capa-page-heading">
-      <span class="icon"><i class="fas fa-tools"></i></span>
-      <div><h1>CAPA Dashboard</h1><p>Corrective and Preventive Action overview</p></div>
+<div class="container-fluid capa-dash-shell" style="padding: 0;">
+
+  <!-- HEADER -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="fas fa-tools"></i></div>
+      <div>
+        <h1>CAPA Analytical Dashboard</h1>
+        <p class="subtitle">Corrective and Preventive Action tracking &amp; insights</p>
+      </div>
     </div>
-    <a class="capa-btn capa-btn-primary" href="{% url 'capa:create' %}"><i class="fas fa-plus"></i> New CAPA</a>
+    <a href="{% url 'capa:create' %}" class="dash-btn-primary"><i class="fas fa-plus"></i> New CAPA</a>
   </div>
-  <div class="row g-3 mb-3">
+
+  <!-- FILTER SECTION -->
+  <div class="dash-filter-section">
+    <form method="GET" action="{% url 'capa:dashboard' %}" id="filterForm">
+      <div class="row align-items-end">
+        <div class="col-md-2 mb-3">
+          <label for="plant_filter" class="form-label"><i class="fas fa-industry mr-1"></i> Plant</label>
+          <select name="plant" id="plant_filter" class="form-control form-select">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+              <option value="{{ plant.id }}" {% if selected_plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="zone_filter" class="form-label"><i class="fas fa-map-marker-alt mr-1"></i> Zone</label>
+          <select name="zone" id="zone_filter" class="form-control form-select">
+            <option value="">All Zones</option>
+            {% for zone in zones %}
+              <option value="{{ zone.id }}" {% if selected_zone == zone.id|stringformat:"s" %}selected{% endif %}>{{ zone.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="location_filter" class="form-label"><i class="fas fa-location-arrow mr-1"></i> Location</label>
+          <select name="location" id="location_filter" class="form-control form-select">
+            <option value="">All Locations</option>
+            {% for location in locations %}
+              <option value="{{ location.id }}" {% if selected_location == location.id|stringformat:"s" %}selected{% endif %}>{{ location.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="sublocation_filter" class="form-label"><i class="fas fa-map-pin mr-1"></i> Sub-Location</label>
+          <select name="sublocation" id="sublocation_filter" class="form-control form-select">
+            <option value="">All Sub-Locations</option>
+            {% for sublocation in sublocations %}
+              <option value="{{ sublocation.id }}" {% if selected_sublocation == sublocation.id|stringformat:"s" %}selected{% endif %}>{{ sublocation.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="month_filter" class="form-label"><i class="fas fa-calendar mr-1"></i> Month</label>
+          <select name="month" id="month_filter" class="form-control form-select">
+            <option value="">All Time</option>
+            {% for month_option in month_options %}
+              <option value="{{ month_option.value }}" {% if selected_month == month_option.value %}selected{% endif %}>{{ month_option.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <button type="submit" class="btn-filter" id="applyFilterBtn"><i class="fas fa-filter mr-1"></i> Apply Filters</button>
+        </div>
+      </div>
+
+      {% if has_active_filters %}
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-bold" style="font-size: 13px; color: var(--text-secondary);">Active Filters:</span>
+            {% if selected_plant_name %}<span class="active-filter-badge">Plant: {{ selected_plant_name }} <i class="fas fa-times" onclick="removeFilter('plant')"></i></span>{% endif %}
+            {% if selected_zone_name %}<span class="active-filter-badge">Zone: {{ selected_zone_name }} <i class="fas fa-times" onclick="removeFilter('zone')"></i></span>{% endif %}
+            {% if selected_location_name %}<span class="active-filter-badge">Location: {{ selected_location_name }} <i class="fas fa-times" onclick="removeFilter('location')"></i></span>{% endif %}
+            {% if selected_sublocation_name %}<span class="active-filter-badge">Sub-Location: {{ selected_sublocation_name }} <i class="fas fa-times" onclick="removeFilter('sublocation')"></i></span>{% endif %}
+            {% if selected_month_label %}<span class="active-filter-badge">Month: {{ selected_month_label }} <i class="fas fa-times" onclick="removeFilter('month')"></i></span>{% endif %}
+            <a href="{% url 'capa:dashboard' %}" class="btn-clear-filters"><i class="fas fa-times-circle"></i> Clear All</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="dash-stats-grid">
     {% for value, label, icon, color in dashboard_cards %}
-    <div class="col-6 col-lg-3">
-      <div class="capa-kpi">
-        <div class="kpi-icon {{ color }}"><i class="{{ icon }}"></i></div>
-        <h4>{{ value }}</h4>
-        <p>{{ label }}</p>
+    <div class="dash-stat-card">
+      <div class="stat-icon {{ color }}"><i class="{{ icon }}"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ value }}</div>
+        <div class="stat-label">{{ label }}</div>
       </div>
     </div>
     {% endfor %}
   </div>
-  <div class="capa-panel">
-    <div class="capa-panel-header"><i class="fas fa-filter mr-2"></i> Quick Filters</div>
-    <div class="capa-panel-body">
-      <form method="get">
-        <div class="capa-filter-grid">
-          {% for field in filters %}
-          <div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom"><h5><i class="fas fa-chart-pie"></i> CAPAs by Source</h5></div>
+        <div class="card-body-custom"><div class="dash-chart-container"><canvas id="sourceTypeChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom"><h5><i class="fas fa-chart-line"></i> Monthly Trend (Last 6 Months)</h5></div>
+        <div class="card-body-custom"><div class="dash-chart-container"><canvas id="monthlyTrendChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom"><h5><i class="fas fa-exclamation-circle"></i> Severity Distribution</h5></div>
+        <div class="card-body-custom"><div class="dash-chart-container"><canvas id="severityChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom"><h5><i class="fas fa-tasks"></i> Status Distribution</h5></div>
+        <div class="card-body-custom"><div class="dash-chart-container"><canvas id="statusChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTS / RECENT TABLE -->
+  <div class="row">
+    <div class="col-lg-4 mb-4">
+      {% if overdue_capas %}
+      <div class="dash-chart-card mb-3">
+        <div class="card-header-custom" style="background: #fef2f2; border-color: #fca5a5;">
+          <h5 style="color: #dc2626;"><i class="fas fa-exclamation-triangle"></i> Overdue CAPAs</h5>
+        </div>
+        <div class="card-body-custom">
+          {% for capa in overdue_capas %}
+          <div class="dash-alert-card alert-danger">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="alert-title">{{ capa.capa_number }}</div>
+                <div class="alert-text">{{ capa.title|truncatewords:8 }}</div>
+                <div class="alert-meta">
+                  <i class="fas fa-clock"></i> Due: {{ capa.target_date|date:"d/m/Y" }}
+                  <span class="text-danger">({{ capa.target_date|timesince }} ago)</span>
+                </div>
+              </div>
+              <a href="{{ capa.get_absolute_url }}" class="alert-action btn-danger" title="View CAPA"><i class="fas fa-search"></i></a>
+            </div>
+          </div>
           {% endfor %}
         </div>
-        <div class="mt-3 d-flex gap-2 flex-wrap">
-          <button class="capa-btn capa-btn-primary" type="submit"><i class="fas fa-search"></i> Apply Filters</button>
-          <a class="capa-btn" style="border:2px solid #e2e8f0;color:#475569;" href="{% url 'capa:list' %}"><i class="fas fa-list"></i> Open Register</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-8 mb-4">
+      <div class="dash-chart-card">
+        <div class="card-header-custom"><h5><i class="fas fa-clock"></i> Recent CAPAs</h5></div>
+        <div class="card-body-custom" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="table dash-capa-table">
+              <thead><tr><th>CAPA #</th><th>Plant</th><th>Target Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for capa in recent_capas %}
+                <tr>
+                  <td data-label="CAPA #"><strong>{{ capa.capa_number }}</strong><br><span style="font-size:12px;color:var(--text-muted);">{{ capa.title|truncatewords:6 }}</span></td>
+                  <td data-label="Plant">{{ capa.plant.name|default:"—" }}</td>
+                  <td data-label="Target Date">{{ capa.target_date|date:"d/m/Y"|default:"—" }}</td>
+                  <td data-label="Status"><span class="dash-badge {{ capa.status_badge_class }}">{{ capa.get_status_display }}</span></td>
+                  <td data-label="Action"><a href="{{ capa.get_absolute_url }}" class="btn-view-detail" title="View"><i class="fas fa-eye"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">
+                  <i class="fas fa-inbox fa-3x mb-3 d-block" style="color: var(--primary-teal-light);"></i>No CAPAs found
+                </td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if recent_capas %}
+          <div class="text-center p-3"><a href="{% url 'capa:list' %}" class="btn-view-all"><i class="fas fa-arrow-right mr-2"></i> View All CAPAs</a></div>
+          {% endif %}
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+{{ type_chart_labels|json_script:"capa-type-chart-labels" }}
+{{ type_chart_data|json_script:"capa-type-chart-data" }}
+{{ monthly_labels|json_script:"capa-monthly-labels" }}
+{{ monthly_data|json_script:"capa-monthly-data" }}
+{{ severity_labels|json_script:"capa-severity-labels" }}
+{{ severity_data|json_script:"capa-severity-data" }}
+{{ status_labels|json_script:"capa-status-labels" }}
+{{ status_data|json_script:"capa-status-data" }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const filterForm = document.getElementById('filterForm');
+  const applyButton = document.getElementById('applyFilterBtn');
+  filterForm.addEventListener('submit', function () {
+    if (applyButton) { applyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...'; applyButton.disabled = true; }
+  });
+
+  document.getElementById('plant_filter').addEventListener('change', function () {
+    const zoneSelect = document.getElementById('zone_filter');
+    const locationSelect = document.getElementById('location_filter');
+    const sublocationSelect = document.getElementById('sublocation_filter');
+    zoneSelect.innerHTML = '<option value="">All Zones</option>';
+    locationSelect.innerHTML = '<option value="">All Locations</option>';
+    sublocationSelect.innerHTML = '<option value="">All Sub-Locations</option>';
+    if (this.value) {
+      fetch(`{% url 'capa:ajax_get_zones' %}?plant_id=${this.value}`).then(r => r.json()).then(data => {
+        data.forEach(z => zoneSelect.add(new Option(z.name, z.id)));
+      });
+    }
+  });
+
+  document.getElementById('zone_filter').addEventListener('change', function () {
+    const locationSelect = document.getElementById('location_filter');
+    const sublocationSelect = document.getElementById('sublocation_filter');
+    locationSelect.innerHTML = '<option value="">All Locations</option>';
+    sublocationSelect.innerHTML = '<option value="">All Sub-Locations</option>';
+    if (this.value) {
+      fetch(`{% url 'capa:ajax_get_locations' %}?zone_id=${this.value}`).then(r => r.json()).then(data => {
+        data.forEach(l => locationSelect.add(new Option(l.name, l.id)));
+      });
+    }
+  });
+
+  document.getElementById('location_filter').addEventListener('change', function () {
+    const sublocationSelect = document.getElementById('sublocation_filter');
+    sublocationSelect.innerHTML = '<option value="">All Sub-Locations</option>';
+    if (this.value) {
+      fetch(`{% url 'capa:ajax_get_sublocations' %}?location_id=${this.value}`).then(r => r.json()).then(data => {
+        data.forEach(s => sublocationSelect.add(new Option(s.name, s.id)));
+      });
+    }
+  });
+
+  window.removeFilter = function (name) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete(name);
+    window.location.href = window.location.pathname + '?' + params.toString();
+  };
+
+  const colors = { teal: '#0d9488', blue: '#3b82f6', gold: '#d97706', red: '#ef4444', green: '#22c55e', purple: '#7c3aed', orange: '#f59e0b', slate: '#64748b' };
+  const chartData = id => JSON.parse(document.getElementById(id).textContent);
+
+  const sourceCtx = document.getElementById('sourceTypeChart')?.getContext('2d');
+  if (sourceCtx) {
+    new Chart(sourceCtx, {
+      type: 'doughnut',
+      data: {
+        labels: chartData('capa-type-chart-labels'),
+        datasets: [{ data: chartData('capa-type-chart-data'), backgroundColor: [colors.teal, colors.blue, colors.gold, colors.red, colors.green, colors.purple, colors.orange, colors.slate] }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          datalabels: { color: '#fff', font: { weight: 'bold', size: 13 }, formatter: v => v > 0 ? v : '' }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  const trendCtx = document.getElementById('monthlyTrendChart')?.getContext('2d');
+  if (trendCtx) {
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: chartData('capa-monthly-labels'),
+        datasets: [{
+          label: 'CAPAs Raised', data: chartData('capa-monthly-data'), borderColor: colors.teal,
+          backgroundColor: 'rgba(13,148,136,0.1)', tension: 0.4, fill: true,
+          pointBackgroundColor: colors.teal, pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }
+      }
+    });
+  }
+
+  const severityCtx = document.getElementById('severityChart')?.getContext('2d');
+  if (severityCtx) {
+    new Chart(severityCtx, {
+      type: 'bar',
+      data: {
+        labels: chartData('capa-severity-labels'),
+        datasets: [{ label: 'CAPAs', data: chartData('capa-severity-data'), backgroundColor: [colors.green, colors.gold, colors.orange, colors.red] }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { anchor: 'end', align: 'top', color: '#334155', font: { weight: 'bold', size: 13 }, formatter: v => v > 0 ? v : '' }
+        },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+  if (statusCtx) {
+    const statusData = chartData('capa-status-data');
+    new Chart(statusCtx, {
+      type: 'bar',
+      data: {
+        labels: chartData('capa-status-labels'),
+        datasets: [{ label: 'CAPAs', data: statusData.map(d => d.count), backgroundColor: colors.teal }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { anchor: 'end', align: 'right', color: '#334155', font: { weight: 'bold', size: 13 }, formatter: v => v > 0 ? v : '' }
+        },
+        scales: { x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
+        onClick: (e, els) => { if (els.length) window.location.href = statusData[els[0].index].url; },
+        onHover: (e, els) => { e.native.target.style.cursor = els[0] ? 'pointer' : 'default'; }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+});
+</script>
 {% endblock %}

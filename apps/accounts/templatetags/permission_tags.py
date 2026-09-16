@@ -5,6 +5,8 @@ register = template.Library()
 @register.filter
 def has_perm(user, permission_code):
     """Check if user has a specific permission by code"""
+    if not user.is_authenticated:
+        return False
     if user.is_superuser:
         return True
     if not user.role:

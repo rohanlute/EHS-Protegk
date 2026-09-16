@@ -101,13 +101,6 @@ class NotificationService:
         Returns:
             List of User objects who should receive this notification
         """
-        # print(f"\n{'='*70}")
-        # print(f"FINDING STAKEHOLDERS FOR: {event_type}")
-        # print(f"{'='*70}")
-        # print(f"Plant: {plant}")
-        # print(f"Location: {location}")
-        # print(f"Zone: {zone}")
-        
         # Get all active notification configurations for this event type
         configs = NotificationMaster.objects.filter(
             notification_event=event_type,
@@ -115,23 +108,16 @@ class NotificationService:
         ).select_related('role')
         
         if not configs.exists():
-            # print(f"⚠️ No notification configurations found for {event_type}")
             return []
-        
-        # print(f"\nFound {configs.count()} active configuration(s)")
         
         stakeholders = []
         
         for config in configs:
-            # print(f"\n--- Processing Config: {config.name} ---")
-            # print(f"Role: {config.role.name}")
-            # print(f"Filters: Plant={config.filter_by_plant}, Location={config.filter_by_location}, Zone={config.filter_by_zone}")
-
             # Build query to find users with this role
             query = User.objects.filter(
-                    role=config.role,
-                    is_active=True
-                )
+                role=config.role,
+                is_active=True
+            )
             
             if config.role.name == 'PLANT HEAD':
                 config.filter_by_plant = True
@@ -139,27 +125,18 @@ class NotificationService:
             # Apply filters based on configuration
             if config.filter_by_plant and plant:
                 query = query.filter(plant=plant)
-                # print(f"  - Filtered by plant: {plant.name}")
             
             if config.filter_by_location and location:
                 query = query.filter(location=location)
-                # print(f"  - Filtered by location: {location.name}")
             
             if config.filter_by_zone and zone:
                 query = query.filter(zone=zone)
-                # print(f"  - Filtered by zone: {zone.name}")
             
             users = query.all()
-            # print(f"  - Found {users.count()} user(s) with role {config.role.name}")
             
             for user in users:
-                # print(f"    • {user.username} | {user.get_full_name()} | {user.email}")
                 if user not in stakeholders:
                     stakeholders.append(user)
-        
-        # print(f"\n{'='*70}")
-        # print(f"TOTAL UNIQUE STAKEHOLDERS: {len(stakeholders)}")
-        # print(f"{'='*70}\n")
         
         return stakeholders
     
@@ -176,11 +153,6 @@ class NotificationService:
             title: Notification title
             message: Notification message
         """
-        # print(f"\n--- CREATING NOTIFICATION ---")
-        # print(f"Recipient: {recipient.username}")
-        # print(f"Type: {notification_type}")
-        # print(f"Title: {title[:50]}...")
-        
         try:
             content_type = ContentType.objects.get_for_model(content_object)
             
@@ -195,20 +167,17 @@ class NotificationService:
             )
             
             notification.save()
-            # print(f"  ✅ SAVED! Notification ID: {notification.id}")
             return notification
             
         except Exception as e:
-            # print(f"  ❌ ERROR: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Failed to create notification: {e}")
             return None
     
     
     @staticmethod
     def send_email(recipient, subject, message, html_template=None, context=None):
         """
-        Send email notification
+        Send email notification to Django User
         
         Args:
             recipient: User object
@@ -217,21 +186,20 @@ class NotificationService:
             html_template: Path to HTML template (optional)
             context: Template context dictionary (optional)
         """
-        # print(f"\n--- SENDING EMAIL ---")
-        # print(f"To: {recipient.email}")
-        # print(f"Subject: {subject}")
-        
+        if not recipient or not recipient.email:
+            logger.error("Email cannot be sent: recipient or email is missing.")
+            return False
+
         # Check if email is configured
         if not hasattr(settings, 'EMAIL_HOST') or not settings.EMAIL_HOST:
-            # print("  ⚠️ EMAIL NOT CONFIGURED - Skipping email send")
+            logger.warning("EMAIL NOT CONFIGURED - Skipping email send")
             return False
         
         try:
             # Render HTML template if provided
+            html_content = None
             if html_template and context:
                 html_content = select_template([html_template, 'emails/notification.html']).render(context)
-            else:
-                html_content = None
             
             # Create email
             email = EmailMultiAlternatives(
@@ -245,16 +213,58 @@ class NotificationService:
                 email.attach_alternative(html_content, "text/html")
             
             email.send(fail_silently=False)
-            # print("  ✅ Email sent successfully")
+            logger.info(f"Email sent successfully to {recipient.email}")
             return True
             
         except Exception as e:
-            # print(f"  ❌ Email error: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception(f"Failed to send email to {recipient.email}: {e}")
             return False
 
-    # Add this method to your NotificationService class
+    @staticmethod
+    def send_contractor_email(portal_user, subject, message, html_template=None, context=None):
+        """
+        Send email to a ContractorPortalUser.
+        
+        Args:
+            portal_user: ContractorPortalUser instance
+            subject: Email subject
+            message: Plain text message
+            html_template: Path to HTML template (optional)
+            context: Template context dictionary (optional)
+        """
+        if not portal_user or not portal_user.email:
+            logger.error("Contractor email cannot be sent: email is missing.")
+            return False
+
+        # Check if email is configured
+        if not hasattr(settings, 'EMAIL_HOST') or not settings.EMAIL_HOST:
+            logger.warning("EMAIL NOT CONFIGURED - Skipping email send")
+            return False
+
+        try:
+            # Render HTML template if provided
+            html_content = None
+            if html_template and context:
+                html_content = select_template([html_template, 'emails/notification.html']).render(context)
+
+            # Create email
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[portal_user.email]
+            )
+
+            if html_content:
+                email.attach_alternative(html_content, "text/html")
+
+            email.send(fail_silently=False)
+            logger.info(f"Contractor email sent successfully to {portal_user.email}")
+            return True
+
+        except Exception as e:
+            logger.exception(f"Failed to send contractor email to {portal_user.email}: {e}")
+            return False
 
     @staticmethod
     def send_contractor_onboarding_email(
@@ -297,37 +307,37 @@ class NotificationService:
 
         # Build plain text message
         message = f"""
-    Hello {portal_user.name},
+Hello {portal_user.name},
 
-    You have been assigned an onboarding task in the EHS-360 Contractor Portal.
+You have been assigned an onboarding task in the EHS-360 Contractor Portal.
 
-    CONTRACTOR DETAILS
-    --------------------------------------------------
-    Company Name         : {contractor.contractor_name}
-    Company Type         : {contractor.get_contractor_type_display()}
-    Address              : {contractor.address_line1}, {contractor.city}, {contractor.state}, {contractor.country} - {contractor.pincode}
-    Service Description  : {contractor.service_description[:200]}{'...' if contractor.service_description and len(contractor.service_description) > 200 else ''}
+CONTRACTOR DETAILS
+--------------------------------------------------
+Company Name         : {contractor.contractor_name}
+Company Type         : {contractor.get_contractor_type_display()}
+Address              : {contractor.address_line1}, {contractor.city}, {contractor.state}, {contractor.country} - {contractor.pincode}
+Service Description  : {contractor.service_description[:200]}{'...' if contractor.service_description and len(contractor.service_description) > 200 else ''}
 
-    PORTAL LOGIN DETAILS
-    --------------------------------------------------
-    Login URL           : {login_url}
-    Email               : {portal_user.email}
-    Password            : {temporary_password}
+PORTAL LOGIN DETAILS
+--------------------------------------------------
+Login URL           : {login_url}
+Email               : {portal_user.email}
+Password            : {temporary_password}
 
-    IMPORTANT INSTRUCTIONS
-    --------------------------------------------------
-    • Keep your login credentials confidential
-    • Complete all pre-qualification questions
-    • Upload all required documents
-    • Your assignment will expire if not completed within timeframe
-    • For assistance, contact your EHS administrator
+IMPORTANT INSTRUCTIONS
+--------------------------------------------------
+• Keep your login credentials confidential
+• Complete all pre-qualification questions
+• Upload all required documents
+• Your assignment will expire if not completed within timeframe
+• For assistance, contact your EHS administrator
 
-    If you did not expect this email, please contact the EHS administrator.
+If you did not expect this email, please contact the EHS administrator.
 
-    Regards,
-    EHS-360
-    EHS Management System
-    """
+Regards,
+EHS-360
+EHS Management System
+"""
 
         # Build context for HTML template
         context = {
@@ -379,6 +389,428 @@ class NotificationService:
                 portal_user.email,
                 e
             )
+            return False
+
+    @staticmethod
+    def send_contractor_onboarding_approved_email(portal_user, contractor, approved_by, approved_at):
+        """
+        Send approval email to the contractor's portal user.
+        """
+        if not portal_user or not portal_user.email:
+            logger.error("Approval email cannot be sent: email is missing.")
+            return False
+
+        subject = f"✅ Onboarding Approved - {contractor.contractor_name}"
+        
+        context = {
+            'contractor': contractor,
+            'approved_by': approved_by.get_full_name() if approved_by else 'System',
+            'approved_at': approved_at if approved_at else timezone.now(),
+            'portal_user': portal_user,
+        }
+        
+        try:
+            html_content = select_template([
+                'notifications/contractor_onboarding_approved.html',
+                'notifications/contractor_onboarding_approved.html',
+                'notifications/notification.html',
+            ]).render(context)
+            
+            # Plain text message
+            message = f"""
+Hello {contractor.contact_person},
+
+Congratulations! Your onboarding request for {contractor.contractor_name} has been APPROVED.
+
+Company Name    : {contractor.contractor_name}
+Contractor Code : {contractor.contractor_code}
+Approved By     : {approved_by.get_full_name() if approved_by else 'System'}
+Approved Date   : {approved_at.strftime('%d %B %Y, %I:%M %p') if approved_at else 'N/A'}
+
+
+For any questions, please contact your EHS administrator.
+
+Regards,
+EHS-360 Team
+"""
+            
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[portal_user.email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send(fail_silently=False)
+            
+            logger.info(f"Approval email sent successfully to {portal_user.email}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Failed to send approval email to {portal_user.email}: {e}")
+            return False
+
+    @staticmethod
+    def send_contractor_onboarding_rejected_email(portal_user, contractor, rejected_at, rejection_reason=None):
+        """
+        Send rejection email to the contractor's portal user.
+        """
+        if not portal_user or not portal_user.email:
+            logger.error("Rejection email cannot be sent: email is missing.")
+            return False
+
+        subject = f"❌ Onboarding Rejected - {contractor.contractor_name}"
+        
+        reason_text = rejection_reason or 'Please contact your EHS administrator for details.'
+        
+        # Build login URL
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        site_url = site_url.rstrip('/')
+        login_path = reverse('contractor:portal_login')
+        login_url = f"{site_url}{login_path}"
+        
+        context = {
+            'contractor': contractor,
+            'portal_user': portal_user,
+            'rejected_at': rejected_at,
+            'rejection_reason': reason_text,
+            'login_url': login_url,
+        }
+        
+        try:
+            html_content = select_template([
+                'notifications/contractor_onboarding_rejected.html',
+                'notifications/contractor_onboarding_rejected.html',
+                'notifications/notification.html',
+            ]).render(context)
+            
+            # Plain text message
+            message = f"""
+Hello {contractor.contact_person},
+
+We regret to inform you that your onboarding request for {contractor.contractor_name} has been REJECTED.
+
+Company Name    : {contractor.contractor_name}
+Contractor Code : {contractor.contractor_code}
+Rejected Date   : {rejected_at.strftime('%d %B %Y, %I:%M %p')}
+Reason          : {reason_text}
+
+Login URL: {login_url}
+
+For any questions, please contact your EHS administrator.
+
+Regards,
+EHS-360 Team
+"""
+            
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[portal_user.email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send(fail_silently=False)
+            
+            logger.info(f"Rejection email sent successfully to {portal_user.email}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Failed to send rejection email to {portal_user.email}: {e}")
+            return False
+    # Add this to apps/notifications/services.py - inside NotificationService class
+
+   # apps/notifications/services.py - Update send_training_signoff_email method
+
+    @staticmethod
+    def send_training_signoff_email(signoff, cc_email=None):
+        """
+        Send email with PDF attachment to contractor representative.
+
+        Args:
+            signoff: TrainingSignOff instance
+            cc_email: Optional CC email address (contact person)
+
+        Returns:
+            bool: True if email sent successfully
+        """
+        try:
+            # Import PDF generator
+            from apps.contractor.pdf_generators import generate_training_signoff_pdf
+
+            # ==========================================================
+            # GET PLANT NAME
+            # ==========================================================
+            plant_name = 'the Plant'  # Default fallback
+
+            # Try to get plant name from work_order
+            if hasattr(signoff, 'work_order') and signoff.work_order:
+                if hasattr(signoff.work_order, 'plant') and signoff.work_order.plant:
+                    if hasattr(signoff.work_order.plant, 'name'):
+                        plant_name = signoff.work_order.plant.name
+
+            # If still no plant name, try to get from contractor
+            if plant_name == 'the Plant' and hasattr(signoff, 'contractor') and signoff.contractor:
+                if hasattr(signoff.contractor, 'plant') and signoff.contractor.plant:
+                    if hasattr(signoff.contractor.plant, 'name'):
+                        plant_name = signoff.contractor.plant.name
+
+            # Generate PDF — returns an HttpResponse, extract bytes
+            pdf_response = generate_training_signoff_pdf(signoff)
+            pdf_bytes = pdf_response.content
+
+            # Get contractor representative email (EHS Officer/Contact Person)
+            to_email = signoff.contractor.ehs_email or signoff.contractor.email
+
+            if not to_email:
+                logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
+                return False
+
+            # Get CC email - contact person from registration
+            if not cc_email:
+                cc_email = signoff.contractor.email or signoff.contractor.ehs_email
+
+            # Prepare email context
+            context = {
+                'signoff': signoff,
+                'contractor': signoff.contractor,
+                'work_order': signoff.work_order,
+                'session': signoff.session,
+                'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
+                'plant_name': plant_name,
+            }
+
+            # Render email body
+            try:
+                from django.template.loader import select_template
+                html_content = select_template([
+                    'contractor/emails/training_signoff_email.html',
+                    'emails/training_signoff_email.html',
+                ]).render(context)
+            except Exception:
+                html_content = None
+
+            # Create subject
+            subject = f'📋 Training Sign-Off Completed - {signoff.signoff_number}'
+
+            # Plain text message
+            plain_message = f"""
+Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
+
+Training sign-off has been completed successfully.
+
+SIGN-OFF DETAILS
+--------------------------------------------------
+Sign-Off Number   : {signoff.signoff_number}
+Contractor        : {signoff.contractor.contractor_name}
+Work Order        : {signoff.work_order.work_order_number if signoff.work_order else 'N/A'}
+Training Session  : {signoff.session.session_no if signoff.session else 'N/A'}
+Training Topic    : {signoff.session.topic.topic_title if signoff.session and signoff.session.topic else 'N/A'}
+Date              : {signoff.signoff_date} {signoff.signoff_time}
+Plant             : {plant_name}
+
+STATUS
+--------------------------------------------------
+Plant Sign-Off    : {'✅ Confirmed' if signoff.company_declaration else '⏳ Pending'}
+Contractor Sign-Off: {'✅ Confirmed' if signoff.contractor_declaration else '⏳ Pending'}
+
+Please find attached the PDF with complete sign-off details.
+
+ACTION REQUIRED
+--------------------------------------------------
+1. Review the attached PDF document
+2. If you are the contractor representative, please sign the document
+3. Return the signed copy to the EHS department
+
+For any questions, please contact your EHS administrator.
+
+Regards,
+EHS-360 Team
+EHS Management System
+"""
+
+            # Create email with attachment
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+                cc=[cc_email] if cc_email and cc_email != to_email else [],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+
+            # Attach HTML version if available
+            if html_content:
+                email.attach_alternative(html_content, "text/html")
+
+            # Attach PDF
+            email.attach(
+                f'Training_SignOff_{signoff.signoff_number}.pdf',
+                pdf_bytes,
+                'application/pdf'
+            )
+
+            # Send email
+            email.send(fail_silently=False)
+
+            logger.info(f"Training sign-off email sent to {to_email} with CC to {cc_email}")
+            return True
+
+        except Exception as e:
+            logger.exception(f"Error sending training sign-off email: {str(e)}")
+            return False
+
+    @staticmethod
+    def send_training_signoff_reminder_email(signoff, cc_email=None):
+        """
+        Send reminder email to contractor representative for sign-off.
+        """
+        try:
+            from apps.contractor.pdf_generators import generate_training_signoff_pdf
+
+            # Generate PDF — returns an HttpResponse, extract bytes
+            pdf_response = generate_training_signoff_pdf(signoff)
+            pdf_bytes = pdf_response.content
+
+            # Get contractor representative email
+            to_email = signoff.contractor.ehs_email or signoff.contractor.email
+
+            if not to_email:
+                logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
+                return False
+
+            # Get CC email
+            if not cc_email:
+                cc_email = signoff.contractor.email or signoff.contractor.ehs_email
+
+            context = {
+                'signoff': signoff,
+                'contractor': signoff.contractor,
+                'work_order': signoff.work_order,
+                'session': signoff.session,
+                'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
+            }
+
+            subject = f'⏰ Reminder: Training Sign-Off Pending - {signoff.signoff_number}'
+
+            plain_message = f"""
+Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
+
+This is a reminder that training sign-off is pending for the following:
+
+SIGN-OFF DETAILS
+--------------------------------------------------
+Sign-Off Number   : {signoff.signoff_number}
+Contractor        : {signoff.contractor.contractor_name}
+Work Order        : {signoff.work_order.work_order_number if signoff.work_order else 'N/A'}
+Training Session  : {signoff.session.session_no if signoff.session else 'N/A'}
+
+Please review the attached PDF and complete the sign-off process.
+
+Regards,
+EHS-360 Team
+"""
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+                cc=[cc_email] if cc_email and cc_email != to_email else [],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+
+            email.attach(
+                f'Training_SignOff_{signoff.signoff_number}.pdf',
+                pdf_bytes,
+                'application/pdf'
+            )
+
+            email.send(fail_silently=False)
+
+            logger.info(f"Training sign-off reminder email sent to {to_email}")
+            return True
+
+        except Exception as e:
+            logger.exception(f"Error sending training sign-off reminder email: {str(e)}")
+            return False
+
+    @staticmethod
+    def send_training_signoff_reminder_email(signoff, cc_email=None):
+        """
+        Send reminder email to contractor representative for sign-off.
+        """
+        try:
+            from apps.contractor.pdf_generators import generate_training_signoff_pdf
+            
+            # Generate PDF
+            pdf_buffer = generate_training_signoff_pdf(signoff)
+            
+            # Get contractor representative email
+            to_email = signoff.contractor.ehs_email or signoff.contractor.email
+            
+            if not to_email:
+                logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
+                return False
+            
+            # Get CC email
+            if not cc_email:
+                cc_email = signoff.contractor.email or signoff.contractor.ehs_email
+            
+            context = {
+                'signoff': signoff,
+                'contractor': signoff.contractor,
+                'work_order': signoff.work_order,
+                'session': signoff.session,
+                'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
+            }
+            
+            subject = f'⏰ Reminder: Training Sign-Off Pending - {signoff.signoff_number}'
+            
+            plain_message = f"""
+Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
+
+This is a reminder that training sign-off is pending for the following:
+
+SIGN-OFF DETAILS
+--------------------------------------------------
+Sign-Off Number   : {signoff.signoff_number}
+Contractor        : {signoff.contractor.contractor_name}
+Work Order        : {signoff.work_order.work_order_number if signoff.work_order else 'N/A'}
+Training Session  : {signoff.session.session_no if signoff.session else 'N/A'}
+
+Please review the attached PDF and complete the sign-off process.
+
+Regards,
+EHS-360 Team
+"""
+            
+            from django.core.mail import EmailMultiAlternatives
+            
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+                cc=[cc_email] if cc_email and cc_email != to_email else [],
+                reply_to=[settings.DEFAULT_FROM_EMAIL]
+            )
+            
+            email.attach(
+                f'Training_SignOff_{signoff.signoff_number}.pdf',
+                pdf_buffer.getvalue(),
+                'application/pdf'
+            )
+            
+            email.send(fail_silently=False)
+            
+            logger.info(f"Training sign-off reminder email sent to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Error sending training sign-off reminder email: {str(e)}")
             return False
     @staticmethod
     def _resolve_email_template(notification_type, module):
@@ -448,17 +880,12 @@ class NotificationService:
             notification_type: Type of notification (e.g., 'INCIDENT_REPORTED')
             module: Module name for template selection
         """
-        # print("\n" + "*"*70)
-        # print(f"NOTIFICATION SYSTEM - {notification_type}")
-        # print("*"*70)
         if content_object is None:
-            # print(f"\n❌ ERROR: content_object is None. Cannot send notification for {notification_type}")
+            logger.error(f"content_object is None. Cannot send notification for {notification_type}")
             return
 
         # Determine object type and extract plant/location/zone
-        # Auto-detect object type
         if hasattr(content_object, 'incident'):
-            # Investigation Report
             incident = content_object.incident
             plant = incident.plant
             location = incident.location
@@ -479,11 +906,9 @@ class NotificationService:
             location = schedule.location
             zone = schedule.zone
         else:
-            # Incident / Hazard
             plant = getattr(content_object, 'plant', None)
             location = getattr(content_object, 'location', None)
             zone = getattr(content_object, 'zone', None)
-
 
         # inspection schedule - only notify assigned user
         if notification_type == 'INSPECTION_SCHEDULE':
@@ -498,36 +923,30 @@ class NotificationService:
                 zone=zone
             )
 
-            # For responsible person
             if extra_recipients:
                 for user in NotificationService._normalize_users(extra_recipients):
                     if user not in stakeholders:
                         stakeholders.append(user)
 
-            # Add assigned_to if present
             if hasattr(content_object, 'assigned_to') and content_object.assigned_to:
                 for user in NotificationService._normalize_users(content_object.assigned_to):
                     if user not in stakeholders:
                         stakeholders.append(user)
 
-            # Add responsible persons for action items
             if hasattr(content_object, 'responsible_person'):
                 for user in NotificationService._normalize_users(content_object.responsible_person):
                     if user not in stakeholders:
                         stakeholders.append(user)
 
-            # Add responsible emails if present
             if hasattr(content_object, 'responsible_emails') and content_object.responsible_emails:
                 emails = [e.strip() for e in content_object.responsible_emails.split(',') if e.strip()]
                 responsible_users = User.objects.filter(email__in=emails, is_active=True)
                 for user in responsible_users:
                     if user not in stakeholders:
                         stakeholders.append(user)
-       
-
 
         if not stakeholders and not extra_recipients:
-            # print("\n❌ ERROR: No stakeholders found!")
+            logger.warning(f"No stakeholders found for {notification_type}")
             return
 
         notifications_created = 0
@@ -576,10 +995,7 @@ class NotificationService:
             logger.error(f"Unknown notification type: {notification_type}")
             return
 
-
         for stakeholder in stakeholders:
-            # print("📨 Processing stakeholder:", stakeholder.email)
-
             notification = NotificationService.create_notification(
                 recipient=stakeholder,
                 content_object=content_object,
@@ -623,16 +1039,12 @@ class NotificationService:
                     notification.email_sent_at = timezone.now()
                     notification.save()
 
-        # print(f"\n{'='*70}")
-        # print("NOTIFICATION SUMMARY")
-        # print(f"{'='*70}")
-        # print(f"Total stakeholders: {len(stakeholders)}")
-        # print(f"Notifications created: {notifications_created}")
-        # print(f"Emails sent: {emails_sent}")
-        # print(f"{'='*70}\n")
+        logger.info(f"Notification sent: {notification_type}, stakeholders: {len(stakeholders)}, emails: {emails_sent}")
 
-    
-    
+    # ==========================================================
+    # CONTEXT BUILDERS
+    # ==========================================================
+
     @staticmethod
     def _build_incident_context(incident):
         """Build context for incident notifications"""
@@ -652,10 +1064,10 @@ A new {incident_type} has been reported.
 INJURY DETAILS
 --------------------------------------------------
 Injury Number      : {incident.report_number}
-Date & Time          : {incident.incident_date} {incident.incident_time}
-Plant                : {incident.plant.name}
-Location             : {incident.location.name if incident.location else 'N/A'}
-Reported By          : {incident.reported_by.get_full_name()}
+Date & Time        : {incident.incident_date} {incident.incident_time}
+Plant              : {incident.plant.name}
+Location           : {incident.location.name if incident.location else 'N/A'}
+Reported By        : {incident.reported_by.get_full_name()}
 Investigation Deadline: {incident.investigation_deadline}
 
 DESCRIPTION
@@ -671,12 +1083,10 @@ EHS Management System
             'incident_url': incident_url,
         }
     
-    
     @staticmethod
     def _build_hazard_context(hazard):
         """Build context for hazard notifications"""
         hazard_url = f"{settings.SITE_URL}{reverse('hazards:hazard_detail', args=[hazard.id])}"
-
         return {
             'title': f"New Hazard Reported | {hazard.report_number}",
             'subject': f"⚠️ New Hazard Reported - {hazard.report_number}",
@@ -706,19 +1116,16 @@ EHS Management System
             'hazard': hazard,
             'hazard_url': hazard_url,
         }
-    
+
     @staticmethod
     def _build_incident_report_context(incidentinvestigationreport):
-        """
-        Build context for Incident Investigation Report notifications
-        """
+        """Build context for Incident Investigation Report notifications"""
         incident = incidentinvestigationreport.incident
         incident_type = (
             incident.incident_type.name
             if incident.incident_type else 'NA'
         )
         incident_url = f"{settings.SITE_URL}{reverse('accidents:incident_detail', args=[incident.id])}"
-
         return {
             'title': f"Incident Investigation Completed | {incident.report_number}",
             'subject': f"📝 Investigation Report Submitted - {incident.report_number}",
@@ -765,36 +1172,30 @@ Please review the investigation findings and proceed with action item assignment
 Regards,
 EHS Management System
 """,
-        'investigation_report': incidentinvestigationreport,
-        'incident':incident,
-        'incident_url':incident_url
-    }
-
+            'investigation_report': incidentinvestigationreport,
+            'incident': incident,
+            'incident_url': incident_url
+        }
 
     @staticmethod
     def _build_incident_close_context(incident):
         """Build context for incident closure notifications"""
-
         incident_type = (
             incident.incident_type.name
             if incident.incident_type else 'NA'
         )
-
         plant_name = incident.plant.name if incident.plant else "N/A"
         location_name = incident.location.name if incident.location else "N/A"
         closed_by_name = (
             incident.closed_by.get_full_name()
             if incident.closed_by else "System"
         )
-
         description = (
             incident.description[:300] + "..."
             if incident.description and len(incident.description) > 300
             else incident.description or "N/A"
         )
-
         incident_url = f"{settings.SITE_URL}{reverse('accidents:incident_detail', args=[incident.id])}"
-
         return {
             'title': f"Incident Closed | {incident.report_number}",
             'subject': f"Incident Closed ✅ - {incident.report_number}",
@@ -804,7 +1205,7 @@ Hello,
 A {incident_type} has been closed.
 
 INCIDENT DETAILS 
-----------------------------------------------------------------------------------
+--------------------------------------------------
 Incident Number     : {incident.report_number}
 Date & Time         : {incident.incident_date} {incident.incident_time}
 Plant               : {plant_name}
@@ -813,28 +1214,24 @@ Closed By           : {closed_by_name}
 Closure Date        : {incident.closure_date}
 
 DESCRIPTION
----------------------------------------------------------------------------------
+--------------------------------------------------
 {description}
 
 Regards,
 EHS Management System
 """,
-        'incident': incident,
-        'incident_url': incident_url,
-    }
+            'incident': incident,
+            'incident_url': incident_url,
+        }
 
-    
     @staticmethod
     def _build_incident_action_context(action_item):
-        """
-        Build context for Incident Action notifications
-        """
+        """Build context for Incident Action notifications"""
         incident = action_item.incident
         incident_type = incident.incident_type.name if incident.incident_type else 'NA'
         action_url = f"{settings.SITE_URL}{reverse('accidents:action_item_complete', args=[action_item.id])}"
-        
         return {
-            'title' : f"Incident Action Assigned | {incident.report_number}",
+            'title': f"Incident Action Assigned | {incident.report_number}",
             'subject': f"✅ Incident Action Assigned - {incident.report_number}",
             'message': f"""
 Hello,
@@ -842,7 +1239,7 @@ Hello,
 An action item for the following incident has been assigned.
 
 INCIDENT DETAILS
-------------------------------------------------------------------
+--------------------------------------------------
 Incident Number      : {incident.report_number}
 Incident Type        : {incident_type}
 Date & Time          : {incident.incident_date} {incident.incident_time}
@@ -870,19 +1267,16 @@ EHS Management System
 """,
             'action_item': action_item,
             'incident': incident,
-            'action_url':action_url
+            'action_url': action_url
         }
-    
 
     @staticmethod
     def _build_hazard_action_context(action_item):
         hazard = action_item.hazard
         action_url = f"{settings.SITE_URL}{reverse('hazards:action_item_complete', args=[action_item.id])}"
-
         return {
             'title': f"Hazard Action Assigned | {hazard.report_number}",
             'subject': f"⚠️ Hazard Action Assigned - {hazard.report_number}",
-
             'message': f"""
 Hello,
 
@@ -1159,12 +1553,12 @@ EHS Management System
             'report': report,
             'report_url': report_url,
         }
-    
+
     @staticmethod
     def _build_environment_context(plant):
         dashboard_url = f"{settings.SITE_URL}{reverse('environmental:plant-data-view')}"
-        return{
-            'title': f"Enviromental Data Submitted | {plant.name}",
+        return {
+            'title': f"Environmental Data Submitted | {plant.name}",
             'subject': f"🌱 Environmental Data Submitted - {plant.name}",
             'message': f"""
 Hello,
@@ -1175,20 +1569,19 @@ PLANT DETAILS
 --------------------------------------------------
 Plant Name : {plant.name}
 
-Please review the submitted enviromental data.
+Please review the submitted environmental data.
 
 Regards,
 EHS Management System
 """,
-            'plant':plant,
-            'dashboard_url':dashboard_url,
+            'plant': plant,
+            'dashboard_url': dashboard_url,
         }
-    
+
     @staticmethod
     def _build_inspection_context(schedule):
         inspection_url = f"{settings.SITE_URL}{reverse('inspections:schedule_detail', args=[schedule.id])}"
-        
-        return{
+        return {
             'title': f"Inspection {schedule.get_status_display()} | {schedule.schedule_code}",
             'subject': f"📝 Inspection {schedule.get_status_display()} - {schedule.schedule_code}",
             'message': f"""
@@ -1201,7 +1594,8 @@ INSPECTION DETAILS
 Schedule Code      : {schedule.schedule_code}
 Template           : {schedule.template.template_name}
 Inspection Type    : {schedule.template.get_inspection_type_display()}
-Plant              : {", ".join([p.name for p in schedule.plants.all()]) if schedule.plants.exists() else "N/A"}Department         : {schedule.department.name if schedule.department else 'N/A'}
+Plant              : {', '.join([p.name for p in schedule.plants.all()]) if schedule.plants.exists() else 'N/A'}
+Department         : {schedule.department.name if schedule.department else 'N/A'}
 
 ASSIGNED DETAILS
 --------------------------------------------------
@@ -1219,18 +1613,17 @@ Please log in to the EHS system for more details.
 Regards,
 EHS Management System
 """,
-        'schedule': schedule,
-        'inspection_url': inspection_url,
-    }
+            'schedule': schedule,
+            'inspection_url': inspection_url,
+        }
 
     @staticmethod
     def _build_notify_inspection_context(schedule):
         inspection_url = f"{settings.SITE_URL}{reverse('inspections:schedule_detail', args=[schedule.id])}"
-        return{
+        return {
             'title': f"Inspection Reminder | {schedule.schedule_code}",
             'subject': f"⏰ Reminder: Inspection {schedule.get_status_display()} - {schedule.schedule_code}",
             'message': f"""
-
 Hello {schedule.assigned_to.get_full_name()},
 
 This is a reminder regarding the upcoming inspection.
@@ -1240,7 +1633,8 @@ INSPECTION DETAILS
 Schedule Code      : {schedule.schedule_code}
 Template           : {schedule.template.template_name}
 Inspection Type    : {schedule.template.get_inspection_type_display()}
-Plant              : {", ".join([p.name for p in schedule.plants.all()]) if schedule.plants.exists() else "N/A"}Department         : {schedule.department.name if schedule.department else 'N/A'}
+Plant              : {', '.join([p.name for p in schedule.plants.all()]) if schedule.plants.exists() else 'N/A'}
+Department         : {schedule.department.name if schedule.department else 'N/A'}
 Assigned By        : {schedule.assigned_by.get_full_name()}
 Scheduled Date     : {schedule.scheduled_date}
 Due Date           : {schedule.due_date}
@@ -1251,22 +1645,19 @@ Please ensure the inspection is completed within the scheduled timeframe.
 Regards,
 EHS Management System
 """,
-        'schedule': schedule,
-        'recipient': schedule.assigned_to,
-        'inspection_url': inspection_url,
-    }
+            'schedule': schedule,
+            'recipient': schedule.assigned_to,
+            'inspection_url': inspection_url,
+        }
 
     @staticmethod
     def _build_noncompliance_assigned_context(response):
         schedule = response.submission.schedule
         no_answer_url = f"{settings.SITE_URL}{reverse('inspections:no_answers_list')}"
-
-
         return {
             'title': f"Non-Compliance Assigned | {schedule.schedule_code}",
             'subject': f"⚠️ Non-Compliance Assigned - {schedule.schedule_code}",
             'message': f"""
-
 Hello {response.assigned_to.get_full_name()},
 
 A non-compliance item has been assigned to you for corrective action.
@@ -1289,15 +1680,14 @@ Please review the issue and take necessary corrective action at the earliest.
 Regards,
 EHS Management System
 """,
-        'response': response,
-        'recipient': response.assigned_to,
-        'no_answer_url': no_answer_url,
-    }
+            'response': response,
+            'recipient': response.assigned_to,
+            'no_answer_url': no_answer_url,
+        }
 
     @staticmethod
     def _build_compliance_base_context(requirement, event_label, subject_prefix):
         requirement_url = f"{settings.SITE_URL}{reverse('legal_compliance:compliance_detail', args=[requirement.id])}"
-
         responsible_names = ", ".join(
             filter(
                 None,
@@ -1307,7 +1697,6 @@ EHS Management System
                 ],
             )
         ) or "N/A"
-
         reviewer_names = ", ".join(
             filter(
                 None,
@@ -1317,7 +1706,6 @@ EHS Management System
                 ],
             )
         ) or "N/A"
-
         return {
             'title': f"{event_label} | {requirement.requirement_code}",
             'subject': f"{subject_prefix} - {requirement.requirement_code}",
@@ -1354,16 +1742,16 @@ EHS Management System
     def _build_compliance_reminder_context(requirement):
         return NotificationService._build_compliance_base_context(
             requirement,
-            event_label=f"Compliance Reminder",
-            subject_prefix=f"Compliance Reminder",
+            event_label="Compliance Reminder",
+            subject_prefix="Compliance Reminder",
         )
 
     @staticmethod
     def _build_compliance_escalation_context(requirement):
         return NotificationService._build_compliance_base_context(
             requirement,
-            event_label=f"Compliance Escalation",
-            subject_prefix=f"Compliance Escalation",
+            event_label="Compliance Escalation",
+            subject_prefix="Compliance Escalation",
         )
 
     @staticmethod
@@ -1371,46 +1759,43 @@ EHS Management System
         """Build context for investigation overdue notifications"""
         import datetime
         days_overdue = (datetime.date.today() - incident.investigation_deadline).days
-        
         incident_type = (
             incident.incident_type.name
             if incident.incident_type else 'NA'
         )
         incident_url = f"{settings.SITE_URL}{reverse('accidents:incident_detail', args=[incident.id])}"
-
-        
         return {
             'title': f"Investigation Overdue | {incident.report_number}",
             'subject': f"⚠️ Investigation Overdue ({days_overdue} day(s)) - {incident.report_number}",
             'message': f"""
-    Hello,
+Hello,
 
-    The investigation for the following incident is OVERDUE by {days_overdue} day(s).
+The investigation for the following incident is OVERDUE by {days_overdue} day(s).
 
-    INCIDENT DETAILS
-    --------------------------------------------------
-    Incident Number       : {incident.report_number}
-    Incident Type         : {incident_type}
-    Date & Time           : {incident.incident_date} {incident.incident_time}
-    Plant                 : {incident.plant.name}
-    Zone                  : {incident.zone.name if incident.zone else 'N/A'}
-    Location              : {incident.location.name if incident.location else 'N/A'}
-    Reported By           : {incident.reported_by.get_full_name()}
+INCIDENT DETAILS
+--------------------------------------------------
+Incident Number       : {incident.report_number}
+Incident Type         : {incident_type}
+Date & Time           : {incident.incident_date} {incident.incident_time}
+Plant                 : {incident.plant.name}
+Zone                  : {incident.zone.name if incident.zone else 'N/A'}
+Location              : {incident.location.name if incident.location else 'N/A'}
+Reported By           : {incident.reported_by.get_full_name()}
 
-    INVESTIGATION STATUS
-    --------------------------------------------------
-    Investigation Deadline : {incident.investigation_deadline}
-    Days Overdue           : {days_overdue} day(s)
-    Current Status         : {incident.get_status_display()}
+INVESTIGATION STATUS
+--------------------------------------------------
+Investigation Deadline : {incident.investigation_deadline}
+Days Overdue           : {days_overdue} day(s)
+Current Status         : {incident.get_status_display()}
 
-    Please ensure the investigation is completed immediately.
+Please ensure the investigation is completed immediately.
 
-    Regards,
-    EHS Management System
-    """,
+Regards,
+EHS Management System
+""",
             'incident': incident,
             'days_overdue': days_overdue,
-            'incident_url':incident_url,
+            'incident_url': incident_url,
         }
 
     @staticmethod
@@ -1442,3 +1827,145 @@ EHS Management System
             'capa': capa,
             'capa_url': capa_url,
         }
+        # ---------------------------------------------------------------------------
+# Add to apps/notifications/services.py
+# ---------------------------------------------------------------------------
+
+# 1. In NotificationService.notify(), inside the context-building if/elif
+#    chain (right after the `elif notification_type.startswith('CAPA_') ...`
+#    branch), add:
+#
+#     elif notification_type.startswith('ERGONOMIC_'):
+#         context = NotificationService._build_ergonomic_context(content_object, notification_type)
+#
+# 2. `notify()` resolves plant/location/zone generically for any object with
+#    those attributes (the final `else` branch already does
+#    `getattr(content_object, 'plant', None)` etc.) — ErgonomicAssessment,
+#    ErgonomicCorrectiveAction and MSDDiscomfort don't have `plant` directly
+#    in all cases (MSDDiscomfort only has `department`), so add one more
+#    branch near the top of notify() alongside the existing
+#    hasattr(content_object, 'incident') chain:
+#
+#     elif hasattr(content_object, 'assessment') and content_object.assessment:
+#         # ErgonomicCorrectiveAction / ErgonomicReassessment
+#         plant = content_object.assessment.plant
+#         location = getattr(content_object.assessment, 'location', None)
+#         zone = getattr(content_object.assessment, 'zone', None)
+#
+# 3. Add this method next to _build_capa_context:
+
+    @staticmethod
+    def _build_ergonomic_context(content_object, notification_type):
+        from apps.ergonomics.models import ErgonomicAssessment, ErgonomicCorrectiveAction, MSDDiscomfort
+
+        if isinstance(content_object, ErgonomicAssessment):
+            assessment = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[assessment.id])}"
+            risk_label = assessment.get_risk_level_display() if assessment.risk_level else "N/A"
+            title = f"Ergonomic Risk: {risk_label} | {assessment.assessment_id}"
+            subject = f"⚠️ Ergonomic Assessment - {risk_label} Risk - {assessment.assessment_id}"
+            message = f"""
+Hello,
+
+An ergonomic assessment has returned a {risk_label} risk result.
+
+ASSESSMENT DETAILS
+--------------------------------------------------
+Assessment ID   : {assessment.assessment_id}
+Plant           : {assessment.plant.name}
+Department      : {assessment.department.name}
+Job / Task      : {assessment.job_role} / {assessment.task}
+Method          : {assessment.assessment_method.name}
+Score           : {assessment.score}
+Risk Level      : {risk_label}
+Recommended Action: {assessment.recommended_action}
+
+Please review and initiate corrective action if not already assigned.
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "assessment": assessment, "detail_url": detail_url}
+
+        if isinstance(content_object, ErgonomicCorrectiveAction):
+            action = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[action.assessment_id])}"
+            label = "Overdue" if notification_type == "ERGONOMIC_ACTION_OVERDUE" else "Assigned"
+            title = f"Ergonomic Action {label} | {action.action_id}"
+            subject = f"Ergonomic Corrective Action {label} - {action.action_id}"
+            message = f"""
+Hello,
+
+An ergonomic corrective action requires your attention.
+
+ACTION DETAILS
+--------------------------------------------------
+Action ID        : {action.action_id}
+Assessment       : {action.assessment.assessment_id}
+Description      : {action.action_description}
+Responsible      : {action.responsible_person.get_full_name()}
+Priority         : {action.get_priority_display()}
+Target Date      : {action.target_date}
+Status           : {action.get_status_display()}
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "action": action, "detail_url": detail_url}
+
+        if isinstance(content_object, MSDDiscomfort):
+            case = content_object
+            title = f"MSD/Discomfort Reported | {case.worker.get_full_name() if case.worker else 'Worker'}"
+            subject = f"MSD/Discomfort Report - {case.get_body_part_display()}"
+            message = f"""
+Hello,
+
+A musculoskeletal discomfort case has been reported and requires review.
+
+CASE DETAILS
+--------------------------------------------------
+Worker          : {case.worker.get_full_name() if case.worker else 'N/A'}
+Department      : {case.department.name if case.department else 'N/A'}
+Body Part       : {case.get_body_part_display()}
+Severity        : {case.get_severity_display()}
+Date Reported   : {case.date_reported}
+Medical Referral: {'Yes' if case.medical_referral else 'No'}
+
+Please review and link to an ergonomic assessment if warranted.
+
+Regards,
+EHS Management System
+"""
+            return {"title": title, "subject": subject, "message": message, "msd_case": case}
+
+        # ERGONOMIC_REASSESSMENT_INEFFECTIVE — content_object is ErgonomicReassessment
+        reassessment = content_object
+        detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[reassessment.assessment_id])}"
+        title = f"Ergonomic Control Not Effective | {reassessment.assessment.assessment_id}"
+        subject = f"Control Not Effective - Additional Action Needed - {reassessment.assessment.assessment_id}"
+        message = f"""
+Hello,
+
+A reassessment found the implemented ergonomic control was NOT EFFECTIVE.
+
+REASSESSMENT DETAILS
+--------------------------------------------------
+Assessment      : {reassessment.assessment.assessment_id}
+Previous Score  : {reassessment.previous_score} ({reassessment.previous_risk})
+New Score       : {reassessment.new_score} ({reassessment.new_risk})
+Residual Risk   : {reassessment.residual_risk}
+
+An additional corrective action is required.
+
+Regards,
+EHS Management System
+"""
+        return {"title": title, "subject": subject, "message": message, "reassessment": reassessment, "detail_url": detail_url}
+
+# 4. NotificationMaster rows: an admin configures which Role receives each
+#    of these event types via the existing "Notifications Master Create"
+#    screen — no schema change needed there since notification_event is
+#    free-text. Event codes to configure:
+#      ERGONOMIC_HIGH_RISK, ERGONOMIC_VERY_HIGH_RISK, ERGONOMIC_ACTION_ASSIGNED,
+#      ERGONOMIC_ACTION_OVERDUE, ERGONOMIC_REASSESSMENT_INEFFECTIVE,
+#      ERGONOMIC_MSD_REPORTED

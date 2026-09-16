@@ -1,0 +1,748 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Contractor Reports | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13, 148, 136, 0.08);
+        --primary-teal-line: rgba(13, 148, 136, 0.20);
+        --primary-teal-glow: rgba(13, 148, 136, 0.25);
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-700: #334155;
+        --slate-900: #0f172a;
+
+        --radius-lg: 16px;
+        --radius-md: 12px;
+        --radius-sm: 10px;
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+        --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.05);
+        --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    /* ================= PAGE WRAP ================= */
+    .reports-wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* ================= HEADER ================= */
+    .reports-header {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--slate-200);
+        padding: 22px 26px;
+        margin-bottom: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 18px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .reports-header .hl {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .reports-header .hi {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 6px 16px var(--primary-teal-glow);
+        flex-shrink: 0;
+    }
+
+    .reports-header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--slate-900);
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+
+    .reports-header .subtitle {
+        font-size: 13px;
+        color: var(--slate-500);
+        margin: 4px 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .reports-header .subtitle i {
+        color: var(--primary-teal);
+    }
+
+    /* ================= BACK BUTTON ================= */
+    .btn-ghost {
+        background: white;
+        color: var(--slate-600);
+        border: 1.5px solid var(--slate-200);
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+        background: var(--slate-50);
+        border-color: var(--primary-teal-line);
+        color: var(--primary-teal);
+        text-decoration: none;
+        transform: translateX(-2px);
+    }
+
+    /* ================= MAIN CARD ================= */
+    .report-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--slate-200);
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .report-card-header {
+        padding: 22px 28px;
+        background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-card-header::after {
+        content: '';
+        position: absolute;
+        top: -60%;
+        right: -8%;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .report-card-header .header-icon-sm {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        backdrop-filter: blur(6px);
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+    }
+
+    .report-card-header h3 {
+        font-size: 17px;
+        font-weight: 700;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        letter-spacing: -0.005em;
+    }
+
+    .report-card-header .header-sub {
+        font-size: 12.5px;
+        opacity: 0.88;
+        margin-top: 3px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .report-card-body {
+        padding: 28px 28px;
+    }
+
+    /* ================= INLINE FORM ================= */
+    .form-row-inline {
+        display: grid;
+        grid-template-columns: 2.4fr 1fr 1fr;
+        gap: 16px;
+        align-items: end;
+    }
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .form-field .field-label {
+        display: block;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--slate-700);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .form-field .field-label .req {
+        color: #dc2626;
+        margin-left: 2px;
+    }
+
+    /* Custom select */
+    .select-wrap {
+        position: relative;
+    }
+
+    .select-wrap::after {
+        content: '\f078';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--slate-400);
+        pointer-events: none;
+        font-size: 11px;
+        transition: color 0.2s ease;
+    }
+
+    .select-wrap:hover::after {
+        color: var(--primary-teal);
+    }
+
+    .custom-select {
+        width: 100%;
+        padding: 0 42px 0 16px;
+        border: 1.5px solid var(--slate-200);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 500;
+        background: white;
+        color: var(--slate-900);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        height: 48px;
+    }
+
+    .custom-select:hover {
+        border-color: var(--slate-300);
+    }
+
+    .custom-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px var(--primary-teal-light);
+    }
+
+    /* ================= GENERATE BUTTON ================= */
+    .btn-generate {
+        width: 100%;
+        height: 48px;
+        padding: 0 22px;
+        background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: all 0.22s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 14px var(--primary-teal-glow);
+        position: relative;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .btn-generate::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+        transition: left 0.55s ease;
+    }
+
+    .btn-generate:hover::before {
+        left: 100%;
+    }
+
+    .btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px var(--primary-teal-glow);
+    }
+
+    .btn-generate:active {
+        transform: translateY(0);
+    }
+
+    .btn-generate:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* ================= RECENT REPORTS ================= */
+    .recent-section {
+        margin-top: 28px;
+    }
+
+    .recent-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding: 0 4px;
+    }
+
+    .recent-section-header .rh-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .recent-section-header .rh-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .recent-section-header h2 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--slate-900);
+        margin: 0;
+        letter-spacing: -0.005em;
+    }
+
+    .recent-section-header .rh-sub {
+        font-size: 12px;
+        color: var(--slate-500);
+        margin-top: 1px;
+    }
+
+    .count-chip {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--slate-500);
+        background: var(--slate-100);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+
+    /* Report rows */
+    .report-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .report-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: white;
+        border: 1px solid var(--slate-200);
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        gap: 16px;
+    }
+
+    .report-row:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-teal-line);
+        transform: translateY(-2px);
+    }
+
+    .report-row .row-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .fmt-badge {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        flex-shrink: 0;
+    }
+
+    .fmt-badge.pdf {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #dc2626;
+    }
+
+    .fmt-badge.excel {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        color: #16a34a;
+    }
+
+    .fmt-badge.csv {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #2563eb;
+    }
+
+    .row-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .row-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--slate-900);
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .row-meta {
+        font-size: 12px;
+        color: var(--slate-500);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .row-meta .meta-dot {
+        width: 3px;
+        height: 3px;
+        background: var(--slate-300);
+        border-radius: 50%;
+    }
+
+    .row-meta i {
+        font-size: 10.5px;
+        color: var(--slate-400);
+        margin-right: 3px;
+    }
+
+    .btn-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        border: 1px solid transparent;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .btn-download:hover {
+        background: var(--primary-teal);
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 4px 12px var(--primary-teal-glow);
+        transform: translateY(-1px);
+    }
+
+    /* Empty state */
+    .empty-reports {
+        text-align: center;
+        padding: 40px 24px;
+        background: white;
+        border: 1px dashed var(--slate-200);
+        border-radius: var(--radius-md);
+    }
+
+    .empty-reports i {
+        font-size: 34px;
+        color: var(--slate-300);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .empty-reports p {
+        font-size: 13px;
+        color: var(--slate-500);
+        margin: 0;
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 900px) {
+        .form-row-inline {
+            grid-template-columns: 1fr 1fr;
+        }
+        .form-row-inline .form-field:first-child {
+            grid-column: 1 / -1;
+        }
+        .form-row-inline .form-field:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .reports-header {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 18px 20px;
+        }
+        .report-card-body {
+            padding: 22px 18px;
+        }
+        .report-card-header {
+            padding: 18px 20px;
+        }
+        .form-row-inline {
+            grid-template-columns: 1fr;
+        }
+        .report-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        .report-row .row-left {
+            gap: 12px;
+        }
+        .btn-download {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="reports-wrap">
+
+    <!-- ======================== Page Header ======================== -->
+    <div class="reports-header">
+        <div class="hl">
+            <div class="hi">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div>
+                <h1>Contractor Reports</h1>
+                <p class="subtitle">
+                    <i class="fas fa-shield-halved"></i>
+                    Generate comprehensive, audit-ready contractor reports
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'contractor:overview_dashboard' %}" class="btn-ghost">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ======================== Generate Card ======================== -->
+    <div class="report-card">
+
+        <div class="report-card-header">
+            <div class="header-icon-sm">
+                <i class="fas fa-file-export"></i>
+            </div>
+            <div>
+                <h3>Generate Contractor Report</h3>
+                <div class="header-sub">Select a contractor and choose your output format</div>
+            </div>
+        </div>
+
+        <div class="report-card-body">
+
+            <form method="post" action="{% url 'contractor:generate_report' %}" id="reportForm">
+                {% csrf_token %}
+
+                <div class="form-row-inline">
+
+                    <!-- Contractor dropdown -->
+                    <div class="form-field">
+                        <label class="field-label" for="contractor">
+                            Select Contractor <span class="req">*</span>
+                        </label>
+                        <div class="select-wrap">
+                            <select name="contractor" id="contractor" class="custom-select" required>
+                                <option value="">— Choose a contractor —</option>
+                                {% for contractor in contractors %}
+                                    <option value="{{ contractor.id }}">
+                                        {{ contractor.contractor_code }} — {{ contractor.contractor_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Format dropdown -->
+                    <div class="form-field">
+                        <label class="field-label" for="report_format">Format</label>
+                        <div class="select-wrap">
+                            <select name="report_format" id="report_format" class="custom-select" required>
+                              <option value="" selected disabled>— Choose format —</option>
+                              <option value="PDF">PDF</option>
+                              <option value="EXCEL">Excel</option>
+                           </select>
+                        </div>
+                    </div>
+
+                    <!-- Generate button -->
+                    <div class="form-field">
+                        <label class="field-label" style="visibility: hidden;">Action</label>
+                        <button type="submit" class="btn-generate" id="generateBtn">
+                            <i class="fas fa-download"></i>
+                            Generate
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================== Recent Reports ======================== -->
+    <div class="recent-section">
+
+        <div class="recent-section-header">
+            <div class="rh-left">
+                <div class="rh-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                <div>
+                    <h2>Recent Reports</h2>
+                    <div class="rh-sub">Previously generated contractor reports</div>
+                </div>
+            </div>
+            {% if reports %}
+                <span class="count-chip">{{ reports|length }} report{{ reports|length|pluralize }}</span>
+            {% endif %}
+        </div>
+
+        {% if reports %}
+            <div class="report-list">
+                {% for report in reports %}
+                <div class="report-row">
+                    <div class="row-left">
+                        <div class="fmt-badge {{ report.report_format|lower }}">
+                            {% if report.report_format == 'PDF' %}
+                                <i class="fas fa-file-pdf"></i>
+                            {% elif report.report_format == 'EXCEL' %}
+                                <i class="fas fa-file-excel"></i>
+                            {% else %}
+                                <i class="fas fa-file-csv"></i>
+                            {% endif %}
+                        </div>
+                        <div class="row-info">
+                            <div class="row-title">
+                                {{ report.contractor.contractor_name|default:'All Contractors' }}
+                            </div>
+                            <div class="row-meta">
+                                <span>{{ report.report_format }}</span>
+                                <span class="meta-dot"></span>
+                                <span><i class="fas fa-calendar"></i>{{ report.generated_at|date:"d M Y, H:i" }}</span>
+                                <span class="meta-dot"></span>
+                                <span><i class="fas fa-user"></i>{{ report.generated_by.get_full_name|default:'System' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if report.report_file %}
+                        <a href="{{ report.report_file.url }}" class="btn-download" download>
+                            <i class="fas fa-download"></i>
+                            <span>Download</span>
+                        </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-reports">
+                <i class="fas fa-folder-open"></i>
+                <p>No reports generated yet. Use the form above to create your first report.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('reportForm').addEventListener('submit', function (e) {
+    const contractor = document.getElementById('contractor').value;
+    const format = document.getElementById('report_format').value;
+
+    if (!contractor) {
+        e.preventDefault();
+        alert('Please select a contractor.');
+        return false;
+    }
+
+    if (!format) {
+        e.preventDefault();
+        alert('Please choose a report format (PDF or Excel).');
+        return false;
+    }
+
+    const btn = document.getElementById('generateBtn');
+    const originalHTML = btn.innerHTML;
+
+    // Show spinner briefly, then restore after the download starts
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+    // Re-enable after 3 seconds — enough time for the browser to
+    // kick off the file download, but short enough that the button
+    // doesn't appear frozen.
+    setTimeout(function () {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }, 3000);
+});
+</script>
+{% endblock %}

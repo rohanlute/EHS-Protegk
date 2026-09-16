@@ -1,0 +1,480 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Create HIRA from Source | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'hira:register' %}">HIRA Register</a></li>
+<li class="breadcrumb-item active">Create From Source</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --bg-subtle: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --info-blue: #0ea5e9;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hira-header .hira-title .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-block {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    max-width: 1400px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ehs-card .card-header strong i {
+    color: var(--primary-teal);
+  }
+
+  .ehs-card .card-body {
+    padding: 24px;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                               */
+  /* ========================================================== */
+  .ehs-card label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+
+  .ehs-card select,
+  .ehs-card input[type="text"],
+  .ehs-card input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%2364748b' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 8px 10px;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  .ehs-card input[type="text"],
+  .ehs-card input[type="email"] {
+    background-image: none;
+    padding-right: 12px;
+    cursor: text;
+  }
+
+  .ehs-card select:focus,
+  .ehs-card input:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .ehs-card .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    font-size: 11px;
+    color: var(--danger-red);
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* INFO NOTE                                                   */
+  /* ========================================================== */
+  .info-note {
+    background: var(--primary-teal-light);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #0f766e;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .info-note i {
+    color: var(--primary-teal);
+    font-size: 15px;
+    margin-top: 1px;
+  }
+
+  /* ========================================================== */
+  /* STEP INDICATOR                                              */
+  /* ========================================================== */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .step-indicator .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .step-indicator .step.active {
+    color: var(--primary-teal);
+  }
+
+  .step-indicator .step .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1.5px solid var(--border-color);
+  }
+
+  .step-indicator .step.active .step-num {
+    background: var(--primary-teal);
+    color: white;
+    border-color: var(--primary-teal);
+  }
+
+  .step-indicator .step-divider {
+    flex: 1;
+    height: 1.5px;
+    background: var(--border-color);
+    max-width: 40px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .hira-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .hira-header .hira-actions .btn,
+    .hira-header > .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .ehs-card .card-body {
+      padding: 16px;
+    }
+
+    .step-indicator {
+      flex-wrap: wrap;
+    }
+
+    .step-indicator .step-divider {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <div class="header-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <div>
+        <h1>Create HIRA from Module Data</h1>
+        <p>Select an existing EHS record. HIRA will link to it and read current source data during reporting.</p>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'hira:create' %}?standalone=1">
+      <i class="fas fa-pen"></i> Standalone HIRA
+    </a>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SOURCE SELECTION FORM                                        -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <strong><i class="fas fa-link"></i> Link to Source Record</strong>
+    </div>
+    <div class="card-body">
+
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step active">
+          <span class="step-num">1</span>
+          <span>Select Source</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Fill HIRA Details</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Review & Submit</span>
+        </div>
+      </div>
+
+      <!-- Info note -->
+      <div class="info-note">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          The HIRA will link to the selected source record. Updates to the source record will be reflected in future HIRA reports.
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form method="get" id="sourceForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.source_module.id_for_label }}">Source Module</label>
+            {{ form.source_module }}
+            {{ form.source_module.errors }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.source_record.id_for_label }}">Source Record</label>
+            {{ form.source_record }}
+            {{ form.source_record.errors }}
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2" style="gap: 10px; margin-top: 8px;">
+          <a class="btn btn-outline-secondary" href="{% url 'hira:register' %}">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+          <button class="btn btn-primary" type="submit">
+            <i class="fas fa-arrow-right"></i> Continue
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const moduleSelect = document.getElementById('id_source_module');
+  const recordSelect = document.getElementById('id_source_record');
+
+  if (!moduleSelect || !recordSelect) return;
+
+  // Disable record select initially if no module is chosen
+  if (!moduleSelect.value) {
+    recordSelect.disabled = true;
+    recordSelect.innerHTML = '<option value="">Select a source module first</option>';
+  }
+
+  moduleSelect.addEventListener('change', function () {
+    const moduleId = this.value;
+
+    if (!moduleId) {
+      recordSelect.disabled = true;
+      recordSelect.innerHTML = '<option value="">Select a source module first</option>';
+      return;
+    }
+
+    recordSelect.disabled = true;
+    recordSelect.innerHTML = '<option value="">Loading records…</option>';
+
+    fetch(`{% url 'hira:ajax_source_records' %}?source_module=${encodeURIComponent(moduleId)}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.json();
+      })
+      .then(records => {
+        recordSelect.innerHTML = '<option value="">Select Source Record</option>';
+        if (!records.length) {
+          recordSelect.innerHTML = '<option value="">No records available</option>';
+          return;
+        }
+        records.forEach(record => {
+          recordSelect.add(new Option(record.label, record.id));
+        });
+        recordSelect.disabled = false;
+      })
+      .catch(() => {
+        recordSelect.innerHTML = '<option value="">Failed to load records</option>';
+        recordSelect.disabled = false;
+      });
+  });
+});
+</script>
+{% endblock %}

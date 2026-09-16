@@ -24,7 +24,6 @@ class CAPA(models.Model):
         MANUAL = "MANUAL", "Manual"
 
     class Status(models.TextChoices):
-        DRAFT = "DRAFT", "Draft"
         OPEN = "OPEN", "Open"
         INVESTIGATION_IN_PROGRESS = "INVESTIGATION_IN_PROGRESS", "Investigation in Progress"
         INVESTIGATION_SUBMITTED = "INVESTIGATION_SUBMITTED", "Investigation Submitted"
@@ -51,6 +50,8 @@ class CAPA(models.Model):
         URGENT = "URGENT", "Urgent"
 
     capa_number = models.CharField(max_length=30, unique=True, editable=False, db_index=True)
+    doc_no = models.CharField(max_length=50, blank=True, editable=False)
+    rev_info = models.CharField(max_length=100, blank=True, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
@@ -77,7 +78,7 @@ class CAPA(models.Model):
     capa_recommended = models.BooleanField(default=False)
     capa_reason = models.TextField(blank=True)
 
-    status = models.CharField(max_length=40, choices=Status.choices, default=Status.DRAFT, db_index=True)
+    status = models.CharField(max_length=40, choices=Status.choices, default=Status.OPEN, db_index=True)
     progress = models.PositiveSmallIntegerField(default=0)
 
     created_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="created_capas")
@@ -121,6 +122,12 @@ class CAPA(models.Model):
                 if last and last.capa_number.rsplit("-", 1)[-1].isdigit():
                     next_num = int(last.capa_number.rsplit("-", 1)[-1]) + 1
                 self.capa_number = f"{prefix}-{next_num:05d}"
+
+        if not self.doc_no:
+            self.doc_no = f"DOC-{self.capa_number}"
+        revision_number = self.capa_number.rsplit("-", 1)[-1]
+        if not self.rev_info or self.rev_info.startswith("REV NO: 00"):
+            self.rev_info = f"REV NO: {revision_number} & DATE: {timezone.localdate():%d-%m-%Y}"
 
         if self.status == self.Status.CLOSED and not self.closed_date:
             self.closed_date = timezone.now()
@@ -196,8 +203,8 @@ class CAPAInvestigation(models.Model):
     existing_controls = models.TextField(blank=True)
 
     existing_control_in_place = models.BooleanField(default=False)
-    existing_control_followed = models.CharField(max_length=20, blank=True)
-    existing_control_adequate = models.CharField(max_length=20, blank=True)
+    existing_control_followed = models.CharField(max_length=200, blank=True)
+    existing_control_adequate = models.CharField(max_length=200, blank=True)
     control_failure_reason = models.TextField(blank=True)
     control_gap_identified = models.TextField(blank=True)
 
@@ -237,7 +244,7 @@ class CAPAInvestigation(models.Model):
     management_system_impact_details = models.TextField(blank=True)
 
     investigation_conclusion = models.TextField(blank=True)
-    root_cause_confirmed = models.CharField(max_length=20, blank=True)
+    root_cause_confirmed = models.CharField(max_length=200, blank=True)
     additional_investigation_required = models.BooleanField(default=False)
     systemic_issue_identified = models.BooleanField(default=False)
     extent_analysis_required = models.BooleanField(default=False)

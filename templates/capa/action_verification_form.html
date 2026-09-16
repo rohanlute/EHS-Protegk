@@ -1,4 +1,953 @@
-{% extends 'capa/form.html' %}
-{% block form_heading %}Action Verification{% endblock %}
-{% block breadcrumb_label %}Verification{% endblock %}
-{% block submit_label %}Save Verification{% endblock %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Action Verification{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:list' %}">CAPA</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:my_action_items' %}">My Actions</a></li>
+<li class="breadcrumb-item active">Action Verification</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== ACTION VERIFICATION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                              */
+  /* ========================================================== */
+  .form-section {
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .form-section .section-title {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section .section-title i {
+    color: var(--primary-teal);
+  }
+
+  .form-section .section-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .required-mark {
+    color: var(--secondary-red);
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  .form-error {
+    color: var(--secondary-red) !important;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 36px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .form-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* DETAIL ITEMS                                               */
+  /* ========================================================== */
+  .detail-item {
+    margin-bottom: 10px;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-item .detail-label {
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .detail-item .detail-value {
+    font-size: 0.88rem;
+    color: var(--text-primary);
+  }
+
+  .detail-item .detail-value strong {
+    font-weight: 700;
+  }
+
+  .detail-item .detail-value.text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+  }
+
+  .badge-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .btn-success {
+    background: var(--secondary-green);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
+    color: white;
+  }
+
+  .btn-danger {
+    background: var(--secondary-red);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+    color: white;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .form-section .section-body {
+      padding: 10px 12px;
+    }
+
+    .form-section .section-title {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 10px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.68rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .form-section .section-body {
+      padding: 8px 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 10px;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.65rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="header-text">
+        <h1>Action Verification</h1>
+        <p class="subtitle">Verify action completion</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-md-11 mx-auto">
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user-check"></i> Verify Action
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- ========================================================== -->
+            <!-- VERIFICATION DETAILS                                       -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-clipboard-check"></i> Verification Details
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Verification Date</label>
+                      {{ form.verification_date }}
+                      {% if form.verification_date.errors %}
+                        <div class="form-error">{{ form.verification_date.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Verification Method <span class="required-mark">*</span></label>
+                      {{ form.verification_method }}
+                      {% if form.verification_method.errors %}
+                        <div class="form-error">{{ form.verification_method.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Verification Findings</label>
+                      {{ form.verification_findings }}
+                      {% if form.verification_findings.errors %}
+                        <div class="form-error">{{ form.verification_findings.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- CHECKLIST                                                  -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-list-check"></i> Verification Checklist
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="form-check">
+                        {{ form.was_implemented }}
+                        <label class="form-check-label">Action was implemented as planned</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="form-check">
+                        {{ form.matches_approved_action }}
+                        <label class="form-check-label">Matches the approved action</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="form-check">
+                        {{ form.evidence_sufficient }}
+                        <label class="form-check-label">Evidence is sufficient</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <div class="form-check">
+                        {{ form.meets_required_standard }}
+                        <label class="form-check-label">Meets required standard</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- DEVIATION & EVIDENCE                                       -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-exclamation-triangle"></i> Deviation & Evidence
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label class="field-label">Deviation / Deficiency</label>
+                      {{ form.deviation_deficiency }}
+                      {% if form.deviation_deficiency.errors %}
+                        <div class="form-error">{{ form.deviation_deficiency.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Additional Evidence Remarks</label>
+                      {{ form.additional_evidence_remarks }}
+                      {% if form.additional_evidence_remarks.errors %}
+                        <div class="form-error">{{ form.additional_evidence_remarks.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- VERIFICATION RESULT                                        -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-check-circle"></i> Verification Result
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Result <span class="required-mark">*</span></label>
+                      {{ form.result }}
+                      {% if form.result.errors %}
+                        <div class="form-error">{{ form.result.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Select the verification result</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Rejection Reason</label>
+                      {{ form.rejection_reason }}
+                      {% if form.rejection_reason.errors %}
+                        <div class="form-error">{{ form.rejection_reason.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Required if result is Rejected</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ADDITIONAL ACTION                                          -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-plus-circle"></i> Additional Action
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Additional Action Required</label>
+                      {{ form.additional_action_required }}
+                      {% if form.additional_action_required.errors %}
+                        <div class="form-error">{{ form.additional_action_required.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Reverification Due Date</label>
+                      {{ form.reverification_due_date }}
+                      {% if form.reverification_due_date.errors %}
+                        <div class="form-error">{{ form.reverification_due_date.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ACTION SUMMARY                                             -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-info-circle"></i> Action Summary
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Action Description</span>
+                      <span class="detail-value text-muted">{{ action.action_description|default:"—" }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Assigned To</span>
+                      <span class="detail-value"><strong>{{ action.assigned_to.get_full_name|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Action Plan Type</span>
+                      <span class="detail-value"><strong>{{ action.get_action_plan_type_display|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Target Date</span>
+                      <span class="detail-value"><strong>{{ action.target_date|date:"d-M-Y"|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Current Status</span>
+                      <span class="detail-value">
+                        <span class="badge badge-warning">{{ action.get_status_display }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {% if completion %}
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Completed By</span>
+                      <span class="detail-value"><strong>{{ completion.completed_by.get_full_name|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Completion Date</span>
+                      <span class="detail-value"><strong>{{ completion.completion_date|date:"d-M-Y"|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Completion Remarks</span>
+                      <span class="detail-value text-muted">{{ completion.completion_remarks|default:"—" }}</span>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ACTION BUTTONS                                              -->
+            <!-- ========================================================== -->
+            <div class="form-actions">
+              <a href="{% url 'capa:my_action_items' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save"></i> Save Verification
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default verification date to today if not set
+    const verificationDateInput = document.querySelector('input[name="verification_date"]');
+    if (verificationDateInput && !verificationDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        verificationDateInput.value = today;
+    }
+
+    // Auto-resize textarea
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.style.overflowY = 'hidden';
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Show/hide rejection reason based on result selection
+    const resultSelect = document.querySelector('select[name="result"]');
+    const rejectionReasonField = document.querySelector('textarea[name="rejection_reason"]');
+    const rejectionReasonContainer = rejectionReasonField ? rejectionReasonField.closest('.form-group') : null;
+
+    if (resultSelect && rejectionReasonContainer) {
+        function toggleRejectionReason() {
+            if (resultSelect.value === 'REJECTED') {
+                rejectionReasonContainer.style.display = 'block';
+                rejectionReasonField.required = true;
+            } else {
+                rejectionReasonContainer.style.display = 'none';
+                rejectionReasonField.required = false;
+            }
+        }
+
+        resultSelect.addEventListener('change', toggleRejectionReason);
+        toggleRejectionReason();
+    }
+
+    // Prevent double submission
+    let isSubmitting = false;
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        const btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+        return true;
+    });
+});
+</script>
+{% endblock %}

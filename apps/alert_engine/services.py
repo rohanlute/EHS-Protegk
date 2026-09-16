@@ -268,7 +268,20 @@ class NotificationService:
 
         # Determine object type and extract plant/location/zone
         # Auto-detect object type
-        if hasattr(content_object, 'incident'):
+        if content_object._meta.app_label == 'audits':
+            audit = getattr(content_object, 'parent_audit', None)
+            if audit is None:
+                audit = getattr(content_object, 'finding', None)
+                audit = getattr(audit, 'parent_audit', None)
+            location = audit.primary_location if audit else None
+            plant = location.zone.plant if location and location.zone else None
+            zone = location.zone if location else None
+        elif content_object._meta.app_label == 'toolbox_talk':
+            session = getattr(content_object, 'session', content_object)
+            location = session.locations.first()
+            zone = session.zones.first()
+            plant = session.plants.first()
+        elif hasattr(content_object, 'incident'):
             # Investigation Report
             incident = content_object.incident
             plant = incident.plant
@@ -345,7 +358,11 @@ class NotificationService:
         emails_sent = 0
 
         # Build notification context
-        if notification_type == 'INCIDENT_REPORTED':
+        if notification_type.startswith('AUDIT_'):
+            context = NotificationService._build_audit_context(content_object, notification_type)
+        elif notification_type.startswith('TOOLBOX_'):
+            context = NotificationService._build_toolbox_context(content_object, notification_type)
+        elif notification_type == 'INCIDENT_REPORTED':
             context = NotificationService._build_incident_context(content_object)
         elif notification_type == 'INCIDENT_CLOSED':
             context = NotificationService._build_incident_close_context(content_object)
@@ -478,6 +495,55 @@ EHS Management System
 """,
             'incident': incident,
             'incident_url': incident_url,
+        }
+
+    @staticmethod
+    def _build_audit_context(content_object, notification_type):
+        audit = getattr(content_object, 'parent_audit', None)
+        if audit is None:
+            finding = getattr(content_object, 'finding', None)
+            audit = finding.parent_audit if finding else content_object
+
+        if notification_type == 'AUDIT_SCHEDULE_CREATED':
+            title = f"Audit Scheduled | {audit.schedule_code}"
+            message = f"Audit {audit.schedule_code} has been scheduled for {audit.scheduled_date}."
+        elif notification_type == 'AUDIT_COMPLETED':
+            title = f"Audit Completed | {audit.schedule_code}"
+            message = f"Audit {audit.schedule_code} has been completed."
+        elif notification_type == 'AUDIT_FINDING_CREATED':
+            title = f"Audit Finding Created | {content_object.finding_id}"
+            message = f"Finding {content_object.finding_id} was created for audit {audit.schedule_code}."
+        elif notification_type == 'AUDIT_FINDING_REVIEWED':
+            title = f"Audit Finding Reviewed | {content_object.finding_id}"
+            message = f"Finding {content_object.finding_id} was reviewed for audit {audit.schedule_code}."
+        elif notification_type == 'AUDIT_CAPA_ASSIGNED':
+            title = f"Audit CAPA Assigned | {audit.schedule_code}"
+            message = f"A CAPA task has been assigned for audit finding {content_object.finding.finding_id}."
+        else:
+            title = f"Audit CAPA Updated | {audit.schedule_code}"
+            message = f"A CAPA task for audit {audit.schedule_code} has been updated."
+
+        return {
+            'title': title,
+            'subject': title,
+            'message': f"Hello,\n\n{message}\n\nPlease review the audit module for details.",
+        }
+
+    @staticmethod
+    def _build_toolbox_context(content_object, notification_type):
+        session = getattr(content_object, 'session', content_object)
+        topic = session.topic.topic_title if session.topic_id else 'Toolbox Talk'
+        if notification_type == 'TOOLBOX_SESSION_COMPLETED':
+            title = f"Toolbox Talk Completed | {session.session_no}"
+            message = f"The toolbox talk '{topic}' ({session.session_no}) has been completed."
+        else:
+            title = f"Toolbox Talk Assigned | {session.session_no}"
+            message = f"You have been assigned to the toolbox talk '{topic}' ({session.session_no})."
+
+        return {
+            'title': title,
+            'subject': title,
+            'message': f"Hello,\n\n{message}\n\nPlease review the toolbox talk details in the system.",
         }
     
     

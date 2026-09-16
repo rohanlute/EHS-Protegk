@@ -1,0 +1,419 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Risk Matrix Level | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'hira:risk_matrix_master' %}">Risk Matrix Master</a></li>
+<li class="breadcrumb-item active">Level</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --bg-subtle: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --info-blue: #0ea5e9;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .hira-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hira-header .hira-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hira-header .hira-title .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .hira-header .hira-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .hira-header .hira-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 400;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    max-width: 900px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ehs-card .card-header strong i {
+    color: var(--primary-teal);
+  }
+
+  .ehs-card .card-body {
+    padding: 24px;
+  }
+
+  .ehs-card .card-footer {
+    background: var(--bg-subtle);
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                               */
+  /* ========================================================== */
+  .ehs-card label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+
+  .ehs-card input[type="text"],
+  .ehs-card input[type="number"],
+  .ehs-card input[type="date"],
+  .ehs-card input[type="email"],
+  .ehs-card input[type="url"],
+  .ehs-card select,
+  .ehs-card textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+
+  .ehs-card select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%2364748b' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 8px 10px;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  .ehs-card textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .ehs-card input[type="checkbox"] {
+    width: auto;
+    margin-right: 6px;
+    accent-color: var(--primary-teal);
+  }
+
+  .ehs-card input:focus,
+  .ehs-card select:focus,
+  .ehs-card textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .ehs-card .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    font-size: 11px;
+    color: var(--danger-red);
+    font-weight: 500;
+  }
+
+  .ehs-card .help-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ========================================================== */
+  /* ALERTS                                                      */
+  /* ========================================================== */
+  .alert {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .alert i {
+    margin-top: 2px;
+    font-size: 14px;
+  }
+
+  .alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #991b1b;
+  }
+
+  .alert-danger i { color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* INFO HINT                                                   */
+  /* ========================================================== */
+  .info-hint {
+    background: var(--primary-teal-light);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #0f766e;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .info-hint i {
+    color: var(--primary-teal);
+    font-size: 14px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .hira-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ehs-card .card-body {
+      padding: 16px;
+    }
+
+    .ehs-card .card-footer {
+      padding: 12px 16px;
+    }
+
+    .ehs-card .card-footer .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="hira-header">
+    <div class="hira-title">
+      <div class="header-icon">
+        <i class="fas fa-sliders-h"></i>
+      </div>
+      <div>
+        <h1>Risk Matrix Level</h1>
+        <p>Map calculated scores to configured risk levels.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FORM                                                         -->
+  <!-- ============================================================ -->
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="ehs-card">
+      <div class="card-header">
+        <strong><i class="fas fa-edit"></i> Level Configuration</strong>
+      </div>
+      <div class="card-body">
+
+        <!-- Info hint -->
+        <div class="info-hint">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            Define the score range and risk level for this entry. Ranges should not overlap with other levels in the same matrix.
+          </div>
+        </div>
+
+        <!-- Form-level errors -->
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>Please correct the highlighted fields before saving.</div>
+        </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>{{ form.non_field_errors }}</div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+          {% for field in form %}
+          <div class="col-md-4 mb-3">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+            {% if field.help_text %}
+            <div class="help-text">{{ field.help_text }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-primary" type="submit">
+          <i class="fas fa-save"></i> Save
+        </button>
+        <a class="btn btn-outline-secondary" href="{% url 'hira:risk_matrix_master' %}">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

@@ -1,12 +1,12 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Schedule Training Session | EHS-360{% endblock %}
+{% block title %}{% if session %}Update{% else %}Schedule New{% endif %} Training Session | EHS-360{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'training:session_list' %}">Sessions</a></li>
-<li class="breadcrumb-item active">Schedule New Session</li>
+<li class="breadcrumb-item active">{% if session %}Update{% else %}Schedule New{% endif %} Session</li>
 {% endblock %}
 
 {% block extra_css %}
@@ -434,6 +434,29 @@
     font-weight: 700;
   }
 
+  .badge-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-status-scheduled {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .badge-status-completed {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .badge-status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
   /* ========================================================== */
   /* CARD WIDTH - WIDER                                         */
   /* ========================================================== */
@@ -601,13 +624,21 @@
 <div class="dash-page-header">
   <div class="header-left">
     <div class="header-icon">
-      <i class="fas fa-chalkboard-teacher"></i>
+      <i class="fas fa-{% if session %}edit{% else %}chalkboard-teacher{% endif %}"></i>
     </div>
     <div class="header-text">
-      <h1>Schedule New Training Session</h1>
-      <p class="subtitle">Create and schedule a new training session</p>
+      <h1>{% if session %}Update{% else %}Schedule New{% endif %} Training Session</h1>
+      <p class="subtitle">{% if session %}Edit existing training session{% else %}Create and schedule a new training session{% endif %}</p>
     </div>
   </div>
+  {% if session %}
+  <div>
+    <span class="badge-status badge-status-{{ session.status|lower }}">
+      <i class="fas fa-{% if session.status == 'SCHEDULED' %}clock{% elif session.status == 'COMPLETED' %}check-circle{% else %}times-circle{% endif %}"></i>
+      {{ session.get_status_display }}
+    </span>
+  </div>
+  {% endif %}
 </div>
 
 <!-- ========================================================== -->
@@ -617,8 +648,10 @@
   <div class="col-12">
     <div class="ehs-card card-wide">
       <div class="card-header">
-        
-        <h3 class="card-title">Schedule New Training Session</h3>
+        <h3 class="card-title">
+          <i class="fas fa-{% if session %}edit{% else %}plus-circle{% endif %}"></i>
+          {% if session %}Update{% else %}Schedule New{% endif %} Training Session
+        </h3>
       </div>
 
       <form method="POST" id="sessionForm" enctype="multipart/form-data">
@@ -630,6 +663,10 @@
           <div class="alert-info-custom">
             <i class="fas fa-info-circle"></i>
             <strong>Note:</strong> After creating the session, you can add participants and mark attendance after the session is conducted. Fields marked <span class="text-danger">*</span> are mandatory.
+            {% if session and session.status == 'COMPLETED' %}
+            <br><i class="fas fa-exclamation-triangle" style="color: var(--secondary-gold);"></i>
+            <strong>Warning:</strong> This session is already completed. Edits are limited.
+            {% endif %}
           </div>
 
           <!-- Form Errors -->
@@ -657,22 +694,32 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="id_topic">Training Topic <span class="text-danger">*</span></label>
-                <select name="topic" id="id_topic" class="form-control" required>
+                <select name="topic" id="id_topic" class="form-control" required {% if session and session.status == 'COMPLETED' %}disabled{% endif %}>
                   <option value="">-- Select Training Topic --</option>
                   {% for topic in active_topics %}
                     <option value="{{ topic.id }}"
                       data-validity="{{ topic.validity_period_days }}"
                       data-mandatory="{{ topic.is_mandatory }}"
-                      {% if form.topic.value == topic.id|stringformat:"s" %}selected{% endif %}>
+                      {% if form.topic.value == topic.id|stringformat:"s" or session.topic.id == topic.id %}selected{% endif %}>
                       {{ topic.name }} ({{ topic.code }})
                     </option>
                   {% endfor %}
                 </select>
+                {% if session and session.status == 'COMPLETED' %}
+                  <input type="hidden" name="topic" value="{{ session.topic.id }}">
+                {% endif %}
                 {% if form.topic.errors %}
                   <div class="text-danger small">{{ form.topic.errors }}</div>
                 {% endif %}
                 <small class="form-text text-muted">
-                  <span id="topicValidity"></span>
+                  <span id="topicValidity">
+                    {% if session and session.topic %}
+                      Validity: <strong>{{ session.topic.validity_period_days }} days</strong>
+                      {% if session.topic.is_mandatory %}
+                        &nbsp;|&nbsp; <span class="badge-danger-custom">Mandatory</span>
+                      {% endif %}
+                    {% endif %}
+                  </span>
                 </small>
               </div>
             </div>
@@ -731,6 +778,7 @@
                 {% if form.max_participants.errors %}
                   <div class="text-danger small">{{ form.max_participants.errors }}</div>
                 {% endif %}
+                <small class="form-text text-muted">Leave blank for unlimited</small>
               </div>
             </div>
           </div>
@@ -867,7 +915,7 @@
             </div>
           </div>
 
-          <div class="row" id="externalOrgRow" style="display:none;">
+          <div class="row" id="externalOrgRow" style="{% if form.trainer_is_external.value or session.trainer_is_external %}display:block;{% else %}display:none;{% endif %}">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="id_trainer_organization">Trainer's Organization</label>
@@ -907,6 +955,13 @@
                   <div class="text-danger small">{{ form.attachment.errors }}</div>
                 {% endif %}
                 <small class="form-text text-muted">Upload presentation, PDF, or any reference material</small>
+                {% if session and session.attachment %}
+                  <div class="mt-1">
+                    <span class="badge bg-info text-dark">
+                      <i class="fas fa-paperclip"></i> Current file: {{ session.attachment.name }}
+                    </span>
+                  </div>
+                {% endif %}
               </div>
             </div>
 
@@ -930,17 +985,37 @@
               <div class="form-group">
                 <label>Created By</label>
                 <input type="text" class="form-control readonly-field"
-                       value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+                       value="{% if session %}{{ session.created_by.get_full_name|default:session.created_by.username }}{% else %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}" readonly>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label>Created On</label>
+                <label>{% if session %}Created On{% else %}Created On{% endif %}</label>
                 <input type="text" class="form-control readonly-field"
-                       value="{% now 'd/m/Y H:i' %}" readonly>
+                       value="{% if session %}{{ session.created_at|date:'d/m/Y H:i' }}{% else %}{% now 'd/m/Y H:i' %}{% endif %}" readonly>
               </div>
             </div>
           </div>
+
+          <!-- Session Number (readonly for update) -->
+          {% if session %}
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Session Number</label>
+                <input type="text" class="form-control readonly-field"
+                       value="{{ session.session_number }}" readonly>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Status</label>
+                <input type="text" class="form-control readonly-field"
+                       value="{{ session.get_status_display }}" readonly>
+              </div>
+            </div>
+          </div>
+          {% endif %}
 
         </div>
 
@@ -949,11 +1024,17 @@
         <!-- ========================================================== -->
         <div class="card-footer">
           <button type="submit" class="btn-primary-custom" id="submitBtn">
-            <i class="fas fa-calendar-plus"></i> <span class="btn-text">Schedule Training Session</span>
+            <i class="fas fa-{% if session %}save{% else %}calendar-plus{% endif %}"></i>
+            <span class="btn-text">{% if session %}Update{% else %}Schedule Training Session{% endif %}</span>
           </button>
           <a href="{{ cancel_url }}" class="btn-secondary-custom">
             <i class="fas fa-times"></i> Cancel
           </a>
+          {% if session %}
+          <a href="{% url 'training:session_detail' session.pk %}" class="btn-secondary-custom">
+            <i class="fas fa-eye"></i> View Session
+          </a>
+          {% endif %}
         </div>
       </form>
 
@@ -1014,14 +1095,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── Set today as default date ──
+    // ── Set today as default date (only for create) ──
     const dateInput = document.getElementById('id_scheduled_date');
     if (dateInput) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
+        {% if not session %}
         if (!dateInput.value) {
             dateInput.value = today;
         }
+        {% endif %}
     }
 
     // ── AJAX location chain ──
@@ -1032,13 +1115,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetSelect(el, text) {
         if (el && el.tagName === 'SELECT') {
+            // Preserve current value if exists
+            const currentValue = el.value;
             el.innerHTML = '<option value="">-- ' + text + ' --</option>';
+            return currentValue;
+        }
+        return null;
+    }
+
+    function populateSelect(el, data, selectedId) {
+        if (el && el.tagName === 'SELECT') {
+            data.forEach(item => {
+                const opt = new Option(item.code ? `${item.name} (${item.code})` : item.name, item.id);
+                if (selectedId && item.id == selectedId) {
+                    opt.selected = true;
+                }
+                el.add(opt);
+            });
         }
     }
 
     if (plantSelect && plantSelect.tagName === 'SELECT') {
+        // Initial load - if plant has value, load zones
+        if (plantSelect.value) {
+            const plantId = plantSelect.value;
+            fetch(`{% url 'training:ajax_get_zones' %}?plant_id=${plantId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const currentZone = zoneSelect ? zoneSelect.value : null;
+                    resetSelect(zoneSelect, 'Select Zone');
+                    populateSelect(zoneSelect, data, currentZone);
+                    // Trigger zone change to load locations
+                    if (zoneSelect && currentZone) {
+                        const event = new Event('change');
+                        zoneSelect.dispatchEvent(event);
+                    }
+                });
+        }
+
         plantSelect.addEventListener('change', function () {
             const plantId = this.value;
+            const currentZone = zoneSelect ? zoneSelect.value : null;
             resetSelect(zoneSelect, 'Select Zone');
             resetSelect(locationSelect, 'Select Zone First');
             resetSelect(sublocationSelect, 'Select Location First');
@@ -1047,18 +1164,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 fetch(`{% url 'training:ajax_get_zones' %}?plant_id=${plantId}`)
                     .then(r => r.json())
                     .then(data => {
-                        data.forEach(z => {
-                            const opt = new Option(z.code ? `${z.name} (${z.code})` : z.name, z.id);
-                            zoneSelect.add(opt);
-                        });
+                        populateSelect(zoneSelect, data, currentZone);
                     });
             }
         });
     }
 
     if (zoneSelect && zoneSelect.tagName === 'SELECT') {
+        // Initial load - if zone has value, load locations
+        if (zoneSelect.value) {
+            const zoneId = zoneSelect.value;
+            fetch(`{% url 'training:ajax_get_locations' %}?zone_id=${zoneId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const currentLocation = locationSelect ? locationSelect.value : null;
+                    resetSelect(locationSelect, 'Select Location');
+                    populateSelect(locationSelect, data, currentLocation);
+                    // Trigger location change to load sublocations
+                    if (locationSelect && currentLocation) {
+                        const event = new Event('change');
+                        locationSelect.dispatchEvent(event);
+                    }
+                });
+        }
+
         zoneSelect.addEventListener('change', function () {
             const zoneId = this.value;
+            const currentLocation = locationSelect ? locationSelect.value : null;
             resetSelect(locationSelect, 'Select Location');
             resetSelect(sublocationSelect, 'Select Location First');
 
@@ -1066,16 +1198,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 fetch(`{% url 'training:ajax_get_locations' %}?zone_id=${zoneId}`)
                     .then(r => r.json())
                     .then(data => {
-                        data.forEach(l => {
-                            const opt = new Option(l.code ? `${l.name} (${l.code})` : l.name, l.id);
-                            locationSelect.add(opt);
-                        });
+                        populateSelect(locationSelect, data, currentLocation);
                     });
             }
         });
     }
 
     if (locationSelect && locationSelect.tagName === 'SELECT') {
+        // Initial load - if location has value, load sublocations
+        if (locationSelect.value) {
+            const locationId = locationSelect.value;
+            fetch(`{% url 'training:ajax_get_sublocations' %}?location_id=${locationId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const currentSublocation = sublocationSelect ? sublocationSelect.value : null;
+                    resetSelect(sublocationSelect, 'Select Sub-Location');
+                    populateSelect(sublocationSelect, data, currentSublocation);
+                });
+        }
+
         locationSelect.addEventListener('change', function () {
             const locationId = this.value;
             resetSelect(sublocationSelect, 'Select Sub-Location');
@@ -1084,10 +1225,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 fetch(`{% url 'training:ajax_get_sublocations' %}?location_id=${locationId}`)
                     .then(r => r.json())
                     .then(data => {
-                        data.forEach(s => {
-                            const opt = new Option(s.code ? `${s.name} (${s.code})` : s.name, s.id);
-                            sublocationSelect.add(opt);
-                        });
+                        populateSelect(sublocationSelect, data);
                     });
             }
         });
@@ -1104,7 +1242,25 @@ document.addEventListener('DOMContentLoaded', function () {
             const btn = document.getElementById('submitBtn');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span class="btn-text">Scheduling...</span>';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span class="btn-text">{% if session %}Updating...{% else %}Scheduling...{% endif %}</span>';
+            }
+        });
+    }
+
+    // ── Auto-suggest end time (optional) ──
+    const startTimeInput = document.getElementById('id_scheduled_time');
+    const endTimeInput = document.getElementById('id_end_time');
+
+    if (startTimeInput && endTimeInput && !endTimeInput.value) {
+        startTimeInput.addEventListener('change', function() {
+            if (this.value) {
+                // Default to +2 hours
+                const parts = this.value.split(':');
+                let hours = parseInt(parts[0]);
+                const minutes = parts[1] || '00';
+                hours = (hours + 2) % 24;
+                const hourStr = String(hours).padStart(2, '0');
+                endTimeInput.value = `${hourStr}:${minutes}`;
             }
         });
     }

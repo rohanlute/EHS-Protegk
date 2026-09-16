@@ -418,6 +418,7 @@ class Permissions(models.Model):
             ('REPORTS', 'Reports Module'),
             ('ENV_DATA', 'Environmental Data Module'),
             ('LEGAL_COMPLIANCE', 'Legal Compliance Module'),
+            ('BENCHMARKING', 'Site / Business Benchmarking'),
         ],
         null=True,
         blank=True,

@@ -1,4 +1,784 @@
-{% extends 'capa/form.html' %}
-{% block form_heading %}Action Completion{% endblock %}
-{% block breadcrumb_label %}Action Completion{% endblock %}
-{% block submit_label %}Submit Completion{% endblock %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Action Completion{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:list' %}">CAPA</a></li>
+<li class="breadcrumb-item"><a href="{% url 'capa:my_action_items' %}">My Actions</a></li>
+<li class="breadcrumb-item active">Action Completion</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== ACTION COMPLETION - Premium Teal Theme ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --primary-teal-medium: rgba(13, 148, 136, 0.15);
+    
+    --secondary-red: #dc2626;
+    --secondary-green: #22c55e;
+    --secondary-gold: #d97706;
+    --secondary-blue: #3b82f6;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-white: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --radius-card: 12px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* BREADCRUMB                                                  */
+  /* ========================================================== */
+  .breadcrumb {
+    background: transparent;
+    padding: 0.4rem 0;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-page-header .header-left .header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .dash-page-header .header-left .header-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* ========================================================== */
+  /* EHS CARD                                                   */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .ehs-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .ehs-card .card-header .card-title i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+  }
+
+  .ehs-card .card-body {
+    padding: 18px 20px;
+  }
+
+  /* ========================================================== */
+  /* FORM SECTIONS                                              */
+  /* ========================================================== */
+  .form-section {
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .form-section .section-title {
+    background: var(--primary-teal-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section .section-title i {
+    color: var(--primary-teal);
+  }
+
+  .form-section .section-body {
+    padding: 14px 16px;
+  }
+
+  /* ========================================================== */
+  /* FORM ELEMENTS                                              */
+  /* ========================================================== */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    display: block;
+  }
+
+  .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .required-mark {
+    color: var(--secondary-red);
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  .form-error {
+    color: var(--secondary-red) !important;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    background: white;
+    color: var(--text-primary);
+    width: 100%;
+    height: 36px;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  textarea.form-control {
+    height: auto;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .form-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* DETAIL ITEMS                                               */
+  /* ========================================================== */
+  .detail-item {
+    margin-bottom: 10px;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-item .detail-label {
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .detail-item .detail-value {
+    font-size: 0.88rem;
+    color: var(--text-primary);
+  }
+
+  .detail-item .detail-value strong {
+    font-weight: 700;
+  }
+
+  .detail-item .detail-value.text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                     */
+  /* ========================================================== */
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .badge-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
+
+  .badge-warning {
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+  }
+
+  .badge-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+  }
+
+  .badge-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                    */
+  /* ========================================================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    height: 36px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
+    box-shadow: 0 3px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(13, 148, 136, 0.35);
+    color: white;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                 */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 10px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 15px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 10px;
+    }
+
+    .ehs-card .card-body {
+      padding: 12px 14px;
+    }
+
+    .ehs-card .card-header {
+      padding: 8px 12px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.9rem;
+    }
+
+    .form-section .section-body {
+      padding: 10px 12px;
+    }
+
+    .form-section .section-title {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 10px;
+    }
+
+    .btn {
+      font-size: 0.78rem;
+      height: 34px;
+      padding: 4px 14px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .breadcrumb {
+      font-size: 0.7rem;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.68rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 8px 10px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 13px;
+    }
+
+    .dash-page-header .header-left .header-text .subtitle {
+      font-size: 9px;
+    }
+
+    .ehs-card .card-body {
+      padding: 10px 12px;
+    }
+
+    .ehs-card .card-header {
+      padding: 6px 10px;
+    }
+
+    .ehs-card .card-header .card-title {
+      font-size: 0.85rem;
+    }
+
+    .form-section .section-body {
+      padding: 8px 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      font-size: 0.75rem;
+      height: 32px;
+      padding: 3px 10px;
+    }
+
+    .detail-item .detail-label {
+      font-size: 0.65rem;
+    }
+
+    .detail-item .detail-value {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ========================================================== -->
+  <!-- PAGE HEADER                                                 -->
+  <!-- ========================================================== -->
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="header-text">
+        <h1>Action Completion</h1>
+        <p class="subtitle">Mark action as completed</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MAIN FORM CARD                                             -->
+  <!-- ========================================================== -->
+  <div class="row">
+    <div class="col-md-11 mx-auto">
+      <div class="ehs-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-check-circle"></i> Complete Action
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- ========================================================== -->
+            <!-- COMPLETION DETAILS                                         -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-clipboard-check"></i> Completion Details
+              </div>
+              <div class="section-body">
+                <div class="form-group">
+                  <label class="field-label">Completion Remarks <span class="required-mark">*</span></label>
+                  {{ form.completion_remarks }}
+                  {% if form.completion_remarks.errors %}
+                    <div class="form-error">{{ form.completion_remarks.errors }}</div>
+                  {% endif %}
+                  <span class="form-text">Describe how the action was completed</span>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="field-label">Completion Date</label>
+                      {{ form.completion_date }}
+                      {% if form.completion_date.errors %}
+                        <div class="form-error">{{ form.completion_date.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label class="field-label">Evidence File</label>
+                      {{ form.evidence }}
+                      {% if form.evidence.errors %}
+                        <div class="form-error">{{ form.evidence.errors }}</div>
+                      {% endif %}
+                      <span class="form-text">Upload supporting evidence (optional)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ACTION SUMMARY                                             -->
+            <!-- ========================================================== -->
+            <div class="form-section">
+              <div class="section-title">
+                <i class="fas fa-info-circle"></i> Action Summary
+              </div>
+              <div class="section-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Action Plan Type</span>
+                      <span class="detail-value"><strong>{{ action.get_action_plan_type_display|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <span class="detail-label">Assigned To</span>
+                      <span class="detail-value"><strong>{{ action.assigned_to.get_full_name|default:"—" }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <span class="detail-label">Action Description</span>
+                      <span class="detail-value text-muted">{{ action.action_description|default:"No description provided." }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 10px 0;">
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Priority</span>
+                      <span class="detail-value">
+                        {% if action.priority %}
+                          <span class="badge 
+                            {% if action.priority == 'URGENT' %}
+                              badge-danger
+                            {% elif action.priority == 'HIGH' %}
+                              badge-danger
+                            {% elif action.priority == 'MEDIUM' %}
+                              badge-warning
+                            {% else %}
+                              badge-success
+                            {% endif %}
+                          ">
+                            {{ action.get_priority_display }}
+                          </span>
+                        {% else %}
+                          —
+                        {% endif %}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <span class="detail-label">Target Date</span>
+                      <span class="detail-value">
+                        <strong>{{ action.target_date|date:"d-M-Y"|default:"—" }}</strong>
+                        {% if action.is_overdue %}
+                          <span class="badge badge-danger">Overdue</span>
+                        {% endif %}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label">Current Status</span>
+                      <span class="detail-value">
+                        <span class="badge 
+                          {% if action.status == 'PENDING' %}
+                            badge-secondary
+                          {% elif action.status == 'IN_PROGRESS' %}
+                            badge-info
+                          {% elif action.status == 'REJECTED' %}
+                            badge-danger
+                          {% elif action.status == 'PENDING_VERIFICATION' %}
+                            badge-warning
+                          {% elif action.status == 'VERIFIED' %}
+                            badge-success
+                          {% else %}
+                            badge-secondary
+                          {% endif %}
+                        ">
+                          {{ action.get_status_display }}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================== -->
+            <!-- ACTION BUTTONS                                              -->
+            <!-- ========================================================== -->
+            <div class="form-actions">
+              <a href="{% url 'capa:my_action_items' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-check"></i> Submit Completion
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default completion date to today if not set
+    const completionDateInput = document.querySelector('input[name="completion_date"]');
+    if (completionDateInput && !completionDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        completionDateInput.value = today;
+    }
+
+    // Auto-resize textarea
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.style.overflowY = 'hidden';
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Prevent double submission
+    let isSubmitting = false;
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        const btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        }
+        return true;
+    });
+});
+</script>
+{% endblock %}

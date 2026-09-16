@@ -15,6 +15,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 from .forms import *
 from .models import *
 from apps.organizations.models import Plant
+from apps.alert_engine.services import NotificationService
 
 
 def _is_auditor_or_admin(user):
@@ -944,6 +945,7 @@ class AuditFindingReviewView(ManagerOrAdminRequiredMixin, UpdateView):
             else AuditFinding.STATUS_DRAFT
         )
         finding.save()
+        NotificationService.notify(finding, "AUDIT_FINDING_REVIEWED", module="AUDIT")
         messages.success(self.request, f"Finding {finding.finding_id} reviewed successfully.")
         return HttpResponseRedirect(self.get_success_url())
 
@@ -1005,6 +1007,13 @@ class CAPAUpdateView(LoginRequiredMixin, UpdateView):
             capa.save(update_fields=["verified_by", "verified_at", "updated_at"])
             capa.finding.status = AuditFinding.STATUS_CLOSED
             capa.finding.save(update_fields=["status", "updated_at"])
+
+        NotificationService.notify(
+            capa,
+            "AUDIT_CAPA_UPDATED",
+            module="AUDIT",
+            extra_recipients=[capa.assigned_to],
+        )
 
         messages.success(self.request, "CAPA updated successfully.")
         return HttpResponseRedirect(self.get_success_url())

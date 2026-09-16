@@ -39,8 +39,12 @@ class FlexibleJSONField(forms.CharField):
     def prepare_value(self, value):
         if value in (None, "", [], {}):
             return ""
-        if isinstance(value, (list, dict)):
-            return json.dumps(value, indent=2, ensure_ascii=False)
+        if isinstance(value, list):
+            return "\n".join(str(item) for item in value)
+        if isinstance(value, dict):
+            if set(value) == {"details"}:
+                return str(value["details"])
+            return "\n".join(f"{key}: {item}" for key, item in value.items())
         return value
 
     def to_python(self, value):
@@ -313,6 +317,20 @@ class CAPACommentForm(BaseEHSForm):
         model = CAPAComment
         fields = ["comment"]
         widgets = {"comment": forms.Textarea(attrs={"rows": 3})}
+
+
+class CAPAReopenForm(forms.Form):
+    reason = forms.CharField(
+        label="Reason for reopening",
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 4,
+                "class": "form-control",
+                "placeholder": "Explain why this CAPA needs to be reopened",
+            }
+        ),
+    )
 
 
 class CAPAFilterForm(forms.Form):
