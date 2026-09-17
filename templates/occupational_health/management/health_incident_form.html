@@ -1,0 +1,1380 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Health Incident{% else %}Add Health Incident{% endif %} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-back {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all .25s ease;
+}
+
+.btn-back:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.header-title i {
+    color:rgba(255,255,255,.9);
+    font-size:18px;
+}
+
+.header-title h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.card-body-custom {
+    padding:22px 24px;
+}
+
+.form-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+}
+
+.form-group-custom {
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+
+.form-group-custom.full-width {
+    grid-column:1/-1;
+}
+
+.form-label-custom {
+    color:var(--text-secondary);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:7px;
+}
+
+.form-label-custom .required {
+    color:var(--secondary-red);
+}
+
+.form-control-custom {
+    width:100%;
+    min-height:40px;
+    padding:9px 12px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-size:13px;
+    outline:none;
+    transition:all .2s ease;
+    box-sizing:border-box;
+}
+
+.form-control-custom:focus {
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 3px var(--primary-teal-light);
+}
+
+textarea.form-control-custom {
+    min-height:100px;
+    resize:vertical;
+}
+
+.form-help {
+    color:var(--text-muted);
+    font-size:10px;
+    margin-top:5px;
+}
+
+.field-error {
+    color:var(--secondary-red);
+    font-size:11px;
+    margin-top:5px;
+}
+
+.alert-error {
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    color:#b91c1c;
+    padding:12px 15px;
+    border-radius:var(--radius-sm);
+    margin-bottom:18px;
+    font-size:12px;
+}
+
+.employee-summary {
+    display:none;
+    margin-top:10px;
+    padding:12px 14px;
+    border:1px solid rgba(13,148,136,.18);
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal-light);
+}
+
+.employee-summary.show {
+    display:block;
+}
+
+.employee-summary-title {
+    color:var(--text-primary);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+.employee-summary-details {
+    color:var(--text-muted);
+    font-size:11px;
+    line-height:1.7;
+}
+
+.reference-box {
+    padding:13px 15px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafbfc;
+}
+
+.reference-title {
+    color:var(--text-primary);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+.reference-text {
+    color:var(--text-muted);
+    font-size:11px;
+    line-height:1.6;
+}
+
+.form-actions {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    padding-top:20px;
+    margin-top:20px;
+    border-top:1px solid var(--border-color);
+}
+
+.btn-save {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 20px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.btn-save:hover {
+    background:var(--primary-teal-dark);
+}
+
+.btn-cancel {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 18px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.btn-cancel:hover {
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.checkbox-row {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-height:40px;
+}
+
+.custom-checkbox {
+    width:17px;
+    height:17px;
+    accent-color:var(--primary-teal);
+    cursor:pointer;
+}
+
+.conditional-box {
+    display:none;
+    grid-column:1/-1;
+    padding:14px 15px;
+    border:1px solid rgba(13,148,136,.18);
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal-light);
+}
+
+.conditional-box.show {
+    display:block;
+}
+
+.conditional-box .form-grid {
+    gap:18px;
+}
+
+.status-info {
+    padding:12px 14px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafbfc;
+    font-size:11px;
+    color:var(--text-muted);
+    line-height:1.6;
+}
+
+@media(max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right a {
+        flex:1;
+    }
+
+    .card-body-custom {
+        padding:16px;
+    }
+
+    .form-grid {
+        grid-template-columns:1fr;
+    }
+
+    .form-group-custom.full-width {
+        grid-column:auto;
+    }
+
+    .conditional-box {
+        grid-column:auto;
+    }
+
+    .form-actions {
+        flex-direction:column-reverse;
+    }
+
+    .form-actions a,
+    .form-actions button {
+        width:100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+
+    <!-- PAGE HEADER -->
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+
+            <div>
+                <h1>
+                    {% if object %}
+                        Edit Health Incident
+                    {% else %}
+                        Add Health Incident
+                    {% endif %}
+                </h1>
+
+                <p class="subtitle">
+                    Record and manage employee occupational health incidents
+                </p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <a href="{% url 'occupational_health:health_incident_list' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- FORM ERRORS -->
+    {% if form.non_field_errors %}
+    <div class="alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- ========================================================= -->
+        <!-- EMPLOYEE & INCIDENT INFORMATION -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-user"></i>
+                    <h3>Employee & Incident Information</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Employee -->
+                    <div class="form-group-custom full-width">
+                        <label class="form-label-custom" for="{{ form.employee_health_profile.id_for_label }}">
+                            Employee <span class="required">*</span>
+                        </label>
+
+                        {{ form.employee_health_profile }}
+
+                        {% if form.employee_health_profile.errors %}
+                            <div class="field-error">
+                                {{ form.employee_health_profile.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                        <div id="employeeSummary" class="employee-summary">
+                            <div class="employee-summary-title">
+                                <i class="fas fa-user-check"></i>
+                                Selected Employee
+                            </div>
+
+                            <div id="employeeSummaryDetails" class="employee-summary-details"></div>
+                        </div>
+                    </div>
+
+                    <!-- Incident Date -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.incident_date.id_for_label }}">
+                            Incident Date <span class="required">*</span>
+                        </label>
+
+                        {{ form.incident_date }}
+
+                        {% if form.incident_date.errors %}
+                            <div class="field-error">
+                                {{ form.incident_date.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Incident Time -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.incident_time.id_for_label }}">
+                            Incident Time
+                        </label>
+
+                        {{ form.incident_time }}
+
+                        {% if form.incident_time.errors %}
+                            <div class="field-error">
+                                {{ form.incident_time.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Incident Type -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.incident_type.id_for_label }}">
+                            Incident Type <span class="required">*</span>
+                        </label>
+
+                        {{ form.incident_type }}
+
+                        {% if form.incident_type.errors %}
+                            <div class="field-error">
+                                {{ form.incident_type.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Severity -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.severity.id_for_label }}">
+                            Severity <span class="required">*</span>
+                        </label>
+
+                        {{ form.severity }}
+
+                        {% if form.severity.errors %}
+                            <div class="field-error">
+                                {{ form.severity.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Incident Location -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.incident_location.id_for_label }}">
+                            Incident Location
+                        </label>
+
+                        {{ form.incident_location }}
+
+                        {% if form.incident_location.errors %}
+                            <div class="field-error">
+                                {{ form.incident_location.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Work Area -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.work_area.id_for_label }}">
+                            Work Area
+                        </label>
+
+                        {{ form.work_area }}
+
+                        {% if form.work_area.errors %}
+                            <div class="field-error">
+                                {{ form.work_area.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Job Role -->
+                    <div class="form-group-custom full-width">
+                        <label class="form-label-custom" for="{{ form.job_role.id_for_label }}">
+                            Job Role
+                        </label>
+
+                        {{ form.job_role }}
+
+                        {% if form.job_role.errors %}
+                            <div class="field-error">
+                                {{ form.job_role.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- INCIDENT DESCRIPTION -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-file-medical"></i>
+                    <h3>Incident Description</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Description -->
+                    <div class="form-group-custom full-width">
+                        <label class="form-label-custom" for="{{ form.incident_description.id_for_label }}">
+                            Incident Description <span class="required">*</span>
+                        </label>
+
+                        {{ form.incident_description }}
+
+                        {% if form.incident_description.errors %}
+                            <div class="field-error">
+                                {{ form.incident_description.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Symptoms -->
+                    <div class="form-group-custom full-width">
+                        <label class="form-label-custom" for="{{ form.symptoms.id_for_label }}">
+                            Symptoms
+                        </label>
+
+                        {{ form.symptoms }}
+
+                        {% if form.symptoms.errors %}
+                            <div class="field-error">
+                                {{ form.symptoms.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- IMMEDIATE ACTION & TREATMENT -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-first-aid"></i>
+                    <h3>Immediate Action & Treatment</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Immediate Action -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.immediate_action.id_for_label }}">
+                            Immediate Action Taken
+                        </label>
+
+                        {{ form.immediate_action }}
+
+                        {% if form.immediate_action.errors %}
+                            <div class="field-error">
+                                {{ form.immediate_action.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Treatment -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.treatment_provided.id_for_label }}">
+                            Treatment Provided
+                        </label>
+
+                        {{ form.treatment_provided }}
+
+                        {% if form.treatment_provided.errors %}
+                            <div class="field-error">
+                                {{ form.treatment_provided.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Medical Professional -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.medical_professional.id_for_label }}">
+                            Medical Professional
+                        </label>
+
+                        {{ form.medical_professional }}
+
+                        {% if form.medical_professional.errors %}
+                            <div class="field-error">
+                                {{ form.medical_professional.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Medical Facility -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.medical_facility.id_for_label }}">
+                            Medical Facility
+                        </label>
+
+                        {{ form.medical_facility }}
+
+                        {% if form.medical_facility.errors %}
+                            <div class="field-error">
+                                {{ form.medical_facility.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- REFERENCE RECORDS -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-link"></i>
+                    <h3>Linked Health Records</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Occupational Disease -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.occupational_disease.id_for_label }}">
+                            Occupational Disease
+                        </label>
+
+                        {{ form.occupational_disease }}
+
+                        <div class="form-help">
+                            Link this incident to an existing occupational disease record.
+                        </div>
+
+                        {% if form.occupational_disease.errors %}
+                            <div class="field-error">
+                                {{ form.occupational_disease.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Exposure -->
+                    <div class="form-group-custom">
+                        <label class="form-label-custom" for="{{ form.exposure.id_for_label }}">
+                            Exposure Record
+                        </label>
+
+                        {{ form.exposure }}
+
+                        <div class="form-help">
+                            Link this incident to the employee's exposure record.
+                        </div>
+
+                        {% if form.exposure.errors %}
+                            <div class="field-error">
+                                {{ form.exposure.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reference Information -->
+                    <div class="form-group-custom full-width">
+
+                        <div class="reference-box">
+
+                            <div class="reference-title">
+                                <i class="fas fa-info-circle"></i>
+                                Reference Records
+                            </div>
+
+                            <div class="reference-text">
+                                Occupational Disease and Exposure Record should belong to
+                                the selected employee. These records help establish the
+                                relationship between the health incident and existing
+                                occupational health records.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- HOSPITALIZATION -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-hospital"></i>
+                    <h3>Hospitalization</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <div class="form-group-custom full-width">
+
+                        <div class="checkbox-row">
+                            {{ form.hospitalization_required }}
+
+                            <label class="form-label-custom"
+                                   for="{{ form.hospitalization_required.id_for_label }}"
+                                   style="margin:0;">
+                                Hospitalization Required
+                            </label>
+                        </div>
+
+                        {% if form.hospitalization_required.errors %}
+                            <div class="field-error">
+                                {{ form.hospitalization_required.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <div id="hospitalizationBox" class="conditional-box">
+
+                        <div class="form-grid">
+
+                            <div class="form-group-custom full-width">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.hospitalization_details.id_for_label }}">
+                                    Hospitalization Details
+                                </label>
+
+                                {{ form.hospitalization_details }}
+
+                                {% if form.hospitalization_details.errors %}
+                                    <div class="field-error">
+                                        {{ form.hospitalization_details.errors|striptags }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- WORK RESTRICTIONS -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-user-shield"></i>
+                    <h3>Work Restrictions</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <div class="form-group-custom full-width">
+
+                        <div class="checkbox-row">
+                            {{ form.work_restriction_required }}
+
+                            <label class="form-label-custom"
+                                   for="{{ form.work_restriction_required.id_for_label }}"
+                                   style="margin:0;">
+                                Work Restriction Required
+                            </label>
+                        </div>
+
+                        {% if form.work_restriction_required.errors %}
+                            <div class="field-error">
+                                {{ form.work_restriction_required.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <div id="workRestrictionBox" class="conditional-box">
+
+                        <div class="form-grid">
+
+                            <div class="form-group-custom full-width">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.work_restriction_details.id_for_label }}">
+                                    Work Restriction Details
+                                </label>
+
+                                {{ form.work_restriction_details }}
+
+                                {% if form.work_restriction_details.errors %}
+                                    <div class="field-error">
+                                        {{ form.work_restriction_details.errors|striptags }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- MEDICAL FOLLOW-UP -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>Medical Follow-up</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Follow-up Required -->
+                    <div class="form-group-custom">
+
+                        <div class="checkbox-row">
+                            {{ form.follow_up_required }}
+
+                            <label class="form-label-custom"
+                                   for="{{ form.follow_up_required.id_for_label }}"
+                                   style="margin:0;">
+                                Follow-up Required
+                            </label>
+                        </div>
+
+                        {% if form.follow_up_required.errors %}
+                            <div class="field-error">
+                                {{ form.follow_up_required.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- Follow-up Date -->
+                    <div class="form-group-custom">
+
+                        <label class="form-label-custom"
+                               for="{{ form.follow_up_date.id_for_label }}">
+                            Follow-up Date
+                        </label>
+
+                        {{ form.follow_up_date }}
+
+                        {% if form.follow_up_date.errors %}
+                            <div class="field-error">
+                                {{ form.follow_up_date.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- INVESTIGATION -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-search"></i>
+                    <h3>Investigation & Corrective Actions</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <div class="form-group-custom full-width">
+
+                        <div class="checkbox-row">
+                            {{ form.investigation_required }}
+
+                            <label class="form-label-custom"
+                                   for="{{ form.investigation_required.id_for_label }}"
+                                   style="margin:0;">
+                                Investigation Required
+                            </label>
+                        </div>
+
+                        {% if form.investigation_required.errors %}
+                            <div class="field-error">
+                                {{ form.investigation_required.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <div id="investigationBox" class="conditional-box">
+
+                        <div class="form-grid">
+
+                            <!-- Investigation Findings -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.investigation_findings.id_for_label }}">
+                                    Investigation Findings
+                                </label>
+
+                                {{ form.investigation_findings }}
+
+                                {% if form.investigation_findings.errors %}
+                                    <div class="field-error">
+                                        {{ form.investigation_findings.errors|striptags }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                            <!-- Corrective Actions -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.corrective_actions.id_for_label }}">
+                                    Corrective Actions
+                                </label>
+
+                                {{ form.corrective_actions }}
+
+                                {% if form.corrective_actions.errors %}
+                                    <div class="field-error">
+                                        {{ form.corrective_actions.errors|striptags }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- STATUS & DOCUMENTATION -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <h3>Status & Documentation</h3>
+                </div>
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="form-grid">
+
+                    <!-- Status -->
+                    <div class="form-group-custom">
+
+                        <label class="form-label-custom"
+                               for="{{ form.status.id_for_label }}">
+                            Status <span class="required">*</span>
+                        </label>
+
+                        {{ form.status }}
+
+                        {% if form.status.errors %}
+                            <div class="field-error">
+                                {{ form.status.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- Attachment -->
+                    <div class="form-group-custom">
+
+                        <label class="form-label-custom"
+                               for="{{ form.attachment.id_for_label }}">
+                            Attachment
+                        </label>
+
+                        {{ form.attachment }}
+
+                        <div class="form-help">
+                            Upload supporting medical or incident documentation if required.
+                        </div>
+
+                        {% if form.attachment.errors %}
+                            <div class="field-error">
+                                {{ form.attachment.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="form-group-custom full-width">
+
+                        <label class="form-label-custom"
+                               for="{{ form.remarks.id_for_label }}">
+                            Remarks
+                        </label>
+
+                        {{ form.remarks }}
+
+                        {% if form.remarks.errors %}
+                            <div class="field-error">
+                                {{ form.remarks.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ACTION BUTTONS -->
+        <!-- ========================================================= -->
+        <div class="dash-main-card">
+
+            <div class="card-body-custom">
+
+                <div class="form-actions">
+
+                    <a href="{% url 'occupational_health:health_incident_list' %}"
+                       class="btn-cancel">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn-save">
+
+                        <i class="fas fa-save"></i>
+
+                        {% if object %}
+                            Update Health Incident
+                        {% else %}
+                            Save Health Incident
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+
+    /* =========================================================
+       EMPLOYEE SUMMARY
+    ========================================================= */
+
+    const employeeField=document.getElementById('{{ form.employee_health_profile.id_for_label }}');
+    const employeeSummary=document.getElementById('employeeSummary');
+    const employeeSummaryDetails=document.getElementById('employeeSummaryDetails');
+
+    function updateEmployeeSummary(){
+
+        if(!employeeField || !employeeSummary || !employeeSummaryDetails){
+            return;
+        }
+
+        if(!employeeField.value){
+            employeeSummary.classList.remove('show');
+            employeeSummaryDetails.innerHTML='';
+            return;
+        }
+
+        const option=employeeField.options[employeeField.selectedIndex];
+
+        if(option){
+            employeeSummaryDetails.innerHTML=
+                '<strong>'+option.text.trim()+'</strong>';
+
+            employeeSummary.classList.add('show');
+        }
+    }
+
+    if(employeeField){
+        employeeField.addEventListener('change',updateEmployeeSummary);
+        updateEmployeeSummary();
+    }
+
+    /* =========================================================
+       HOSPITALIZATION
+    ========================================================= */
+
+    const hospitalizationCheckbox=
+        document.getElementById('{{ form.hospitalization_required.id_for_label }}');
+
+    const hospitalizationBox=
+        document.getElementById('hospitalizationBox');
+
+    function toggleHospitalization(){
+
+        if(!hospitalizationCheckbox || !hospitalizationBox){
+            return;
+        }
+
+        if(hospitalizationCheckbox.checked){
+            hospitalizationBox.classList.add('show');
+        }else{
+            hospitalizationBox.classList.remove('show');
+        }
+    }
+
+    if(hospitalizationCheckbox){
+
+        hospitalizationCheckbox.addEventListener(
+            'change',
+            toggleHospitalization
+        );
+
+        toggleHospitalization();
+    }
+
+    /* =========================================================
+       WORK RESTRICTION
+    ========================================================= */
+
+    const restrictionCheckbox=
+        document.getElementById('{{ form.work_restriction_required.id_for_label }}');
+
+    const restrictionBox=
+        document.getElementById('workRestrictionBox');
+
+    function toggleRestriction(){
+
+        if(!restrictionCheckbox || !restrictionBox){
+            return;
+        }
+
+        if(restrictionCheckbox.checked){
+            restrictionBox.classList.add('show');
+        }else{
+            restrictionBox.classList.remove('show');
+        }
+    }
+
+    if(restrictionCheckbox){
+
+        restrictionCheckbox.addEventListener(
+            'change',
+            toggleRestriction
+        );
+
+        toggleRestriction();
+    }
+
+    /* =========================================================
+       FOLLOW-UP DATE
+    ========================================================= */
+
+    const followUpCheckbox=
+        document.getElementById('{{ form.follow_up_required.id_for_label }}');
+
+    const followUpDate=
+        document.getElementById('{{ form.follow_up_date.id_for_label }}');
+
+    function toggleFollowUp(){
+
+        if(!followUpCheckbox || !followUpDate){
+            return;
+        }
+
+        if(followUpCheckbox.checked){
+
+            followUpDate.disabled=false;
+
+        }else{
+
+            followUpDate.disabled=false;
+
+        }
+    }
+
+    if(followUpCheckbox){
+
+        followUpCheckbox.addEventListener(
+            'change',
+            toggleFollowUp
+        );
+
+        toggleFollowUp();
+    }
+
+    /* =========================================================
+       INVESTIGATION
+    ========================================================= */
+
+    const investigationCheckbox=
+        document.getElementById('{{ form.investigation_required.id_for_label }}');
+
+    const investigationBox=
+        document.getElementById('investigationBox');
+
+    function toggleInvestigation(){
+
+        if(!investigationCheckbox || !investigationBox){
+            return;
+        }
+
+        if(investigationCheckbox.checked){
+            investigationBox.classList.add('show');
+        }else{
+            investigationBox.classList.remove('show');
+        }
+    }
+
+    if(investigationCheckbox){
+
+        investigationCheckbox.addEventListener(
+            'change',
+            toggleInvestigation
+        );
+
+        toggleInvestigation();
+    }
+
+});
+</script>
+{% endblock %}

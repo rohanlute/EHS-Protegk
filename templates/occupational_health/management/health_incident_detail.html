@@ -1,0 +1,1359 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Health Incident Details | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-back,
+.btn-edit {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all .25s ease;
+}
+
+.btn-back {
+    border:1px solid var(--border-color);
+    background:white;
+    color:var(--text-secondary);
+}
+
+.btn-back:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.btn-edit {
+    border:1px solid var(--primary-teal);
+    background:var(--primary-teal);
+    color:white!important;
+}
+
+.btn-edit:hover {
+    background:var(--primary-teal-dark);
+    border-color:var(--primary-teal-dark);
+    color:white!important;
+    text-decoration:none;
+    box-shadow:0 4px 12px rgba(13,148,136,.25);
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.header-title i {
+    color:rgba(255,255,255,.9);
+    font-size:18px;
+}
+
+.header-title h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.card-body-custom {
+    padding:22px 24px;
+}
+
+.detail-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0;
+}
+
+.detail-item {
+    padding:14px 16px;
+    border-bottom:1px solid var(--border-color);
+    min-width:0;
+}
+
+.detail-item:nth-last-child(-n+2) {
+    border-bottom:none;
+}
+
+.detail-label {
+    color:var(--text-muted);
+    font-size:11px;
+    font-weight:600;
+    margin-bottom:5px;
+    text-transform:uppercase;
+    letter-spacing:.25px;
+}
+
+.detail-value {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:600;
+    line-height:1.6;
+    word-break:break-word;
+}
+
+.detail-value.muted {
+    color:var(--text-muted);
+    font-weight:400;
+}
+
+.detail-full {
+    grid-column:1/-1;
+}
+
+.text-box {
+    padding:14px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafbfc;
+    color:var(--text-secondary);
+    font-size:13px;
+    line-height:1.7;
+    white-space:pre-line;
+}
+
+.employee-box {
+    display:flex;
+    align-items:center;
+    gap:13px;
+    padding:14px 16px;
+    border:1px solid rgba(13,148,136,.18);
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal-light);
+}
+
+.employee-avatar {
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:50%;
+    background:var(--primary-teal);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:700;
+}
+
+.employee-name {
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+
+.employee-id {
+    color:var(--text-muted);
+    font-size:11px;
+    margin-top:2px;
+}
+
+.status-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.badge-reported {
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.badge-review {
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.badge-investigation {
+    background:#ffedd5;
+    color:#c2410c;
+}
+
+.badge-treated {
+    background:#dcfce7;
+    color:#166534;
+}
+
+.badge-closed {
+    background:#f1f5f9;
+    color:#475569;
+}
+
+.badge-minor {
+    background:#dcfce7;
+    color:#166534;
+}
+
+.badge-moderate {
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.badge-serious {
+    background:#ffedd5;
+    color:#c2410c;
+}
+
+.badge-critical {
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.boolean-yes {
+    color:#166534;
+    background:#dcfce7;
+    padding:4px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    display:inline-block;
+}
+
+.boolean-no {
+    color:#64748b;
+    background:#f1f5f9;
+    padding:4px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    display:inline-block;
+}
+
+.info-strip {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:11px 14px;
+    background:var(--primary-teal-light);
+    border:1px solid rgba(13,148,136,.15);
+    border-radius:var(--radius-sm);
+    color:var(--text-secondary);
+    font-size:11px;
+    margin-bottom:18px;
+}
+
+.info-strip i {
+    color:var(--primary-teal);
+}
+
+.date-value {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+}
+
+.date-value i {
+    color:var(--primary-teal);
+    font-size:11px;
+}
+
+.empty-value {
+    color:var(--text-muted);
+    font-weight:400;
+    font-style:italic;
+}
+
+@media(max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right a {
+        flex:1;
+    }
+
+    .card-body-custom {
+        padding:16px;
+    }
+
+    .detail-grid {
+        grid-template-columns:1fr;
+    }
+
+    .detail-item {
+        border-bottom:1px solid var(--border-color)!important;
+    }
+
+    .detail-item:last-child {
+        border-bottom:none!important;
+    }
+
+    .detail-full {
+        grid-column:auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+
+    <!-- PAGE HEADER -->
+    <div class="dash-page-header">
+
+        <div class="header-left">
+
+            <div class="header-icon">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+
+            <div>
+                <h1>Health Incident Details</h1>
+
+                <p class="subtitle">
+                    View employee occupational health incident details
+                </p>
+            </div>
+
+        </div>
+
+        <div class="header-right">
+
+            <a href="{% url 'occupational_health:health_incident_edit' incident.pk %}"
+               class="btn-edit">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+
+            <a href="{% url 'occupational_health:health_incident_list' %}"
+               class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Back to List
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- EMPLOYEE & INCIDENT SUMMARY -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-user"></i>
+                <h3>Employee & Incident Information</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="info-strip">
+                <i class="fas fa-info-circle"></i>
+                Health incident record and employee information
+            </div>
+
+            <div class="detail-grid">
+
+                <!-- Employee -->
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Employee
+                    </div>
+
+                    <div class="employee-box">
+
+                        <div class="employee-avatar">
+                            {% with name=incident.employee_health_profile.employee.get_full_name %}
+                                {% if name %}
+                                    {{ name|slice:":1"|upper }}
+                                {% else %}
+                                    {{ incident.employee_health_profile.employee.username|slice:":1"|upper }}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div>
+
+                            <div class="employee-name">
+                                {{ incident.employee_health_profile.employee.get_full_name|default:incident.employee_health_profile.employee.username }}
+                            </div>
+
+                            <div class="employee-id">
+                                Employee ID:
+                                {{ incident.employee_health_profile.employee.employee_id|default:incident.employee_health_profile.employee.username }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Incident Date -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Incident Date
+                    </div>
+
+                    <div class="detail-value date-value">
+                        <i class="fas fa-calendar"></i>
+                        {{ incident.incident_date|date:"d M Y" }}
+                    </div>
+
+                </div>
+
+                <!-- Incident Time -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Incident Time
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.incident_time %}
+                            <span class="date-value">
+                                <i class="fas fa-clock"></i>
+                                {{ incident.incident_time|time:"h:i A" }}
+                            </span>
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Incident Type -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Incident Type
+                    </div>
+
+                    <div class="detail-value">
+                        {{ incident.get_incident_type_display }}
+                    </div>
+
+                </div>
+
+                <!-- Severity -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Severity
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.severity == 'MINOR' %}
+                            <span class="status-badge badge-minor">
+                                <i class="fas fa-circle"></i>
+                                {{ incident.get_severity_display }}
+                            </span>
+
+                        {% elif incident.severity == 'MODERATE' %}
+                            <span class="status-badge badge-moderate">
+                                <i class="fas fa-circle"></i>
+                                {{ incident.get_severity_display }}
+                            </span>
+
+                        {% elif incident.severity == 'SERIOUS' %}
+                            <span class="status-badge badge-serious">
+                                <i class="fas fa-circle"></i>
+                                {{ incident.get_severity_display }}
+                            </span>
+
+                        {% elif incident.severity == 'CRITICAL' %}
+                            <span class="status-badge badge-critical">
+                                <i class="fas fa-circle"></i>
+                                {{ incident.get_severity_display }}
+                            </span>
+
+                        {% else %}
+                            {{ incident.get_severity_display }}
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Status -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Status
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.status == 'REPORTED' %}
+                            <span class="status-badge badge-reported">
+                                <i class="fas fa-flag"></i>
+                                {{ incident.get_status_display }}
+                            </span>
+
+                        {% elif incident.status == 'UNDER_REVIEW' %}
+                            <span class="status-badge badge-review">
+                                <i class="fas fa-eye"></i>
+                                {{ incident.get_status_display }}
+                            </span>
+
+                        {% elif incident.status == 'UNDER_INVESTIGATION' %}
+                            <span class="status-badge badge-investigation">
+                                <i class="fas fa-search"></i>
+                                {{ incident.get_status_display }}
+                            </span>
+
+                        {% elif incident.status == 'TREATED' %}
+                            <span class="status-badge badge-treated">
+                                <i class="fas fa-check-circle"></i>
+                                {{ incident.get_status_display }}
+                            </span>
+
+                        {% elif incident.status == 'CLOSED' %}
+                            <span class="status-badge badge-closed">
+                                <i class="fas fa-lock"></i>
+                                {{ incident.get_status_display }}
+                            </span>
+
+                        {% else %}
+                            {{ incident.get_status_display }}
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Location -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Incident Location
+                    </div>
+
+                    <div class="detail-value">
+                        {% if incident.incident_location %}
+                            {{ incident.incident_location }}
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <!-- Work Area -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Work Area
+                    </div>
+
+                    <div class="detail-value">
+                        {% if incident.work_area %}
+                            {{ incident.work_area }}
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <!-- Job Role -->
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Job Role
+                    </div>
+
+                    <div class="detail-value">
+                        {% if incident.job_role %}
+                            {{ incident.job_role }}
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- INCIDENT DESCRIPTION -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-file-medical"></i>
+                <h3>Incident Description</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Incident Description
+                    </div>
+
+                    <div class="text-box">
+                        {{ incident.incident_description|default:"No description provided."|linebreaksbr }}
+                    </div>
+
+                </div>
+
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Symptoms
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.symptoms %}
+                            {{ incident.symptoms|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">No symptoms recorded.</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- IMMEDIATE ACTION & TREATMENT -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-first-aid"></i>
+                <h3>Immediate Action & Treatment</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <!-- Immediate Action -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Immediate Action Taken
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.immediate_action %}
+                            {{ incident.immediate_action|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">No immediate action recorded.</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Treatment -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Treatment Provided
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.treatment_provided %}
+                            {{ incident.treatment_provided|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">No treatment recorded.</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Medical Professional -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Medical Professional
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.medical_professional %}
+                            {{ incident.medical_professional.name }}
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Medical Facility -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Medical Facility
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.medical_facility %}
+                            {{ incident.medical_facility.name }}
+                        {% else %}
+                            <span class="empty-value">Not specified</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- LINKED HEALTH RECORDS -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-link"></i>
+                <h3>Linked Health Records</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <!-- Occupational Disease -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Occupational Disease
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.occupational_disease %}
+
+                            {{ incident.occupational_disease.health_condition.name }}
+
+                            {% if incident.occupational_disease.reported_date %}
+                                <div class="form-help">
+                                    Reported:
+                                    {{ incident.occupational_disease.reported_date|date:"d M Y" }}
+                                </div>
+                            {% endif %}
+
+                        {% else %}
+
+                            <span class="empty-value">
+                                No occupational disease linked
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Exposure -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Exposure Record
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.exposure %}
+
+                            {{ incident.exposure.exposure_name }}
+
+                            {% if incident.exposure.exposure_type %}
+                                <div class="form-help">
+                                    Type:
+                                    {{ incident.exposure.exposure_type.name }}
+                                </div>
+                            {% endif %}
+
+                        {% else %}
+
+                            <span class="empty-value">
+                                No exposure record linked
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- HOSPITALIZATION & WORK RESTRICTION -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-hospital"></i>
+                <h3>Hospitalization & Work Restrictions</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <!-- Hospitalization -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Hospitalization Required
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.hospitalization_required %}
+                            <span class="boolean-yes">
+                                <i class="fas fa-check"></i>
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="boolean-no">
+                                No
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Work Restriction -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Work Restriction Required
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.work_restriction_required %}
+                            <span class="boolean-yes">
+                                <i class="fas fa-check"></i>
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="boolean-no">
+                                No
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% if incident.hospitalization_required %}
+
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Hospitalization Details
+                    </div>
+
+                    <div class="text-box">
+                        {{ incident.hospitalization_details|default:"No details provided."|linebreaksbr }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+                {% if incident.work_restriction_required %}
+
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Work Restriction Details
+                    </div>
+
+                    <div class="text-box">
+                        {{ incident.work_restriction_details|default:"No details provided."|linebreaksbr }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- FOLLOW-UP -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-calendar-check"></i>
+                <h3>Medical Follow-up</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Follow-up Required
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.follow_up_required %}
+                            <span class="boolean-yes">
+                                <i class="fas fa-check"></i>
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="boolean-no">
+                                No
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Follow-up Date
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.follow_up_date %}
+                            <span class="date-value">
+                                <i class="fas fa-calendar"></i>
+                                {{ incident.follow_up_date|date:"d M Y" }}
+                            </span>
+                        {% else %}
+                            <span class="empty-value">
+                                Not scheduled
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- INVESTIGATION -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-search"></i>
+                <h3>Investigation & Corrective Actions</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <!-- Investigation Required -->
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Investigation Required
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.investigation_required %}
+                            <span class="boolean-yes">
+                                <i class="fas fa-check"></i>
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="boolean-no">
+                                No
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% if incident.investigation_required %}
+
+                <!-- Findings -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Investigation Findings
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.investigation_findings %}
+                            {{ incident.investigation_findings|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">
+                                No investigation findings recorded.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Corrective Actions -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Corrective Actions
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.corrective_actions %}
+                            {{ incident.corrective_actions|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">
+                                No corrective actions recorded.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- DOCUMENTATION -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-paperclip"></i>
+                <h3>Documentation & Record Information</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="detail-grid">
+
+                <!-- Attachment -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Attachment
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.attachment %}
+
+                            <a href="{{ incident.attachment.url }}"
+                               target="_blank"
+                               class="btn-back"
+                               style="display:inline-flex;">
+                                <i class="fas fa-paperclip"></i>
+                                View Attachment
+                            </a>
+
+                        {% else %}
+
+                            <span class="empty-value">
+                                No attachment uploaded
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Created By -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Created By
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.created_by %}
+                            {{ incident.created_by.get_full_name|default:incident.created_by.username }}
+                        {% else %}
+                            <span class="empty-value">
+                                System
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Created At -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Created At
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.created_at %}
+                            <span class="date-value">
+                                <i class="fas fa-calendar-plus"></i>
+                                {{ incident.created_at|date:"d M Y, h:i A" }}
+                            </span>
+                        {% else %}
+                            <span class="empty-value">Not available</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Updated At -->
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Last Updated
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if incident.updated_at %}
+                            <span class="date-value">
+                                <i class="fas fa-history"></i>
+                                {{ incident.updated_at|date:"d M Y, h:i A" }}
+                            </span>
+                        {% else %}
+                            <span class="empty-value">Not available</span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Remarks -->
+                <div class="detail-item detail-full">
+
+                    <div class="detail-label">
+                        Remarks
+                    </div>
+
+                    <div class="text-box">
+
+                        {% if incident.remarks %}
+                            {{ incident.remarks|linebreaksbr }}
+                        {% else %}
+                            <span class="empty-value">
+                                No remarks provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

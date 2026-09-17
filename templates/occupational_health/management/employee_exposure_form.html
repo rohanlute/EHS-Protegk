@@ -1,0 +1,1212 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{% if object %}Edit Employee Exposure{% else %}Add Employee Exposure{% endif %} | EHS-360
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.exposure-form-page {
+    padding:0;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.btn-add-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white!important;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-add-teal:hover {
+    background:var(--primary-teal-dark);
+    color:white;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+    text-decoration:none;
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+}
+
+.dash-main-card .card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.dash-main-card .card-header-custom i {
+    color:rgba(255,255,255,0.9);
+    font-size:18px;
+}
+
+.dash-main-card .card-header-custom h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.dash-main-card .card-body-custom {
+    padding:24px;
+}
+
+.form-section {
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    margin-bottom:20px;
+    overflow:hidden;
+}
+
+.form-section-header {
+    background:var(--primary-teal-light);
+    border-bottom:1px solid var(--border-color);
+    padding:13px 18px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.form-section-header i {
+    color:var(--primary-teal);
+    font-size:15px;
+}
+
+.form-section-header h4 {
+    margin:0;
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+
+.form-section-body {
+    padding:20px;
+}
+
+.form-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px 20px;
+}
+
+.form-group-custom {
+    margin-bottom:0;
+}
+
+.form-group-custom.full-width {
+    grid-column:1 / -1;
+}
+
+.form-label-custom {
+    display:block;
+    margin-bottom:7px;
+    color:var(--text-secondary);
+    font-size:12px;
+    font-weight:600;
+}
+
+.form-label-custom .required {
+    color:var(--secondary-red);
+}
+
+.form-control-custom {
+    width:100%;
+    min-height:40px;
+    padding:8px 12px;
+    border:2px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    transition:all 0.25s ease;
+}
+
+.form-control-custom:focus {
+    outline:none;
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 4px rgba(13,148,136,0.08);
+}
+
+textarea.form-control-custom {
+    min-height:100px;
+    resize:vertical;
+}
+
+select.form-control-custom[multiple] {
+    min-height:130px;
+}
+
+.form-help {
+    display:block;
+    margin-top:5px;
+    color:var(--text-muted);
+    font-size:11px;
+}
+
+.checkbox-wrapper {
+    min-height:40px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:8px 12px;
+    border:2px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+}
+
+.custom-checkbox {
+    width:17px;
+    height:17px;
+    accent-color:var(--primary-teal);
+    cursor:pointer;
+}
+
+.checkbox-label {
+    margin:0;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+}
+
+.employee-summary {
+    display:none;
+    margin-top:12px;
+    padding:13px 15px;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal-light);
+    border:1px solid rgba(13,148,136,0.15);
+}
+
+.employee-summary.show {
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.employee-summary-icon {
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:white;
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:15px;
+    flex-shrink:0;
+}
+
+.employee-summary-name {
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-primary);
+}
+
+.employee-summary-details {
+    margin-top:3px;
+    font-size:11px;
+    color:var(--text-muted);
+}
+
+.error-message {
+    margin-top:5px;
+    color:var(--secondary-red);
+    font-size:11px;
+}
+
+.field-error {
+    border-color:var(--secondary-red)!important;
+}
+
+.form-errors {
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    border-radius:var(--radius-sm);
+    padding:13px 16px;
+    margin-bottom:20px;
+    color:#991b1b;
+    font-size:12px;
+}
+
+.form-errors strong {
+    display:block;
+    margin-bottom:5px;
+}
+
+.form-errors ul {
+    margin:5px 0 0 18px;
+    padding:0;
+}
+
+.form-actions {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    padding-top:4px;
+}
+
+.btn-cancel {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.btn-cancel:hover {
+    background:#f8fafc;
+    color:var(--text-primary);
+    text-decoration:none;
+}
+
+.btn-save-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 18px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
+
+.btn-save-teal:hover {
+    background:var(--primary-teal-dark);
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+}
+
+@media (max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right .btn-add-teal {
+        width:100%;
+    }
+
+    .dash-main-card .card-body-custom {
+        padding:14px 16px;
+    }
+
+    .form-grid {
+        grid-template-columns:1fr;
+        gap:15px;
+    }
+
+    .form-group-custom.full-width {
+        grid-column:auto;
+    }
+
+    .form-section-body {
+        padding:15px;
+    }
+
+    .form-actions {
+        flex-direction:column-reverse;
+    }
+
+    .form-actions a,
+    .form-actions button {
+        width:100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+
+    <!-- PAGE HEADER -->
+    <div class="dash-page-header">
+
+        <div class="header-left">
+
+            <div class="header-icon">
+                <i class="fas fa-radiation"></i>
+            </div>
+
+            <div>
+                <h1>
+                    {% if object %}
+                        Edit Employee Exposure
+                    {% else %}
+                        Add Employee Exposure
+                    {% endif %}
+                </h1>
+
+                <p class="subtitle">
+                    Record and manage occupational exposure experienced by an employee
+                </p>
+            </div>
+
+        </div>
+
+        <div class="header-right">
+
+            <a href="{% url 'occupational_health:employee_exposure_list' %}"
+               class="btn-add-teal">
+
+                <i class="fas fa-arrow-left"></i>
+                Back to Exposure List
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <i class="fas fa-radiation"></i>
+
+            <h3>
+                {% if object %}
+                    Edit Employee Exposure
+                {% else %}
+                    Employee Exposure Details
+                {% endif %}
+            </h3>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            {% if form.non_field_errors %}
+
+            <div class="form-errors">
+
+                <strong>
+                    <i class="fas fa-exclamation-circle"></i>
+                    Please correct the following errors:
+                </strong>
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+            {% endif %}
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  novalidate>
+
+                {% csrf_token %}
+
+                <!-- EMPLOYEE & EXPOSURE -->
+                <div class="form-section">
+
+                    <div class="form-section-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h4>Employee & Exposure Information</h4>
+                    </div>
+
+                    <div class="form-section-body">
+
+                        <div class="form-grid">
+
+                            <!-- EMPLOYEE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.employee_health_profile.id_for_label }}">
+
+                                    Employee
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                {{ form.employee_health_profile }}
+
+                                {% for error in form.employee_health_profile.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                                <div id="employeeSummary"
+                                     class="employee-summary">
+
+                                    <div class="employee-summary-icon">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+
+                                    <div>
+                                        <div id="employeeSummaryName"
+                                             class="employee-summary-name">
+                                        </div>
+
+                                        <div id="employeeSummaryDetails"
+                                             class="employee-summary-details">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- EXPOSURE TYPE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_type.id_for_label }}">
+
+                                    Exposure Type
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                {{ form.exposure_type }}
+
+                                {% for error in form.exposure_type.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- EXPOSURE NAME -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_name.id_for_label }}">
+
+                                    Exposure Name
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                {{ form.exposure_name }}
+
+                                {% for error in form.exposure_name.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- EXPOSURE SOURCE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_source.id_for_label }}">
+
+                                    Exposure Source
+
+                                </label>
+
+                                {{ form.exposure_source }}
+
+                                <span class="form-help">
+                                    Example: Machine, process, chemical storage or work activity.
+                                </span>
+
+                            </div>
+
+                            <!-- WORK AREA -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.work_area.id_for_label }}">
+
+                                    Work Area
+
+                                </label>
+
+                                {{ form.work_area }}
+
+                            </div>
+
+                            <!-- JOB ROLE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.job_role.id_for_label }}">
+
+                                    Job Role
+
+                                </label>
+
+                                {{ form.job_role }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- EXPOSURE ASSESSMENT -->
+                <div class="form-section">
+
+                    <div class="form-section-header">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>Exposure Assessment</h4>
+                    </div>
+
+                    <div class="form-section-body">
+
+                        <div class="form-grid">
+
+                            <!-- START DATE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_start_date.id_for_label }}">
+
+                                    Exposure Start Date
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                {{ form.exposure_start_date }}
+
+                                {% for error in form.exposure_start_date.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- END DATE -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_end_date.id_for_label }}">
+
+                                    Exposure End Date
+
+                                </label>
+
+                                {{ form.exposure_end_date }}
+
+                                <span class="form-help">
+                                    Leave blank if the exposure is currently active.
+                                </span>
+
+                                {% for error in form.exposure_end_date.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- FREQUENCY -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_frequency.id_for_label }}">
+
+                                    Exposure Frequency
+
+                                </label>
+
+                                {{ form.exposure_frequency }}
+
+                                <span class="form-help">
+                                    Example: Daily, Weekly, Occasional.
+                                </span>
+
+                            </div>
+
+                            <!-- DURATION -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_duration.id_for_label }}">
+
+                                    Exposure Duration
+
+                                </label>
+
+                                {{ form.exposure_duration }}
+
+                                <span class="form-help">
+                                    Example: 7 Hours/Shift.
+                                </span>
+
+                            </div>
+
+                            <!-- EXPOSURE LEVEL -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.exposure_level.id_for_label }}">
+
+                                    Exposure Level
+
+                                </label>
+
+                                {{ form.exposure_level }}
+
+                                <span class="form-help">
+                                    Example: 92 dB(A), 5 mg/m³.
+                                </span>
+
+                            </div>
+
+                            <!-- STATUS -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.status.id_for_label }}">
+
+                                    Status
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                {{ form.status }}
+
+                                {% for error in form.status.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CONTROL MEASURES -->
+                <div class="form-section">
+
+                    <div class="form-section-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Control Measures & PPE</h4>
+                    </div>
+
+                    <div class="form-section-body">
+
+                        <div class="form-grid">
+
+                            <!-- CONTROL MEASURES -->
+                            <div class="form-group-custom full-width">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.control_measures.id_for_label }}">
+
+                                    Control Measures
+
+                                </label>
+
+                                {{ form.control_measures }}
+
+                                <span class="form-help">
+                                    Record engineering, administrative or other controls implemented to reduce exposure.
+                                </span>
+
+                            </div>
+
+                            <!-- PPE -->
+                            <div class="form-group-custom full-width">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.ppe_used.id_for_label }}">
+
+                                    PPE Used
+
+                                </label>
+
+                                {{ form.ppe_used }}
+
+                                <span class="form-help">
+                                    Example: Ear Plug, Respirator, Gloves, Safety Goggles.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- HEALTH SURVEILLANCE -->
+                <div class="form-section">
+
+                    <div class="form-section-header">
+                        <i class="fas fa-heartbeat"></i>
+                        <h4>Health Surveillance</h4>
+                    </div>
+
+                    <div class="form-section-body">
+
+                        <div class="form-grid">
+
+                            <!-- SURVEILLANCE REQUIRED -->
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom">
+                                    Health Surveillance
+                                </label>
+
+                                <div class="checkbox-wrapper">
+
+                                    {{ form.health_surveillance_required }}
+
+                                    <label class="checkbox-label"
+                                           for="{{ form.health_surveillance_required.id_for_label }}">
+                                        Health Surveillance Required
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                            <!-- SURVEILLANCE -->
+                            <div class="form-group-custom"
+                                 id="healthSurveillanceGroup">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.health_surveillance.id_for_label }}">
+
+                                    Health Surveillance Program
+
+                                </label>
+
+                                {{ form.health_surveillance }}
+
+                                <span class="form-help">
+                                    Select the surveillance program associated with this employee exposure.
+                                </span>
+
+                                {% for error in form.health_surveillance.errors %}
+                                    <div class="error-message">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- REMARKS -->
+                            <div class="form-group-custom full-width">
+
+                                <label class="form-label-custom"
+                                       for="{{ form.remarks.id_for_label }}">
+
+                                    Remarks
+
+                                </label>
+
+                                {{ form.remarks }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- RECORD STATUS -->
+                <div class="form-section">
+
+                    <div class="form-section-header">
+                        <i class="fas fa-toggle-on"></i>
+                        <h4>Record Status</h4>
+                    </div>
+
+                    <div class="form-section-body">
+
+                        <div class="form-grid">
+
+                            <div class="form-group-custom">
+
+                                <label class="form-label-custom">
+                                    Active Record
+                                </label>
+
+                                <div class="checkbox-wrapper">
+
+                                    {{ form.is_active }}
+
+                                    <label class="checkbox-label"
+                                           for="{{ form.is_active.id_for_label }}">
+                                        Exposure record is active
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FORM ACTIONS -->
+                <div class="form-actions">
+
+                    <a href="{% url 'occupational_health:employee_exposure_list' %}"
+                       class="btn-cancel">
+
+                        <i class="fas fa-times"></i>
+                        Cancel
+
+                    </a>
+
+                    <button type="submit"
+                            class="btn-save-teal">
+
+                        {% if object %}
+                            <i class="fas fa-save"></i>
+                            Update Employee Exposure
+                        {% else %}
+                            <i class="fas fa-save"></i>
+                            Save Employee Exposure
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const employeeField = document.getElementById('id_employee_health_profile');
+    const employeeSummary = document.getElementById('employeeSummary');
+    const employeeSummaryName = document.getElementById('employeeSummaryName');
+    const employeeSummaryDetails = document.getElementById('employeeSummaryDetails');
+
+    const surveillanceRequired = document.getElementById('id_health_surveillance_required');
+    const surveillanceField = document.getElementById('id_health_surveillance');
+    const surveillanceGroup = document.getElementById('healthSurveillanceGroup');
+
+    function updateEmployeeSummary() {
+
+        if (!employeeField || !employeeSummary) {
+            return;
+        }
+
+        const selectedOption =
+            employeeField.options[employeeField.selectedIndex];
+
+        if (!employeeField.value || !selectedOption) {
+
+            employeeSummary.classList.remove('show');
+            employeeSummaryName.textContent = '';
+            employeeSummaryDetails.textContent = '';
+
+            return;
+        }
+
+        const employeeText = selectedOption.text.trim();
+        const parts = employeeText.split(' - ');
+
+        employeeSummaryName.textContent =
+            parts.length > 1
+                ? parts.slice(1).join(' - ')
+                : employeeText;
+
+        employeeSummaryDetails.textContent =
+            parts.length > 1
+                ? parts[0]
+                : '';
+
+        employeeSummary.classList.add('show');
+    }
+
+    function clearSurveillanceOptions(message) {
+
+        if (!surveillanceField) {
+            return;
+        }
+
+        surveillanceField.innerHTML = '';
+
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = message;
+
+        surveillanceField.appendChild(option);
+    }
+
+    function loadEmployeeSurveillance() {
+
+        if (!employeeField || !surveillanceField) {
+            return;
+        }
+
+        const employeeProfileId = employeeField.value;
+
+        if (!employeeProfileId) {
+
+            clearSurveillanceOptions(
+                'Select Employee First'
+            );
+
+            return;
+        }
+
+        clearSurveillanceOptions(
+            'Loading Health Surveillance...'
+        );
+
+        const url =
+            "{% url 'occupational_health:employee_health_surveillance_data' %}"
+            + "?employee_health_profile_id="
+            + employeeProfileId;
+
+        fetch(url)
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Unable to load health surveillance.'
+                    );
+                }
+
+                return response.json();
+            })
+            .then(data => {
+
+                surveillanceField.innerHTML = '';
+
+                const defaultOption =
+                    document.createElement('option');
+
+                defaultOption.value = '';
+                defaultOption.textContent =
+                    data.surveillance.length
+                        ? 'Select Health Surveillance'
+                        : 'No Active Surveillance Found';
+
+                surveillanceField.appendChild(defaultOption);
+
+                data.surveillance.forEach(item => {
+
+                    const option =
+                        document.createElement('option');
+
+                    option.value = item.id;
+
+                    option.textContent =
+                        item.name
+                        + ' - '
+                        + item.exposure_type
+                        + ' - '
+                        + item.frequency;
+
+                    surveillanceField.appendChild(option);
+
+                });
+
+            })
+            .catch(error => {
+
+                console.error(error);
+
+                clearSurveillanceOptions(
+                    'Unable to load Health Surveillance'
+                );
+
+            });
+    }
+
+    function updateSurveillanceState() {
+
+        if (!surveillanceRequired || !surveillanceGroup) {
+            return;
+        }
+
+        if (surveillanceRequired.checked) {
+
+            surveillanceGroup.style.display = '';
+
+        } else {
+
+            surveillanceGroup.style.display = 'none';
+
+            if (surveillanceField) {
+                surveillanceField.value = '';
+            }
+
+        }
+    }
+
+    if (employeeField) {
+
+        employeeField.addEventListener(
+            'change',
+            function () {
+
+                updateEmployeeSummary();
+
+                if (surveillanceRequired &&
+                    surveillanceRequired.checked) {
+
+                    loadEmployeeSurveillance();
+
+                }
+
+            }
+        );
+
+        updateEmployeeSummary();
+    }
+
+    if (surveillanceRequired) {
+
+        surveillanceRequired.addEventListener(
+            'change',
+            function () {
+
+                updateSurveillanceState();
+
+                if (
+                    surveillanceRequired.checked &&
+                    employeeField &&
+                    employeeField.value
+                ) {
+                    loadEmployeeSurveillance();
+                }
+
+            }
+        );
+
+        updateSurveillanceState();
+    }
+
+});
+</script>
+{% endblock %}

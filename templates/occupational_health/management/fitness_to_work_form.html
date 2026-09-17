@@ -1,0 +1,925 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Fitness to Work{% else %}Add Fitness to Work{% endif %} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --primary-teal-hover:rgba(13,148,136,0.12);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.fitness-form-page {
+    font-family:'Inter',sans-serif;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.btn-back-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-back-teal:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.dash-main-card .card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.dash-main-card .card-header-custom i {
+    color:rgba(255,255,255,0.9);
+    font-size:18px;
+}
+
+.dash-main-card .card-header-custom h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.dash-main-card .card-body-custom {
+    padding:22px 24px;
+}
+
+.form-section {
+    margin-bottom:24px;
+}
+
+.form-section:last-child {
+    margin-bottom:0;
+}
+
+.form-section-title {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding-bottom:10px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--border-color);
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+
+.form-section-title i {
+    color:var(--primary-teal);
+    font-size:15px;
+}
+
+.form-row-custom {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+    margin-bottom:16px;
+}
+
+.form-row-custom:last-child {
+    margin-bottom:0;
+}
+
+.form-group-custom {
+    margin-bottom:0;
+}
+
+.form-group-custom.full-width {
+    grid-column:1 / -1;
+}
+
+.form-label-custom {
+    display:block;
+    margin-bottom:7px;
+    color:var(--text-secondary);
+    font-size:12px;
+    font-weight:600;
+}
+
+.required-mark {
+    color:var(--secondary-red);
+    margin-left:2px;
+}
+
+.form-control-custom {
+    display:block;
+    width:100%;
+    min-height:40px;
+    padding:9px 12px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    transition:all 0.25s ease;
+    box-sizing:border-box;
+}
+
+select.form-control-custom {
+    cursor:pointer;
+}
+
+textarea.form-control-custom {
+    min-height:100px;
+    resize:vertical;
+}
+
+.form-control-custom:focus {
+    outline:none;
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 3px rgba(13,148,136,0.08);
+}
+
+.form-control-custom:disabled {
+    background:#f8fafc;
+    color:var(--text-muted);
+    cursor:not-allowed;
+}
+
+.form-control-custom::placeholder {
+    color:#94a3b8;
+}
+
+.form-help {
+    display:block;
+    margin-top:5px;
+    color:var(--text-muted);
+    font-size:11px;
+}
+
+.error-message {
+    display:block;
+    margin-top:5px;
+    color:var(--secondary-red);
+    font-size:11px;
+    font-weight:500;
+}
+
+.form-control-custom.is-invalid {
+    border-color:var(--secondary-red);
+}
+
+.form-error-box {
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    border-radius:var(--radius-sm);
+    padding:12px 15px;
+    margin-bottom:20px;
+    color:#b91c1c;
+    font-size:12px;
+}
+
+.form-error-box ul {
+    margin:5px 0 0 18px;
+    padding:0;
+}
+
+.checkbox-group {
+    display:flex;
+    align-items:center;
+    min-height:40px;
+    padding:8px 12px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafbfc;
+}
+
+.custom-checkbox {
+    width:17px;
+    height:17px;
+    margin-right:9px;
+    accent-color:var(--primary-teal);
+    cursor:pointer;
+}
+
+.checkbox-label {
+    margin:0;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+}
+
+.restrictions-box {
+    background:var(--primary-teal-light);
+    border:1px solid rgba(13,148,136,0.15);
+    border-radius:var(--radius-sm);
+    padding:14px;
+}
+
+.restrictions-help {
+    color:var(--text-muted);
+    font-size:11px;
+    margin-bottom:10px;
+}
+
+.fitness-status-info {
+    display:none;
+    margin-top:8px;
+    padding:9px 11px;
+    border-radius:var(--radius-sm);
+    font-size:11px;
+    line-height:1.5;
+}
+
+.fitness-status-info.show {
+    display:block;
+}
+
+.fitness-status-info.fit {
+    background:#dcfce7;
+    color:#166534;
+}
+
+.fitness-status-info.restricted {
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.fitness-status-info.temporary {
+    background:#eff6ff;
+    color:#1d4ed8;
+}
+
+.fitness-status-info.unfit {
+    background:#fef2f2;
+    color:#991b1b;
+}
+
+.form-footer {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    padding-top:20px;
+    margin-top:22px;
+    border-top:1px solid var(--border-color);
+}
+
+.btn-save-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:10px 20px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
+
+.btn-save-teal:hover {
+    background:var(--primary-teal-dark);
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+}
+
+.btn-cancel {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:10px 18px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-cancel:hover {
+    background:#f8fafc;
+    border-color:#cbd5e1;
+    color:var(--text-primary);
+    text-decoration:none;
+}
+
+@media (max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right .btn-back-teal {
+        width:100%;
+    }
+
+    .dash-main-card .card-body-custom {
+        padding:16px;
+    }
+
+    .form-row-custom {
+        grid-template-columns:1fr;
+        gap:16px;
+    }
+
+    .form-group-custom.full-width {
+        grid-column:auto;
+    }
+
+    .form-footer {
+        flex-direction:column-reverse;
+        align-items:stretch;
+    }
+
+    .btn-save-teal,
+    .btn-cancel {
+        width:100%;
+    }
+}
+
+@media (max-width:480px) {
+    .dash-page-header .header-left h1 {
+        font-size:18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width:38px;
+        height:38px;
+        font-size:17px;
+    }
+
+    .dash-main-card .card-body-custom {
+        padding:12px;
+    }
+
+    .form-section-title {
+        font-size:13px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid fitness-form-page" style="padding:0;">
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div>
+                <h1>{% if object %}Edit Fitness to Work{% else %}Add Fitness to Work{% endif %}</h1>
+                <p class="subtitle">
+                    {% if object %}
+                    Update employee medical fitness assessment and work restrictions
+                    {% else %}
+                    Record employee medical fitness assessment and work recommendations
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'occupational_health:fitness_to_work_list' %}" class="btn-back-teal">
+                <i class="fas fa-arrow-left"></i>
+                Back to Fitness Assessments
+            </a>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <i class="fas fa-user-md"></i>
+            <h3>Fitness to Work Assessment</h3>
+        </div>
+
+        <div class="card-body-custom">
+            {% if form.non_field_errors %}
+            <div class="form-error-box">
+                <strong><i class="fas fa-exclamation-circle"></i> Please correct the following:</strong>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- ====================================================== -->
+                <!-- MEDICAL EXAMINATION & EMPLOYEE                         -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-notes-medical"></i>
+                        Medical Examination & Employee
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom">
+                            <label for="{{ form.medical_examination.id_for_label }}" class="form-label-custom">
+                                Medical Examination<span class="required-mark">*</span>
+                            </label>
+                            {{ form.medical_examination }}
+                            {% for error in form.medical_examination.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                            <span class="form-help">
+                                Select the medical examination on which this fitness assessment is based.
+                            </span>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">
+                                Employee
+                            </label>
+                            <div class="form-control-custom" id="employeeDisplay" style="background:#f8fafc;">
+                                <span style="color:#94a3b8;">
+                                    Select a Medical Examination
+                                </span>
+                            </div>
+                            <span class="form-help">
+                                Employee is automatically determined from the selected Medical Examination.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- FITNESS ASSESSMENT                                      -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-user-check"></i>
+                        Fitness Assessment
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom">
+                            <label for="{{ form.assessment_date.id_for_label }}" class="form-label-custom">
+                                Assessment Date<span class="required-mark">*</span>
+                            </label>
+                            {{ form.assessment_date }}
+                            {% for error in form.assessment_date.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="{{ form.assessment_type.id_for_label }}" class="form-label-custom">
+                                Assessment Type<span class="required-mark">*</span>
+                            </label>
+                            {{ form.assessment_type }}
+                            {% for error in form.assessment_type.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom">
+                            <label for="{{ form.fitness_status.id_for_label }}" class="form-label-custom">
+                                Fitness Status<span class="required-mark">*</span>
+                            </label>
+                            {{ form.fitness_status }}
+
+                            <div id="fitnessStatusInfo" class="fitness-status-info">
+                                <span id="fitnessStatusText"></span>
+                            </div>
+
+                            {% for error in form.fitness_status.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="{{ form.status.id_for_label }}" class="form-label-custom">
+                                Assessment Status
+                            </label>
+                            <div class="checkbox-group">
+                                {{ form.status }}
+                                <label for="{{ form.status.id_for_label }}" class="checkbox-label">
+                                    Active Fitness Assessment
+                                </label>
+                            </div>
+                            {% for error in form.status.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- VALIDITY                                                -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Fitness Validity
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom">
+                            <label for="{{ form.valid_from.id_for_label }}" class="form-label-custom">
+                                Valid From<span class="required-mark">*</span>
+                            </label>
+                            {{ form.valid_from }}
+                            {% for error in form.valid_from.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                            <span class="form-help">
+                                Date from which the fitness assessment becomes applicable.
+                            </span>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="{{ form.valid_until.id_for_label }}" class="form-label-custom">
+                                Valid Until
+                            </label>
+                            {{ form.valid_until }}
+                            {% for error in form.valid_until.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                            <span class="form-help">
+                                Leave blank if the assessment has no defined expiry date.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- RESTRICTIONS                                            -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-user-shield"></i>
+                        Work Restrictions
+                    </div>
+
+                    <div class="restrictions-box">
+                        <div class="restrictions-help">
+                            Restrictions are required only when the fitness status is
+                            <strong>Fit With Restrictions</strong>.
+                        </div>
+
+                        {{ form.restrictions }}
+
+                        {% for error in form.restrictions.errors %}
+                        <span class="error-message">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- MEDICAL FINDINGS & RECOMMENDATIONS                      -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-file-medical"></i>
+                        Medical Findings & Recommendations
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom full-width">
+                            <label for="{{ form.medical_findings.id_for_label }}" class="form-label-custom">
+                                Medical Findings
+                            </label>
+                            {{ form.medical_findings }}
+                            {% for error in form.medical_findings.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom full-width">
+                            <label for="{{ form.work_recommendations.id_for_label }}" class="form-label-custom">
+                                Work Recommendations
+                            </label>
+                            {{ form.work_recommendations }}
+                            {% for error in form.work_recommendations.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom full-width">
+                            <label for="{{ form.doctor_comments.id_for_label }}" class="form-label-custom">
+                                Doctor Comments
+                            </label>
+                            {{ form.doctor_comments }}
+                            {% for error in form.doctor_comments.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- FOLLOW-UP                                                -->
+                <!-- ====================================================== -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Medical Follow-up
+                    </div>
+
+                    <div class="form-row-custom">
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">
+                                Follow-up Required
+                            </label>
+                            <div class="checkbox-group">
+                                {{ form.follow_up_required }}
+                                <label for="{{ form.follow_up_required.id_for_label }}" class="checkbox-label">
+                                    Follow-up Required
+                                </label>
+                            </div>
+                            {% for error in form.follow_up_required.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-group-custom" id="followUpDateGroup">
+                            <label for="{{ form.follow_up_date.id_for_label }}" class="form-label-custom">
+                                Follow-up Date
+                            </label>
+                            {{ form.follow_up_date }}
+                            {% for error in form.follow_up_date.errors %}
+                            <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====================================================== -->
+                <!-- FORM FOOTER                                              -->
+                <!-- ====================================================== -->
+                <div class="form-footer">
+                    <a href="{% url 'occupational_health:fitness_to_work_list' %}" class="btn-cancel">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn-save-teal">
+                        <i class="fas fa-save"></i>
+                        {% if object %}
+                        Update Fitness Assessment
+                        {% else %}
+                        Save Fitness Assessment
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const examinationField = document.getElementById('id_medical_examination');
+    const employeeDisplay = document.getElementById('employeeDisplay');
+    const fitnessStatusField = document.getElementById('id_fitness_status');
+    const restrictionsField = document.getElementById('id_restrictions');
+    const followUpRequired = document.getElementById('followUpRequired');
+    const followUpDateGroup = document.getElementById('followUpDateGroup');
+    const followUpDate = document.getElementById('id_follow_up_date');
+    const assessmentDate = document.getElementById('id_assessment_date');
+    const validFrom = document.getElementById('id_valid_from');
+    const fitnessStatusInfo = document.getElementById('fitnessStatusInfo');
+    const fitnessStatusText = document.getElementById('fitnessStatusText');
+
+    function updateFitnessStatusInfo() {
+        if (!fitnessStatusField || !fitnessStatusInfo || !fitnessStatusText) {
+            return;
+        }
+
+        const status = fitnessStatusField.value;
+
+        fitnessStatusInfo.className = 'fitness-status-info';
+
+        if (status === 'FIT') {
+            fitnessStatusInfo.classList.add('show', 'fit');
+            fitnessStatusText.textContent = 'Employee is assessed as fit to perform the relevant work without specific restrictions.';
+        } else if (status === 'FIT_WITH_RESTRICTIONS') {
+            fitnessStatusInfo.classList.add('show', 'restricted');
+            fitnessStatusText.textContent = 'Employee may work subject to the selected work restrictions.';
+        } else if (status === 'TEMPORARILY_UNFIT') {
+            fitnessStatusInfo.classList.add('show', 'temporary');
+            fitnessStatusText.textContent = 'Employee is temporarily unable to perform the relevant work and may require reassessment.';
+        } else if (status === 'UNFIT') {
+            fitnessStatusInfo.classList.add('show', 'unfit');
+            fitnessStatusText.textContent = 'Employee is assessed as unfit for the relevant work.';
+        }
+    }
+
+    function updateRestrictionsState() {
+        if (!fitnessStatusField || !restrictionsField) {
+            return;
+        }
+
+        if (fitnessStatusField.value === 'FIT_WITH_RESTRICTIONS') {
+            restrictionsField.disabled = false;
+            restrictionsField.parentElement.style.opacity = '1';
+        } else {
+            restrictionsField.disabled = false;
+            restrictionsField.parentElement.style.opacity = '0.7';
+        }
+    }
+
+    function updateFollowUpState() {
+        if (!followUpRequired || !followUpDateGroup || !followUpDate) {
+            return;
+        }
+
+        if (followUpRequired.checked) {
+            followUpDateGroup.style.display = '';
+            followUpDate.required = true;
+        } else {
+            followUpDateGroup.style.display = 'none';
+            followUpDate.required = false;
+            followUpDate.value = '';
+        }
+    }
+
+    function setValidFromFromAssessment() {
+        if (!assessmentDate || !validFrom) {
+            return;
+        }
+
+        if (!validFrom.value && assessmentDate.value) {
+            validFrom.value = assessmentDate.value;
+        }
+    }
+
+    if (fitnessStatusField) {
+        fitnessStatusField.addEventListener('change', function() {
+            updateFitnessStatusInfo();
+            updateRestrictionsState();
+        });
+
+        updateFitnessStatusInfo();
+        updateRestrictionsState();
+    }
+
+    if (followUpRequired) {
+        followUpRequired.addEventListener('change', updateFollowUpState);
+        updateFollowUpState();
+    }
+
+    if (assessmentDate) {
+        assessmentDate.addEventListener('change', setValidFromFromAssessment);
+    }
+
+    function loadMedicalExaminationEmployee() {
+        if (!examinationField || !employeeDisplay) {
+            return;
+        }
+
+        const examinationId = examinationField.value;
+
+        if (!examinationId) {
+            employeeDisplay.innerHTML = '<span style="color:#94a3b8;">Select a Medical Examination</span>';
+            return;
+        }
+
+        employeeDisplay.innerHTML = '<span style="color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Loading employee...</span>';
+
+        const url = "{% url 'occupational_health:medical_examination_fitness_data' 0 %}".replace('/0/', '/' + examinationId + '/');
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Unable to load medical examination details.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                employeeDisplay.innerHTML = `
+                    <strong>${data.employee_id}</strong> - ${data.employee_name}
+                    <div style="font-size:11px;color:#64748b;margin-top:3px;">
+                        ${data.job_title || 'No job title'}${data.department ? ' · ' + data.department : ''}
+                    </div>
+                `;
+
+                if (assessmentDate && data.examination_date && !assessmentDate.value) {
+                    assessmentDate.value = data.examination_date;
+                }
+
+                setValidFromFromAssessment();
+            })
+            .catch(error => {
+                employeeDisplay.innerHTML = '<span style="color:#dc2626;">Unable to load employee information.</span>';
+                console.error(error);
+            });
+    }
+
+    if (examinationField) {
+        examinationField.addEventListener('change', loadMedicalExaminationEmployee);
+        loadMedicalExaminationEmployee();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1506 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Health Incident Dashboard | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+    font-family:'Inter',sans-serif;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-teal,
+.btn-back {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all .25s ease;
+}
+
+.btn-teal {
+    background:var(--primary-teal);
+    border:1px solid var(--primary-teal);
+    color:#fff!important;
+}
+
+.btn-teal:hover {
+    background:var(--primary-teal-dark);
+    border-color:var(--primary-teal-dark);
+    color:#fff!important;
+    text-decoration:none;
+    box-shadow:0 4px 12px rgba(13,148,136,.25);
+}
+
+.btn-back {
+    background:#fff;
+    border:1px solid var(--border-color);
+    color:var(--text-secondary);
+}
+
+.btn-back:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+/* STAT CARDS */
+
+.stats-grid {
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.stat-card {
+    background:#fff;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+
+.stat-icon {
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:17px;
+}
+
+.stat-icon.teal {
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+}
+
+.stat-icon.green {
+    background:rgba(34,197,94,.10);
+    color:var(--secondary-green);
+}
+
+.stat-icon.red {
+    background:rgba(220,38,38,.10);
+    color:var(--secondary-red);
+}
+
+.stat-icon.blue {
+    background:rgba(59,130,246,.10);
+    color:var(--secondary-blue);
+}
+
+.stat-icon.gold {
+    background:rgba(217,119,6,.10);
+    color:var(--secondary-gold);
+}
+
+.stat-content {
+    min-width:0;
+}
+
+.stat-value {
+    font-size:21px;
+    font-weight:800;
+    color:var(--text-primary);
+    line-height:1.1;
+}
+
+.stat-label {
+    font-size:10px;
+    color:var(--text-muted);
+    margin-top:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+/* CARDS */
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.card-header-custom {
+    padding:15px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.header-title i {
+    color:rgba(255,255,255,.9);
+    font-size:17px;
+}
+
+.header-title h3 {
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    margin:0;
+}
+
+.header-link {
+    color:#fff;
+    font-size:11px;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.header-link:hover {
+    color:#fff;
+    text-decoration:underline;
+}
+
+.card-body-custom {
+    padding:20px 22px;
+}
+
+/* KPI GRID */
+
+.kpi-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+}
+
+.kpi-box {
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    background:#fafbfc;
+}
+
+.kpi-label {
+    font-size:11px;
+    color:var(--text-muted);
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+.kpi-value {
+    font-size:22px;
+    font-weight:800;
+    color:var(--text-primary);
+}
+
+.kpi-description {
+    font-size:10px;
+    color:var(--text-muted);
+    margin-top:4px;
+}
+
+.kpi-value.teal {
+    color:var(--primary-teal);
+}
+
+.kpi-value.green {
+    color:#16a34a;
+}
+
+.kpi-value.orange {
+    color:#ea580c;
+}
+
+.kpi-value.red {
+    color:var(--secondary-red);
+}
+
+/* TWO COLUMN */
+
+.dashboard-two-column {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+/* SUMMARY */
+
+.summary-list {
+    display:flex;
+    flex-direction:column;
+    gap:11px;
+}
+
+.summary-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.summary-label {
+    width:145px;
+    min-width:145px;
+    font-size:11px;
+    color:var(--text-secondary);
+    font-weight:600;
+}
+
+.summary-bar-wrapper {
+    flex:1;
+    height:8px;
+    background:#f1f5f9;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.summary-bar {
+    height:100%;
+    background:var(--primary-teal);
+    border-radius:20px;
+}
+
+.summary-count {
+    width:35px;
+    text-align:right;
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-primary);
+}
+
+/* TABLE */
+
+.table-wrapper {
+    overflow-x:auto;
+}
+
+.dash-table {
+    width:100%;
+    border-collapse:collapse;
+    min-width:700px;
+}
+
+.dash-table th {
+    background:var(--primary-teal-light);
+    color:var(--text-secondary);
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.35px;
+    padding:11px 12px;
+    text-align:left;
+    border-bottom:1px solid var(--border-color);
+}
+
+.dash-table td {
+    padding:12px;
+    font-size:11px;
+    color:var(--text-secondary);
+    border-bottom:1px solid var(--border-color);
+    vertical-align:middle;
+}
+
+.dash-table tbody tr:hover {
+    background:#fafbfc;
+}
+
+.dash-table tbody tr:last-child td {
+    border-bottom:none;
+}
+
+.employee-name {
+    color:var(--text-primary);
+    font-weight:700;
+    font-size:11px;
+}
+
+.employee-id {
+    color:var(--text-muted);
+    font-size:9px;
+    margin-top:2px;
+}
+
+.incident-date {
+    color:var(--text-primary);
+    font-weight:600;
+}
+
+.incident-date i {
+    color:var(--primary-teal);
+    margin-right:4px;
+}
+
+/* BADGES */
+
+.dash-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:4px 8px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.badge-success {
+    background:#dcfce7;
+    color:#166534;
+}
+
+.badge-danger {
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.badge-warning {
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.badge-info {
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.badge-secondary {
+    background:#f1f5f9;
+    color:#475569;
+}
+
+.badge-orange {
+    background:#ffedd5;
+    color:#c2410c;
+}
+
+/* ACTION */
+
+.action-buttons {
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.btn-action {
+    width:28px;
+    height:28px;
+    border-radius:7px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    border:1px solid var(--border-color);
+    background:#fff;
+    color:var(--text-muted);
+    font-size:11px;
+}
+
+.btn-action:hover {
+    color:var(--primary-teal);
+    border-color:var(--primary-teal);
+    background:var(--primary-teal-light);
+}
+
+/* FOLLOW UP */
+
+.follow-up-item {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-color);
+}
+
+.follow-up-item:last-child {
+    border-bottom:none;
+}
+
+.follow-up-left {
+    min-width:0;
+}
+
+.follow-up-name {
+    color:var(--text-primary);
+    font-size:12px;
+    font-weight:700;
+}
+
+.follow-up-title {
+    color:var(--text-muted);
+    font-size:10px;
+    margin-top:3px;
+}
+
+.follow-up-date {
+    text-align:right;
+    white-space:nowrap;
+}
+
+.follow-up-date-value {
+    color:var(--text-primary);
+    font-size:11px;
+    font-weight:700;
+}
+
+.follow-up-date-label {
+    color:var(--text-muted);
+    font-size:9px;
+    margin-top:2px;
+}
+
+.overdue {
+    color:var(--secondary-red)!important;
+}
+
+/* EMPTY */
+
+.empty-state {
+    text-align:center;
+    padding:30px 15px;
+    color:var(--text-muted);
+}
+
+.empty-state i {
+    font-size:26px;
+    margin-bottom:9px;
+    color:#cbd5e1;
+}
+
+.empty-state p {
+    margin:0;
+    font-size:11px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px) {
+    .stats-grid {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+
+    .kpi-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width:900px) {
+    .dashboard-two-column {
+        grid-template-columns:1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right a {
+        flex:1;
+    }
+
+    .stats-grid {
+        grid-template-columns:1fr;
+    }
+
+    .kpi-grid {
+        grid-template-columns:1fr;
+    }
+
+    .card-body-custom {
+        padding:16px;
+    }
+
+    .summary-label {
+        width:110px;
+        min-width:110px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+
+    <!-- ========================================================= -->
+    <!-- PAGE HEADER -->
+    <!-- ========================================================= -->
+
+    <div class="dash-page-header">
+
+        <div class="header-left">
+
+            <div class="header-icon">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+
+            <div>
+                <h1>Health Incident Dashboard</h1>
+
+                <p class="subtitle">
+                    Monitor employee health incidents, treatment, investigation and follow-up activities
+                </p>
+            </div>
+
+        </div>
+
+        <div class="header-right">
+
+            <a href="{% url 'occupational_health:health_incident_list' %}"
+               class="btn-back">
+                <i class="fas fa-list"></i>
+                Incident List
+            </a>
+
+            <a href="{% url 'occupational_health:health_incident_add' %}"
+               class="btn-teal">
+                <i class="fas fa-plus"></i>
+                Add Health Incident
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MAIN STATISTICS -->
+    <!-- ========================================================= -->
+
+    <div class="stats-grid">
+
+        <!-- Total -->
+        <div class="stat-card">
+
+            <div class="stat-icon teal">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-value">
+                    {{ total_incidents }}
+                </div>
+
+                <div class="stat-label">
+                    Total Incidents
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Reported -->
+        <div class="stat-card">
+
+            <div class="stat-icon blue">
+                <i class="fas fa-flag"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-value">
+                    {{ reported_incidents }}
+                </div>
+
+                <div class="stat-label">
+                    Reported
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Investigation -->
+        <div class="stat-card">
+
+            <div class="stat-icon gold">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-value">
+                    {{ under_investigation }}
+                </div>
+
+                <div class="stat-label">
+                    Under Investigation
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Follow-up -->
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-value">
+                    {{ follow_up_required }}
+                </div>
+
+                <div class="stat-label">
+                    Follow-ups Required
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Critical -->
+        <div class="stat-card">
+
+            <div class="stat-icon red">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-value">
+                    {{ critical_incidents }}
+                </div>
+
+                <div class="stat-label">
+                    Critical Incidents
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- HEALTH INCIDENT KPIs -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-chart-line"></i>
+                <h3>Health Incident KPIs</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="kpi-grid">
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Current Month
+                    </div>
+
+                    <div class="kpi-value teal">
+                        {{ current_month_incidents }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Incidents reported this month
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Under Review
+                    </div>
+
+                    <div class="kpi-value orange">
+                        {{ under_review }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Records pending review
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Treated
+                    </div>
+
+                    <div class="kpi-value green">
+                        {{ treated_incidents }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Incidents marked treated
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Closed
+                    </div>
+
+                    <div class="kpi-value">
+                        {{ closed_incidents }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Closed incident records
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Hospitalization
+                    </div>
+
+                    <div class="kpi-value red">
+                        {{ hospitalization_required }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Hospitalization required
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Work Restrictions
+                    </div>
+
+                    <div class="kpi-value orange">
+                        {{ work_restrictions }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Work restriction required
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Investigation
+                    </div>
+
+                    <div class="kpi-value orange">
+                        {{ investigation_required }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Investigation required
+                    </div>
+                </div>
+
+                <div class="kpi-box">
+                    <div class="kpi-label">
+                        Serious Cases
+                    </div>
+
+                    <div class="kpi-value red">
+                        {{ serious_incidents }}
+                    </div>
+
+                    <div class="kpi-description">
+                        Serious severity incidents
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- INCIDENT TYPE + SEVERITY -->
+    <!-- ========================================================= -->
+
+    <div class="dashboard-two-column">
+
+        <!-- INCIDENT TYPE -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+
+                <div class="header-title">
+                    <i class="fas fa-layer-group"></i>
+                    <h3>Incident Type Summary</h3>
+                </div>
+
+            </div>
+
+            <div class="card-body-custom">
+
+                {% if incident_type_summary %}
+
+                    <div class="summary-list">
+
+                        {% for item in incident_type_summary %}
+
+                            <div class="summary-row">
+
+                                <div class="summary-label">
+
+                                    {% if item.incident_type == 'WORK_RELATED_ILLNESS' %}
+                                        Work Related Illness
+                                    {% elif item.incident_type == 'OCCUPATIONAL_EXPOSURE' %}
+                                        Occupational Exposure
+                                    {% elif item.incident_type == 'MEDICAL_EMERGENCY' %}
+                                        Medical Emergency
+                                    {% elif item.incident_type == 'FIRST_AID' %}
+                                        First Aid
+                                    {% elif item.incident_type == 'HEALTH_COMPLAINT' %}
+                                        Health Complaint
+                                    {% else %}
+                                        Other
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="summary-bar-wrapper">
+
+                                    {% if total_incidents %}
+                                        <div class="summary-bar"
+                                             style="width:{% widthratio item.total total_incidents 100 %}%;">
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="summary-count">
+                                    {{ item.total }}
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-state">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>No incident type data available.</p>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- SEVERITY -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+
+                <div class="header-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Severity Summary</h3>
+                </div>
+
+            </div>
+
+            <div class="card-body-custom">
+
+                <div class="summary-list">
+
+                    <div class="summary-row">
+
+                        <div class="summary-label">
+                            Minor
+                        </div>
+
+                        <div class="summary-bar-wrapper">
+
+                            {% if total_incidents %}
+                                <div class="summary-bar"
+                                     style="width:{% widthratio minor_incidents total_incidents 100 %}%;">
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-count">
+                            {{ minor_incidents }}
+                        </div>
+
+                    </div>
+
+                    <div class="summary-row">
+
+                        <div class="summary-label">
+                            Moderate
+                        </div>
+
+                        <div class="summary-bar-wrapper">
+
+                            {% if total_incidents %}
+                                <div class="summary-bar"
+                                     style="width:{% widthratio moderate_incidents total_incidents 100 %}%;">
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-count">
+                            {{ moderate_incidents }}
+                        </div>
+
+                    </div>
+
+                    <div class="summary-row">
+
+                        <div class="summary-label">
+                            Serious
+                        </div>
+
+                        <div class="summary-bar-wrapper">
+
+                            {% if total_incidents %}
+                                <div class="summary-bar"
+                                     style="width:{% widthratio serious_incidents total_incidents 100 %}%;">
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-count">
+                            {{ serious_incidents }}
+                        </div>
+
+                    </div>
+
+                    <div class="summary-row">
+
+                        <div class="summary-label">
+                            Critical
+                        </div>
+
+                        <div class="summary-bar-wrapper">
+
+                            {% if total_incidents %}
+                                <div class="summary-bar"
+                                     style="width:{% widthratio critical_incidents total_incidents 100 %}%;">
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-count">
+                            {{ critical_incidents }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- RECENT INCIDENTS -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-history"></i>
+                <h3>Recent Health Incidents</h3>
+            </div>
+
+            <a href="{% url 'occupational_health:health_incident_list' %}"
+               class="header-link">
+                View All
+                <i class="fas fa-arrow-right"></i>
+            </a>
+
+        </div>
+
+        <div class="card-body-custom" style="padding:0;">
+
+            {% if recent_incidents %}
+
+            <div class="table-wrapper">
+
+                <table class="dash-table">
+
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Incident Type</th>
+                            <th>Date</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Follow-up</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for incident in recent_incidents %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="employee-name">
+                                    {{ incident.employee_health_profile.employee.get_full_name|default:incident.employee_health_profile.employee.username }}
+                                </div>
+
+                                <div class="employee-id">
+                                    {{ incident.employee_health_profile.employee.employee_id|default:incident.employee_health_profile.employee.username }}
+                                </div>
+
+                            </td>
+
+                            <td>
+                                {{ incident.get_incident_type_display }}
+                            </td>
+
+                            <td>
+
+                                <span class="incident-date">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ incident.incident_date|date:"d M Y" }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {% if incident.severity == 'CRITICAL' %}
+
+                                    <span class="dash-badge badge-danger">
+                                        <i class="fas fa-circle"></i>
+                                        Critical
+                                    </span>
+
+                                {% elif incident.severity == 'SERIOUS' %}
+
+                                    <span class="dash-badge badge-orange">
+                                        <i class="fas fa-circle"></i>
+                                        Serious
+                                    </span>
+
+                                {% elif incident.severity == 'MODERATE' %}
+
+                                    <span class="dash-badge badge-warning">
+                                        <i class="fas fa-circle"></i>
+                                        Moderate
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="dash-badge badge-success">
+                                        <i class="fas fa-circle"></i>
+                                        Minor
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if incident.status == 'REPORTED' %}
+
+                                    <span class="dash-badge badge-info">
+                                        Reported
+                                    </span>
+
+                                {% elif incident.status == 'UNDER_REVIEW' %}
+
+                                    <span class="dash-badge badge-warning">
+                                        Under Review
+                                    </span>
+
+                                {% elif incident.status == 'UNDER_INVESTIGATION' %}
+
+                                    <span class="dash-badge badge-orange">
+                                        Investigation
+                                    </span>
+
+                                {% elif incident.status == 'TREATED' %}
+
+                                    <span class="dash-badge badge-success">
+                                        Treated
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="dash-badge badge-secondary">
+                                        Closed
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if incident.follow_up_required %}
+
+                                    <span class="dash-badge badge-warning">
+                                        Required
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="dash-badge badge-secondary">
+                                        Not Required
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <a href="{% url 'occupational_health:health_incident_detail' incident.pk %}"
+                                       class="btn-action"
+                                       title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <a href="{% url 'occupational_health:health_incident_edit' incident.pk %}"
+                                       class="btn-action"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    <i class="fas fa-notes-medical"></i>
+                    <p>No health incidents recorded.</p>
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- FOLLOW-UP TABLES -->
+    <!-- ========================================================= -->
+
+    <div class="dashboard-two-column">
+
+        <!-- UPCOMING -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+
+                <div class="header-title">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>Upcoming Follow-ups</h3>
+                </div>
+
+            </div>
+
+            <div class="card-body-custom">
+
+                {% if upcoming_follow_ups %}
+
+                    {% for incident in upcoming_follow_ups %}
+
+                        <div class="follow-up-item">
+
+                            <div class="follow-up-left">
+
+                                <div class="follow-up-name">
+                                    {{ incident.employee_health_profile.employee.get_full_name|default:incident.employee_health_profile.employee.username }}
+                                </div>
+
+                                <div class="follow-up-title">
+                                    {{ incident.get_incident_type_display }}
+                                </div>
+
+                            </div>
+
+                            <div class="follow-up-date">
+
+                                <div class="follow-up-date-value">
+                                    {{ incident.follow_up_date|date:"d M Y" }}
+                                </div>
+
+                                <div class="follow-up-date-label">
+                                    Follow-up Date
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check"></i>
+                        <p>No upcoming follow-ups.</p>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- OVERDUE -->
+        <div class="dash-main-card">
+
+            <div class="card-header-custom">
+
+                <div class="header-title">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Overdue Follow-ups</h3>
+                </div>
+
+            </div>
+
+            <div class="card-body-custom">
+
+                {% if overdue_follow_ups %}
+
+                    {% for incident in overdue_follow_ups %}
+
+                        <div class="follow-up-item">
+
+                            <div class="follow-up-left">
+
+                                <div class="follow-up-name">
+                                    {{ incident.employee_health_profile.employee.get_full_name|default:incident.employee_health_profile.employee.username }}
+                                </div>
+
+                                <div class="follow-up-title">
+                                    {{ incident.get_incident_type_display }}
+                                </div>
+
+                            </div>
+
+                            <div class="follow-up-date">
+
+                                <div class="follow-up-date-value overdue">
+                                    {{ incident.follow_up_date|date:"d M Y" }}
+                                </div>
+
+                                <div class="follow-up-date-label overdue">
+                                    Overdue
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No overdue follow-ups.</p>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- STATUS SUMMARY -->
+    <!-- ========================================================= -->
+
+    <div class="dash-main-card">
+
+        <div class="card-header-custom">
+
+            <div class="header-title">
+                <i class="fas fa-tasks"></i>
+                <h3>Incident Status Summary</h3>
+            </div>
+
+        </div>
+
+        <div class="card-body-custom">
+
+            <div class="summary-list">
+
+                {% for item in status_summary %}
+
+                    <div class="summary-row">
+
+                        <div class="summary-label">
+
+                            {% if item.status == 'REPORTED' %}
+                                Reported
+                            {% elif item.status == 'UNDER_REVIEW' %}
+                                Under Review
+                            {% elif item.status == 'UNDER_INVESTIGATION' %}
+                                Under Investigation
+                            {% elif item.status == 'TREATED' %}
+                                Treated
+                            {% elif item.status == 'CLOSED' %}
+                                Closed
+                            {% else %}
+                                {{ item.status }}
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-bar-wrapper">
+
+                            {% if total_incidents %}
+
+                                <div class="summary-bar"
+                                     style="width:{% widthratio item.total total_incidents 100 %}%;">
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-count">
+                            {{ item.total }}
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie"></i>
+                        <p>No status data available.</p>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

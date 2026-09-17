@@ -1,0 +1,696 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Medical Test Result{% else %}Add Medical Test Result{% endif %} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --primary-teal-hover:rgba(13,148,136,0.12);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.oh-page {
+    width:100%;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-back-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-back-teal:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    transition:all 0.3s ease;
+}
+
+.dash-main-card:hover {
+    box-shadow:var(--shadow-hover);
+}
+
+.dash-main-card .card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.dash-main-card .card-header-custom .header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.dash-main-card .card-header-custom .header-title i {
+    color:rgba(255,255,255,0.9);
+    font-size:18px;
+}
+
+.dash-main-card .card-header-custom .header-title h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.dash-main-card .card-body-custom {
+    padding:24px;
+}
+
+.form-section {
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    margin-bottom:20px;
+    overflow:hidden;
+    background:white;
+}
+
+.form-section:last-child {
+    margin-bottom:0;
+}
+
+.form-section-header {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 18px;
+    background:var(--primary-teal-light);
+    border-bottom:1px solid var(--border-color);
+}
+
+.form-section-header i {
+    color:var(--primary-teal);
+    font-size:16px;
+}
+
+.form-section-header h4 {
+    margin:0;
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+
+.form-section-body {
+    padding:20px;
+}
+
+.form-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px 22px;
+}
+
+.form-group-custom {
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group-custom.full-width {
+    grid-column:1/-1;
+}
+
+.form-label-custom {
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-secondary);
+    margin-bottom:7px;
+}
+
+.form-label-custom .required {
+    color:var(--secondary-red);
+    margin-left:3px;
+}
+
+.form-control-custom {
+    width:100%;
+    padding:9px 12px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    transition:all 0.25s ease;
+    box-sizing:border-box;
+}
+
+.form-control-custom:focus {
+    outline:none;
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 4px rgba(13,148,136,0.08);
+}
+
+textarea.form-control-custom {
+    min-height:95px;
+    resize:vertical;
+}
+
+select.form-control-custom {
+    cursor:pointer;
+}
+
+.form-control-custom:disabled {
+    background:#f8fafc;
+    color:var(--text-muted);
+    cursor:not-allowed;
+}
+
+.form-help {
+    margin-top:5px;
+    font-size:11px;
+    color:var(--text-muted);
+}
+
+.checkbox-wrapper {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-height:40px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width:17px;
+    height:17px;
+    accent-color:var(--primary-teal);
+    cursor:pointer;
+}
+
+.checkbox-wrapper label {
+    margin:0;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-secondary);
+    cursor:pointer;
+}
+
+.field-error {
+    margin-top:5px;
+    font-size:11px;
+    color:var(--secondary-red);
+    font-weight:500;
+}
+
+.non-field-errors {
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    border-radius:var(--radius-sm);
+    padding:12px 15px;
+    margin-bottom:20px;
+    color:#991b1b;
+    font-size:13px;
+}
+
+.form-actions {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    padding-top:22px;
+    margin-top:4px;
+    border-top:1px solid var(--border-color);
+}
+
+.btn-save-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 20px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white!important;
+    font-size:13px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
+
+.btn-save-teal:hover {
+    background:var(--primary-teal-dark);
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+}
+
+.btn-cancel-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 18px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-cancel-teal:hover {
+    background:#f8fafc;
+    color:var(--text-primary);
+    text-decoration:none;
+}
+
+.file-input-wrapper {
+    border:1px dashed var(--border-color);
+    border-radius:var(--radius-sm);
+    padding:12px;
+    background:#fafbfc;
+}
+
+.file-input-wrapper input {
+    border:none;
+    padding:0;
+    background:transparent;
+}
+
+@media (max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .dash-page-header .header-right {
+        width:100%;
+    }
+
+    .dash-page-header .header-right .btn-back-teal {
+        width:100%;
+    }
+
+    .dash-main-card .card-header-custom {
+        padding:12px 16px;
+    }
+
+    .dash-main-card .card-body-custom {
+        padding:16px;
+    }
+
+    .form-grid {
+        grid-template-columns:1fr;
+        gap:15px;
+    }
+
+    .form-group-custom.full-width {
+        grid-column:auto;
+    }
+
+    .form-actions {
+        flex-direction:column-reverse;
+        align-items:stretch;
+    }
+
+    .btn-save-teal,
+    .btn-cancel-teal {
+        width:100%;
+    }
+}
+
+@media (max-width:480px) {
+    .dash-page-header .header-left h1 {
+        font-size:18px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+        width:38px;
+        height:38px;
+        font-size:17px;
+    }
+
+    .dash-main-card .card-body-custom {
+        padding:10px;
+    }
+
+    .form-section-body {
+        padding:14px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-vials"></i>
+            </div>
+            <div>
+                <h1>{% if object %}Edit Medical Test Result{% else %}Add Medical Test Result{% endif %}</h1>
+                <p class="subtitle">Record employee medical test results, findings and follow-up information</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'occupational_health:medical_test_result_list' %}" class="btn-back-teal">
+                <i class="fas fa-arrow-left"></i>
+                Back to Test Results
+            </a>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <div class="header-title">
+                <i class="fas fa-file-medical"></i>
+                <h3>{% if object %}Update Medical Test Result{% else %}Medical Test Result Information{% endif %}</h3>
+            </div>
+        </div>
+
+        <div class="card-body-custom">
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                <i class="fas fa-exclamation-circle"></i>
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="fas fa-user-md"></i>
+                        <h4>Medical Examination & Test Information</h4>
+                    </div>
+
+                    <div class="form-section-body">
+                        <div class="form-grid">
+                            <div class="form-group-custom">
+                                <label for="{{ form.medical_examination.id_for_label }}" class="form-label-custom">
+                                    Medical Examination<span class="required">*</span>
+                                </label>
+                                {{ form.medical_examination }}
+                                {% for error in form.medical_examination.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Select the medical examination associated with this test result.</div>
+                            </div>
+
+                            <div class="form-group-custom">
+                                <label for="{{ form.medical_test.id_for_label }}" class="form-label-custom">
+                                    Medical Test<span class="required">*</span>
+                                </label>
+                                {{ form.medical_test }}
+                                {% for error in form.medical_test.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Select the test performed from the Medical Test master.</div>
+                            </div>
+
+                            <div class="form-group-custom">
+                                <label for="{{ form.test_date.id_for_label }}" class="form-label-custom">
+                                    Test Date<span class="required">*</span>
+                                </label>
+                                {{ form.test_date }}
+                                {% for error in form.test_date.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="form-group-custom">
+                                <label for="{{ form.result_status.id_for_label }}" class="form-label-custom">
+                                    Result Status<span class="required">*</span>
+                                </label>
+                                {{ form.result_status }}
+                                {% for error in form.result_status.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>Test Result Details</h4>
+                    </div>
+
+                    <div class="form-section-body">
+                        <div class="form-grid">
+                            <div class="form-group-custom">
+                                <label for="{{ form.result_value.id_for_label }}" class="form-label-custom">
+                                    Result Value
+                                </label>
+                                {{ form.result_value }}
+                                {% for error in form.result_value.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Enter the measured test value or result.</div>
+                            </div>
+
+                            <div class="form-group-custom">
+                                <label for="{{ form.unit.id_for_label }}" class="form-label-custom">
+                                    Unit
+                                </label>
+                                {{ form.unit }}
+                                {% for error in form.unit.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Example: mg/dL, mmHg, dB, %, bpm.</div>
+                            </div>
+
+                            <div class="form-group-custom full-width">
+                                <label for="{{ form.reference_range.id_for_label }}" class="form-label-custom">
+                                    Reference Range
+                                </label>
+                                {{ form.reference_range }}
+                                {% for error in form.reference_range.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Enter the applicable normal/reference range for the test.</div>
+                            </div>
+
+                            <div class="form-group-custom full-width">
+                                <label for="{{ form.findings.id_for_label }}" class="form-label-custom">
+                                    Findings
+                                </label>
+                                {{ form.findings }}
+                                {% for error in form.findings.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="form-group-custom full-width">
+                                <label for="{{ form.recommendations.id_for_label }}" class="form-label-custom">
+                                    Recommendations
+                                </label>
+                                {{ form.recommendations }}
+                                {% for error in form.recommendations.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="form-group-custom full-width">
+                                <label for="{{ form.doctor_comments.id_for_label }}" class="form-label-custom">
+                                    Doctor Comments
+                                </label>
+                                {{ form.doctor_comments }}
+                                {% for error in form.doctor_comments.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="fas fa-paperclip"></i>
+                        <h4>Medical Report Attachment</h4>
+                    </div>
+
+                    <div class="form-section-body">
+                        <div class="form-grid">
+                            <div class="form-group-custom full-width">
+                                <label for="{{ form.attachment.id_for_label }}" class="form-label-custom">
+                                    Test Report / Attachment
+                                </label>
+                                <div class="file-input-wrapper">
+                                    {{ form.attachment }}
+                                </div>
+                                {% for error in form.attachment.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Upload the laboratory report, diagnostic report or other supporting medical document.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <h4>Medical Follow-up</h4>
+                    </div>
+
+                    <div class="form-section-body">
+                        <div class="form-grid">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Follow-up Required</label>
+                                <div class="checkbox-wrapper">
+                                    {{ form.follow_up_required }}
+                                    <label for="{{ form.follow_up_required.id_for_label }}">Follow-up is required for this test result</label>
+                                </div>
+                                {% for error in form.follow_up_required.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="form-group-custom">
+                                <label for="{{ form.follow_up_date.id_for_label }}" class="form-label-custom">
+                                    Follow-up Date
+                                </label>
+                                {{ form.follow_up_date }}
+                                {% for error in form.follow_up_date.errors %}
+                                <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-help">Required when Follow-up Required is selected.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{% url 'occupational_health:medical_test_result_list' %}" class="btn-cancel-teal">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-save-teal">
+                        <i class="fas fa-save"></i>
+                        {% if object %}Update Medical Test Result{% else %}Save Medical Test Result{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+    const followUpCheckbox=document.getElementById('{{ form.follow_up_required.id_for_label }}');
+    const followUpDate=document.getElementById('{{ form.follow_up_date.id_for_label }}');
+
+    function toggleFollowUpDate(){
+        if(!followUpCheckbox||!followUpDate)return;
+        followUpDate.disabled=!followUpCheckbox.checked;
+        if(!followUpCheckbox.checked){
+            followUpDate.value='';
+        }
+    }
+
+    if(followUpCheckbox){
+        followUpCheckbox.addEventListener('change',toggleFollowUpDate);
+        toggleFollowUpDate();
+    }
+});
+</script>
+{% endblock %}
