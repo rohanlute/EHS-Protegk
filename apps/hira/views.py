@@ -26,7 +26,7 @@ from .source_adapters import ADAPTERS, describe_source_object, get_adapter, get_
 
 
 class HIRAAccessMixin(LoginRequiredMixin):
-    allowed_roles = ["ADMIN", "SAFETY OFFICER", "PLANT HEAD", "HOD"]
+    allowed_roles = ["ADMIN", "SAFETY MANAGER", "PLANT HEAD", "HOD"]
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -49,11 +49,11 @@ class HIRAAccessMixin(LoginRequiredMixin):
             plants = user.get_all_plants()
             return qs.filter(plant__in=plants) if plants else qs.none()
         return qs
-
     def can_approve_hira(self):
+        """Only Safety Manager (and superuser) can approve HIRAs."""
         user = self.request.user
         role_name = user.role.name if getattr(user, "role", None) else ""
-        return user.is_superuser or role_name in ["ADMIN", "SAFETY OFFICER", "PLANT HEAD"]
+        return user.is_superuser or role_name == "SAFETY MANAGER"
 
 
 class HIRAMasterAccessMixin(HIRAAccessMixin):
