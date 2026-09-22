@@ -1,0 +1,675 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ action.action_id }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:actions' %}">Corrective Actions</a></li>
+<li class="breadcrumb-item active">{{ action.action_id }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-outline-danger {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(220, 38, 38, 0.4);
+    color: var(--danger-red);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-danger:hover {
+    background: rgba(220, 38, 38, 0.10);
+    border-color: var(--danger-red);
+  }
+
+  .btn-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--bg-card);
+  }
+  .btn-card-action:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    height: 100%;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 22px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ehs-card .card-body { padding: 22px 24px; }
+  .ehs-card .card-body.p-0 { padding: 0; }
+
+  /* ========================================================== */
+  /* INFO GRID                                                   */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 4px 0;
+    line-height: 1.55;
+  }
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .info-row a {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .info-row a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-badge.status-draft,
+  .status-badge.status-pending,
+  .status-badge.status-open,
+  .status-badge.status-in_progress,
+  .status-badge.status-assigned {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--pending-orange);
+  }
+  .status-badge.status-approved,
+  .status-badge.status-completed,
+  .status-badge.status-closed,
+  .status-badge.status-implemented {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+  .status-badge.status-submitted,
+  .status-badge.status-under_review,
+  .status-badge.status-pending_verification {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+  .status-badge.status-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .priority-badge.priority-low       { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+  .priority-badge.priority-medium    { background: rgba(13, 148, 136, 0.12);  color: var(--primary-teal); }
+  .priority-badge.priority-high      { background: rgba(217, 119, 6, 0.12);   color: var(--warning-amber); }
+  .priority-badge.priority-very_high { background: rgba(220, 38, 38, 0.12);   color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    text-align: left;
+  }
+  .notice.notice-warning {
+    background: rgba(217, 119, 6, 0.08);
+    border-color: rgba(217, 119, 6, 0.25);
+    color: #92400e;
+  }
+  .notice.notice-danger {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #7f1d1d;
+  }
+  .notice strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* ========================================================== */
+  /* EVIDENCE BOX                                                */
+  /* ========================================================== */
+  .evidence-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--primary-teal-light);
+    border: 1px dashed rgba(13, 148, 136, 0.4);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--primary-teal-dark);
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+  .evidence-box:hover {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal-dark);
+    text-decoration: none;
+  }
+  .evidence-box i { color: var(--primary-teal); font-size: 16px; }
+
+  /* ========================================================== */
+  /* DESCRIPTION BLOCK (for linebreaks)                          */
+  /* ========================================================== */
+  .desc-block {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.65;
+  }
+  .desc-block p { margin: 0 0 8px 0; }
+  .desc-block p:last-child { margin-bottom: 0; }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ergo-header .ergo-actions { justify-content: stretch; }
+    .ergo-header .ergo-actions .btn-primary,
+    .ergo-header .ergo-actions .btn-outline-primary,
+    .ergo-header .ergo-actions .btn-outline-secondary,
+    .ergo-header .ergo-actions .btn-outline-danger {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        {{ action.action_id }}
+        <span class="status-badge status-{{ action.status|lower }}">
+          {{ action.get_status_display }}
+        </span>
+      </h1>
+      <p>
+        {% if action.assessment %}
+          Assessment
+          <a href="{% url 'ergonomics:detail' action.assessment.pk %}"
+             style="color:var(--primary-teal);font-weight:600;text-decoration:none;">
+            {{ action.assessment.assessment_id }}
+          </a>
+          &middot;
+        {% endif %}
+        {{ action.get_priority_display }} Priority
+        {% if action.responsible_person %}
+          &middot; Assigned to {{ action.responsible_person.get_full_name|default:action.responsible_person }}
+        {% endif %}
+      </p>
+    </div>
+    <div class="ergo-actions">
+      {% if action.status != "CLOSED" and action.status != "OVERDUE" %}
+      <a href="{% url 'ergonomics:action_edit' action.pk %}" class="btn-outline-primary">
+        <i class="fas fa-pencil-alt"></i> Update
+      </a>
+      {% endif %}
+      <a href="{% url 'ergonomics:actions' %}" class="btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to List
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ACTION DEFINITION + CONTEXT                                  -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-8">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-info-circle" style="color:var(--primary-teal);"></i>
+            Action Definition
+          </span>
+          {% if action.status != "CLOSED" and action.status != "OVERDUE" %}
+          <a href="{% url 'ergonomics:action_edit' action.pk %}" class="btn-card-action">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Description</strong>
+                <div class="desc-block">{{ action.action_description|linebreaks }}</div>
+              </div>
+            </div>
+
+            {% if action.root_cause %}
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Root Cause</strong>
+                <div class="desc-block">{{ action.root_cause|linebreaks }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="col-md-4">
+              <div class="info-row">
+                <strong>Control Type</strong>
+                {{ action.get_control_type_display|default:"—" }}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row">
+                <strong>Priority</strong>
+                <span class="priority-badge priority-{{ action.priority|lower }}">
+                  {{ action.get_priority_display }}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row">
+                <strong>Target Date</strong>
+                {{ action.target_date|default:"—" }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: at-a-glance side card -->
+    <div class="col-md-4">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-sitemap" style="color:var(--primary-teal);"></i>
+            Context
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Assessment</strong>
+                {% if action.assessment %}
+                  <a href="{% url 'ergonomics:detail' action.assessment.pk %}">
+                    {{ action.assessment.assessment_id }}
+                  </a>
+                {% else %}—{% endif %}
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Assessment Risk Level</strong>
+                {% if action.assessment.risk_level %}
+                  <span class="risk-badge risk-badge-{{ action.assessment.risk_level|lower }}">
+                    {{ action.assessment.get_risk_level_display }}
+                  </span>
+                {% else %}—{% endif %}
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Site</strong>
+                {{ action.assessment.plant.name|default:"—" }}
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Department</strong>
+                {{ action.department.name|default:action.assessment.department.name|default:"—" }}
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Responsible Person</strong>
+                {{ action.responsible_person.get_full_name|default:"—" }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SUBMISSION / COMPLETION                                      -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-user-check" style="color:var(--primary-teal);"></i>
+            Submission &amp; Evidence
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <div class="info-row">
+                <strong>Completion Date</strong>
+                {{ action.completion_date|default:"—" }}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-row">
+                <strong>Evidence</strong>
+                {% if action.evidence %}
+                  <a href="{{ action.evidence.url }}" target="_blank" class="evidence-box">
+                    <i class="fas fa-paperclip"></i>
+                    View uploaded evidence
+                  </a>
+                {% else %}
+                  <span class="text-muted">Not uploaded yet</span>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if action.remarks %}
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Remarks</strong>
+                <div class="desc-block">{{ action.remarks|linebreaks }}</div>
+              </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- VERIFICATION / REJECTION                                     -->
+  <!-- ============================================================ -->
+  {% if action.verification or action.rejection_remark %}
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-check-double" style="color:var(--primary-teal);"></i>
+            Verification
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            {% if action.verification %}
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Verification Notes</strong>
+                <div class="desc-block">{{ action.verification|linebreaks }}</div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="info-row">
+                <strong>Verified By</strong>
+                {{ action.verified_by.get_full_name|default:action.verified_by|default:"—" }}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-row">
+                <strong>Verification Date</strong>
+                {{ action.verification_date|default:"—" }}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if action.rejection_remark %}
+            <div class="col-12">
+              <div class="notice notice-danger">
+                <strong>Previously Rejected</strong>
+                {{ action.rejection_remark|linebreaks }}
+                <span style="display:block;font-size:11px;margin-top:6px;opacity:0.8;">
+                  by {{ action.rejected_by.get_full_name|default:action.rejected_by }}
+                  {% if action.rejected_at %}
+                    on {{ action.rejected_at|date:"d M Y, H:i" }}
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

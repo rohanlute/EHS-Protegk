@@ -86,18 +86,18 @@ class NotificationService:
             return [value]
 
         return []
-    
+
     @staticmethod
     def get_stakeholders_for_event(event_type, plant=None, location=None, zone=None):
         """
         Get stakeholders based on NotificationMaster configuration
-        
+
         Args:
             event_type: Notification event type (e.g., 'INCIDENT_REPORTED')
             plant: Plant object
             location: Location object
             zone: Zone object
-        
+
         Returns:
             List of User objects who should receive this notification
         """
@@ -106,46 +106,46 @@ class NotificationService:
             notification_event=event_type,
             is_active=True
         ).select_related('role')
-        
+
         if not configs.exists():
             return []
-        
+
         stakeholders = []
-        
+
         for config in configs:
             # Build query to find users with this role
             query = User.objects.filter(
                 role=config.role,
                 is_active=True
             )
-            
+
             if config.role.name == 'PLANT HEAD':
                 config.filter_by_plant = True
-                
+
             # Apply filters based on configuration
             if config.filter_by_plant and plant:
                 query = query.filter(plant=plant)
-            
+
             if config.filter_by_location and location:
                 query = query.filter(location=location)
-            
+
             if config.filter_by_zone and zone:
                 query = query.filter(zone=zone)
-            
+
             users = query.all()
-            
+
             for user in users:
                 if user not in stakeholders:
                     stakeholders.append(user)
-        
+
         return stakeholders
-    
-    
+
+
     @staticmethod
     def create_notification(recipient, content_object, notification_type, title, message):
         """
         Create a notification in the database
-        
+
         Args:
             recipient: User object
             content_object: The object (Incident/Hazard) being notified about
@@ -155,7 +155,7 @@ class NotificationService:
         """
         try:
             content_type = ContentType.objects.get_for_model(content_object)
-            
+
             notification = Notification(
                 recipient=recipient,
                 content_type=content_type,
@@ -165,20 +165,20 @@ class NotificationService:
                 message=message,
                 is_read=False
             )
-            
+
             notification.save()
             return notification
-            
+
         except Exception as e:
             logger.error(f"Failed to create notification: {e}")
             return None
-    
-    
+
+
     @staticmethod
     def send_email(recipient, subject, message, html_template=None, context=None):
         """
         Send email notification to Django User
-        
+
         Args:
             recipient: User object
             subject: Email subject
@@ -194,13 +194,13 @@ class NotificationService:
         if not hasattr(settings, 'EMAIL_HOST') or not settings.EMAIL_HOST:
             logger.warning("EMAIL NOT CONFIGURED - Skipping email send")
             return False
-        
+
         try:
             # Render HTML template if provided
             html_content = None
             if html_template and context:
                 html_content = select_template([html_template, 'emails/notification.html']).render(context)
-            
+
             # Create email
             email = EmailMultiAlternatives(
                 subject=subject,
@@ -208,14 +208,14 @@ class NotificationService:
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[recipient.email]
             )
-            
+
             if html_content:
                 email.attach_alternative(html_content, "text/html")
-            
+
             email.send(fail_silently=False)
             logger.info(f"Email sent successfully to {recipient.email}")
             return True
-            
+
         except Exception as e:
             logger.exception(f"Failed to send email to {recipient.email}: {e}")
             return False
@@ -224,7 +224,7 @@ class NotificationService:
     def send_contractor_email(portal_user, subject, message, html_template=None, context=None):
         """
         Send email to a ContractorPortalUser.
-        
+
         Args:
             portal_user: ContractorPortalUser instance
             subject: Email subject
@@ -278,7 +278,7 @@ class NotificationService:
     ):
         """
         Send Contractor Portal onboarding credentials with full details.
-        
+
         Args:
             portal_user: ContractorPortalUser instance
             assignment: ContractorAssignment instance
@@ -288,7 +288,7 @@ class NotificationService:
             prequal_questions: List of pre-qualification questions with answers
             document_requirements: List of document requirements
         """
-        
+
         if not portal_user or not portal_user.email:
             logger.error("Contractor portal email cannot be sent: email is missing.")
             return False
@@ -358,7 +358,7 @@ EHS Management System
                 'emails/contractor_onboarding.html',
                 'emails/notification.html',
             ]).render(context)
-            
+
             cc = []
             if cc_email:
                 cc_email = cc_email.strip().lower()
@@ -401,21 +401,21 @@ EHS Management System
             return False
 
         subject = f"✅ Onboarding Approved - {contractor.contractor_name}"
-        
+
         context = {
             'contractor': contractor,
             'approved_by': approved_by.get_full_name() if approved_by else 'System',
             'approved_at': approved_at if approved_at else timezone.now(),
             'portal_user': portal_user,
         }
-        
+
         try:
             html_content = select_template([
                 'notifications/contractor_onboarding_approved.html',
                 'notifications/contractor_onboarding_approved.html',
                 'notifications/notification.html',
             ]).render(context)
-            
+
             # Plain text message
             message = f"""
 Hello {contractor.contact_person},
@@ -433,7 +433,7 @@ For any questions, please contact your EHS administrator.
 Regards,
 EHS-360 Team
 """
-            
+
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=message,
@@ -443,10 +443,10 @@ EHS-360 Team
             )
             email.attach_alternative(html_content, "text/html")
             email.send(fail_silently=False)
-            
+
             logger.info(f"Approval email sent successfully to {portal_user.email}")
             return True
-            
+
         except Exception as e:
             logger.exception(f"Failed to send approval email to {portal_user.email}: {e}")
             return False
@@ -461,15 +461,15 @@ EHS-360 Team
             return False
 
         subject = f"❌ Onboarding Rejected - {contractor.contractor_name}"
-        
+
         reason_text = rejection_reason or 'Please contact your EHS administrator for details.'
-        
+
         # Build login URL
         site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
         site_url = site_url.rstrip('/')
         login_path = reverse('contractor:portal_login')
         login_url = f"{site_url}{login_path}"
-        
+
         context = {
             'contractor': contractor,
             'portal_user': portal_user,
@@ -477,14 +477,14 @@ EHS-360 Team
             'rejection_reason': reason_text,
             'login_url': login_url,
         }
-        
+
         try:
             html_content = select_template([
                 'notifications/contractor_onboarding_rejected.html',
                 'notifications/contractor_onboarding_rejected.html',
                 'notifications/notification.html',
             ]).render(context)
-            
+
             # Plain text message
             message = f"""
 Hello {contractor.contact_person},
@@ -503,7 +503,7 @@ For any questions, please contact your EHS administrator.
 Regards,
 EHS-360 Team
 """
-            
+
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=message,
@@ -513,10 +513,10 @@ EHS-360 Team
             )
             email.attach_alternative(html_content, "text/html")
             email.send(fail_silently=False)
-            
+
             logger.info(f"Rejection email sent successfully to {portal_user.email}")
             return True
-            
+
         except Exception as e:
             logger.exception(f"Failed to send rejection email to {portal_user.email}: {e}")
             return False
@@ -744,21 +744,21 @@ EHS-360 Team
         """
         try:
             from apps.contractor.pdf_generators import generate_training_signoff_pdf
-            
+
             # Generate PDF
             pdf_buffer = generate_training_signoff_pdf(signoff)
-            
+
             # Get contractor representative email
             to_email = signoff.contractor.ehs_email or signoff.contractor.email
-            
+
             if not to_email:
                 logger.error(f"No email found for contractor: {signoff.contractor.contractor_name}")
                 return False
-            
+
             # Get CC email
             if not cc_email:
                 cc_email = signoff.contractor.email or signoff.contractor.ehs_email
-            
+
             context = {
                 'signoff': signoff,
                 'contractor': signoff.contractor,
@@ -766,9 +766,9 @@ EHS-360 Team
                 'session': signoff.session,
                 'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000'),
             }
-            
+
             subject = f'⏰ Reminder: Training Sign-Off Pending - {signoff.signoff_number}'
-            
+
             plain_message = f"""
 Hello {signoff.contractor.contact_person or signoff.contractor.contractor_name},
 
@@ -786,9 +786,9 @@ Please review the attached PDF and complete the sign-off process.
 Regards,
 EHS-360 Team
 """
-            
+
             from django.core.mail import EmailMultiAlternatives
-            
+
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=plain_message,
@@ -797,18 +797,18 @@ EHS-360 Team
                 cc=[cc_email] if cc_email and cc_email != to_email else [],
                 reply_to=[settings.DEFAULT_FROM_EMAIL]
             )
-            
+
             email.attach(
                 f'Training_SignOff_{signoff.signoff_number}.pdf',
                 pdf_buffer.getvalue(),
                 'application/pdf'
             )
-            
+
             email.send(fail_silently=False)
-            
+
             logger.info(f"Training sign-off reminder email sent to {to_email}")
             return True
-            
+
         except Exception as e:
             logger.exception(f"Error sending training sign-off reminder email: {str(e)}")
             return False
@@ -864,6 +864,7 @@ EHS-360 Team
             'INSPECTION': 'emails/inspection/notification.html',
             'CAPA': 'emails/capa/notification.html',
             'INVESTIGATION_OVERDUE': 'emails/investigation_overdue/notification.html',
+            'ERGONOMICS': 'emails/ergonomic/notification.html',
         }
         return module_templates.get(
             normalized_module,
@@ -905,6 +906,11 @@ EHS-360 Team
             plant = schedule.plant.first() if schedule.plants.exists() else None
             location = schedule.location
             zone = schedule.zone
+        elif hasattr(content_object, 'assessment') and content_object.assessment:
+            # ErgonomicCorrectiveAction / ErgonomicReassessment
+            plant = getattr(content_object.assessment, 'plant', None)
+            location = getattr(content_object.assessment, 'location', None)
+            zone = getattr(content_object.assessment, 'zone', None)
         else:
             plant = getattr(content_object, 'plant', None)
             location = getattr(content_object, 'location', None)
@@ -989,6 +995,8 @@ EHS-360 Team
             context = NotificationService._build_investigation_overdue_context(content_object)
         elif notification_type.startswith('CAPA_') or module == 'CAPA':
             context = NotificationService._build_capa_context(content_object, notification_type)
+        elif notification_type.startswith('ERGONOMIC_'):
+            context = NotificationService._build_ergonomic_context(content_object, notification_type)
         elif module == 'INSPECTION':
             context = NotificationService._build_inspection_context(content_object)
         else:
@@ -1082,7 +1090,7 @@ EHS Management System
             'incident': incident,
             'incident_url': incident_url,
         }
-    
+
     @staticmethod
     def _build_hazard_context(hazard):
         """Build context for hazard notifications"""
@@ -1827,73 +1835,73 @@ EHS Management System
             'capa': capa,
             'capa_url': capa_url,
         }
-        # ---------------------------------------------------------------------------
-# Add to apps/notifications/services.py
-# ---------------------------------------------------------------------------
 
-# 1. In NotificationService.notify(), inside the context-building if/elif
-#    chain (right after the `elif notification_type.startswith('CAPA_') ...`
-#    branch), add:
-#
-#     elif notification_type.startswith('ERGONOMIC_'):
-#         context = NotificationService._build_ergonomic_context(content_object, notification_type)
-#
-# 2. `notify()` resolves plant/location/zone generically for any object with
-#    those attributes (the final `else` branch already does
-#    `getattr(content_object, 'plant', None)` etc.) — ErgonomicAssessment,
-#    ErgonomicCorrectiveAction and MSDDiscomfort don't have `plant` directly
-#    in all cases (MSDDiscomfort only has `department`), so add one more
-#    branch near the top of notify() alongside the existing
-#    hasattr(content_object, 'incident') chain:
-#
-#     elif hasattr(content_object, 'assessment') and content_object.assessment:
-#         # ErgonomicCorrectiveAction / ErgonomicReassessment
-#         plant = content_object.assessment.plant
-#         location = getattr(content_object.assessment, 'location', None)
-#         zone = getattr(content_object.assessment, 'zone', None)
-#
-# 3. Add this method next to _build_capa_context:
+    # ==========================================================
+    # ERGONOMIC CONTEXT BUILDER
+    # ==========================================================
 
     @staticmethod
     def _build_ergonomic_context(content_object, notification_type):
-        from apps.ergonomics.models import ErgonomicAssessment, ErgonomicCorrectiveAction, MSDDiscomfort
+        """
+        Build context for all ERGONOMIC_* notifications.
 
+        Dispatches on the object's type:
+          - ErgonomicAssessment  → HIGH / VERY_HIGH risk events
+          - ErgonomicCorrectiveAction → ACTION_ASSIGNED / ACTION_OVERDUE
+          - ErgonomicReassessment → REASSESSMENT_INEFFECTIVE
+          - MSDDiscomfort → MSD_REPORTED
+        """
+        from apps.ergonomics.models import (
+            ErgonomicAssessment,
+            ErgonomicCorrectiveAction,
+            ErgonomicReassessment,
+            MSDDiscomfort,
+        )
+
+        # ---------------- HIGH / VERY HIGH risk assessment ----------------
         if isinstance(content_object, ErgonomicAssessment):
-            assessment = content_object
-            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[assessment.id])}"
-            risk_label = assessment.get_risk_level_display() if assessment.risk_level else "N/A"
-            title = f"Ergonomic Risk: {risk_label} | {assessment.assessment_id}"
-            subject = f"⚠️ Ergonomic Assessment - {risk_label} Risk - {assessment.assessment_id}"
-            message = f"""
+            a = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[a.id])}"
+            risk_label = a.get_risk_level_display() if a.risk_level else "N/A"
+            severity_tag = "🚨" if a.risk_level == "VERY_HIGH" else "⚠️"
+            return {
+                'title': f"{severity_tag} Ergonomic Risk: {risk_label} | {a.assessment_id}",
+                'subject': f"{severity_tag} Ergonomic Assessment - {risk_label} Risk - {a.assessment_id}",
+                'message': f"""
 Hello,
 
 An ergonomic assessment has returned a {risk_label} risk result.
 
 ASSESSMENT DETAILS
 --------------------------------------------------
-Assessment ID   : {assessment.assessment_id}
-Plant           : {assessment.plant.name}
-Department      : {assessment.department.name}
-Job / Task      : {assessment.job_role} / {assessment.task}
-Method          : {assessment.assessment_method.name}
-Score           : {assessment.score}
-Risk Level      : {risk_label}
-Recommended Action: {assessment.recommended_action}
+Assessment ID      : {a.assessment_id}
+Plant              : {a.plant.name}
+Department         : {a.department.name}
+Job / Task         : {a.job_role} / {a.task}
+Method             : {a.assessment_method.name}
+Score              : {a.score}
+Risk Level         : {risk_label}
+Recommended Action : {a.recommended_action}
 
 Please review and initiate corrective action if not already assigned.
 
 Regards,
 EHS Management System
-"""
-            return {"title": title, "subject": subject, "message": message, "assessment": assessment, "detail_url": detail_url}
+""",
+                'assessment': a,
+                'detail_url': detail_url,
+            }
 
+        # ---------------- Corrective action assigned / overdue ----------------
         if isinstance(content_object, ErgonomicCorrectiveAction):
             action = content_object
             detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[action.assessment_id])}"
             label = "Overdue" if notification_type == "ERGONOMIC_ACTION_OVERDUE" else "Assigned"
-            title = f"Ergonomic Action {label} | {action.action_id}"
-            subject = f"Ergonomic Corrective Action {label} - {action.action_id}"
-            message = f"""
+            icon = "⏰" if notification_type == "ERGONOMIC_ACTION_OVERDUE" else "📋"
+            return {
+                'title': f"{icon} Ergonomic Action {label} | {action.action_id}",
+                'subject': f"{icon} Ergonomic Corrective Action {label} - {action.action_id}",
+                'message': f"""
 Hello,
 
 An ergonomic corrective action requires your attention.
@@ -1910,62 +1918,82 @@ Status           : {action.get_status_display()}
 
 Regards,
 EHS Management System
-"""
-            return {"title": title, "subject": subject, "message": message, "action": action, "detail_url": detail_url}
+""",
+                'action': action,
+                'assessment': action.assessment,
+                'detail_url': detail_url,
+            }
 
-        if isinstance(content_object, MSDDiscomfort):
-            case = content_object
-            title = f"MSD/Discomfort Reported | {case.worker.get_full_name() if case.worker else 'Worker'}"
-            subject = f"MSD/Discomfort Report - {case.get_body_part_display()}"
-            message = f"""
-Hello,
-
-A musculoskeletal discomfort case has been reported and requires review.
-
-CASE DETAILS
---------------------------------------------------
-Worker          : {case.worker.get_full_name() if case.worker else 'N/A'}
-Department      : {case.department.name if case.department else 'N/A'}
-Body Part       : {case.get_body_part_display()}
-Severity        : {case.get_severity_display()}
-Date Reported   : {case.date_reported}
-Medical Referral: {'Yes' if case.medical_referral else 'No'}
-
-Please review and link to an ergonomic assessment if warranted.
-
-Regards,
-EHS Management System
-"""
-            return {"title": title, "subject": subject, "message": message, "msd_case": case}
-
-        # ERGONOMIC_REASSESSMENT_INEFFECTIVE — content_object is ErgonomicReassessment
-        reassessment = content_object
-        detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[reassessment.assessment_id])}"
-        title = f"Ergonomic Control Not Effective | {reassessment.assessment.assessment_id}"
-        subject = f"Control Not Effective - Additional Action Needed - {reassessment.assessment.assessment_id}"
-        message = f"""
+        # ---------------- Reassessment — control not effective ----------------
+        if isinstance(content_object, ErgonomicReassessment):
+            r = content_object
+            detail_url = f"{settings.SITE_URL}{reverse('ergonomics:detail', args=[r.assessment_id])}"
+            return {
+                'title': f"❌ Ergonomic Control Not Effective | {r.assessment.assessment_id}",
+                'subject': f"Control Not Effective - Additional Action Needed - {r.assessment.assessment_id}",
+                'message': f"""
 Hello,
 
 A reassessment found the implemented ergonomic control was NOT EFFECTIVE.
 
 REASSESSMENT DETAILS
 --------------------------------------------------
-Assessment      : {reassessment.assessment.assessment_id}
-Previous Score  : {reassessment.previous_score} ({reassessment.previous_risk})
-New Score       : {reassessment.new_score} ({reassessment.new_risk})
-Residual Risk   : {reassessment.residual_risk}
+Assessment      : {r.assessment.assessment_id}
+Previous Score  : {r.previous_score} ({r.previous_risk})
+New Score       : {r.new_score} ({r.new_risk})
+Residual Risk   : {r.residual_risk}
+Control Status  : {r.get_control_effectiveness_display()}
 
 An additional corrective action is required.
 
 Regards,
 EHS Management System
-"""
-        return {"title": title, "subject": subject, "message": message, "reassessment": reassessment, "detail_url": detail_url}
+""",
+                'reassessment': r,
+                'assessment': r.assessment,
+                'detail_url': detail_url,
+            }
 
-# 4. NotificationMaster rows: an admin configures which Role receives each
-#    of these event types via the existing "Notifications Master Create"
-#    screen — no schema change needed there since notification_event is
-#    free-text. Event codes to configure:
-#      ERGONOMIC_HIGH_RISK, ERGONOMIC_VERY_HIGH_RISK, ERGONOMIC_ACTION_ASSIGNED,
-#      ERGONOMIC_ACTION_OVERDUE, ERGONOMIC_REASSESSMENT_INEFFECTIVE,
-#      ERGONOMIC_MSD_REPORTED
+        # ---------------- MSD / Discomfort reported ----------------
+        if isinstance(content_object, MSDDiscomfort):
+            case = content_object
+            return {
+                'title': f"🩺 MSD / Discomfort Reported | {case.worker.get_full_name() if case.worker else 'Worker'}",
+                'subject': f"MSD / Discomfort Report - {case.get_body_part_display()}",
+                'message': f"""
+Hello,
+
+A musculoskeletal discomfort case has been reported and requires review.
+
+CASE DETAILS
+--------------------------------------------------
+Worker           : {case.worker.get_full_name() if case.worker else 'N/A'}
+Department       : {case.department.name if case.department else 'N/A'}
+Job / Task       : {case.job} / {case.task}
+Body Part        : {case.get_body_part_display()}
+Discomfort Type  : {case.discomfort_type}
+Severity         : {case.get_severity_display()}
+Date Reported    : {case.date_reported}
+Medical Referral : {'Yes' if case.medical_referral else 'No'}
+Work Restriction : {'Yes' if case.work_restriction else 'No'}
+
+Please review and link to an ergonomic assessment if warranted.
+
+Regards,
+EHS Management System
+""",
+                'msd_case': case,
+                'department': case.department,
+            }
+
+        # ---------------- Fallback for any other ergonomic code ----------------
+        logger.error(
+            "Ergonomic context requested for unsupported type: %s (%s)",
+            type(content_object).__name__,
+            notification_type,
+        )
+        return {
+            'title': "Ergonomic Notification",
+            'subject': "Ergonomic Notification",
+            'message': "An ergonomic event occurred. Please log in to review.",
+        }

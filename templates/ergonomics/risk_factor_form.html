@@ -1,0 +1,689 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Risk Factors — {{ assessment.assessment_id }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:assessments' %}">Assessments</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:detail' assessment.pk %}">{{ assessment.assessment_id }}</a></li>
+<li class="breadcrumb-item active">Risk Factors</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --teal: #0d9488;
+    --teal-dark: #0f766e;
+    --teal-bg: rgba(13, 148, 136, 0.08);
+    --text: #0f172a;
+    --text2: #334155;
+    --muted: #64748b;
+    --border: #cbd5e1;
+    --card: #ffffff;
+    --page: #f8fafc;
+    --red: #dc2626;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .page-head {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px;
+  }
+  .page-head h1 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0; }
+  .page-head p { font-size: 12.5px; color: var(--muted); margin: 3px 0 0 0; }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-teal {
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: #fff; border: none;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-teal:hover { color: #fff; transform: translateY(-1px); }
+  .btn-ghost {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none;
+  }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
+
+  /* ========================================================== */
+  /* SECTION CARD                                                */
+  /* ========================================================== */
+  .sec {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .sec-head {
+    background: var(--teal-bg);
+    padding: 12px 20px;
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 700; color: var(--text);
+  }
+  .sec-head i { color: var(--teal); font-size: 14px; }
+  .sec-body { padding: 18px 20px; }
+
+  /* ========================================================== */
+  /* FIELD GRID                                                  */
+  /* ========================================================== */
+  .fgrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 16px;
+  }
+  .fgrid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fgrid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fgrid.cols-1 { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;   /* prevents grid blowout */
+  }
+  .field > label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* ========================================================== */
+  /* ALL FORM INPUTS — the key fix                              */
+  /* ========================================================== */
+  .sec input[type="text"],
+  .sec input[type="number"],
+  .sec input[type="email"],
+  .sec input[type="url"],
+  .sec input[type="tel"],
+  .sec input[type="date"],
+  .sec input[type="datetime-local"],
+  .sec input[type="time"],
+  .sec input[type="search"],
+  .sec input[type="password"],
+  .sec select,
+  .sec textarea,
+  .sec .form-control,
+  .sec .form-select {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 38px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: var(--text) !important;
+    background-color: var(--card) !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+
+  .sec textarea,
+  .sec textarea.form-control {
+    height: auto !important;
+    min-height: 80px !important;
+    resize: vertical !important;
+    line-height: 1.5 !important;
+  }
+
+  .sec select,
+  .sec .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 10px !important;
+    padding-right: 32px !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  .sec input:focus,
+  .sec select:focus,
+  .sec textarea:focus {
+    border-color: var(--teal) !important;
+    box-shadow: 0 0 0 3px var(--teal-bg) !important;
+    outline: none !important;
+  }
+
+  .field .hint {
+    font-size: 10.5px; color: var(--muted);
+    font-style: italic; line-height: 1.3;
+  }
+  .field .err,
+  .err {
+    font-size: 11px; color: var(--red); font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* ========================================================== */
+  /* SECTION DIVIDER                                             */
+  /* ========================================================== */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    opacity: 0.6;
+    margin: 18px 0 14px 0;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOXES                                                  */
+  /* ========================================================== */
+  .chk-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 10px; display: block;
+  }
+  .chk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+  }
+  .chk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    min-height: 40px;
+    box-sizing: border-box;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+  }
+  .chk:hover {
+    border-color: var(--teal);
+    background: var(--teal-bg);
+  }
+  .chk input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-radius: 4px !important;
+    background: #fff !important;
+    cursor: pointer !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s !important;
+    box-shadow: none !important;
+    float: none !important;
+    vertical-align: middle !important;
+  }
+  .chk input[type="checkbox"]:hover {
+    border-color: var(--teal) !important;
+  }
+  .chk input[type="checkbox"]:checked {
+    background: var(--teal) !important;
+    border-color: var(--teal) !important;
+  }
+  .chk input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .chk input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 3px var(--teal-bg) !important;
+    outline: none !important;
+  }
+  .chk span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ========================================================== */
+  /* ACTION BAR                                                  */
+  /* ========================================================== */
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+  }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    background: rgba(220, 38, 38, 0.05);
+    color: #991b1b;
+    margin-bottom: 16px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 1200px) {
+    .fgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .fgrid, .fgrid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .fgrid, .fgrid.cols-3, .fgrid.cols-2 { grid-template-columns: 1fr; }
+    .chk-grid { grid-template-columns: 1fr; }
+    .page-head { flex-direction: column; align-items: stretch; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- HEADER -->
+  <div class="page-head">
+    <div>
+      <h1>Ergonomic Risk Factors</h1>
+      <p>{{ assessment.assessment_id }} &middot; {{ assessment.job_role }} / {{ assessment.task }}</p>
+    </div>
+    <a href="{% url 'ergonomics:detail' assessment.pk %}" class="btn-ghost">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="notice">
+      {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ============ A. POSTURE ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-user"></i> A. Posture</div>
+      <div class="sec-body">
+
+        <div class="fgrid">
+          <div class="field">
+            <label for="{{ form.neck_posture.id_for_label }}">Neck</label>
+            {{ form.neck_posture }}
+            {% for e in form.neck_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.shoulder_posture.id_for_label }}">Shoulder</label>
+            {{ form.shoulder_posture }}
+            {% for e in form.shoulder_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.elbow_posture.id_for_label }}">Elbow</label>
+            {{ form.elbow_posture }}
+            {% for e in form.elbow_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.wrist_posture.id_for_label }}">Wrist</label>
+            {{ form.wrist_posture }}
+            {% for e in form.wrist_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.back_posture.id_for_label }}">Back</label>
+            {{ form.back_posture }}
+            {% for e in form.back_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.hip_posture.id_for_label }}">Hip</label>
+            {{ form.hip_posture }}
+            {% for e in form.hip_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.knee_posture.id_for_label }}">Knee</label>
+            {{ form.knee_posture }}
+            {% for e in form.knee_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.ankle_posture.id_for_label }}">Ankle</label>
+            {{ form.ankle_posture }}
+            {% for e in form.ankle_posture.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <span class="chk-label">Awkward Postures Present</span>
+        <div class="chk-grid">
+          <label class="chk" for="{{ form.bending.id_for_label }}">
+            {{ form.bending }}<span>Bending</span>
+          </label>
+          <label class="chk" for="{{ form.twisting.id_for_label }}">
+            {{ form.twisting }}<span>Twisting</span>
+          </label>
+          <label class="chk" for="{{ form.reaching.id_for_label }}">
+            {{ form.reaching }}<span>Reaching</span>
+          </label>
+          <label class="chk" for="{{ form.overhead_work.id_for_label }}">
+            {{ form.overhead_work }}<span>Overhead Work</span>
+          </label>
+          <label class="chk" for="{{ form.kneeling.id_for_label }}">
+            {{ form.kneeling }}<span>Kneeling</span>
+          </label>
+          <label class="chk" for="{{ form.squatting.id_for_label }}">
+            {{ form.squatting }}<span>Squatting</span>
+          </label>
+          <label class="chk" for="{{ form.static_posture.id_for_label }}">
+            {{ form.static_posture }}<span>Static Posture</span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ B. FORCE ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-hand-rock"></i> B. Force</div>
+      <div class="sec-body">
+        <div class="fgrid">
+          <div class="field">
+            <label for="{{ form.force_required.id_for_label }}">Force Required</label>
+            {{ form.force_required }}
+            {% for e in form.force_required.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.push_force_n.id_for_label }}">Push Force (N)</label>
+            {{ form.push_force_n }}
+            {% for e in form.push_force_n.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.pull_force_n.id_for_label }}">Pull Force (N)</label>
+            {{ form.pull_force_n }}
+            {% for e in form.pull_force_n.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.grip_force_n.id_for_label }}">Grip Force (N)</label>
+            {{ form.grip_force_n }}
+            {% for e in form.grip_force_n.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.lift_force_kg.id_for_label }}">Lift Force (kg)</label>
+            {{ form.lift_force_kg }}
+            {% for e in form.lift_force_kg.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ C. REPETITION ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-redo"></i> C. Repetition</div>
+      <div class="sec-body">
+        <div class="fgrid">
+          <div class="field">
+            <label for="{{ form.repetitions_per_minute.id_for_label }}">Reps / Minute</label>
+            {{ form.repetitions_per_minute }}
+            {% for e in form.repetitions_per_minute.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.repetitions_per_hour.id_for_label }}">Reps / Hour</label>
+            {{ form.repetitions_per_hour }}
+            {% for e in form.repetitions_per_hour.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.cycle_time_seconds.id_for_label }}">Cycle Time (s)</label>
+            {{ form.cycle_time_seconds }}
+            {% for e in form.cycle_time_seconds.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.task_duration_minutes.id_for_label }}">Task Duration (min)</label>
+            {{ form.task_duration_minutes }}
+            {% for e in form.task_duration_minutes.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.cycles_per_shift.id_for_label }}">Cycles / Shift</label>
+            {{ form.cycles_per_shift }}
+            {% for e in form.cycles_per_shift.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ D. MANUAL HANDLING ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-dolly"></i> D. Manual Handling</div>
+      <div class="sec-body">
+        <div class="fgrid">
+          <div class="field">
+            <label for="{{ form.object_weight_kg.id_for_label }}">Object Weight (kg)</label>
+            {{ form.object_weight_kg }}
+            {% for e in form.object_weight_kg.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.lifting_frequency.id_for_label }}">Lifting Frequency</label>
+            {{ form.lifting_frequency }}
+            {% for e in form.lifting_frequency.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.lifting_height_cm.id_for_label }}">Lift Height (cm)</label>
+            {{ form.lifting_height_cm }}
+            {% for e in form.lifting_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.starting_height_cm.id_for_label }}">Start Height (cm)</label>
+            {{ form.starting_height_cm }}
+            {% for e in form.starting_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.ending_height_cm.id_for_label }}">End Height (cm)</label>
+            {{ form.ending_height_cm }}
+            {% for e in form.ending_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.horizontal_reach_cm.id_for_label }}">Horizontal Reach (cm)</label>
+            {{ form.horizontal_reach_cm }}
+            {% for e in form.horizontal_reach_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.carrying_distance_m.id_for_label }}">Carrying Distance (m)</label>
+            {{ form.carrying_distance_m }}
+            {% for e in form.carrying_distance_m.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.push_distance_m.id_for_label }}">Push Distance (m)</label>
+            {{ form.push_distance_m }}
+            {% for e in form.push_distance_m.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.pull_distance_m.id_for_label }}">Pull Distance (m)</label>
+            {{ form.pull_distance_m }}
+            {% for e in form.pull_distance_m.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.handling_type.id_for_label }}">Handling Type</label>
+            {{ form.handling_type }}
+            {% for e in form.handling_type.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.handling_person.id_for_label }}">Person Handling</label>
+            {{ form.handling_person }}
+            {% for e in form.handling_person.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="chk-grid">
+          <label class="chk" for="{{ form.mechanical_assistance_available.id_for_label }}">
+            {{ form.mechanical_assistance_available }}<span>Mechanical Assistance Available</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ E. VIBRATION ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-wave-square"></i> E. Vibration</div>
+      <div class="sec-body">
+        <div class="fgrid cols-2">
+          <div class="field">
+            <label for="{{ form.vibration_exposure_duration.id_for_label }}">Exposure Duration</label>
+            {{ form.vibration_exposure_duration }}
+            {% for e in form.vibration_exposure_duration.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.vibration_tool_used.id_for_label }}">Equipment / Tool Used</label>
+            {{ form.vibration_tool_used }}
+            {% for e in form.vibration_tool_used.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="chk-grid">
+          <label class="chk" for="{{ form.hand_arm_vibration.id_for_label }}">
+            {{ form.hand_arm_vibration }}<span>Hand-Arm Vibration</span>
+          </label>
+          <label class="chk" for="{{ form.whole_body_vibration.id_for_label }}">
+            {{ form.whole_body_vibration }}<span>Whole-Body Vibration</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ F. WORKSTATION ============ -->
+    <div class="sec">
+      <div class="sec-head"><i class="fas fa-desktop"></i> F. Workstation</div>
+      <div class="sec-body">
+        <div class="fgrid">
+          <div class="field">
+            <label for="{{ form.work_surface_height_cm.id_for_label }}">Work Surface (cm)</label>
+            {{ form.work_surface_height_cm }}
+            {% for e in form.work_surface_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.chair_height_cm.id_for_label }}">Chair Height (cm)</label>
+            {{ form.chair_height_cm }}
+            {% for e in form.chair_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.monitor_height_cm.id_for_label }}">Monitor Height (cm)</label>
+            {{ form.monitor_height_cm }}
+            {% for e in form.monitor_height_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.reach_distance_cm.id_for_label }}">Reach Distance (cm)</label>
+            {{ form.reach_distance_cm }}
+            {% for e in form.reach_distance_cm.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.keyboard_position.id_for_label }}">Keyboard Position</label>
+            {{ form.keyboard_position }}
+            {% for e in form.keyboard_position.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.mouse_position.id_for_label }}">Mouse Position</label>
+            {{ form.mouse_position }}
+            {% for e in form.mouse_position.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <span class="chk-label">Workstation Conditions</span>
+        <div class="chk-grid">
+          <label class="chk" for="{{ form.leg_room_adequate.id_for_label }}">
+            {{ form.leg_room_adequate }}<span>Leg Room Adequate</span>
+          </label>
+          <label class="chk" for="{{ form.lighting_adequate.id_for_label }}">
+            {{ form.lighting_adequate }}<span>Lighting Adequate</span>
+          </label>
+          <label class="chk" for="{{ form.workspace_adequate.id_for_label }}">
+            {{ form.workspace_adequate }}<span>Workspace Adequate</span>
+          </label>
+          <label class="chk" for="{{ form.adjustable_workstation_available.id_for_label }}">
+            {{ form.adjustable_workstation_available }}<span>Adjustable Workstation Available</span>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="{{ form.workstation_notes.id_for_label }}">Workstation Notes</label>
+          {{ form.workstation_notes }}
+          {% for e in form.workstation_notes.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="action-bar">
+      <button type="submit" class="btn-teal">
+        <i class="fas fa-check"></i> Save Risk Factors
+      </button>
+      <a href="{% url 'ergonomics:detail' assessment.pk %}" class="btn-ghost">
+        Cancel
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

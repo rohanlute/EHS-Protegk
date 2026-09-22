@@ -1,0 +1,712 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Site Benchmarks | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item active">Site Benchmarks</li>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* KPI GRID — explicit gap, roomier than Bootstrap's g-3       */
+  /* ========================================================== */
+  .benchmark-kpis {
+    --kpi-gap: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: calc(var(--kpi-gap) / -2);
+    margin-right: calc(var(--kpi-gap) / -2);
+    margin-bottom: 28px;
+    row-gap: var(--kpi-gap);
+  }
+
+  .benchmark-kpis > [class*="col-"] {
+    padding-left: calc(var(--kpi-gap) / 2);
+    padding-right: calc(var(--kpi-gap) / 2);
+    display: flex;
+  }
+
+  /* ========================================================== */
+  /* KPI CARDS                                                   */
+  /* ========================================================== */
+  .metric {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 24px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    height: 100%;
+    width: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .metric:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--primary-teal);
+  }
+
+  .metric strong {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--primary-teal);
+    line-height: 1.05;
+    letter-spacing: -0.3px;
+  }
+
+  .metric span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    line-height: 1.4;
+  }
+
+  .metric.metric-warning strong { color: var(--warning-amber); }
+  .metric.metric-danger  strong { color: var(--danger-red); }
+  .metric.metric-success strong { color: var(--success-green); }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 16px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-body {
+    padding: 0;
+  }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 14px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========================================================== */
+  /* RANK COLUMN                                                 */
+  /* ========================================================== */
+  .rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .rank.rank-1 {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+
+  .rank.rank-2 {
+    background: rgba(249, 115, 22, 0.15);
+    color: #ea580c;
+  }
+
+  .rank.rank-3 {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning-amber);
+  }
+
+  /* ========================================================== */
+  /* METER / BAR                                                 */
+  /* ========================================================== */
+  .meter {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 8px;
+    background: rgba(100, 116, 139, 0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    vertical-align: middle;
+  }
+
+  .meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--success-green);
+  }
+
+  .meter-fill.bar-good { background: var(--success-green); }
+  .meter-fill.bar-warn { background: var(--warning-amber); }
+  .meter-fill.bar-bad  { background: var(--danger-red); }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+    background: rgba(100, 116, 139, 0.10);
+    min-width: 56px;
+  }
+
+  .score-pill.score-good { color: var(--success-green); background: rgba(34, 197, 94, 0.12); }
+  .score-pill.score-warn { color: var(--warning-amber); background: rgba(217, 119, 6, 0.12); }
+  .score-pill.score-bad  { color: var(--danger-red);   background: rgba(220, 38, 38, 0.12); }
+
+  /* ========================================================== */
+  /* INFO ROWS (legend card)                                     */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 4px 0;
+    line-height: 1.6;
+  }
+
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .empty-state i {
+    font-size: 42px;
+    display: block;
+    margin-bottom: 14px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  .empty-state strong {
+    display: block;
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .table tbody td:last-child {
+      border-bottom: none;
+    }
+
+    .table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.3px;
+      margin-right: 12px;
+    }
+
+    .meter {
+      width: 80px;
+    }
+
+    .benchmark-kpis {
+      --kpi-gap: 16px;
+    }
+
+    .metric {
+      padding: 20px 20px;
+    }
+
+    .metric strong {
+      font-size: 26px;
+    }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        <i class="fas fa-balance-scale" style="color:var(--primary-teal);"></i>
+        Site Benchmarks
+      </h1>
+      <p>Compare ergonomic performance across sites. Sorted by average risk score (highest first).</p>
+    </div>
+    <div class="ergo-actions">
+      <a href="{% url 'ergonomics:site_benchmarks_api' %}" target="_blank" class="btn-outline-secondary">
+        <i class="fas fa-code"></i> JSON
+      </a>
+      <a href="{% url 'ergonomics:management_report_export' %}" class="btn-primary">
+        <i class="fas fa-file-excel"></i> Management Report
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KPI CARDS                                                    -->
+  <!-- ============================================================ -->
+  <div class="row benchmark-kpis">
+
+    <div class="col-md-3 col-6">
+      <div class="metric">
+        <strong>{{ sites_count }}</strong>
+        <span>Sites Compared</span>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="metric">
+        <strong>{{ total_assessments }}</strong>
+        <span>Total Assessments</span>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="metric metric-danger">
+        <strong>{{ total_high_risk }}</strong>
+        <span>High-Risk Tasks</span>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="metric metric-warning">
+        <strong>{{ total_msd }}</strong>
+        <span>MSD Cases</span>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-6">
+      <div class="metric">
+        <strong>{{ overall_avg_score }}</strong>
+        <span>Overall Avg Risk Score</span>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-6">
+      <div class="metric metric-success">
+        <strong>{{ overall_action_closure }}%</strong>
+        <span>Avg Action Closure</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- BENCHMARK TABLE                                              -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-table" style="color:var(--primary-teal);"></i>
+        Site-by-Site Comparison
+      </span>
+      <span class="text-muted" style="font-size:12px;">
+        {{ sites_count }} site{{ sites_count|pluralize }} &middot; sorted by avg risk score
+      </span>
+    </div>
+
+    <div class="card-body p-0">
+      {% if rows %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:70px;">Rank</th>
+              <th>Site</th>
+              <th>Assessments</th>
+              <th>High-Risk Tasks</th>
+              <th>Avg Risk Score</th>
+              <th>MSD Cases</th>
+              <th>Action Closure</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+
+              <td data-label="Rank">
+                <span class="rank rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
+              </td>
+
+              <td data-label="Site">
+                <strong>{{ row.plant }}</strong>
+              </td>
+
+              <td data-label="Assessments">
+                {{ row.total_assessments }}
+              </td>
+
+              <td data-label="High-Risk Tasks">
+                <span class="risk-badge
+                  {% if row.high_risk_tasks > 20 %}risk-badge-very_high
+                  {% elif row.high_risk_tasks > 10 %}risk-badge-high
+                  {% elif row.high_risk_tasks > 0 %}risk-badge-medium
+                  {% else %}risk-badge-low{% endif %}">
+                  {{ row.high_risk_tasks }}
+                </span>
+              </td>
+
+              <td data-label="Avg Risk Score">
+                <span class="score-pill
+                  {% if row.average_risk_score > 7 %}score-bad
+                  {% elif row.average_risk_score > 4 %}score-warn
+                  {% else %}score-good{% endif %}">
+                  {{ row.average_risk_score }}
+                </span>
+              </td>
+
+              <td data-label="MSD Cases">
+                {% if row.msd_cases %}
+                <span class="risk-badge
+                  {% if row.msd_cases > 10 %}risk-badge-very_high
+                  {% elif row.msd_cases > 5 %}risk-badge-high
+                  {% else %}risk-badge-medium{% endif %}">
+                  {{ row.msd_cases }}
+                </span>
+                {% else %}
+                <span class="risk-badge risk-badge-low">0</span>
+                {% endif %}
+              </td>
+
+              <td data-label="Action Closure">
+                {% if row.action_closure is not None %}
+                <span style="font-weight:700;
+                  {% if row.action_closure >= 80 %}color:var(--success-green);
+                  {% elif row.action_closure >= 60 %}color:var(--warning-amber);
+                  {% else %}color:var(--danger-red);{% endif %}">
+                  {{ row.action_closure }}%
+                </span>
+                <span class="meter" style="margin-left:10px;">
+                  <span class="meter-fill
+                    {% if row.action_closure >= 80 %}bar-good
+                    {% elif row.action_closure >= 60 %}bar-warn
+                    {% else %}bar-bad{% endif %}"
+                    style="width: {{ row.action_closure }}%;"></span>
+                </span>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-balance-scale"></i>
+        <strong>No site data to compare yet</strong>
+        Once assessments and corrective actions are recorded across your sites, they'll appear here.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND                                                       -->
+  <!-- ============================================================ -->
+  {% if rows %}
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-info-circle" style="color:var(--primary-teal);"></i>
+        How to read this
+      </span>
+    </div>
+
+    <div class="card-body" style="padding: 22px 26px;">
+      <div class="row g-3">
+
+        <div class="col-md-3">
+          <div class="info-row">
+            <strong>Avg Risk Score</strong>
+            Mean of every scored assessment at the site.
+            Lower is better. &gt;7 is critical, 4–7 is elevated, &lt;4 is healthy.
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="info-row">
+            <strong>High-Risk Tasks</strong>
+            Count of assessments rated HIGH or VERY_HIGH.
+            &gt;20 is a strong signal something systemic is wrong.
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="info-row">
+            <strong>MSD Cases</strong>
+            Reported MSD / discomfort cases at the site.
+            The count covers the same filter window as the assessments.
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="info-row">
+            <strong>Action Closure</strong>
+            Percentage of corrective actions that have been closed (verified)
+            vs total created. Higher is better.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

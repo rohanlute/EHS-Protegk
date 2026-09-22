@@ -1,0 +1,509 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ method_name|default:"Method Scoring" }} — {{ assessment.assessment_id }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:assessments' %}">Assessments</a></li>
+<li class="breadcrumb-item">
+  <a href="{% url 'ergonomics:detail' assessment.pk %}">{{ assessment.assessment_id }}</a>
+</li>
+<li class="breadcrumb-item active">{{ method_name|default:"Method Scoring" }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .ehs-card .card-header .card-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .ehs-card .card-body { padding: 24px; }
+
+  /* ========================================================== */
+  /* SCORE GRID — 2 columns of fields                            */
+  /* ========================================================== */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 24px;
+  }
+  @media (max-width: 768px) {
+    .score-grid { grid-template-columns: 1fr; gap: 18px; }
+  }
+
+  .score-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .score-field > label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .score-field .form-control,
+  .score-field .form-select,
+  .score-field input,
+  .score-field select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    width: 100%;
+    display: block;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .score-field .form-control:focus,
+  .score-field .form-select:focus,
+  .score-field input:focus,
+  .score-field select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  .score-field .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: block;
+    line-height: 1.5;
+  }
+
+  .score-field .error-text {
+    font-size: 12px;
+    color: var(--danger-red);
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* RESULT PANEL                                                */
+  /* ========================================================== */
+  .result-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-top: 2px solid var(--border-color);
+  }
+  @media (max-width: 768px) {
+    .result-panel { grid-template-columns: 1fr; }
+  }
+
+  .result-box {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .result-box .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .result-box .value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary-teal);
+    line-height: 1.1;
+  }
+  .result-box .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+    align-self: flex-start;
+  }
+  .result-box .risk-badge.risk-low      { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .result-box .risk-badge.risk-medium   { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .result-box .risk-badge.risk-high     { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .result-box .risk-badge.risk-very-high{ background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* METHOD HINT                                                 */
+  /* ========================================================== */
+  .method-hint {
+    background: var(--primary-teal-light);
+    border-left: 3px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .method-hint strong { color: var(--text-primary); }
+
+  /* ========================================================== */
+  /* FORM FOOTER                                                 */
+  /* ========================================================== */
+  .form-footer {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ehs-card .card-body { padding: 18px; }
+    .form-footer { flex-direction: column; }
+    .form-footer .btn-primary,
+    .form-footer .btn-outline-secondary { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        <i class="fas fa-calculator" style="color:var(--primary-teal);"></i>
+        {{ method_name|default:"Method" }} Scoring
+      </h1>
+      <p>
+        Assessment <strong>{{ assessment.assessment_id|default:"—" }}</strong>
+        {% if assessment %} — {{ assessment.job_role }} / {{ assessment.task }}{% endif %}
+      </p>
+    </div>
+    {% if assessment %}
+    <a href="{% url 'ergonomics:detail' assessment.pk %}" class="btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Assessment
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- METHOD HINT                                                  -->
+  <!-- ============================================================ -->
+  <div class="method-hint">
+    <strong>How to score:</strong>
+    Enter the numeric score for each body part or parameter below.
+    The result panel at the bottom updates automatically as you enter values.
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="ehs-card">
+      <div class="card-header">
+        <span class="card-title">
+          <i class="fas fa-list-ol" style="color:var(--primary-teal);"></i>
+          Scoring Inputs
+        </span>
+        <span style="font-size:12px;font-weight:500;color:var(--text-muted);">
+          {{ method_name|default:"Method" }}
+        </span>
+      </div>
+
+      <div class="card-body">
+
+        {% if form.non_field_errors %}
+        <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25);color:#991b1b;padding:14px 18px;border-radius:8px;margin-bottom:20px;">
+          <strong>Please fix the following:</strong>
+          <ul style="margin:8px 0 0 0;padding-left:18px;">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <div class="score-grid">
+          {% for field in form %}
+            <div class="score-field">
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+              </label>
+              {{ field }}
+              {% if field.help_text %}
+                <span class="hint">{{ field.help_text }}</span>
+              {% endif %}
+              {% for error in field.errors %}
+                <span class="error-text">{{ error }}</span>
+              {% endfor %}
+            </div>
+          {% empty %}
+            <div class="score-field" style="grid-column: 1 / -1;">
+              <p style="color:var(--text-muted);font-size:13px;margin:0;">
+                No scoring fields are available for this method.
+              </p>
+            </div>
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- LIVE RESULT PANEL                                            -->
+      <!-- ============================================================ -->
+      <div class="result-panel">
+        <div class="result-box">
+          <div class="label">Calculated Score</div>
+          <div class="value" id="live-score">—</div>
+        </div>
+        <div class="result-box">
+          <div class="label">Risk Level</div>
+          <div class="risk-badge" id="live-risk">Pending</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FORM FOOTER                                                  -->
+    <!-- ============================================================ -->
+    <div class="form-footer">
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-check"></i> Save Scores
+      </button>
+      {% if assessment %}
+      <a href="{% url 'ergonomics:detail' assessment.pk %}" class="btn-outline-secondary">
+        <i class="fas fa-times"></i> Cancel
+      </a>
+      {% endif %}
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  // ---- Method-specific thresholds ----
+  const METHOD_LEVELS = {
+    rula:           { thresholds: [2, 4, 6],        max: 7  },
+    reba:           { thresholds: [3, 7, 10],       max: 15 },
+    niosh:          { thresholds: [1, 2, 3],        max: 5  },
+    owas:           { thresholds: [1, 2, 3],        max: 4  },
+    ocra:           { thresholds: [1.5, 2.2, 3.5],  max: 5  },
+    strain_index:   { thresholds: [3, 5, 7],        max: 10 },
+    snook_ciriello: { thresholds: [0.8, 1, 1.5],    max: 3  }
+  };
+
+  // Determine method slug from URL: /method/<slug>/
+  const pathMatch = window.location.pathname.match(/\/method\/([a-z_]+)\//);
+  const methodSlug = pathMatch ? pathMatch[1] : "rula";
+  const config = METHOD_LEVELS[methodSlug] || METHOD_LEVELS.rula;
+
+  const scoreInputs = document.querySelectorAll(
+    ".score-field select, .score-field input"
+  );
+
+  function levelFromScore(score) {
+    if (score <= 0) return 0;
+    const t = config.thresholds;
+    if (score <= t[0]) return 1;
+    if (score <= t[1]) return 2;
+    if (score <= t[2]) return 3;
+    return 4;
+  }
+
+  function updateVisuals() {
+    let total = 0;
+
+    scoreInputs.forEach(function (input) {
+      const v = parseFloat(input.value);
+      if (!isNaN(v)) total += v;
+    });
+
+    const scoreEl = document.getElementById("live-score");
+    const riskEl = document.getElementById("live-risk");
+
+    if (scoreEl) scoreEl.textContent = total > 0 ? total.toFixed(2) : "—";
+
+    let risk = "Pending";
+    let riskClass = "";
+
+    if (total > 0) {
+      const level = levelFromScore(total);
+      if (level === 1) { risk = "Low";       riskClass = "risk-low"; }
+      else if (level === 2) { risk = "Medium";    riskClass = "risk-medium"; }
+      else if (level === 3) { risk = "High";      riskClass = "risk-high"; }
+      else if (level === 4) { risk = "Very High"; riskClass = "risk-very-high"; }
+    }
+
+    if (riskEl) {
+      riskEl.textContent = risk;
+      riskEl.className = "risk-badge" + (riskClass ? " " + riskClass : "");
+    }
+  }
+
+  scoreInputs.forEach(function (input) {
+    input.addEventListener("change", updateVisuals);
+    input.addEventListener("input", updateVisuals);
+  });
+
+  // Initial run
+  updateVisuals();
+
+})();
+</script>
+{% endblock %}

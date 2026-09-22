@@ -1,0 +1,777 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Verify {{ action.action_id }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:verifications' %}">Verifications</a></li>
+<li class="breadcrumb-item active">{{ action.action_id }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px 24px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px 24px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.4);
+    color: #fff;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px 24px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 14px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ehs-card .card-body { padding: 24px; }
+
+  /* ========================================================== */
+  /* INFO ROWS                                                   */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 6px 0;
+    line-height: 1.55;
+  }
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .info-row a {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .info-row a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .status-badge.status-pending_verification {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-teal);
+  }
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+  .status-badge.status-closed,
+  .status-badge.status-completed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+  .status-badge.status-open,
+  .status-badge.status-assigned,
+  .status-badge.status-in_progress {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning-amber);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .priority-badge.priority-low       { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+  .priority-badge.priority-medium    { background: rgba(13, 148, 136, 0.12);  color: var(--primary-teal); }
+  .priority-badge.priority-high      { background: rgba(217, 119, 6, 0.12);   color: var(--warning-amber); }
+  .priority-badge.priority-very_high { background: rgba(220, 38, 38, 0.12);   color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 13px;
+    border: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.6;
+  }
+  .notice i { color: var(--primary-teal); margin-top: 3px; flex-shrink: 0; font-size: 16px; }
+  .notice.notice-danger {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #7f1d1d;
+  }
+  .notice.notice-danger i { color: var(--danger-red); }
+  .notice.notice-locked {
+    background: rgba(217, 119, 6, 0.06);
+    border-color: rgba(217, 119, 6, 0.25);
+    color: #78350f;
+  }
+  .notice.notice-locked i { color: var(--warning-amber); }
+  .notice strong {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .notice p { margin: 0; font-size: 13px; }
+  .notice small { color: #7f1d1d; opacity: 0.75; }
+
+  /* ========================================================== */
+  /* DECISION BAR                                                */
+  /* ========================================================== */
+  .decision-bar {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 22px 24px;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.02), rgba(13, 148, 136, 0.06));
+  }
+
+  /* ========================================================== */
+  /* EVIDENCE BOX                                                */
+  /* ========================================================== */
+  .evidence-box {
+    background: var(--primary-teal-light);
+    border: 1px dashed rgba(13, 148, 136, 0.4);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .evidence-box i {
+    color: var(--primary-teal);
+    font-size: 20px;
+  }
+  .evidence-box a {
+    color: var(--primary-teal-dark);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .evidence-box a:hover { text-decoration: underline; }
+
+  /* ========================================================== */
+  /* MODAL STYLING                                               */
+  /* ========================================================== */
+  .modal-content {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  }
+  .modal-header {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-bottom: 2px solid #fecaca;
+    padding: 18px 24px;
+  }
+  .modal-title {
+    color: #991b1b;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-body {
+    padding: 22px 24px;
+  }
+  .modal-body p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .modal-body label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .modal-body textarea {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 14px;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+    resize: vertical;
+    min-height: 110px;
+  }
+  .modal-body textarea:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .decision-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .decision-bar .btn-primary,
+    .decision-bar .btn-danger,
+    .decision-bar .btn-outline-secondary,
+    .decision-bar form {
+      width: 100%;
+    }
+    .decision-bar form button {
+      width: 100%;
+      justify-content: center;
+    }
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer button { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        {{ action.action_id }}
+        <span class="status-badge status-{{ action.status|lower }}">
+          {{ action.get_status_display }}
+        </span>
+      </h1>
+      <p>Review the work submitted by the responsible person. Approve or reject below.</p>
+    </div>
+    <a href="{% url 'ergonomics:verifications' %}" class="btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Queue
+    </a>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ACTION DEFINITION                                            -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-info-circle" style="color:var(--primary-teal);"></i>
+        Action Definition
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Assessment</strong>
+            {% if action.assessment %}
+              <a href="{% url 'ergonomics:detail' action.assessment.pk %}">
+                {{ action.assessment.assessment_id }}
+              </a>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Risk Level</strong>
+            {% if action.assessment.risk_level %}
+              <span class="risk-badge risk-badge-{{ action.assessment.risk_level|lower }}">
+                {{ action.assessment.get_risk_level_display }}
+              </span>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Action Required</strong>
+            {{ action.action_description|default:"—" }}
+          </div>
+        </div>
+
+        {% if action.root_cause %}
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Root Cause</strong>
+            {{ action.root_cause }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Control Type</strong>
+            {{ action.get_control_type_display|default:"—" }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Priority</strong>
+            {% if action.priority %}
+              <span class="priority-badge priority-{{ action.priority|lower }}">
+                {{ action.get_priority_display }}
+              </span>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Target Date</strong>
+            {{ action.target_date|default:"—" }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Site</strong>
+            {{ action.assessment.plant.name|default:"—" }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Department</strong>
+            {{ action.assessment.department.name|default:"—" }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SUBMISSION                                                   -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-user-check" style="color:var(--primary-teal);"></i>
+        Submission
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Responsible Person</strong>
+            {{ action.responsible_person.get_full_name|default:"—" }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Completion Date</strong>
+            {{ action.completion_date|default:"—" }}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Evidence</strong>
+            {% if action.evidence %}
+              <div class="evidence-box">
+                <i class="fas fa-paperclip"></i>
+                <a href="{{ action.evidence.url }}" target="_blank">
+                  View uploaded evidence
+                </a>
+              </div>
+            {% else %}
+              <div class="notice notice-danger" style="display:inline-flex;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>No evidence uploaded by the responsible person.</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if action.remarks %}
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Remarks</strong>
+            {{ action.remarks }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if action.rejection_remark %}
+        <div class="col-12">
+          <div class="notice notice-danger">
+            <i class="fas fa-times-circle"></i>
+            <div>
+              <strong>Previously Rejected</strong>
+              <p>{{ action.rejection_remark }}</p>
+              <small>
+                by {{ action.rejected_by.get_full_name|default:action.rejected_by }}
+                {% if action.rejected_at %}
+                  on {{ action.rejected_at|date:"d M Y, H:i" }}
+                {% endif %}
+              </small>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DECISION                                                     -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-gavel" style="color:var(--primary-teal);"></i>
+        {% if can_verify %}Your Decision{% else %}Verification Access{% endif %}
+      </span>
+    </div>
+    <div class="card-body p-0">
+
+      {% if can_verify %}
+        {# ---------- Plant Head / Superuser view ---------- #}
+        <div class="decision-bar">
+
+          <form method="post" action="{% url 'ergonomics:approve_action' action.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary"
+                    onclick="return confirm('Approve this action and mark it as verified?');">
+              <i class="fas fa-check-circle"></i> Approve &amp; Verify
+            </button>
+          </form>
+
+          <button type="button" class="btn-danger"
+                  data-bs-toggle="modal" data-bs-target="#rejectModal">
+            <i class="fas fa-times-circle"></i> Reject
+          </button>
+
+          <a href="{% url 'ergonomics:verifications' %}" class="btn-outline-secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+
+        </div>
+      {% else %}
+        {# ---------- Everyone else: view-only ---------- #}
+        <div class="decision-bar" style="justify-content: flex-start;">
+          <div class="notice notice-locked" style="margin: 0; width: 100%;">
+            <i class="fas fa-lock"></i>
+            <div>
+              <strong>View only</strong>
+              Only the <b>Plant Head</b> can approve or reject corrective actions.
+              You can review the submission, but the decision must be made by the
+              Plant Head of the plant this action belongs to.
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+{% if can_verify %}
+<!-- ============================================================ -->
+<!-- REJECT MODAL — only rendered for verifiers                   -->
+<!-- ============================================================ -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <form method="post" action="{% url 'ergonomics:reject_action' action.pk %}">
+        {% csrf_token %}
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="rejectModalLabel">
+            <i class="fas fa-times-circle"></i>
+            Reject this action
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            <strong style="color:#991b1b;">This action will be sent back for revision.</strong><br>
+            The responsible person will see your reason and must fix the issue, then resubmit.
+          </p>
+
+          <label for="rejection_remark">
+            Rejection Reason <span style="color:#dc2626;">*</span>
+          </label>
+          <textarea
+            name="rejection_remark"
+            id="rejection_remark"
+            placeholder="Explain what needs to be fixed or re-done..."
+            required
+            minlength="10"
+          ></textarea>
+          <small style="color:#64748b;font-size:12px;display:block;margin-top:6px;">
+            Minimum 10 characters. Be specific so the person knows exactly what to fix.
+          </small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button type="submit" class="btn-danger">
+            <i class="fas fa-paper-plane"></i> Submit Rejection
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if can_verify %}
+<script>
+  (function () {
+    var btn = document.querySelector('[data-bs-target="#rejectModal"]');
+    var modalEl = document.getElementById('rejectModal');
+    if (!btn || !modalEl) return;
+
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      modalEl.style.display = 'block';
+      modalEl.classList.add('show');
+      modalEl.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      modalEl.removeAttribute('aria-hidden');
+
+      // Close on dismiss buttons
+      modalEl.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          modalEl.style.display = 'none';
+          modalEl.classList.remove('show');
+        });
+      });
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

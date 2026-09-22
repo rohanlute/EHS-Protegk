@@ -1,0 +1,477 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Report MSD Case | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:msd_list' %}">MSD Discomfort</a></li>
+<li class="breadcrumb-item active">Report New Case</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 28px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ehs-card .card-body { padding: 28px 32px; }
+
+  /* ========================================================== */
+  /* FORM GRID                                                   */
+  /* ========================================================== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px 24px;
+  }
+  .form-grid .form-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .form-grid .form-field.full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                               */
+  /* ========================================================== */
+  .form-field > label,
+  .form-field > .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .form-field .form-control,
+  .form-field .form-select,
+  .form-field input:not([type="checkbox"]),
+  .form-field select,
+  .form-field textarea {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    width: 100%;
+    display: block;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .form-field .form-control:focus,
+  .form-field .form-select:focus,
+  .form-field input:not([type="checkbox"]):focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+  .form-field textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.55;
+  }
+
+  /* Required asterisk */
+  .form-field .text-danger {
+    color: var(--danger-red);
+    font-weight: 700;
+  }
+
+  /* Help text */
+  .form-field .form-text,
+  .form-field small.text-muted {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: block;
+    line-height: 1.5;
+  }
+
+  /* Errors */
+  .form-field .errorlist,
+  .form-field .text-danger.small {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0 0;
+    color: var(--danger-red);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ========================================================== */
+  /* CHECKBOX — card style, no overlap                           */
+  /* ========================================================== */
+  .form-field .form-check {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 14px 18px;
+    min-height: 52px;
+    background: #f8fafc;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .form-field .form-check:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  /* Target checkbox by type — overrides Django's default styling */
+  .form-field .form-check input[type="checkbox"],
+  .form-field input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    border: 1.5px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    accent-color: var(--primary-teal);
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    position: static !important;
+    float: none !important;
+    display: inline-block !important;
+    vertical-align: middle;
+  }
+
+  /* Target label by attribute — matches Django's <label for="..."> */
+  .form-field .form-check label,
+  .form-field .form-check .form-check-label,
+  .form-field .form-check label[for] {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary);
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+    line-height: 1.4;
+    flex: 1;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 13px;
+    border: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .notice i {
+    color: var(--primary-teal);
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .notice strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .notice.notice-danger {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #991b1b;
+  }
+  .notice.notice-danger i { color: var(--danger-red); }
+  .notice.notice-danger strong { color: #991b1b; }
+
+  /* ========================================================== */
+  /* FORM FOOTER                                                 */
+  /* ========================================================== */
+  .form-footer {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 1100px) {
+    .form-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px 20px;
+    }
+  }
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ehs-card .card-body { padding: 22px; }
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .form-grid .form-field.full-width { grid-column: auto; }
+    .form-footer { flex-direction: column; }
+    .form-footer .btn-primary,
+    .form-footer .btn-outline-secondary { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        <i class="fas fa-user-injured" style="color:var(--primary-teal);"></i>
+        Report MSD Case
+      </h1>
+      <p>Record a worker-reported musculoskeletal discomfort. This feeds into the ergonomic assessment workflow.</p>
+    </div>
+  </div>
+
+  <div class="notice">
+    <i class="fas fa-info-circle"></i>
+    <div>
+      <strong>Why track MSD discomfort?</strong>
+      Discomfort is a leading indicator. Catching it early lets you adjust workstations before it becomes a formal injury. Each MSD case can be linked to an ergonomic assessment.
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="ehs-card">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-clipboard-list" style="color:var(--primary-teal);"></i>
+            MSD Case Details
+          </span>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="notice notice-danger">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>
+                <strong>Please fix the following:</strong>
+                <ul style="margin:8px 0 0 0; padding-left:18px;">
+                  {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="form-grid">
+              {% for field in form %}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                  {# === Checkbox === #}
+                  <div class="form-field">
+                    <div class="form-check">
+                      {{ field }}
+                      <label for="{{ field.id_for_label }}">
+                        {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                      </label>
+                    </div>
+                    {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+
+                {% elif field.field.widget.input_type == 'textarea' %}
+                  {# === Textarea — full width === #}
+                  <div class="form-field full-width">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                      {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+
+                {% else %}
+                  {# === Normal field === #}
+                  <div class="form-field">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                      {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <div class="form-footer">
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-check"></i> Report Case
+              </button>
+              <a href="{% url 'ergonomics:msd_list' %}" class="btn-outline-secondary">
+                <i class="fas fa-times"></i> Cancel
+              </a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,1067 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Assessment {{ assessment.assessment_id }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:assessments' %}">Assessments</a></li>
+<li class="breadcrumb-item active">{{ assessment.assessment_id }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+  
+  .btn-outline-info {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(13, 148, 136, 0.4);
+    color: var(--primary-teal);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-info:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+  }
+  .btn-outline-warning {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(217, 119, 6, 0.4);
+    color: var(--warning-amber);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-warning:hover {
+    background: rgba(217, 119, 6, 0.10);
+    border-color: var(--warning-amber);
+  }
+  .btn-outline-danger {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(220, 38, 38, 0.4);
+    color: var(--danger-red);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-danger:hover {
+    background: rgba(220, 38, 38, 0.10);
+    border-color: var(--danger-red);
+  }
+
+  /* Small buttons — used in card headers (top-right corner) */
+  .btn-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--bg-card);
+  }
+  .btn-card-action:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+  .btn-card-action.primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+  }
+  .btn-card-action.primary:hover {
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.35);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  /* ========================================================== */
+  /* CARDS — card-header uses space-between so any button inside */
+  /* it automatically lands in the top-right corner              */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    height: 100%;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 22px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;   /* ← this is what pushes buttons right */
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* Optional: allow multiple buttons in the header, grouped right */
+  .ehs-card .card-header .card-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .ehs-card .card-body { padding: 22px 24px; }
+  .ehs-card .card-body.p-0 { padding: 0; }
+
+  /* ========================================================== */
+  /* INFO GRID                                                   */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 4px 0;
+    line-height: 1.55;
+  }
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .info-row a {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .info-row a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* RESULT PANEL                                                */
+  /* ========================================================== */
+  .result-score {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--primary-teal);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .result-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+  }
+  .result-action {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .table tbody tr:hover { background: var(--primary-teal-light); }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .table a { color: var(--primary-teal); font-weight: 600; text-decoration: none; }
+  .table a:hover { color: var(--primary-teal-dark); text-decoration: underline; }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-badge.status-draft,
+  .status-badge.status-pending,
+  .status-badge.status-open,
+  .status-badge.status-in_progress,
+  .status-badge.status-assigned {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--pending-orange);
+  }
+  .status-badge.status-approved,
+  .status-badge.status-completed,
+  .status-badge.status-closed,
+  .status-badge.status-implemented {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+  .status-badge.status-submitted,
+  .status-badge.status-under_review,
+  .status-badge.status-pending_verification {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+  .status-badge.status-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .priority-badge.priority-low       { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+  .priority-badge.priority-medium    { background: rgba(13, 148, 136, 0.12);  color: var(--primary-teal); }
+  .priority-badge.priority-high      { background: rgba(217, 119, 6, 0.12);   color: var(--warning-amber); }
+  .priority-badge.priority-very_high { background: rgba(220, 38, 38, 0.12);   color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* REASSESSMENT SPECIFIC                                       */
+  /* ========================================================== */
+  .reduction-up   { color: var(--success-green); font-weight: 700; }
+  .reduction-down { color: var(--danger-red);    font-weight: 700; }
+  .reduction-flat { color: var(--text-muted); }
+
+  .remarks-row td {
+    background: var(--primary-teal-light);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    text-align: left;
+  }
+  .notice.notice-warning {
+    background: rgba(217, 119, 6, 0.08);
+    border-color: rgba(217, 119, 6, 0.25);
+    color: #92400e;
+  }
+  .notice strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* ========================================================== */
+  /* LIST                                                        */
+  /* ========================================================== */
+  .ehs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .ehs-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .ehs-list li:last-child { border-bottom: none; }
+  .ehs-list li.empty {
+    justify-content: center;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state i {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ergo-header .ergo-actions { justify-content: stretch; }
+    .ergo-header .ergo-actions .btn-primary,
+    .ergo-header .ergo-actions .btn-outline-primary,
+    .ergo-header .ergo-actions .btn-outline-info,
+    .ergo-header .ergo-actions .btn-outline-warning,
+    .ergo-header .ergo-actions .btn-outline-danger,
+    .ergo-header .ergo-actions .btn-outline-secondary {
+      flex: 1;
+      justify-content: center;
+    }
+    .table thead { display: none; }
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+    .table tbody td:last-child { border-bottom: none; }
+    .result-score { font-size: 40px; }
+    .ehs-card .card-header { flex-direction: column; align-items: stretch; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        {{ assessment.assessment_id }}
+        {% if assessment.risk_level %}
+        <span class="risk-badge risk-badge-{{ assessment.risk_level|lower }}">{{ assessment.get_risk_level_display }}</span>
+        {% endif %}
+      </h1>
+      <p>
+        {{ assessment.plant.name }} &middot;
+        {{ assessment.department.name }} &middot;
+        {{ assessment.job_role }} / {{ assessment.task }}
+      </p>
+    </div>
+    <div class="ergo-actions">
+      <a href="{% url 'ergonomics:assessment_edit' assessment.pk %}" class="btn-outline-primary">
+        <i class="fas fa-pencil-alt"></i> Edit
+      </a>
+
+      {% if assessment.score is not None %}
+      <a href="{% url 'ergonomics:reassess' assessment.pk %}" class="btn-outline-info">
+        <i class="fas fa-redo"></i> Reassess
+      </a>
+      {% endif %}
+
+      {% if assessment.risk_level == "HIGH" or assessment.risk_level == "VERY_HIGH" %}
+      <a href="{% url 'ergonomics:action_create' %}?assessment={{ assessment.pk }}" class="btn-outline-warning">
+        <i class="fas fa-tools"></i> Corrective Action
+      </a>
+      {% endif %}
+
+      <a href="{% url 'ergonomics:assessment_delete' assessment.pk %}" class="btn-outline-danger">
+        <i class="fas fa-trash"></i> Delete
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- BASIC INFO + RESULT                                          -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-8">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-info-circle" style="color:var(--primary-teal);"></i>
+            Basic Information
+          </span>
+          <a href="{% url 'ergonomics:assessment_edit' assessment.pk %}" class="btn-card-action">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </a>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="info-row"><strong>Area</strong>{{ assessment.area|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Worker</strong>{{ assessment.worker.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Workers Exposed</strong>{{ assessment.workers_exposed }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Shift</strong>{{ assessment.shift|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Assessment Type</strong>{{ assessment.get_assessment_type_display }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Method</strong>{{ assessment.assessment_method.name }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Assessment Date</strong>{{ assessment.assessment_date }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Assessor</strong>{{ assessment.assessor.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Next Assessment Due</strong>{{ assessment.next_assessment_date|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Task Duration</strong>{{ assessment.task_duration|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row"><strong>Frequency</strong>{{ assessment.frequency|default:"—" }}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-row">
+                <strong>Status</strong>
+                <span class="status-badge status-{{ assessment.status|lower }}">{{ assessment.get_status_display }}</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="info-row">
+                <strong>Task Description</strong>
+                {{ assessment.task_description|default:"—"|linebreaks }}
+              </div>
+            </div>
+            {% if assessment.attachment %}
+            <div class="col-12">
+              <a href="{{ assessment.attachment.url }}" target="_blank" class="btn-outline-secondary" style="padding:6px 14px;font-size:12px;border-radius:6px;">
+                <i class="fas fa-paperclip"></i> View Attachment
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-chart-line" style="color:var(--primary-teal);"></i>
+            Result
+          </span>
+        </div>
+        <div class="card-body text-center">
+          {% if assessment.score is not None %}
+          <div class="result-label">Calculated Score</div>
+          <div class="result-score">{{ assessment.score }}</div>
+          <div class="my-2">
+            <span class="risk-badge risk-badge-{{ assessment.risk_level|lower }}">{{ assessment.get_risk_level_display }}</span>
+          </div>
+          <div class="result-label mb-1">Action Level: {{ assessment.action_level }}</div>
+          <div class="result-action">{{ assessment.recommended_action }}</div>
+          {% else %}
+          <div class="empty-state" style="padding: 24px 12px;">
+            <i class="fas fa-hourglass-half"></i>
+            Not scored yet — complete method-specific inputs.
+          </div>
+          {% endif %}
+          {% if assessment.override_score %}
+          <div class="notice notice-warning mt-3">
+            <strong>Overridden</strong>
+            {{ assessment.override_score }} / {{ assessment.get_override_risk_level_display }}<br>
+            {{ assessment.override_reason }}<br>
+            <span class="text-muted" style="font-size:11px;">
+              by {{ assessment.override_by.get_full_name|default:assessment.override_by|default:"—" }}
+              on {{ assessment.override_at|date:"d M Y, H:i"|default:"—" }}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RISK FACTORS + METHOD SCORING                                -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color:var(--primary-teal);"></i>
+            Risk Factors
+          </span>
+          <a href="{% url 'ergonomics:risk_factors' assessment.pk %}" class="btn-card-action">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </a>
+        </div>
+        <div class="card-body">
+          {% with rf=assessment.risk_factors %}
+          {% if rf %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Neck</strong>{{ rf.get_neck_posture_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Shoulder</strong>{{ rf.get_shoulder_posture_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Elbow</strong>{{ rf.get_elbow_posture_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Wrist</strong>{{ rf.get_wrist_posture_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Back</strong>{{ rf.get_back_posture_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Force Required</strong>{{ rf.get_force_required_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Object Weight</strong>{{ rf.object_weight_kg|default:"—" }} kg</div></div>
+            <div class="col-6"><div class="info-row"><strong>Handling Type</strong>{{ rf.get_handling_type_display|default:"—" }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Hand-Arm Vibration</strong>{{ rf.hand_arm_vibration|yesno:"Yes,No" }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Whole-Body Vibration</strong>{{ rf.whole_body_vibration|yesno:"Yes,No" }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Bending / Twisting</strong>{{ rf.bending|yesno:"Yes,No" }} / {{ rf.twisting|yesno:"Yes,No" }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Adjustable Workstation</strong>{{ rf.adjustable_workstation_available|yesno:"Yes,No" }}</div></div>
+          </div>
+          {% else %}
+          <div class="empty-state" style="padding: 16px;">
+            <i class="fas fa-clipboard"></i>
+            No risk factors recorded yet.
+          </div>
+          {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-calculator" style="color:var(--primary-teal);"></i>
+            Method Scoring — {{ assessment.assessment_method.name }}
+          </span>
+          {% with code=assessment.assessment_method.code %}
+            {% if code == "RULA" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'rula' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "REBA" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'reba' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "NIOSH" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'niosh' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "OWAS" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'owas' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "OCRA" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'ocra' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "STRAIN_INDEX" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'strain_index' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% elif code == "SNOOK_CIRIELLO" %}
+            <a href="{% url 'ergonomics:method_score' assessment.pk 'snook_ciriello' %}" class="btn-card-action">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </a>
+            {% else %}
+            <span class="text-muted small">No dedicated scoring form — use Override.</span>
+            {% endif %}
+          {% endwith %}
+        </div>
+        <div class="card-body">
+          {% if assessment.assessment_method.code == "RULA" and assessment.rula %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Upper Arm</strong>{{ assessment.rula.upper_arm_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Lower Arm</strong>{{ assessment.rula.lower_arm_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Wrist</strong>{{ assessment.rula.wrist_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Neck</strong>{{ assessment.rula.neck_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Trunk</strong>{{ assessment.rula.trunk_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Legs</strong>{{ assessment.rula.leg_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Muscle Use</strong>{{ assessment.rula.muscle_use_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Force/Load</strong>{{ assessment.rula.force_load_score }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "REBA" and assessment.reba %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Trunk</strong>{{ assessment.reba.trunk_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Neck</strong>{{ assessment.reba.neck_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Legs</strong>{{ assessment.reba.legs_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Upper Arm</strong>{{ assessment.reba.upper_arm_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Lower Arm</strong>{{ assessment.reba.lower_arm_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Wrist</strong>{{ assessment.reba.wrist_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Load/Force</strong>{{ assessment.reba.load_force_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Coupling</strong>{{ assessment.reba.coupling_score }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Activity</strong>{{ assessment.reba.activity_score }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "NIOSH" and assessment.niosh %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Load Weight</strong>{{ assessment.niosh.load_weight }} kg</div></div>
+            <div class="col-6"><div class="info-row"><strong>Horizontal Location</strong>{{ assessment.niosh.horizontal_location }} cm</div></div>
+            <div class="col-6"><div class="info-row"><strong>Vertical Location</strong>{{ assessment.niosh.vertical_location }} cm</div></div>
+            <div class="col-6"><div class="info-row"><strong>Vertical Travel</strong>{{ assessment.niosh.vertical_travel_distance }} cm</div></div>
+            <div class="col-6"><div class="info-row"><strong>Asymmetry</strong>{{ assessment.niosh.asymmetry_angle }}&deg;</div></div>
+            <div class="col-6"><div class="info-row"><strong>Coupling</strong>{{ assessment.niosh.get_coupling_display }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Frequency</strong>{{ assessment.niosh.frequency }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Duration</strong>{{ assessment.niosh.duration }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>RWL</strong>{{ assessment.niosh.rwl }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>LI</strong>{{ assessment.niosh.li }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "OWAS" and assessment.owas %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Back Posture</strong>{{ assessment.owas.back_posture }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Arm Posture</strong>{{ assessment.owas.arm_posture }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Leg Posture</strong>{{ assessment.owas.leg_posture }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Load/Force</strong>{{ assessment.owas.load_force }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Action Category</strong>{{ assessment.owas.action_category }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "OCRA" and assessment.ocra %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Frequency</strong>{{ assessment.ocra.frequency }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Force</strong>{{ assessment.ocra.force }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Posture</strong>{{ assessment.ocra.posture }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Repetitiveness</strong>{{ assessment.ocra.repetitiveness }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Additional Factors</strong>{{ assessment.ocra.additional_factors }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>OCRA Index</strong>{{ assessment.ocra.ocra_index }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "STRAIN_INDEX" and assessment.strain_index %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Intensity of Exertion</strong>{{ assessment.strain_index.intensity_of_exertion }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Duration of Exertion</strong>{{ assessment.strain_index.duration_of_exertion }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Effort per Minute</strong>{{ assessment.strain_index.efforts_per_minute }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Hand/Arm Posture</strong>{{ assessment.strain_index.hand_arm_posture }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Speed of Work</strong>{{ assessment.strain_index.speed_of_work }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Duration per Day</strong>{{ assessment.strain_index.duration_per_day }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Strain Index</strong>{{ assessment.strain_index.strain_index }}</div></div>
+          </div>
+
+          {% elif assessment.assessment_method.code == "SNOOK_CIRIELLO" and assessment.snook_ciriello %}
+          <div class="row g-3">
+            <div class="col-6"><div class="info-row"><strong>Task Type</strong>{{ assessment.snook_ciriello.task_type }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Load Weight</strong>{{ assessment.snook_ciriello.load_weight }} kg</div></div>
+            <div class="col-6"><div class="info-row"><strong>Frequency</strong>{{ assessment.snook_ciriello.frequency }}</div></div>
+            <div class="col-6"><div class="info-row"><strong>Horizontal Distance</strong>{{ assessment.snook_ciriello.horizontal_distance }} cm</div></div>
+            <div class="col-6"><div class="info-row"><strong>Vertical Distance</strong>{{ assessment.snook_ciriello.vertical_distance }} cm</div></div>
+            <div class="col-6"><div class="info-row"><strong>Recommended Weight</strong>{{ assessment.snook_ciriello.recommended_weight }} kg</div></div>
+            <div class="col-6"><div class="info-row"><strong>Lifting Index</strong>{{ assessment.snook_ciriello.lifting_index }}</div></div>
+          </div>
+
+          {% else %}
+          <div class="empty-state" style="padding: 16px;">
+            <i class="fas fa-calculator"></i>
+            No method-specific scores recorded yet.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CORRECTIVE ACTIONS                                           -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-tasks" style="color:var(--primary-teal);"></i>
+            Corrective Actions
+          </span>
+          <a href="{% url 'ergonomics:action_create' %}?assessment={{ assessment.pk }}" class="btn-card-action primary">
+            <i class="fas fa-plus"></i> Add Action
+          </a>
+        </div>
+        <div class="card-body p-0">
+          {% if actions %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Description</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Target Date</th>
+                  <th>Responsible</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for action in actions %}
+                <tr>
+                  <td>
+                    <a href="{% url 'ergonomics:detail' action.pk %}">
+                      {{ action.action_id }}
+                    </a>
+                  </td>
+                  <td>{{ action.action_description|truncatewords:12 }}</td>
+                  <td>
+                    <span class="priority-badge priority-{{ action.priority|lower }}">
+                      {{ action.get_priority_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge status-{{ action.status|lower }}">
+                      {{ action.get_status_display }}
+                    </span>
+                  </td>
+                  <td>{{ action.target_date|default:"—" }}</td>
+                  <td>{{ action.responsible_person.get_full_name|default:"—" }}</td>
+                  <td>
+                    <a href="{% url 'ergonomics:action_edit' action.pk %}"
+                      class="btn-card-action" style="padding:4px 10px;font-size:11px;">
+                      <i class="fas fa-pencil-alt"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    No corrective actions linked to this assessment.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            No corrective actions linked to this assessment.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- REASSESSMENT HISTORY                                         -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-redo" style="color:var(--primary-teal);"></i>
+            Reassessment History
+          </span>
+          {% if assessment.score is not None and assessment.score >= 1 %}
+          <a href="{% url 'ergonomics:reassess' assessment.pk %}" class="btn-card-action primary">
+            <i class="fas fa-plus"></i> Add Reassessment
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body p-0">
+          {% if reassessments %}
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Previous Score</th>
+                  <th>New Score</th>
+                  <th>Previous Risk</th>
+                  <th>New Risk</th>
+                  <th>Effectiveness</th>
+                  <th>Reduction</th>
+                  <th>Assessor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in reassessments %}
+                <tr>
+                  <td>{{ r.reassessment_date }}</td>
+                  <td>{{ r.previous_score }}</td>
+                  <td>{{ r.new_score }}</td>
+                  <td>
+                    {% if r.previous_risk %}
+                    <span class="risk-badge risk-badge-{{ r.previous_risk|lower }}">
+                      {{ r.get_previous_risk_display }}
+                    </span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td>
+                    {% if r.new_risk %}
+                    <span class="risk-badge risk-badge-{{ r.new_risk|lower }}">
+                      {{ r.get_new_risk_display }}
+                    </span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td>
+                    <span class="status-badge
+                      {% if r.control_effectiveness == 'EFFECTIVE' %}status-approved
+                      {% elif r.control_effectiveness == 'PARTIAL' %}status-submitted
+                      {% else %}status-rejected{% endif %}">
+                      {{ r.get_control_effectiveness_display }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if r.risk_reduction_percent > 0 %}
+                      <span class="reduction-up">&darr; {{ r.risk_reduction_percent }}%</span>
+                    {% elif r.risk_reduction_percent < 0 %}
+                      <span class="reduction-down">&uarr; {{ r.risk_reduction_percent }}%</span>
+                    {% else %}
+                      <span class="reduction-flat">—</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ r.assessor.get_full_name|default:"—" }}</td>
+                </tr>
+                {% if r.remarks %}
+                <tr class="remarks-row">
+                  <td colspan="8">
+                    <strong>Remarks:</strong> {{ r.remarks }}
+                  </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-redo"></i>
+            No reassessments recorded yet.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- REVIEWS / VERIFICATION                                       -->
+  <!-- ============================================================ -->
+  {% if reviews %}
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fas fa-check-double" style="color:var(--primary-teal);"></i>
+            Reviews &amp; Verification
+          </span>
+        </div>
+        <div class="card-body p-0">
+          <ul class="ehs-list">
+            {% for review in reviews %}
+            <li>
+              <div>
+                <strong>{{ review.reviewed_by.get_full_name|default:review.reviewed_by }}</strong>
+                <span class="text-muted small">— {{ review.reviewed_at|date:"d M Y, H:i" }}</span>
+                <div class="text-muted small">{{ review.comments|default:"" }}</div>
+              </div>
+              <span class="status-badge status-{{ review.status|lower }}">{{ review.get_status_display }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

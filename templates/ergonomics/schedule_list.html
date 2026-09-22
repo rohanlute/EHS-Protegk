@@ -1,0 +1,438 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Assessment Schedule | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item active">Assessment Schedule</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+  }
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+  .btn-sm.btn-outline-primary {
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ehs-card .card-body { padding: 0; }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .table tbody tr:hover { background: var(--primary-teal-light); }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .table a { color: var(--primary-teal); font-weight: 600; text-decoration: none; }
+  .table a:hover { color: var(--primary-teal-dark); text-decoration: underline; }
+
+  /* Row highlight for schedule statuses */
+  .table tbody tr.row-overdue {
+    background: rgba(220, 38, 38, 0.05);
+    box-shadow: inset 4px 0 0 var(--danger-red);
+  }
+  .table tbody tr.row-overdue:hover {
+    background: rgba(220, 38, 38, 0.09);
+  }
+  .table tbody tr.row-due {
+    background: rgba(217, 119, 6, 0.05);
+    box-shadow: inset 4px 0 0 var(--warning-amber);
+  }
+  .table tbody tr.row-due:hover {
+    background: rgba(217, 119, 6, 0.09);
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+  .status-badge.status-due {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning-amber);
+  }
+  .status-badge.status-completed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+  .status-badge.status-cancelled,
+  .status-badge.status-upcoming,
+  .status-badge.status-secondary {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-muted);
+  }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state i {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                  */
+  /* ========================================================== */
+  .ehs-pagination {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+    display: flex;
+    justify-content: center;
+  }
+  .ehs-pagination .pagination {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ehs-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .ehs-pagination .page-link:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+  .ehs-pagination .page-item.disabled .page-link {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border-color: var(--primary-teal);
+    cursor: default;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .table thead { display: none; }
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+    .table tbody tr.row-overdue,
+    .table tbody tr.row-due {
+      box-shadow: none;
+      border-left: 4px solid var(--danger-red);
+    }
+    .table tbody tr.row-due { border-left-color: var(--warning-amber); }
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+    .table tbody td:last-child { border-bottom: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>Assessment Schedule</h1>
+      <p>Track upcoming, due, and overdue ergonomic assessments and reassessments.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TABLE                                                        -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-calendar-alt" style="color:var(--primary-teal);"></i>
+        Scheduled Assessments
+      </span>
+      <span class="text-muted" style="font-size:12px;">
+        {% if is_paginated %}
+          {{ page_obj.paginator.count }} entr{{ page_obj.paginator.count|pluralize:"y,ies" }}
+        {% else %}
+          {{ objects|length }} entr{{ objects|length|pluralize:"y,ies" }}
+        {% endif %}
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Department</th>
+              <th>Job</th>
+              <th>Task</th>
+              <th>Reason</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Assessment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for obj in objects %}
+            <tr class="{% if obj.status == 'OVERDUE' %}row-overdue{% elif obj.status == 'DUE' %}row-due{% endif %}">
+              <td>{{ obj.plant.name }}</td>
+              <td>{{ obj.department.name }}</td>
+              <td>{{ obj.job }}</td>
+              <td>{{ obj.task }}</td>
+              <td>{{ obj.get_reason_display }}</td>
+              <td>{{ obj.due_date }}</td>
+              <td>
+                <span class="status-badge status-{{ obj.status|lower }}">{{ obj.get_status_display }}</span>
+              </td>
+              <td>{{ obj.assigned_to.get_full_name|default:"—" }}</td>
+              <td>
+                {% if obj.assessment %}
+                  <a href="{% url 'ergonomics:detail' obj.assessment.pk %}">{{ obj.assessment.assessment_id }}</a>
+                {% else %}
+                  <a href="{% url 'ergonomics:assessment_create' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus"></i> Start Assessment
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i class="fas fa-calendar-alt"></i>
+                  No scheduled assessments.
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if is_paginated %}
+    <div class="ehs-pagination">
+      <nav>
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
