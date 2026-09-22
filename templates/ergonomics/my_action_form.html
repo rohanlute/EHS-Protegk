@@ -1,0 +1,965 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if readonly %}View{% else %}Update{% endif %} Action {{ action.action_id }} | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:my_actions' %}">My Actions</a></li>
+<li class="breadcrumb-item active">{{ action.action_id }}</li>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* HEADER                                                      */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 14px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* FORM ACTIONS — clear gap between buttons                    */
+  /* ========================================================== */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 16px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-body { padding: 24px; }
+
+  /* ========================================================== */
+  /* INFO ROWS                                                   */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 6px 0;
+    line-height: 1.55;
+  }
+
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .info-row a {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .info-row a:hover {
+    color: var(--primary-teal-dark);
+    text-decoration: underline;
+  }
+
+  /* ========================================================== */
+  /* FORM CONTROLS                                               */
+  /* ========================================================== */
+  .form-group { margin-bottom: 20px; }
+
+  .form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-group .form-control,
+  .form-group input:not([type="file"]),
+  .form-group textarea,
+  .form-group select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    width: 100%;
+    display: block;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .form-group .form-control:focus,
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  .form-group .form-control:disabled,
+  .form-group input:disabled,
+  .form-group textarea:disabled,
+  .form-group select:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+    color: #475569;
+  }
+
+  .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.55;
+  }
+
+  .form-group .help-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: block;
+    line-height: 1.5;
+  }
+
+  .form-group .error-text {
+    font-size: 12px;
+    color: var(--danger-red);
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+  }
+
+  /* ========================================================== */
+  /* FILE BOXES                                                  */
+  /* ========================================================== */
+  .current-file {
+    background: var(--primary-teal-light);
+    border: 1px solid rgba(13, 148, 136, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .current-file .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+  }
+
+  .current-file .file-info i {
+    color: var(--primary-teal);
+    font-size: 18px;
+  }
+
+  .current-file a {
+    color: var(--primary-teal-dark);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .current-file a:hover { text-decoration: underline; }
+
+  .file-upload-box {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    background: #fafbfc;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+  }
+
+  .file-upload-box:hover {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .file-upload-box input[type="file"] {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    width: 100% !important;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    display: block;
+  }
+
+  .file-upload-box input[type="file"]:focus { outline: none; }
+
+  .file-upload-box input[type="file"]::file-selector-button,
+  .file-upload-box input[type="file"]::-webkit-file-upload-button {
+    background: var(--primary-teal);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .file-upload-box input[type="file"]::file-selector-button:hover,
+  .file-upload-box input[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--primary-teal-dark);
+  }
+
+  /* ========================================================== */
+  /* REJECTION BANNER                                            */
+  /* ========================================================== */
+  .rejection-banner {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    border-radius: var(--radius-sm);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .rejection-banner .icon {
+    color: #dc2626;
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .rejection-banner .content { flex: 1; }
+
+  .rejection-banner .content h3 {
+    color: #991b1b;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+  }
+
+  .rejection-banner .content p {
+    color: #7f1d1d;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0 0 10px 0;
+  }
+
+  .rejection-banner .content .meta {
+    color: #991b1b;
+    opacity: 0.75;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* READ-ONLY NOTICE                                            */
+  /* ========================================================== */
+  .readonly-notice {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(13, 148, 136, 0.04));
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .readonly-notice i {
+    color: var(--primary-teal);
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .readonly-notice .content { flex: 1; }
+
+  .readonly-notice strong {
+    color: var(--primary-teal-dark);
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .readonly-notice p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .status-badge.status-open,
+  .status-badge.status-assigned,
+  .status-badge.status-in_progress {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning-amber);
+  }
+
+  .status-badge.status-pending_verification {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .status-badge.status-completed,
+  .status-badge.status-closed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .priority-badge.priority-low       { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+  .priority-badge.priority-medium    { background: rgba(13, 148, 136, 0.12);  color: var(--primary-teal); }
+  .priority-badge.priority-high      { background: rgba(217, 119, 6, 0.12);   color: var(--warning-amber); }
+  .priority-badge.priority-very_high { background: rgba(220, 38, 38, 0.12);   color: var(--danger-red); }
+
+  /* ========================================================== */
+  /* NOTICE                                                      */
+  /* ========================================================== */
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 13px;
+    border: 1px solid var(--border-color);
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.6;
+  }
+
+  .notice i {
+    color: var(--primary-teal);
+    margin-top: 2px;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .notice strong { font-weight: 700; }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ehs-card .card-body { padding: 18px; }
+    .current-file { flex-direction: column; align-items: flex-start; }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .form-actions .btn-primary,
+    .form-actions .btn-outline-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- HEADER                                                       -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>
+        {{ action.action_id }}
+        <span class="status-badge status-{{ action.status|lower }}">
+          {{ action.get_status_display }}
+        </span>
+      </h1>
+      <p>
+        {% if readonly %}
+          This action has been submitted and cannot be edited.
+        {% else %}
+          Complete the work, upload evidence, and submit for verification.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- READ-ONLY NOTICE (when locked)                               -->
+  <!-- ============================================================ -->
+  {% if readonly %}
+  <div class="readonly-notice">
+    <i class="fas fa-lock"></i>
+    <div class="content">
+      <strong>
+        {% if action.status == "PENDING_VERIFICATION" %}
+          Awaiting verification
+        {% elif action.status == "CLOSED" or action.status == "COMPLETED" %}
+          Action verified and closed
+        {% else %}
+          This action is locked
+        {% endif %}
+      </strong>
+      <p>
+        {% if action.status == "PENDING_VERIFICATION" %}
+          Your submission is under review by EHS. You'll be notified when it's verified or if it's rejected.
+        {% elif action.status == "CLOSED" or action.status == "COMPLETED" %}
+          This action has been verified and closed. No further changes are possible.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================================================ -->
+  <!-- REJECTION BANNER (only if rejected)                          -->
+  <!-- ============================================================ -->
+  {% if action.rejection_remark and action.status == "REJECTED" %}
+  <div class="rejection-banner">
+    <i class="fas fa-times-circle icon"></i>
+    <div class="content">
+      <h3>This action was rejected</h3>
+      <p>{{ action.rejection_remark }}</p>
+      <div class="meta">
+        <span><i class="fas fa-user"></i> Rejected by {{ action.rejected_by.get_full_name|default:action.rejected_by|default:"EHS" }}</span>
+        {% if action.rejected_at %}
+        <span><i class="fas fa-clock"></i> {{ action.rejected_at|date:"d M Y, H:i" }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================================================ -->
+  <!-- ACTION DETAILS (read-only)                                   -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-info-circle" style="color:var(--primary-teal);"></i>
+        Action Details
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Assessment</strong>
+            {% if action.assessment %}
+              <a href="{% url 'ergonomics:detail' action.assessment.pk %}">
+                {{ action.assessment.assessment_id }}
+              </a>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Risk Level</strong>
+            {% if action.assessment.risk_level %}
+              <span class="risk-badge risk-badge-{{ action.assessment.risk_level|lower }}">
+                {{ action.assessment.get_risk_level_display }}
+              </span>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Action Required</strong>
+            {{ action.action_description|default:"—" }}
+          </div>
+        </div>
+
+        {% if action.root_cause %}
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Root Cause</strong>
+            {{ action.root_cause }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Control Type</strong>
+            {{ action.get_control_type_display|default:"—" }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Priority</strong>
+            {% if action.priority %}
+              <span class="priority-badge priority-{{ action.priority|lower }}">
+                {{ action.get_priority_display }}
+              </span>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Target Date</strong>
+            {{ action.target_date|default:"—" }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Site</strong>
+            {% if action.assessment %}{{ action.assessment.plant.name }}{% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Department</strong>
+            {% if action.assessment %}{{ action.assessment.department.name }}{% else %}—{% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SUBMISSION CARD                                              -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-clipboard-check" style="color:var(--primary-teal);"></i>
+        {% if readonly %}Your Submission{% else %}
+          {% if action.status == "REJECTED" %}Revise and Resubmit{% else %}Your Update{% endif %}
+        {% endif %}
+      </span>
+    </div>
+    <div class="card-body">
+
+      {% if readonly %}
+      {# === READ-ONLY VIEW === #}
+      <div class="row g-3">
+        {% if action.completion_date %}
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Completion Date</strong>
+            {{ action.completion_date }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if action.evidence %}
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Evidence</strong>
+            <div class="current-file" style="margin-bottom:0;">
+              <div class="file-info">
+                <i class="fas fa-paperclip"></i>
+                <a href="{{ action.evidence.url }}" target="_blank">
+                  {{ action.evidence.name|slice:"19:" }}
+                </a>
+              </div>
+              <a href="{{ action.evidence.url }}" target="_blank" class="btn-outline-primary">
+                <i class="fas fa-external-link-alt"></i> Open
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if action.remarks %}
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Remarks</strong>
+            {{ action.remarks }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if action.verified_by %}
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Verified By</strong>
+            {{ action.verified_by.get_full_name|default:action.verified_by }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <strong>Verification Date</strong>
+            {{ action.verification_date|default:"—" }}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-actions mt-4">
+        <a href="{% url 'ergonomics:my_actions' %}" class="btn-outline-secondary">
+          <i class="fas fa-arrow-left"></i> Back to My Actions
+        </a>
+      </div>
+
+      {% else %}
+      {# === EDITABLE FORM === #}
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="notice" style="margin-bottom:20px; background:rgba(220,38,38,0.06); border-color:rgba(220,38,38,0.25); color:#991b1b;">
+          <i class="fas fa-exclamation-triangle" style="color:var(--danger-red);"></i>
+          <div>
+            <strong>Please fix the following:</strong>
+            <ul style="margin:8px 0 0 0; padding-left:18px;">
+              {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if action.status == "REJECTED" %}
+        <div class="notice" style="margin-bottom:20px;">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong>Update the fields below to address the rejection reason.</strong>
+            Make sure the issue has been fixed and provide updated evidence if needed.
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-3">
+
+          <!-- Completion Date -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.completion_date.id_for_label }}">
+                Completion Date <span style="color:var(--danger-red);">*</span>
+              </label>
+              {{ form.completion_date }}
+              <span class="help-text">Set this when the work is finished.</span>
+              {% for error in form.completion_date.errors %}
+              <span class="error-text">{{ error }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Current Status (read-only) -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Current Status</label>
+              <div style="padding-top:8px;">
+                <span class="status-badge status-{{ action.status|lower }}">
+                  {{ action.get_status_display }}
+                </span>
+              </div>
+              <span class="help-text">
+                On save, this action will be submitted for EHS verification.
+              </span>
+            </div>
+          </div>
+
+          <!-- Evidence -->
+          <div class="col-12">
+            <div class="form-group">
+              <label for="{{ form.evidence.id_for_label }}">
+                Evidence
+                {% if not action.evidence %}<span style="color:var(--danger-red);">*</span>{% endif %}
+              </label>
+
+              {% if action.evidence %}
+              <div class="current-file">
+                <div class="file-info">
+                  <i class="fas fa-paperclip"></i>
+                  <span>Current file: <a href="{{ action.evidence.url }}" target="_blank">{{ action.evidence.name|slice:"19:" }}</a></span>
+                </div>
+              </div>
+              <span class="help-text" style="margin-bottom:8px; display:block;">
+                Upload a new file to replace, or leave blank to keep the current evidence.
+              </span>
+              {% endif %}
+
+              <div class="file-upload-box">
+                {{ form.evidence }}
+              </div>
+              <span class="help-text">
+                Upload photos, documents, or proof of completion.
+              </span>
+              {% for error in form.evidence.errors %}
+              <span class="error-text">{{ error }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div class="col-12">
+            <div class="form-group">
+              <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+              {{ form.remarks }}
+              <span class="help-text">
+                {% if action.status == "REJECTED" %}
+                  Describe what you changed to address the rejection reason.
+                {% else %}
+                  Any notes about the work, obstacles, or follow-ups needed.
+                {% endif %}
+              </span>
+              {% for error in form.remarks.errors %}
+              <span class="error-text">{{ error }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="notice mt-4">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            {% if action.status == "REJECTED" %}
+              On save, this action will be <strong>re-submitted to EHS for verification</strong>.
+            {% else %}
+              On save, this action will be <strong>submitted to EHS for verification and closure</strong>.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-actions mt-4">
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-paper-plane"></i>
+            {% if action.status == "REJECTED" %}
+              Resubmit for Verification
+            {% else %}
+              Submit for Verification
+            {% endif %}
+          </button>
+          <a href="{% url 'ergonomics:my_actions' %}" class="btn-outline-secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+
+      </form>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

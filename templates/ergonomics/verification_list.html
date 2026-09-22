@@ -1,0 +1,308 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Verification Queue | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item active">Verification Queue</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+  }
+
+  .metric {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 100%;
+  }
+  .metric strong {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary-teal);
+    line-height: 1.1;
+  }
+  .metric span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .metric.metric-warning strong { color: var(--warning-amber); }
+  .metric.metric-danger  strong { color: var(--danger-red); }
+
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 5px 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ehs-card .card-body { padding: 0; }
+
+  .table { width: 100%; margin-bottom: 0; border-collapse: collapse; }
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .table tbody tr:hover { background: var(--primary-teal-light); }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .table a { color: var(--primary-teal); font-weight: 600; text-decoration: none; }
+  .table a:hover { color: var(--primary-teal-dark); text-decoration: underline; }
+
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .priority-badge.priority-low       { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+  .priority-badge.priority-medium    { background: rgba(13, 148, 136, 0.12);  color: var(--primary-teal); }
+  .priority-badge.priority-high      { background: rgba(217, 119, 6, 0.12);   color: var(--warning-amber); }
+  .priority-badge.priority-very_high { background: rgba(220, 38, 38, 0.12);   color: var(--danger-red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state i {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .table thead { display: none; }
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+    .table tbody td:last-child { border-bottom: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>Verification Queue</h1>
+      <p>Review actions submitted by responsible persons. Approve or reject each one.</p>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-4 col-6 mb-2">
+      <div class="metric metric-warning">
+        <strong>{{ pending_count|default:0 }}</strong>
+        <span>Awaiting Verification</span>
+      </div>
+    </div>
+    <div class="col-md-4 col-6 mb-2">
+      <div class="metric metric-danger">
+        <strong>{{ overdue_count|default:0 }}</strong>
+        <span>Overdue</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-clipboard-check" style="color:var(--primary-teal);"></i>
+        Pending Verification
+      </span>
+      <span class="text-muted" style="font-size:12px;">
+        {% if is_paginated %}
+          {{ page_obj.paginator.count }} action{{ page_obj.paginator.count|pluralize }}
+        {% else %}
+          {{ actions|length }} action{{ actions|length|pluralize }}
+        {% endif %}
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Action ID</th>
+              <th>Assessment</th>
+              <th>Description</th>
+              <th>Responsible</th>
+              <th>Priority</th>
+              <th>Submitted</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for action in actions %}
+            <tr>
+              <td>{{ action.action_id }}</td>
+              <td>
+                {% if action.assessment %}
+                  <a href="{% url 'ergonomics:detail' action.assessment.pk %}">
+                    {{ action.assessment.assessment_id }}
+                  </a>
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ action.action_description|truncatechars:60 }}</td>
+              <td>{{ action.responsible_person.get_full_name|default:"—" }}</td>
+              <td>
+                <span class="priority-badge priority-{{ action.priority|lower }}">
+                  {{ action.get_priority_display }}
+                </span>
+              </td>
+              <td>{{ action.completion_date|default:"—" }}</td>
+              <td>
+                <a href="{% url 'ergonomics:verification_detail' action.pk %}" class="btn-outline-primary">
+                  <i class="fas fa-search"></i> Review
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <i class="fas fa-check-circle"></i>
+                  No actions waiting for verification.
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,667 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}{% if object %}Edit Monitoring Schedule{% else %}Add Monitoring Schedule{% endif %} | EHS-360{% endblock %}
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-green:#22c55e;
+    --secondary-gold:#d97706;
+    --secondary-blue:#2563eb;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+.header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+.header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:19px;
+}
+.header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0 0 3px;
+}
+.header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+}
+.header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.btn-back {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 15px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+.btn-back:hover {
+    border-color:var(--primary-teal);
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+.form-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+}
+.form-card-header {
+    padding:16px 22px;
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.form-card-header i {
+    color:white;
+    font-size:17px;
+}
+.form-card-header h3 {
+    margin:0;
+    color:white;
+    font-size:16px;
+    font-weight:700;
+}
+.form-card-body {
+    padding:24px;
+}
+.form-section {
+    margin-bottom:24px;
+}
+.form-section:last-child {
+    margin-bottom:0;
+}
+.section-title {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:16px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border-color);
+}
+.section-title i {
+    color:var(--primary-teal);
+    font-size:15px;
+}
+.section-title h4 {
+    margin:0;
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+.form-group {
+    margin-bottom:18px;
+}
+.form-group:last-child {
+    margin-bottom:0;
+}
+.form-label {
+    display:block;
+    margin-bottom:7px;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+}
+.required {
+    color:var(--secondary-red);
+}
+.form-control {
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    transition:all 0.25s ease;
+    box-sizing:border-box;
+}
+.form-control:focus {
+    outline:none;
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 4px rgba(13,148,136,0.08);
+}
+textarea.form-control {
+    resize:vertical;
+    min-height:110px;
+}
+select.form-control {
+    cursor:pointer;
+}
+.field-help {
+    display:block;
+    margin-top:6px;
+    color:var(--text-muted);
+    font-size:11px;
+}
+.field-error {
+    display:block;
+    margin-top:6px;
+    color:var(--secondary-red);
+    font-size:11px;
+    font-weight:500;
+}
+.field-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+}
+.date-grid {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+}
+.status-card {
+    padding:16px;
+    border:1px solid var(--border-color);
+    border-radius:10px;
+    background:#fafbfc;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+}
+.status-card-left {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+.status-icon {
+    width:40px;
+    height:40px;
+    flex-shrink:0;
+    border-radius:10px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:17px;
+}
+.status-info {
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+}
+.status-info strong {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:700;
+}
+.status-info span {
+    color:var(--text-muted);
+    font-size:11px;
+    line-height:1.4;
+}
+.custom-check {
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    cursor:pointer;
+    flex-shrink:0;
+}
+.custom-check input[type="checkbox"] {
+    width:18px!important;
+    height:18px!important;
+    margin:1px 0 0!important;
+    padding:0!important;
+    accent-color:var(--primary-teal);
+    cursor:pointer;
+    flex-shrink:0;
+}
+.custom-check-text {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+}
+.custom-check-text strong {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:700;
+}
+.custom-check-text span {
+    color:var(--text-muted);
+    font-size:10px;
+}
+.form-footer {
+    padding:16px 24px;
+    border-top:1px solid var(--border-color);
+    background:#fafbfc;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+}
+.btn-cancel,
+.btn-submit {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 17px;
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
+.btn-cancel {
+    border:1px solid var(--border-color);
+    background:white;
+    color:var(--text-secondary);
+    text-decoration:none;
+}
+.btn-cancel:hover {
+    border-color:var(--primary-teal);
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+.btn-submit {
+    border:1px solid var(--primary-teal);
+    background:var(--primary-teal);
+    color:white;
+}
+.btn-submit:hover {
+    border-color:var(--primary-teal-dark);
+    background:var(--primary-teal-dark);
+    color:white;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+}
+.alert-error {
+    padding:12px 14px;
+    margin-bottom:20px;
+    border:1px solid #fecaca;
+    border-radius:var(--radius-sm);
+    background:#fef2f2;
+    color:#b91c1c;
+    font-size:12px;
+}
+@media (max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .header-right {
+        width:100%;
+    }
+    .btn-back {
+        width:100%;
+    }
+    .form-card-body {
+        padding:18px;
+    }
+    .field-grid,
+    .date-grid {
+        grid-template-columns:1fr;
+        gap:0;
+    }
+    .status-card {
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .custom-check {
+        width:100%;
+    }
+    .form-footer {
+        padding:14px 18px;
+        flex-direction:column-reverse;
+        align-items:stretch;
+    }
+    .btn-cancel,
+    .btn-submit {
+        width:100%;
+    }
+}
+@media (max-width:480px) {
+    .header-left h1 {
+        font-size:18px;
+    }
+    .header-icon {
+        width:38px;
+        height:38px;
+        font-size:17px;
+    }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <h1>{% if object %}Edit Monitoring Schedule{% else %}Add Monitoring Schedule{% endif %}</h1>
+                <p class="subtitle">{% if object %}Update Industrial Hygiene monitoring schedule details{% else %}Create a new Industrial Hygiene monitoring schedule{% endif %}</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'industrial_hygiene:monitoring_schedule_list' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Back to Monitoring Schedules
+            </a>
+        </div>
+    </div>
+    <div class="form-card">
+        <div class="form-card-header">
+            <i class="fas fa-calendar-alt"></i>
+            <h3>Industrial Hygiene Monitoring Schedule Information</h3>
+        </div>
+        <form method="post" id="monitoringScheduleForm">
+            {% csrf_token %}
+            <div class="form-card-body">
+                {% if form.non_field_errors %}
+                <div class="alert-error">
+                    {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <!-- Schedule Details -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <h4>Schedule Details</h4>
+                    </div>
+                    <div class="field-grid">
+                        <div class="form-group">
+                            <label for="{{ form.schedule_name.id_for_label }}" class="form-label">
+                                Schedule Name <span class="required">*</span>
+                            </label>
+                            {{ form.schedule_name }}
+                            <span class="field-help">Enter the name of the Industrial Hygiene monitoring schedule.</span>
+                            {% if form.schedule_name.errors %}
+                            {% for error in form.schedule_name.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.schedule_code.id_for_label }}" class="form-label">
+                                Schedule Code <span class="required">*</span>
+                            </label>
+                            {{ form.schedule_code }}
+                            <span class="field-help">Enter a unique code to identify this monitoring schedule.</span>
+                            {% if form.schedule_code.errors %}
+                            {% for error in form.schedule_code.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.monitoring_plan.id_for_label }}" class="form-label">
+                            Monitoring Plan <span class="required">*</span>
+                        </label>
+                        {{ form.monitoring_plan }}
+                        <span class="field-help">Select the Monitoring Plan from which this schedule is created.</span>
+                        {% if form.monitoring_plan.errors %}
+                        {% for error in form.monitoring_plan.errors %}
+                        <span class="field-error">{{ error }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Schedule Dates -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-calendar-check"></i>
+                        <h4>Schedule Dates</h4>
+                    </div>
+                    <div class="date-grid">
+                        <div class="form-group">
+                            <label for="{{ form.planned_date.id_for_label }}" class="form-label">
+                                Planned Date <span class="required">*</span>
+                            </label>
+                            {{ form.planned_date }}
+                            <span class="field-help">Primary date on which the monitoring activity is planned.</span>
+                            {% if form.planned_date.errors %}
+                            {% for error in form.planned_date.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.frequency.id_for_label }}" class="form-label">Frequency</label>
+                            {{ form.frequency }}
+                            <span class="field-help">Example: Monthly, Quarterly, Half-Yearly or Annually.</span>
+                            {% if form.frequency.errors %}
+                            {% for error in form.frequency.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="date-grid">
+                        <div class="form-group">
+                            <label for="{{ form.scheduled_start_date.id_for_label }}" class="form-label">Scheduled Start Date</label>
+                            {{ form.scheduled_start_date }}
+                            <span class="field-help">Start date for the scheduled monitoring activity.</span>
+                            {% if form.scheduled_start_date.errors %}
+                            {% for error in form.scheduled_start_date.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.scheduled_end_date.id_for_label }}" class="form-label">Scheduled End Date</label>
+                            {{ form.scheduled_end_date }}
+                            <span class="field-help">End date for the scheduled monitoring activity.</span>
+                            {% if form.scheduled_end_date.errors %}
+                            {% for error in form.scheduled_end_date.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Sampling Details -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-vials"></i>
+                        <h4>Sampling Details</h4>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.sample_count.id_for_label }}" class="form-label">
+                            Sample Count <span class="required">*</span>
+                        </label>
+                        {{ form.sample_count }}
+                        <span class="field-help">Enter the number of samples planned for this scheduled monitoring activity.</span>
+                        {% if form.sample_count.errors %}
+                        {% for error in form.sample_count.errors %}
+                        <span class="field-error">{{ error }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Assignment -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user-check"></i>
+                        <h4>Assignment</h4>
+                    </div>
+                    <div class="field-grid">
+                        <div class="form-group">
+                            <label for="{{ form.responsible_person.id_for_label }}" class="form-label">Responsible Person</label>
+                            {{ form.responsible_person }}
+                            <span class="field-help">Select the person responsible for managing this monitoring schedule.</span>
+                            {% if form.responsible_person.errors %}
+                            {% for error in form.responsible_person.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="form-label">Assigned To</label>
+                            {{ form.assigned_to }}
+                            <span class="field-help">Select the person assigned to execute the monitoring activity.</span>
+                            {% if form.assigned_to.errors %}
+                            {% for error in form.assigned_to.errors %}
+                            <span class="field-error">{{ error }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Remarks -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-comment-alt"></i>
+                        <h4>Remarks</h4>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.remarks.id_for_label }}" class="form-label">Additional Remarks</label>
+                        {{ form.remarks }}
+                        <span class="field-help">Enter any additional instructions or information related to this monitoring schedule.</span>
+                        {% if form.remarks.errors %}
+                        {% for error in form.remarks.errors %}
+                        <span class="field-error">{{ error }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Status -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-toggle-on"></i>
+                        <h4>Schedule Status</h4>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            Status <span class="required">*</span>
+                        </label>
+                        {{ form.status }}
+                        <span class="field-help">Select the current execution status of the monitoring schedule.</span>
+                        {% if form.status.errors %}
+                        {% for error in form.status.errors %}
+                        <span class="field-error">{{ error }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="status-card">
+                        <div class="status-card-left">
+                            <div class="status-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="status-info">
+                                <strong>Schedule Availability</strong>
+                                <span>Active schedules can be used for Industrial Hygiene monitoring execution and follow-up activities.</span>
+                            </div>
+                        </div>
+                        <label class="custom-check">
+                            {{ form.is_active }}
+                            <span class="custom-check-text">
+                                <strong>Active</strong>
+                                <span>Enable this monitoring schedule for use in the Industrial Hygiene module.</span>
+                            </span>
+                        </label>
+                    </div>
+                    {% if form.is_active.errors %}
+                    {% for error in form.is_active.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-footer">
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_list' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-submit" id="submitButton">
+                    <i class="fas fa-save"></i>
+                    {% if object %}Update Monitoring Schedule{% else %}Create Monitoring Schedule{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+    const form=document.getElementById("monitoringScheduleForm");
+    const submitButton=document.getElementById("submitButton");
+    if(form){
+        form.addEventListener("submit",function(){
+            if(submitButton){
+                submitButton.disabled=true;
+                submitButton.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+            const scheduleName=document.getElementById("id_schedule_name");
+            const scheduleCode=document.getElementById("id_schedule_code");
+            const frequency=document.getElementById("id_frequency");
+            if(scheduleName){
+                scheduleName.value=scheduleName.value.trim();
+            }
+            if(scheduleCode){
+                scheduleCode.value=scheduleCode.value.trim();
+            }
+            if(frequency){
+                frequency.value=frequency.value.trim();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

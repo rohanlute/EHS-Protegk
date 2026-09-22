@@ -1,0 +1,418 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Convert Observation | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:observations' %}">Observations</a></li>
+<li class="breadcrumb-item active">Convert to Assessment</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+    --success-green: #22c55e;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+  }
+  .ergo-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .ergo-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ehs-card .card-header i { color: var(--primary-teal); }
+  .ehs-card .card-body { padding: 24px; }
+
+  /* ========================================================== */
+  /* INFO ROWS                                                   */
+  /* ========================================================== */
+  .info-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 6px 0;
+    line-height: 1.55;
+  }
+  .info-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ========================================================== */
+  /* RISK BADGE (used inside info-row)                           */
+  /* ========================================================== */
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  /* ========================================================== */
+  /* FORM                                                        */
+  /* ========================================================== */
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  label .req { color: var(--danger-red); }
+
+  .form-control,
+  .form-select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  .method-hint {
+    background: var(--primary-teal-light);
+    border-left: 3px solid var(--primary-teal);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .method-hint strong { color: var(--text-primary); }
+
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12.5px;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+    background: rgba(217, 119, 6, 0.06);
+    color: #92400e;
+    line-height: 1.55;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .notice i { font-size: 14px; margin-top: 2px; }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 22px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+
+  .form-footer {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* LAYOUT                                                      */
+  /* ========================================================== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .form-grid .full-width { grid-column: 1 / -1; }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; gap: 20px; }
+    .form-footer { flex-direction: column; }
+    .form-footer .btn-primary,
+    .form-footer .btn-outline-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <h1>Convert Observation to Assessment</h1>
+    <p>Choose the assessment method for this task. The observation's data will pre-fill the new assessment.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OBSERVATION SUMMARY                                          -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <i class="fas fa-eye"></i> Observation Details
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="info-row"><strong>Site</strong>{{ observation.plant.name }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row"><strong>Department</strong>{{ observation.department.name }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row"><strong>Area</strong>{{ observation.area|default:"—" }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row"><strong>Task</strong>{{ observation.task }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row"><strong>Worker</strong>{{ observation.worker.get_full_name|default:"—" }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row"><strong>Reported</strong>{{ observation.observation_date }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Risk Factor</strong>{{ observation.risk_factor|default:"—" }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Risk Level</strong>
+            {% if observation.risk_level %}
+              <span class="risk-badge risk-badge-{{ observation.risk_level|lower }}">
+                {{ observation.get_risk_level_display }}
+              </span>
+            {% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="info-row">
+            <strong>Immediate Action</strong>{{ observation.immediate_action|default:"—" }}
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="info-row">
+            <strong>Observation</strong>
+            {{ observation.observation|linebreaks }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CONVERSION FORM                                              -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <i class="fas fa-exchange-alt"></i> Choose Assessment Method &amp; Worker
+    </div>
+    <div class="card-body">
+
+      <div class="notice">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          The new assessment will be created with status <strong>SUBMITTED</strong>.
+          After conversion, open the assessment and fill in the <strong>Risk Factors</strong>
+          and <strong>Method Scoring</strong> cards to compute the risk score.
+        </div>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <!-- ===== Assessment Method ===== -->
+          <div class="full-width">
+            <label for="assessment_method">
+              Assessment Method <span class="req">*</span>
+            </label>
+            <select name="assessment_method" id="assessment_method" class="form-select" required>
+              <option value="">— Select a method —</option>
+              {% for method in methods %}
+              <option value="{{ method.pk }}">{{ method.name }} ({{ method.code }})</option>
+              {% endfor %}
+            </select>
+            <div class="method-hint">
+              <strong>Choose based on the task type:</strong><br>
+              <strong>RULA</strong> — upper limb / workstation tasks (assembly, desk work)<br>
+              <strong>REBA</strong> — whole-body posture (bending, lifting, carrying)<br>
+              <strong>NIOSH</strong> — manual lifting tasks (lift/lower weight)<br>
+              <strong>OWAS</strong> — simple whole-body posture check<br>
+              <strong>OCRA</strong> — repetitive upper-limb movements<br>
+              <strong>Strain Index</strong> — hand/wrist repetitive tasks<br>
+              <strong>Snook &amp; Ciriello</strong> — push / pull / carry forces
+            </div>
+          </div>
+
+          <!-- ===== Worker dropdown ===== -->
+          <div class="full-width">
+            <label for="worker">Worker</label>
+            <select name="worker" id="worker" class="form-select">
+              <option value="">
+                — Same as observed worker
+                ({{ observation.worker.get_full_name|default:"none" }}) —
+              </option>
+              {% for w in workers %}
+                <option value="{{ w.pk }}"
+                  {% if w.pk == selected_worker_id %}selected{% endif %}>
+                  {{ w.get_full_name|default:w.username }}{% if w.job_title %} — {{ w.job_title }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <div class="method-hint">
+              <strong>Who is this assessment about?</strong><br>
+              Leave the default to keep the observation's worker
+              ({{ observation.worker.get_full_name|default:"—" }}).
+              Pick a different user if the observation was recorded for one person
+              but the assessment should be tied to another.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-footer">
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-check"></i> Create Assessment
+          </button>
+          <a href="{% url 'ergonomics:observations' %}" class="btn-outline-secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

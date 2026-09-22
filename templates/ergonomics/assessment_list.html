@@ -1,0 +1,734 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Ergonomic Assessments | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item active">Assessments</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --primary-teal-hover: rgba(13, 148, 136, 0.12);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 22px 26px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 0 0;
+  }
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    color: #fff;
+  }
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-secondary:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+  .btn-outline-success {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(34, 197, 94, 0.4);
+    color: var(--success-green);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-outline-success:hover {
+    background: rgba(34, 197, 94, 0.10);
+    border-color: var(--success-green);
+    color: var(--success-green);
+  }
+  .btn-outline-primary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--primary-teal);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  .btn-outline-primary:hover {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal-dark);
+  }
+  .btn-outline-warning {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(217, 119, 6, 0.4);
+    color: var(--warning-amber);
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  .btn-outline-warning:hover {
+    background: rgba(217, 119, 6, 0.10);
+    border-color: var(--warning-amber);
+  }
+  .btn-outline-info {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(13, 148, 136, 0.4);
+    color: var(--primary-teal);
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  .btn-outline-info:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+  }
+  .btn-outline-danger {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(220, 38, 38, 0.4);
+    color: var(--danger-red);
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  .btn-outline-danger:hover {
+    background: rgba(220, 38, 38, 0.10);
+    border-color: var(--danger-red);
+  }
+
+  /* Small table-row buttons */
+  .btn-sm.btn-outline-secondary,
+  .btn-sm.btn-outline-primary,
+  .btn-sm.btn-outline-warning,
+  .btn-sm.btn-outline-info,
+  .btn-sm.btn-outline-danger,
+  .btn-sm.btn-outline-success,
+  .btn-sm.btn-primary {
+    padding: 7px 11px;
+    font-size: 12px;
+    border-radius: 6px;
+    line-height: 1;
+  }
+
+  /* Gap between row buttons */
+  .row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  /* ========================================================== */
+  /* FILTER CARD                                                 */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 24px 28px;
+    margin-bottom: 28px;
+  }
+
+  /* Explicit grid — no Bootstrap grid classes, no ambiguity */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px 20px;                /* row-gap 24px, column-gap 20px */
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;                      /* label ↔ input */
+    min-width: 0;
+  }
+  .filter-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin: 0;
+  }
+
+  .filter-field .form-control,
+  .filter-field .form-select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .filter-field .form-control:focus,
+  .filter-field .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  /* Action buttons row — separated from the grid */
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+  }
+  .filter-actions-right {
+    margin-left: auto;             /* push Export to the far right */
+  }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 16px 26px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ehs-card .card-header .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .ehs-card .card-body { padding: 0; }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 14px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .table tbody tr:hover { background: var(--primary-teal-light); }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .table a { color: var(--primary-teal); font-weight: 600; text-decoration: none; }
+  .table a:hover { color: var(--primary-teal-dark); text-decoration: underline; }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-badge.status-draft,
+  .status-badge.status-pending,
+  .status-badge.status-open,
+  .status-badge.status-in_progress {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--pending-orange);
+  }
+  .status-badge.status-approved,
+  .status-badge.status-completed,
+  .status-badge.status-closed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+  .status-badge.status-submitted,
+  .status-badge.status-under_review,
+  .status-badge.status-under-review {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  /* ========================================================== */
+  /* EMPTY STATE                                                 */
+  /* ========================================================== */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state i {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* PAGINATION                                                  */
+  /* ========================================================== */
+  .ehs-pagination {
+    padding: 18px 26px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+    display: flex;
+    justify-content: center;
+  }
+  .ehs-pagination .pagination {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ehs-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .ehs-pagination .page-link:hover {
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    background: var(--primary-teal-light);
+  }
+  .ehs-pagination .page-item.disabled .page-link {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    border-color: var(--primary-teal);
+    cursor: default;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 1200px) {
+    .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .ergo-header .ergo-actions { justify-content: stretch; }
+    .ergo-header .ergo-actions .btn-primary,
+    .ergo-header .ergo-actions .btn-outline-secondary { flex: 1; justify-content: center; }
+    .table thead { display: none; }
+    .table tbody tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+    }
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+    .table tbody td:last-child { border-bottom: none; }
+    .row-actions { flex-wrap: wrap; gap: 6px; }
+  }
+  @media (max-width: 600px) {
+    .filter-grid { grid-template-columns: 1fr; }
+    .filter-actions { flex-direction: column; align-items: stretch; }
+    .filter-actions .btn { width: 100%; justify-content: center; }
+    .filter-actions-right { margin-left: 0; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>Ergonomic Assessments</h1>
+      <p>Browse, filter, and manage all recorded ergonomic assessments.</p>
+    </div>
+    <div class="ergo-actions">
+      <a href="{% url 'ergonomics:assessment_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Assessment
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FILTERS                                                      -->
+  <!-- ============================================================ -->
+  <div class="filter-card">
+    <form method="get">
+      <div class="filter-grid">
+
+        <div class="filter-field">
+          <label>Search</label>
+          <input type="text" name="search" value="{{ request.GET.search }}"
+                 class="form-control" placeholder="Assessment ID, job, task, worker">
+        </div>
+
+        <div class="filter-field">
+          <label>Site</label>
+          <select name="plant" class="form-select">
+            <option value="">All</option>
+            {% for plant in plants %}
+            <option value="{{ plant.id }}" {% if request.GET.plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Department</label>
+          <select name="department" class="form-select">
+            <option value="">All</option>
+            {% for dept in departments %}
+            <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Method</label>
+          <select name="method" class="form-select">
+            <option value="">All</option>
+            {% for method in methods %}
+            <option value="{{ method.id }}" {% if request.GET.method == method.id|stringformat:"s" %}selected{% endif %}>{{ method.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Risk Level</label>
+          <select name="risk_level" class="form-select">
+            <option value="">All</option>
+            {% for value, label in risk_levels %}
+            <option value="{{ value }}" {% if request.GET.risk_level == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Status</label>
+          <select name="status" class="form-select">
+            <option value="">All</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>From Date</label>
+          <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="form-control">
+        </div>
+
+        <div class="filter-field">
+          <label>To Date</label>
+          <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="form-control">
+        </div>
+
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Filter
+        </button>
+        <a href="{% url 'ergonomics:assessments' %}" class="btn btn-outline-secondary">
+          Reset
+        </a>
+        <a href="{% url 'ergonomics:report_export' %}?{{ request.GET.urlencode }}"
+           class="btn btn-outline-success filter-actions-right">
+          <i class="fas fa-file-excel"></i> Export
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TABLE                                                        -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header">
+      <span class="card-title">Assessment Register</span>
+      <span class="text-muted" style="font-size:12px;">
+        {{ page_obj.paginator.count|default:assessments|length }}
+        record{{ page_obj.paginator.count|default:assessments|length|pluralize }}
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Assessment ID</th>
+              <th>Site</th>
+              <th>Department</th>
+              <th>Area</th>
+              <th>Job</th>
+              <th>Task</th>
+              <th>Worker</th>
+              <th>Method</th>
+              <th>Score</th>
+              <th>Risk Level</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Assessor</th>
+              <th>Next Due</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in assessments %}
+            <tr>
+              <td><a href="{% url 'ergonomics:detail' a.pk %}">{{ a.assessment_id }}</a></td>
+              <td>{{ a.plant.name }}</td>
+              <td>{{ a.department.name }}</td>
+              <td>{{ a.area|default:"—" }}</td>
+              <td>{{ a.job_role }}</td>
+              <td>{{ a.task }}</td>
+              <td>{{ a.worker.get_full_name|default:"—" }}</td>
+              <td>{{ a.assessment_method.name }}</td>
+              <td>{{ a.score|default:"—" }}</td>
+              <td>
+                {% if a.risk_level %}
+                  <span class="risk-badge risk-badge-{{ a.risk_level|lower }}">{{ a.get_risk_level_display }}</span>
+                {% else %}
+                  <span class="risk-badge risk-badge-">Not scored</span>
+                {% endif %}
+              </td>
+              <td>{{ a.get_assessment_type_display }}</td>
+              <td><span class="status-badge status-{{ a.status|lower }}">{{ a.get_status_display }}</span></td>
+              <td>{{ a.assessment_date }}</td>
+              <td>{{ a.assessor.get_full_name|default:"—" }}</td>
+              <td>{{ a.next_assessment_date|default:"—" }}</td>
+              <td class="text-nowrap">
+                <div class="row-actions">
+                  <a href="{% url 'ergonomics:detail' a.pk %}" class="btn btn-sm btn-outline-secondary" title="View">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'ergonomics:assessment_edit' a.pk %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                    <i class="fas fa-pencil-alt"></i>
+                  </a>
+                  {% if a.risk_level == "HIGH" or a.risk_level == "VERY_HIGH" %}
+                  <a href="{% url 'ergonomics:action_create' %}?assessment={{ a.pk }}" class="btn btn-sm btn-outline-warning" title="Corrective Action">
+                    <i class="fas fa-tools"></i>
+                  </a>
+                  {% endif %}
+                  <a href="{% url 'ergonomics:reassess' a.pk %}" class="btn btn-sm btn-outline-info" title="Reassess">
+                    <i class="fas fa-redo"></i>
+                  </a>
+                  <a href="{% url 'ergonomics:assessment_delete' a.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="16">
+                <div class="empty-state">
+                  <i class="fas fa-clipboard-list"></i>
+                  No assessments match your filters.
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if is_paginated %}
+    <div class="ehs-pagination">
+      <nav>
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

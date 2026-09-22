@@ -1,0 +1,904 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}Monitoring Schedule Management | EHS-360{% endblock %}
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --secondary-red:#dc2626;
+    --secondary-red-light:rgba(220,38,38,0.08);
+    --secondary-gold:#d97706;
+    --secondary-gold-light:rgba(217,119,6,0.08);
+    --secondary-green:#22c55e;
+    --secondary-green-light:rgba(34,197,94,0.08);
+    --secondary-blue:#2563eb;
+    --secondary-blue-light:rgba(37,99,235,0.08);
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+.dash-page-header .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:19px;
+}
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0 0 3px 0;
+}
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+.header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.btn-add-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+.btn-add-teal:hover {
+    background:var(--primary-teal-dark);
+    color:white;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+    text-decoration:none;
+}
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+    transition:all 0.3s ease;
+}
+.dash-main-card:hover {
+    box-shadow:var(--shadow-hover);
+}
+.dash-search-section {
+    padding:16px 20px;
+    border-bottom:1px solid var(--border-color);
+    background:#ffffff;
+}
+.search-form {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.search-input-wrapper {
+    position:relative;
+    flex:1;
+}
+.search-input-wrapper i {
+    position:absolute;
+    left:13px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+    font-size:13px;
+    pointer-events:none;
+}
+.search-input {
+    width:100%;
+    padding:9px 12px 9px 36px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-primary);
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    transition:all 0.25s ease;
+}
+.search-input:focus {
+    outline:none;
+    border-color:var(--primary-teal);
+    box-shadow:0 0 0 4px rgba(13,148,136,0.08);
+}
+.search-input::placeholder {
+    color:#94a3b8;
+}
+.btn-search-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:9px 17px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
+.btn-search-teal:hover {
+    background:var(--primary-teal-dark);
+}
+.btn-clear-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:8px 14px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+.btn-clear-teal:hover {
+    border-color:var(--primary-teal);
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+.search-result-info {
+    margin-top:10px;
+    font-size:11px;
+    color:var(--text-muted);
+}
+.search-result-info strong {
+    color:var(--text-secondary);
+}
+.card-header-custom {
+    padding:15px 20px;
+    background:#ffffff;
+    border-bottom:1px solid var(--border-color);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+.card-header-title {
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+.card-header-title i {
+    color:var(--primary-teal);
+    font-size:16px;
+}
+.card-header-title h3 {
+    margin:0;
+    font-size:15px;
+    font-weight:700;
+    color:var(--text-primary);
+}
+.header-count {
+    display:inline-flex;
+    align-items:center;
+    padding:4px 9px;
+    border-radius:20px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    font-size:11px;
+    font-weight:700;
+}
+.table-wrapper {
+    overflow-x:auto;
+}
+.dash-table {
+    width:100%;
+    margin:0;
+    border-collapse:collapse;
+    min-width:1500px;
+}
+.dash-table thead th {
+    padding:12px 15px;
+    background:#f8fafc;
+    border-bottom:1px solid var(--border-color);
+    color:var(--text-muted);
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    white-space:nowrap;
+}
+.dash-table tbody td {
+    padding:14px 15px;
+    border-bottom:1px solid #eef2f7;
+    color:var(--text-secondary);
+    font-size:13px;
+    vertical-align:middle;
+}
+.dash-table tbody tr {
+    transition:background 0.2s ease;
+}
+.dash-table tbody tr:hover {
+    background:rgba(13,148,136,0.025);
+}
+.dash-table tbody tr:last-child td {
+    border-bottom:none;
+}
+.col-number {
+    width:55px;
+    color:var(--text-muted)!important;
+    font-weight:600;
+}
+.col-schedule {
+    min-width:240px;
+}
+.col-code {
+    min-width:130px;
+}
+.col-plan {
+    min-width:220px;
+}
+.col-program {
+    min-width:210px;
+}
+.col-plant {
+    min-width:170px;
+}
+.col-hazard {
+    min-width:170px;
+}
+.col-date {
+    min-width:130px;
+}
+.col-status {
+    min-width:130px;
+}
+.col-action {
+    width:100px;
+    min-width:100px;
+    text-align:center;
+    white-space:nowrap;
+}
+.schedule-name {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.schedule-icon {
+    width:34px;
+    height:34px;
+    flex-shrink:0;
+    border-radius:9px;
+    background:var(--secondary-blue-light);
+    color:var(--secondary-blue);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+}
+.schedule-name-text {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+}
+.schedule-name-text strong {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:600;
+}
+.schedule-name-text span {
+    color:var(--text-muted);
+    font-size:10px;
+}
+.code-badge {
+    display:inline-flex;
+    align-items:center;
+    padding:5px 9px;
+    border-radius:6px;
+    background:#f8fafc;
+    border:1px solid var(--border-color);
+    color:var(--text-secondary);
+    font-size:11px;
+    font-weight:700;
+}
+.plan-text,
+.program-text,
+.plant-text,
+.hazard-text {
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+.plan-text i,
+.program-text i,
+.plant-text i,
+.hazard-text i {
+    color:var(--primary-teal);
+    font-size:12px;
+}
+.plan-text span,
+.program-text span,
+.plant-text span,
+.hazard-text span {
+    color:var(--text-secondary);
+    font-size:12px;
+}
+.date-text {
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+.date-text i {
+    color:var(--primary-teal);
+    font-size:12px;
+}
+.date-text span {
+    color:var(--text-secondary);
+    font-size:12px;
+}
+.frequency-badge {
+    display:inline-flex;
+    align-items:center;
+    padding:5px 9px;
+    border-radius:6px;
+    background:#f8fafc;
+    border:1px solid var(--border-color);
+    color:var(--text-secondary);
+    font-size:11px;
+    font-weight:600;
+}
+.dash-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+}
+.dash-badge.scheduled {
+    background:var(--secondary-blue-light);
+    color:#1d4ed8;
+}
+.dash-badge.in-progress {
+    background:var(--secondary-gold-light);
+    color:#b45309;
+}
+.dash-badge.completed {
+    background:var(--secondary-green-light);
+    color:#15803d;
+}
+.dash-badge.overdue {
+    background:var(--secondary-red-light);
+    color:#b91c1c;
+}
+.dash-badge.cancelled {
+    background:#f1f5f9;
+    color:var(--text-muted);
+}
+.status-dot {
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:currentColor;
+}
+.btn-action-group {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    flex-wrap:nowrap;
+}
+.btn-action {
+    width:34px;
+    height:34px;
+    min-width:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    border:1px solid var(--border-color);
+    background:white;
+    color:var(--text-muted);
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+.btn-action:hover {
+    text-decoration:none;
+    transform:translateY(-1px);
+}
+.btn-action.view:hover {
+    background:#eff6ff;
+    border-color:#3b82f6;
+    color:#2563eb;
+}
+.btn-action.edit:hover {
+    background:#fffbeb;
+    border-color:#d97706;
+    color:#d97706;
+}
+.empty-state {
+    padding:55px 20px;
+    text-align:center;
+}
+.empty-state-icon {
+    width:64px;
+    height:64px;
+    margin:0 auto 15px;
+    border-radius:16px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+.empty-state h4 {
+    margin:0 0 6px;
+    color:var(--text-primary);
+    font-size:15px;
+    font-weight:700;
+}
+.empty-state p {
+    margin:0;
+    color:var(--text-muted);
+    font-size:12px;
+}
+.empty-state .btn-add-teal {
+    margin-top:15px;
+}
+.pagination-wrapper {
+    padding:14px 20px;
+    border-top:1px solid var(--border-color);
+    background:#fafbfc;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+}
+.pagination-info {
+    color:var(--text-muted);
+    font-size:11px;
+}
+.pagination-info strong {
+    color:var(--text-secondary);
+}
+.pagination {
+    margin:0;
+    display:flex;
+    gap:4px;
+}
+.pagination .page-link {
+    min-width:32px;
+    height:32px;
+    padding:0 8px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--border-color);
+    border-radius:7px!important;
+    background:white;
+    color:var(--text-secondary);
+    font-size:11px;
+    font-weight:600;
+    transition:all 0.2s ease;
+}
+.pagination .page-link:hover {
+    border-color:var(--primary-teal);
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+}
+.pagination .page-item.active .page-link {
+    background:var(--primary-teal);
+    border-color:var(--primary-teal);
+    color:white;
+}
+.pagination .page-item.disabled .page-link {
+    background:#f8fafc;
+    color:#cbd5e1;
+    cursor:not-allowed;
+}
+@media (max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .header-right {
+        width:100%;
+    }
+    .btn-add-teal {
+        width:100%;
+    }
+    .dash-search-section {
+        padding:14px 16px;
+    }
+    .search-form {
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .btn-search-teal,
+    .btn-clear-teal {
+        width:100%;
+    }
+    .card-header-custom {
+        padding:13px 16px;
+    }
+    .dash-table thead th,
+    .dash-table tbody td {
+        padding:11px 12px;
+    }
+    .pagination-wrapper {
+        padding:12px 16px;
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .pagination {
+        justify-content:center;
+    }
+}
+@media (max-width:480px) {
+    .dash-page-header .header-left h1 {
+        font-size:18px;
+    }
+    .dash-page-header .header-icon {
+        width:38px;
+        height:38px;
+        font-size:17px;
+    }
+    .schedule-icon {
+        width:30px;
+        height:30px;
+    }
+    .empty-state {
+        padding:40px 15px;
+    }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <h1>Monitoring Schedule Management</h1>
+                <p class="subtitle">Manage scheduled Industrial Hygiene monitoring activities</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'industrial_hygiene:monitoring_schedule_create' %}" class="btn-add-teal">
+                <i class="fas fa-plus"></i>
+                Add Monitoring Schedule
+            </a>
+        </div>
+    </div>
+    <div class="dash-main-card">
+        <div class="dash-search-section">
+            <form method="get" class="search-form">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request.GET.search }}"
+                        class="search-input"
+                        placeholder="Search by schedule, code, plan, program, plant, hazard or status..."
+                        autocomplete="off"
+                    >
+                </div>
+                <button type="submit" class="btn-search-teal">
+                    <i class="fas fa-search"></i>
+                    Search
+                </button>
+                {% if request.GET.search %}
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_list' %}" class="btn-clear-teal">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </a>
+                {% endif %}
+            </form>
+            {% if request.GET.search %}
+            <div class="search-result-info">
+                Showing results for:
+                <strong>"{{ request.GET.search }}"</strong>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-header-custom">
+            <div class="card-header-title">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Industrial Hygiene Monitoring Schedules</h3>
+            </div>
+            {% if paginator %}
+            <div class="header-count">
+                {{ paginator.count }} Schedule{{ paginator.count|pluralize }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="table-wrapper">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th class="col-number">#</th>
+                        <th class="col-schedule">Monitoring Schedule</th>
+                        <th class="col-code">Schedule Code</th>
+                        <th class="col-plan">Monitoring Plan</th>
+                        <th class="col-program">IH Program</th>
+                        <th class="col-plant">Plant</th>
+                        <th class="col-hazard">Hazard</th>
+                        <th class="col-date">Planned Date</th>
+                        <th class="col-date">Frequency</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-action">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in monitoring_schedules %}
+                    <tr>
+                        <td class="col-number">
+                            {% if page_obj %}
+                                {{ page_obj.start_index|add:forloop.counter0 }}
+                            {% else %}
+                                {{ forloop.counter }}
+                            {% endif %}
+                        </td>
+                        <td class="col-schedule">
+                            <div class="schedule-name">
+                                <div class="schedule-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="schedule-name-text">
+                                    <strong>{{ schedule.schedule_name }}</strong>
+                                    <span>Industrial Hygiene Monitoring Schedule</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="col-code">
+                            <span class="code-badge">
+                                {{ schedule.schedule_code }}
+                            </span>
+                        </td>
+                        <td class="col-plan">
+                            {% if schedule.monitoring_plan %}
+                            <div class="plan-text">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span>{{ schedule.monitoring_plan.plan_name }}</span>
+                            </div>
+                            {% else %}
+                            <span class="no-value">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-program">
+                            {% if schedule.monitoring_plan.ih_program %}
+                            <div class="program-text">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>{{ schedule.monitoring_plan.ih_program.program_name }}</span>
+                            </div>
+                            {% else %}
+                            <span class="no-value">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-plant">
+                            {% if schedule.monitoring_plan.plant %}
+                            <div class="plant-text">
+                                <i class="fas fa-industry"></i>
+                                <span>{{ schedule.monitoring_plan.plant.name }}</span>
+                            </div>
+                            {% else %}
+                            <span class="no-value">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-hazard">
+                            {% if schedule.monitoring_plan.hazard %}
+                            <div class="hazard-text">
+                                <i class="fas fa-triangle-exclamation"></i>
+                                <span>{{ schedule.monitoring_plan.hazard.hazard }}</span>
+                            </div>
+                            {% else %}
+                            <span class="no-value">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-date">
+                            {% if schedule.planned_date %}
+                            <div class="date-text">
+                                <i class="far fa-calendar"></i>
+                                <span>{{ schedule.planned_date|date:"d M Y" }}</span>
+                            </div>
+                            {% else %}
+                            <span class="no-value">Not Set</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-date">
+                            {% if schedule.frequency %}
+                            <span class="frequency-badge">
+                                {{ schedule.frequency }}
+                            </span>
+                            {% else %}
+                            <span class="no-value">Not Set</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-status">
+                            {% if schedule.status == "SCHEDULED" %}
+                            <span class="dash-badge scheduled">
+                                <span class="status-dot"></span>
+                                Scheduled
+                            </span>
+                            {% elif schedule.status == "IN_PROGRESS" %}
+                            <span class="dash-badge in-progress">
+                                <span class="status-dot"></span>
+                                In Progress
+                            </span>
+                            {% elif schedule.status == "COMPLETED" %}
+                            <span class="dash-badge completed">
+                                <span class="status-dot"></span>
+                                Completed
+                            </span>
+                            {% elif schedule.status == "OVERDUE" %}
+                            <span class="dash-badge overdue">
+                                <span class="status-dot"></span>
+                                Overdue
+                            </span>
+                            {% elif schedule.status == "CANCELLED" %}
+                            <span class="dash-badge cancelled">
+                                <span class="status-dot"></span>
+                                Cancelled
+                            </span>
+                            {% else %}
+                            <span class="dash-badge cancelled">
+                                <span class="status-dot"></span>
+                                {{ schedule.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="col-action">
+                            <div class="btn-action-group">
+                                <a href="{% url 'industrial_hygiene:monitoring_schedule_detail' schedule.pk %}"
+                                   class="btn-action view"
+                                   title="View Monitoring Schedule">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'industrial_hygiene:monitoring_schedule_edit' schedule.pk %}"
+                                   class="btn-action edit"
+                                   title="Edit Monitoring Schedule">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <h4>No Monitoring Schedules Found</h4>
+                                {% if request.GET.search %}
+                                <p>No monitoring schedules match your search criteria. Try a different search term.</p>
+                                {% else %}
+                                <p>No Industrial Hygiene monitoring schedules have been configured yet. Add your first monitoring schedule to get started.</p>
+                                <a href="{% url 'industrial_hygiene:monitoring_schedule_create' %}" class="btn-add-teal">
+                                    <i class="fas fa-plus"></i>
+                                    Add Monitoring Schedule
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
+                Showing
+                <strong>{{ page_obj.start_index }}</strong>
+                to
+                <strong>{{ page_obj.end_index }}</strong>
+                of
+                <strong>{{ paginator.count }}</strong>
+                schedules
+            </div>
+            <nav aria-label="Monitoring schedule pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                           aria-label="Previous">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+                           aria-label="Next">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
