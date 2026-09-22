@@ -245,6 +245,7 @@ class HIRA(models.Model):
         blank=True,
         related_name="hira_approved",
     )
+    
     review_date = models.DateField(null=True, blank=True)
     approval_date = models.DateField(null=True, blank=True)
     revision_number = models.PositiveIntegerField(default=0)

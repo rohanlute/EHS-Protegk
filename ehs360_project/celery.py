@@ -12,22 +12,35 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'check-due-date-reminders': {
         'task': 'apps.notifications.tasks.send_due_date_reminders',
+        'schedule': crontab(hour=9, minute=0),
+    },
+    'check-compliance-reminders': {
         'task': 'apps.legal_compliance.tasks.send_compliance_reminders',
         'schedule': crontab(hour=9, minute=0),  # Run daily at 9 AM
     },
     'check-overdue-escalations': {
         'task': 'apps.notifications.tasks.send_overdue_escalations',
+        'schedule': crontab(hour=10, minute=0),
+    },
+    'check-compliance-overdue-escalations': {
         'task': 'apps.legal_compliance.tasks.send_overdue_escalations',
         'schedule': crontab(hour=10, minute=0),  # Run daily at 10 AM
     },
     'check-investigation-overdue': {
         'task': 'apps.notifications.tasks.send_investigation_overdue_notifications',
-    'task': 'apps.alert_engine.tasks.send_investigation_overdue_notifications',
-    'schedule': crontab(hour=11, minute=0),  # Daily at 11 AM IST
+        'schedule': crontab(hour=11, minute=0),
+    },
+    'check-alert-investigation-overdue': {
+        'task': 'apps.alert_engine.tasks.send_investigation_overdue_notifications',
+        'schedule': crontab(hour=11, minute=0),  # Daily at 11 AM IST
     },
     'auto-create-inspection-schedules': {
     'task': 'apps.inspections.tasks.auto_create_inspection_schedules', 
     'schedule': crontab(hour=0, minute=0),  
+    },
+    'refresh-live-benchmark-results': {
+        'task': 'apps.benchmarking.tasks.refresh_live_benchmark_results',
+        'schedule': crontab(minute=0),
     },
 }
 
