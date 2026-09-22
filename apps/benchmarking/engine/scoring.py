@@ -17,3 +17,27 @@ def calculate_overall_score(category_scores):
     if not valid: return Decimal("0.00")
     weight_total = sum(w for _, w in valid)
     return min(Decimal("100"), sum(s * w for s, w in valid) / weight_total).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+
+
+def calculate_category_score(kpi_scores):
+    """Return a category score from configured KPI score/weight pairs."""
+    return calculate_overall_score(kpi_scores)
+
+
+def calculate_overall_target(category_targets):
+    """Return a weighted overall target, or ``None`` when no KPI target exists."""
+    valid = [(Decimal(str(target)), Decimal(str(weight))) for target, weight in category_targets if target is not None]
+    if not valid:
+        return None
+    weight_total = sum(weight for _, weight in valid)
+    return (sum(target * weight for target, weight in valid) / weight_total).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+ 
+
+def calculate_trend(current_score, previous_score, threshold):
+    """Classify score movement using the configured stability threshold."""
+    if previous_score is None or current_score is None:
+        return "STABLE"
+    difference = Decimal(str(current_score)) - Decimal(str(previous_score))
+    if abs(difference) < Decimal(str(threshold)):
+        return "STABLE"
+    return "IMPROVING" if difference > 0 else "DECLINING"

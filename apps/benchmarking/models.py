@@ -61,7 +61,20 @@ class BenchmarkTarget(models.Model):
     target_type = models.CharField(max_length=15, choices=Type.choices); plant = models.ForeignKey(Plant, null=True, blank=True, on_delete=models.PROTECT); department = models.ForeignKey(Department, null=True, blank=True, on_delete=models.PROTECT)
     target_value = models.DecimalField(max_digits=14, decimal_places=4); effective_from = models.DateField(); effective_to = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="created_benchmark_targets"); updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="updated_benchmark_targets")
-    class Meta: indexes = [models.Index(fields=["framework", "kpi", "target_type"])]
+    class Meta:
+        indexes = [models.Index(fields=["framework", "kpi", "target_type"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["framework", "kpi", "plant", "effective_from"],
+                condition=Q(target_type="PLANT", department__isnull=True, effective_to__isnull=True),
+                name="unique_open_plant_benchmark_target",
+            ),
+            models.UniqueConstraint(
+                fields=["framework", "kpi", "plant", "effective_from", "effective_to"],
+                condition=Q(target_type="PLANT", department__isnull=True, effective_to__isnull=False),
+                name="unique_dated_plant_benchmark_target",
+            ),
+        ]
     def clean(self):
         if self.kpi_id and self.framework_id and self.kpi.category.framework_id != self.framework_id: raise ValidationError("KPI must belong to the selected framework.")
         if self.target_type != self.Type.PLANT or not self.plant_id or self.department_id:
@@ -100,7 +113,15 @@ class BenchmarkResult(models.Model):
     overall_score = models.DecimalField(max_digits=5, decimal_places=2); performance_level = models.ForeignKey(BenchmarkPerformanceLevel, null=True, blank=True, on_delete=models.SET_NULL)
     target_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True); target_gap = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True); previous_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True); previous_gap = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True); best_performer_gap = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     trend = models.CharField(max_length=12, choices=Trend.choices, default=Trend.STABLE); rank = models.PositiveIntegerField(null=True, blank=True); created_at = models.DateTimeField(auto_now_add=True); updated_at = models.DateTimeField(auto_now=True)
-    class Meta: constraints = [models.UniqueConstraint(fields=["framework", "period", "scope_type", "plant", "department"], name="unique_benchmark_result_scope")]; indexes = [models.Index(fields=["period", "scope_type", "rank"])]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["framework", "period", "scope_type", "plant"],
+                condition=Q(scope_type="PLANT", department__isnull=True),
+                name="unique_plant_benchmark_result",
+            ),
+        ]
+        indexes = [models.Index(fields=["period", "scope_type", "rank"])]
 
 
 class BenchmarkKPIResult(models.Model):
@@ -114,7 +135,15 @@ class BenchmarkGap(models.Model):
     class Type(models.TextChoices): KPI = "KPI", "KPI"; CATEGORY = "CATEGORY", "Category"; TARGET = "TARGET", "Target"; BEST = "BEST_PERFORMER", "Best performer"; PREVIOUS = "PREVIOUS_PERIOD", "Previous period"
     benchmark_result = models.ForeignKey(BenchmarkResult, on_delete=models.CASCADE, related_name="gaps"); kpi = models.ForeignKey(BenchmarkKPI, null=True, blank=True, on_delete=models.SET_NULL); category = models.ForeignKey(BenchmarkCategory, null=True, blank=True, on_delete=models.SET_NULL)
     gap_type = models.CharField(max_length=20, choices=Type.choices); actual_value = models.DecimalField(max_digits=14, decimal_places=4); reference_value = models.DecimalField(max_digits=14, decimal_places=4); gap_value = models.DecimalField(max_digits=14, decimal_places=4); priority = models.CharField(max_length=10, choices=[("HIGH", "High"), ("MEDIUM", "Medium"), ("LOW", "Low")]); reason = models.TextField(blank=True); created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["benchmark_result", "kpi", "gap_type"], condition=Q(kpi__isnull=False), name="unique_benchmark_kpi_gap"),
+        ]
 
 
 class BenchmarkInsight(models.Model):
     benchmark_result = models.ForeignKey(BenchmarkResult, on_delete=models.CASCADE, related_name="insights"); title = models.CharField(max_length=255); description = models.TextField(); reason = models.TextField(blank=True); priority = models.CharField(max_length=10, choices=[("HIGH", "High"), ("MEDIUM", "Medium"), ("LOW", "Low")]); recommendation = models.TextField(blank=True); related_kpi = models.ForeignKey(BenchmarkKPI, null=True, blank=True, on_delete=models.SET_NULL); related_category = models.ForeignKey(BenchmarkCategory, null=True, blank=True, on_delete=models.SET_NULL); status = models.CharField(max_length=15, choices=[("OPEN", "Open"), ("ACKNOWLEDGED", "Acknowledged"), ("RESOLVED", "Resolved")], default="OPEN"); created_at = models.DateTimeField(auto_now_add=True); updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["benchmark_result", "related_kpi"], condition=Q(related_kpi__isnull=False), name="unique_benchmark_kpi_insight"),
+        ]
