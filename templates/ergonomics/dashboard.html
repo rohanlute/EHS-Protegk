@@ -1,0 +1,1401 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Ergonomics Dashboard | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item active">Ergonomics</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+
+  /* ========================================================== */
+  /* PAGE HEADER                                                 */
+  /* ========================================================== */
+  .ergo-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .ergo-header .ergo-title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ergo-header .ergo-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .ergo-header .ergo-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+  }
+
+  .ergo-header .ergo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ========================================================== */
+  /* BUTTONS                                                     */
+  /* ========================================================== */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary:hover {
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-sm.btn-outline-secondary {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  /* ========================================================== */
+  /* METRIC CARDS                                                */
+  /* ========================================================== */
+  .metric {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 100%;
+  }
+
+  .metric strong {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary-teal);
+    line-height: 1.1;
+  }
+
+  .metric span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .metric.metric-warning strong { color: var(--warning-amber); }
+  .metric.metric-danger  strong { color: var(--danger-red); }
+  .metric.metric-success strong { color: var(--success-green); }
+
+  /* ========================================================== */
+  /* CARDS                                                       */
+  /* ========================================================== */
+  .ehs-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 24px;
+    height: 100%;
+  }
+
+  .ehs-card .card-header {
+    background: var(--primary-teal-light);
+    padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ehs-card .card-header strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .ehs-card .card-body { padding: 0; }
+  .ehs-card .card-body.padded { padding: 20px 24px; }
+
+  /* ========================================================== */
+  /* FILTER CARD                                                 */
+  /* ========================================================== */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 18px 24px;
+    margin-bottom: 24px;
+  }
+
+  .filter-card label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .filter-card .form-control,
+  .filter-card .form-select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    width: 100%;
+  }
+
+  .filter-card .form-control:focus,
+  .filter-card .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  /* ========================================================== */
+  /* TABLES                                                      */
+  /* ========================================================== */
+  .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+  }
+
+  .table thead th {
+    background: var(--primary-teal-light);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+
+  .table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .table tbody tr:hover { background: var(--primary-teal-light); }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .table a { color: var(--primary-teal); font-weight: 600; text-decoration: none; }
+  .table a:hover { color: var(--primary-teal-dark); text-decoration: underline; }
+
+  /* ========================================================== */
+  /* BADGES                                                      */
+  /* ========================================================== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .status-badge.status-draft,
+  .status-badge.status-pending,
+  .status-badge.status-open,
+  .status-badge.status-in-progress,
+  .status-badge.status-assigned,
+  .status-badge.status-in_progress {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--pending-orange);
+  }
+
+  .status-badge.status-approved,
+  .status-badge.status-completed,
+  .status-badge.status-closed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-green);
+  }
+
+  .status-badge.status-rejected,
+  .status-badge.status-overdue {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--danger-red);
+  }
+
+  .status-badge.status-submitted,
+  .status-badge.status-under-review,
+  .status-badge.status-under_review,
+  .status-badge.status-pending_verification {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .risk-badge-low       { background: rgba(34, 197, 94, 0.12);  color: var(--success-green); }
+  .risk-badge-medium    { background: rgba(217, 119, 6, 0.12);  color: var(--warning-amber); }
+  .risk-badge-high      { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+  .risk-badge-very_high { background: rgba(220, 38, 38, 0.12);  color: var(--danger-red); }
+  .risk-badge-          { background: rgba(100, 116, 139, 0.12); color: var(--text-muted); }
+
+  /* ========================================================== */
+  /* CHARTS                                                      */
+  /* ========================================================== */
+  .chart-wrap {
+    padding: 18px 20px;
+    height: 260px;
+    min-height: 260px;
+    position: relative;
+  }
+
+  .chart-wrap canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 260px;
+  }
+
+  /* ========================================================== */
+  /* OVERDUE LIST                                                */
+  /* ========================================================== */
+  .overdue-list {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .overdue-list .table td {
+    font-size: 12px;
+    padding: 10px 14px;
+  }
+
+  /* ========================================================== */
+  /* SITE BENCHMARKING                                           */
+  /* ========================================================== */
+  .benchmark-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 20px 24px;
+  }
+
+  .benchmark-tile {
+    background: var(--bg-page);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-teal);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+  }
+
+  .benchmark-tile.tile-warning { border-left-color: var(--warning-amber); }
+  .benchmark-tile.tile-danger  { border-left-color: var(--danger-red); }
+  .benchmark-tile.tile-success { border-left-color: var(--success-green); }
+
+  .benchmark-tile .bm-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .benchmark-tile .bm-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .benchmark-tile .bm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+  }
+
+  .benchmark-tile .bm-row .bm-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+  }
+
+  .benchmark-tile .bm-row .bm-value {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .benchmark-tile .bm-row .bm-value.bm-good { color: var(--success-green); }
+  .benchmark-tile .bm-row .bm-value.bm-warn { color: var(--warning-amber); }
+  .benchmark-tile .bm-row .bm-value.bm-bad  { color: var(--danger-red); }
+
+  .benchmark-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .benchmark-empty i {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.4;
+    color: var(--primary-teal);
+  }
+
+  /* ========================================================== */
+  /* UTILITY                                                     */
+  /* ========================================================== */
+  .text-center.text-muted {
+    color: var(--text-muted) !important;
+    font-size: 13px;
+  }
+
+  /* ========================================================== */
+  /* RESPONSIVE                                                  */
+  /* ========================================================== */
+  @media (max-width: 768px) {
+    .ergo-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .metric strong { font-size: 22px; }
+
+    .table thead { display: none; }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .table tbody td:last-child { border-bottom: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <!-- ============================================================ -->
+  <!-- PAGE HEADER                                                  -->
+  <!-- ============================================================ -->
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>Ergonomics Dashboard</h1>
+      <p>Identify → Assess → Score → Risk → Control → Corrective Action → Verify → Reassess → Analyze</p>
+    </div>
+    <div class="ergo-actions">
+      <a href="{% url 'ergonomics:assessment_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Assessment
+      </a>
+      <a href="{% url 'ergonomics:observation_create' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-eye"></i> Quick Observation
+      </a>
+      <a href="{% url 'ergonomics:report_export' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-file-excel"></i> Export
+      </a>
+      <a href="{% url 'ergonomics:department_report_export' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-building"></i> Dept Report
+      </a>
+      <a href="{% url 'ergonomics:management_report_export' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-chart-pie"></i> Mgmt Report
+      </a>
+     <a href="{% url 'ergonomics:site_benchmarks' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-balance-scale"></i> Benchmark
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FILTERS                                                      -->
+  <!-- ============================================================ -->
+  <div class="filter-card">
+    <form method="get" class="row g-2 align-items-end">
+
+      <div class="col-md-2 col-6">
+        <label>Site</label>
+        <select name="plant" class="form-select">
+          <option value="">All Sites</option>
+          {% for plant in plants %}
+          <option value="{{ plant.id }}" {% if request.GET.plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label>Department</label>
+        <select name="department" class="form-select">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+          <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label>Area</label>
+        <select name="area" class="form-select">
+          <option value="">All Areas</option>
+          {% for area in areas %}
+          <option value="{{ area }}" {% if request.GET.area == area %}selected{% endif %}>{{ area }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label>Method</label>
+        <select name="method" class="form-select">
+          <option value="">All Methods</option>
+          {% for method in methods %}
+          <option value="{{ method.id }}" {% if request.GET.method == method.id|stringformat:"s" %}selected{% endif %}>{{ method.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label>Risk Level</label>
+        <select name="risk_level" class="form-select">
+          <option value="">All</option>
+          <option value="LOW"       {% if request.GET.risk_level == "LOW" %}selected{% endif %}>Low</option>
+          <option value="MEDIUM"    {% if request.GET.risk_level == "MEDIUM" %}selected{% endif %}>Medium</option>
+          <option value="HIGH"      {% if request.GET.risk_level == "HIGH" %}selected{% endif %}>High</option>
+          <option value="VERY_HIGH" {% if request.GET.risk_level == "VERY_HIGH" %}selected{% endif %}>Very High</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label>Status</label>
+        <select name="status" class="form-select">
+          <option value="">All</option>
+          {% for value, label in statuses %}
+          <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3 col-6">
+        <label>From Date</label>
+        <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="form-control">
+      </div>
+
+      <div class="col-md-3 col-6">
+        <label>To Date</label>
+        <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="form-control">
+      </div>
+
+      <div class="col-md-3 col-6">
+        <label>Assessor</label>
+        <select name="assessor" class="form-select">
+          <option value="">All Assessors</option>
+          {% for a in assessors %}
+          <option value="{{ a.id }}" {% if request.GET.assessor == a.id|stringformat:"s" %}selected{% endif %}>{{ a.get_full_name|default:a.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3 col-12 d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary flex-fill">
+          <i class="fas fa-filter"></i> Apply
+        </button>
+        <a href="{% url 'ergonomics:dashboard' %}" class="btn btn-outline-secondary flex-fill">
+          Reset
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- KPI METRICS                                                  -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-6">
+      <div class="metric"><strong>{{ total_assessments }}</strong><span>Total Assessments</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric metric-warning"><strong>{{ high_risk }}</strong><span>High Risk</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric metric-danger"><strong>{{ very_high_risk }}</strong><span>Very High Risk</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric"><strong>{{ msd_cases }}</strong><span>MSD / Discomfort</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric"><strong>{{ open_actions }}</strong><span>Open Actions</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric metric-danger"><strong>{{ overdue_actions }}</strong><span>Overdue Actions</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric metric-success"><strong>{{ completed_actions }}</strong><span>Completed Actions</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric"><strong>{{ assessments_due }}</strong><span>Assessments Due</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric"><strong>{{ average_score }}</strong><span>Avg Risk Score</span></div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="metric metric-success"><strong>{{ risk_reduction }}%</strong><span>Risk Reduction</span></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHARTS — ROW 1                                               -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-chart-pie" style="color: var(--primary-teal);"></i>
+          <strong>Risk Level Distribution</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskDistChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-chart-bar" style="color: var(--primary-teal);"></i>
+          <strong>Assessments by Department</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="deptDistChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHARTS — ROW 2                                               -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-8">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-chart-line" style="color: var(--primary-teal);"></i>
+          <strong>Ergonomic Risk Trend</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskTrendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-building" style="color: var(--primary-teal);"></i>
+          <strong>Risk by Site</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="siteChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHARTS — ROW 3                                               -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-exclamation-circle" style="color: var(--primary-teal);"></i>
+          <strong>High-Risk Tasks</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="highRiskTaskChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-user-injured" style="color: var(--primary-teal);"></i>
+          <strong>Most Affected Body Parts</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="bodyPartChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHARTS — ROW 4                                               -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-tasks" style="color: var(--primary-teal);"></i>
+          <strong>Corrective Action Status</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="actionStatusChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-exchange-alt" style="color: var(--primary-teal);"></i>
+          <strong>Before vs After Risk Score</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="beforeAfterChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHARTS — ROW 5                                               -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-calculator" style="color: var(--primary-teal);"></i>
+          <strong>Assessment Method Usage</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="methodChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-clock" style="color: var(--danger-red);"></i>
+          <strong>Overdue Actions</strong>
+        </div>
+        <div class="card-body p-0">
+          <div class="overdue-list table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Action ID</th>
+                  <th>Assessment</th>
+                  <th>Target</th>
+                  <th>Responsible</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in overdue_list %}
+                <tr>
+                  <td>{{ a.action_id }}</td>
+                  <td><a href="{% url 'ergonomics:detail' a.assessment.pk %}">{{ a.assessment.assessment_id }}</a></td>
+                  <td>{{ a.target_date }}</td>
+                  <td>{{ a.responsible_person.get_full_name|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No overdue actions.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PHASE 2 CHARTS — ROW A: Risk by Job + Risk by Task           -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-briefcase" style="color: var(--primary-teal);"></i>
+          <strong>Risk by Job</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskByJobChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-tasks" style="color: var(--primary-teal);"></i>
+          <strong>Risk by Task</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskByTaskChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PHASE 2 CHARTS — ROW B: Risk by Shift + Risk by Month        -->
+  <!-- ============================================================ -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-clock" style="color: var(--primary-teal);"></i>
+          <strong>Risk by Shift</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskByShiftChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header">
+          <i class="fas fa-calendar" style="color: var(--primary-teal);"></i>
+          <strong>Risk by Month</strong>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="riskByMonthChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SITE BENCHMARKING                                            -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header" style="justify-content: space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-balance-scale" style="color: var(--primary-teal);"></i>
+        <strong>Site Benchmarking</strong>
+      </div>
+      <a href="{% url 'ergonomics:site_benchmarks_api' %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-code"></i> JSON
+      </a>
+    </div>
+    <div class="card-body p-0">
+      {% if benchmark_rows %}
+      <div class="benchmark-grid">
+        {% for row in benchmark_rows %}
+        <div class="benchmark-tile
+                    {% if row.average_risk_score > 7 or row.high_risk_tasks > 20 %}tile-danger
+                    {% elif row.average_risk_score > 4 or row.high_risk_tasks > 10 %}tile-warning
+                    {% else %}tile-success{% endif %}">
+
+          <div class="bm-name">
+            <span>{{ row.plant }}</span>
+            {% if row.average_risk_score > 7 %}
+              <span class="risk-badge risk-badge-high">High</span>
+            {% elif row.average_risk_score > 4 %}
+              <span class="risk-badge risk-badge-medium">Medium</span>
+            {% else %}
+              <span class="risk-badge risk-badge-low">Low</span>
+            {% endif %}
+          </div>
+
+          <div class="bm-rows">
+            <div class="bm-row">
+              <span class="bm-label">Assessments</span>
+              <span class="bm-value">{{ row.total_assessments }}</span>
+            </div>
+
+            <div class="bm-row">
+              <span class="bm-label">High-Risk Tasks</span>
+              <span class="bm-value {% if row.high_risk_tasks > 20 %}bm-bad{% elif row.high_risk_tasks > 10 %}bm-warn{% else %}bm-good{% endif %}">
+                {{ row.high_risk_tasks }}
+              </span>
+            </div>
+
+            <div class="bm-row">
+              <span class="bm-label">Avg Risk Score</span>
+              <span class="bm-value {% if row.average_risk_score > 7 %}bm-bad{% elif row.average_risk_score > 4 %}bm-warn{% else %}bm-good{% endif %}">
+                {{ row.average_risk_score }}
+              </span>
+            </div>
+
+            <div class="bm-row">
+              <span class="bm-label">MSD Cases</span>
+              <span class="bm-value {% if row.msd_cases > 10 %}bm-bad{% elif row.msd_cases > 5 %}bm-warn{% else %}bm-good{% endif %}">
+                {{ row.msd_cases }}
+              </span>
+            </div>
+
+            <div class="bm-row">
+              <span class="bm-label">Action Closure</span>
+              <span class="bm-value {% if row.action_closure >= 80 %}bm-good{% elif row.action_closure >= 60 %}bm-warn{% else %}bm-bad{% endif %}">
+                {{ row.action_closure }}%
+              </span>
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="benchmark-empty">
+        <i class="fas fa-balance-scale"></i>
+        No site data available yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RECENT ASSESSMENTS                                           -->
+  <!-- ============================================================ -->
+  <div class="ehs-card">
+    <div class="card-header" style="justify-content: space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-history" style="color: var(--primary-teal);"></i>
+        <strong>Recent Assessments</strong>
+      </div>
+      <a href="{% url 'ergonomics:assessments' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Assessment ID</th>
+              <th>Site</th>
+              <th>Department</th>
+              <th>Job / Task</th>
+              <th>Method</th>
+              <th>Score</th>
+              <th>Risk</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in assessments %}
+            <tr>
+              <td><a href="{% url 'ergonomics:detail' a.pk %}">{{ a.assessment_id }}</a></td>
+              <td>{{ a.plant.name }}</td>
+              <td>{{ a.department.name }}</td>
+              <td>{{ a.job_role }} / {{ a.task }}</td>
+              <td>{{ a.assessment_method.name }}</td>
+              <td>{{ a.score|default:"—" }}</td>
+              <td>
+                {% if a.risk_level %}
+                  <span class="risk-badge risk-badge-{{ a.risk_level|lower }}">{{ a.get_risk_level_display }}</span>
+                {% else %}—{% endif %}
+              </td>
+              <td><span class="status-badge status-{{ a.status|lower }}">{{ a.get_status_display }}</span></td>
+              <td>{{ a.assessment_date }}</td>
+              <td>
+                <a href="{% url 'ergonomics:detail' a.pk %}" class="btn btn-sm btn-outline-secondary">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="10" class="text-center text-muted py-4">
+                <i class="fas fa-clipboard-list" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
+                No assessments recorded yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function initCharts() {
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js failed to load.');
+      return;
+    }
+
+    var RISK_PALETTE = ['#22c55e', '#d97706', '#ea580c', '#dc2626', '#94a3b8'];
+    var MIXED_PALETTE = ['#0d9488', '#0f766e', '#22c55e', '#d97706', '#ea580c', '#dc2626', '#64748b', '#94a3b8'];
+    var CHART_FONT = { family: 'Inter', size: 12 };
+    var GRID_COLOR = '#e2e8f0';
+    var BASE_OPTS = { responsive: true, maintainAspectRatio: false };
+
+    function make(id, config) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      try {
+        new Chart(el, config);
+      } catch (e) {
+        console.error('Chart error on ' + id + ':', e);
+      }
+    }
+
+    /* ---------------------------------------------------------- */
+    /* 1. Risk Distribution                                        */
+    /* ---------------------------------------------------------- */
+    make('riskDistChart', {
+      type: 'doughnut',
+      data: {
+        labels: [{% for r in risk_distribution %}"{{ r.risk_level|default:'Unscored' }}",{% endfor %}],
+        datasets: [{
+          data: [{% for r in risk_distribution %}{{ r.total }},{% endfor %}],
+          backgroundColor: RISK_PALETTE,
+          borderWidth: 0
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: CHART_FONT, padding: 12, usePointStyle: true }
+          }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 2. Assessments by Department                                */
+    /* ---------------------------------------------------------- */
+    make('deptDistChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for d in department_distribution %}"{{ d.department__name|default:'Unassigned' }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for d in department_distribution %}{{ d.total }},{% endfor %}],
+          backgroundColor: '#0d9488',
+          borderRadius: 6,
+          maxBarThickness: 40
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 3. Ergonomic Risk Trend                                     */
+    /* ---------------------------------------------------------- */
+    make('riskTrendChart', {
+      type: 'line',
+      data: {
+        labels: [{% for t in risk_trend %}"{{ t.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'Avg Score',
+          data: [{% for t in risk_trend %}{{ t.avg_score|floatformat:2 }},{% endfor %}],
+          borderColor: '#0d9488',
+          backgroundColor: 'rgba(13,148,136,0.10)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#0d9488',
+          pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 4. Risk by Site                                             */
+    /* ---------------------------------------------------------- */
+    make('siteChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for s in risk_by_site %}"{{ s.plant__name }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for s in risk_by_site %}{{ s.total }},{% endfor %}],
+          backgroundColor: '#0f766e',
+          borderRadius: 6,
+          maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 5. High-Risk Tasks                                          */
+    /* ---------------------------------------------------------- */
+    make('highRiskTaskChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for t in high_risk_tasks %}"{{ t.task|truncatechars:28 }}",{% endfor %}],
+        datasets: [{
+          label: 'Count',
+          data: [{% for t in high_risk_tasks %}{{ t.total }},{% endfor %}],
+          backgroundColor: '#ea580c',
+          borderRadius: 6,
+          maxBarThickness: 36
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 6. Most Affected Body Parts                                 */
+    /* ---------------------------------------------------------- */
+    make('bodyPartChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for b in body_parts %}"{{ b.body_part }}",{% endfor %}],
+        datasets: [{
+          label: 'MSD Cases',
+          data: [{% for b in body_parts %}{{ b.total }},{% endfor %}],
+          backgroundColor: '#dc2626',
+          borderRadius: 6,
+          maxBarThickness: 36
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 7. Corrective Action Status                                 */
+    /* ---------------------------------------------------------- */
+    make('actionStatusChart', {
+      type: 'doughnut',
+      data: {
+        labels: [{% for a in action_status %}"{{ a.status }}",{% endfor %}],
+        datasets: [{
+          data: [{% for a in action_status %}{{ a.total }},{% endfor %}],
+          backgroundColor: MIXED_PALETTE,
+          borderWidth: 0
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: CHART_FONT, padding: 10, usePointStyle: true }
+          }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 8. Before vs After Risk Score                               */
+    /* ---------------------------------------------------------- */
+    make('beforeAfterChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for b in before_after %}"{{ b.assessment__assessment_id }}",{% endfor %}],
+        datasets: [
+          {
+            label: 'Before',
+            data: [{% for b in before_after %}{{ b.previous_score }},{% endfor %}],
+            backgroundColor: '#dc2626',
+            borderRadius: 6,
+            maxBarThickness: 36
+          },
+          {
+            label: 'After',
+            data: [{% for b in before_after %}{{ b.new_score }},{% endfor %}],
+            backgroundColor: '#22c55e',
+            borderRadius: 6,
+            maxBarThickness: 36
+          }
+        ]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: CHART_FONT, usePointStyle: true }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 9. Assessment Method Usage                                  */
+    /* ---------------------------------------------------------- */
+    make('methodChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for m in method_usage %}"{{ m.assessment_method__name }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for m in method_usage %}{{ m.total }},{% endfor %}],
+          backgroundColor: '#0d9488',
+          borderRadius: 6,
+          maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 10. Risk by Job                                             */
+    /* ---------------------------------------------------------- */
+    make('riskByJobChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for j in risk_by_job %}"{{ j.job_role|truncatechars:25 }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for j in risk_by_job %}{{ j.total }},{% endfor %}],
+          backgroundColor: '#0d9488',
+          borderRadius: 6,
+          maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 11. Risk by Task                                            */
+    /* ---------------------------------------------------------- */
+    make('riskByTaskChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for t in risk_by_task %}"{{ t.task|truncatechars:25 }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for t in risk_by_task %}{{ t.total }},{% endfor %}],
+          backgroundColor: '#0f766e',
+          borderRadius: 6,
+          maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 12. Risk by Shift                                           */
+    /* ---------------------------------------------------------- */
+    make('riskByShiftChart', {
+      type: 'doughnut',
+      data: {
+        labels: [{% for s in risk_by_shift %}"{{ s.shift }}",{% endfor %}],
+        datasets: [{
+          data: [{% for s in risk_by_shift %}{{ s.total }},{% endfor %}],
+          backgroundColor: MIXED_PALETTE,
+          borderWidth: 0
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: CHART_FONT, padding: 10, usePointStyle: true }
+          }
+        }
+      })
+    });
+
+    /* ---------------------------------------------------------- */
+    /* 13. Risk by Month                                           */
+    /* ---------------------------------------------------------- */
+    make('riskByMonthChart', {
+      type: 'line',
+      data: {
+        labels: [{% for m in risk_by_month %}"{{ m.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for m in risk_by_month %}{{ m.total }},{% endfor %}],
+          borderColor: '#0d9488',
+          backgroundColor: 'rgba(13, 148, 136, 0.10)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#0d9488',
+          pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    console.log('Ergonomics charts initialized.');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCharts);
+  } else {
+    initCharts();
+  }
+})();
+</script>
+{% endblock %}

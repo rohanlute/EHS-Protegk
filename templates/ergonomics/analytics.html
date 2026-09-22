@@ -1,0 +1,574 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Ergonomics Analytics | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'ergonomics:dashboard' %}">Ergonomics</a></li>
+<li class="breadcrumb-item active">Analytics</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --radius-card: 12px;
+    --radius-sm: 8px;
+    --success-green: #22c55e;
+    --pending-orange: #d97706;
+    --danger-red: #dc2626;
+    --warning-amber: #d97706;
+  }
+
+  body { font-family: 'Inter', sans-serif; }
+  .content-wrapper { background: var(--bg-page) !important; }
+
+  .ergo-header {
+    background: var(--bg-card); border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card); border: 1px solid var(--border-color);
+    padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .ergo-header .ergo-title h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0; }
+  .ergo-header .ergo-title p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0; }
+  .ergo-header .ergo-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    border: none; color: #fff; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 13px; padding: 8px 18px;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:hover { color: #fff; transform: translateY(-1px); }
+  .btn-outline-success {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(34, 197, 94, 0.4);
+    color: var(--success-green);
+    border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 13px; padding: 8px 18px;
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none;
+  }
+  .btn-outline-success:hover {
+    background: rgba(34, 197, 94, 0.10);
+    color: var(--success-green);
+  }
+
+  .filter-card {
+    background: var(--bg-card); border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card); border: 1px solid var(--border-color);
+    padding: 18px 24px; margin-bottom: 24px;
+  }
+  .filter-card label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.3px;
+    margin-bottom: 4px; display: block;
+  }
+  .filter-card .form-control,
+  .filter-card .form-select {
+    border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
+    font-size: 13px; padding: 8px 12px; color: var(--text-primary);
+    background: var(--bg-card); width: 100%;
+  }
+  .filter-card .form-control:focus,
+  .filter-card .form-select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px var(--primary-teal-light);
+    outline: none;
+  }
+
+  .ehs-card {
+    background: var(--bg-card); border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card); border: 1px solid var(--border-color);
+    overflow: hidden; margin-bottom: 24px; height: 100%;
+  }
+  .ehs-card .card-header {
+    background: var(--primary-teal-light); padding: 14px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ehs-card .card-header strong { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .ehs-card .card-body { padding: 0; }
+
+  .chart-wrap {
+    padding: 18px 20px;
+    height: 280px;
+    min-height: 280px;
+    position: relative;
+  }
+  .chart-wrap canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 280px;
+  }
+
+  @media (max-width: 768px) {
+    .ergo-header { flex-direction: column; align-items: stretch; }
+    .chart-wrap { height: 240px; padding: 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0;">
+
+  <div class="ergo-header">
+    <div class="ergo-title">
+      <h1>Ergonomics Analytics</h1>
+      <p>Risk distribution, method usage, departmental exposure, MSD and corrective action trends.</p>
+    </div>
+    <div class="ergo-actions">
+      <a href="{% url 'ergonomics:report_export' %}" class="btn btn-outline-success">
+        <i class="fas fa-file-excel"></i> Export
+      </a>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-card">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3 col-6">
+        <label>Site</label>
+        <select name="plant" class="form-select">
+          <option value="">All Sites</option>
+          {% for plant in plants %}
+          <option value="{{ plant.id }}" {% if request.GET.plant == plant.id|stringformat:"s" %}selected{% endif %}>{{ plant.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3 col-6">
+        <label>Department</label>
+        <select name="department" class="form-select">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+          <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 col-6">
+        <label>From Date</label>
+        <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="form-control">
+      </div>
+      <div class="col-md-2 col-6">
+        <label>To Date</label>
+        <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="form-control">
+      </div>
+      <div class="col-md-2 col-12">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="fas fa-filter"></i> Apply
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ROW 1 — Risk Distribution + Department -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-chart-pie" style="color: var(--primary-teal);"></i><strong>Risk Level Distribution</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="riskChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-building" style="color: var(--primary-teal);"></i><strong>Assessments by Department</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2 — Method Usage + Body Parts -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-calculator" style="color: var(--primary-teal);"></i><strong>Assessment Method Usage</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="methodChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-user-injured" style="color: var(--primary-teal);"></i><strong>Most Affected Body Parts (MSD)</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="bodyPartChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3 — Risk by Site + Risk by Shift -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-industry" style="color: var(--primary-teal);"></i><strong>Risk by Site</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="siteChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-clock" style="color: var(--primary-teal);"></i><strong>Risk by Shift</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="shiftChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 4 — Risk by Job + Risk by Task -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-briefcase" style="color: var(--primary-teal);"></i><strong>Risk by Job</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="jobChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-tasks" style="color: var(--primary-teal);"></i><strong>Risk by Task</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="taskChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 5 — Risk by Month + High-Risk Task Trend -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-calendar" style="color: var(--primary-teal);"></i><strong>Risk by Month</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="monthChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-exclamation-circle" style="color: var(--warning-amber);"></i><strong>High-Risk Task Trend</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="highRiskTrendChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 6 — MSD Trend + Corrective Action Trend -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-heartbeat" style="color: var(--danger-red);"></i><strong>MSD / Discomfort Trend</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="msdTrendChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-tools" style="color: var(--primary-teal);"></i><strong>Corrective Action Trend</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="actionTrendChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 7 — Risk Reduction Trend (full width) -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-12">
+      <div class="ehs-card mb-0">
+        <div class="card-header"><i class="fas fa-arrow-down" style="color: var(--success-green);"></i><strong>Risk Reduction Trend (avg % per month)</strong></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="reductionTrendChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  function initCharts() {
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js failed to load.');
+      return;
+    }
+
+    var RISK_PALETTE = ['#22c55e', '#d97706', '#ea580c', '#dc2626', '#94a3b8'];
+    var CHART_FONT = { family: 'Inter', size: 12 };
+    var GRID_COLOR = '#e2e8f0';
+    var BASE_OPTS = { responsive: true, maintainAspectRatio: false };
+
+    function make(id, config) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      try { new Chart(el, config); }
+      catch (e) { console.error('Chart error on ' + id + ':', e); }
+    }
+
+    /* 1. Risk Distribution */
+    make('riskChart', {
+      type: 'doughnut',
+      data: {
+        labels: [{% for r in by_risk %}"{{ r.risk_level|default:'Unscored' }}",{% endfor %}],
+        datasets: [{
+          data: [{% for r in by_risk %}{{ r.total }},{% endfor %}],
+          backgroundColor: RISK_PALETTE,
+          borderWidth: 0
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        cutout: '60%',
+        plugins: { legend: { position: 'bottom', labels: { font: CHART_FONT, padding: 12, usePointStyle: true } } }
+      })
+    });
+
+    /* 2. Department */
+    make('deptChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for d in by_department %}"{{ d.department__name|default:'Unassigned' }}",{% endfor %}],
+        datasets: [{
+          data: [{% for d in by_department %}{{ d.total }},{% endfor %}],
+          backgroundColor: '#0d9488', borderRadius: 6, maxBarThickness: 40
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 3. Method Usage */
+    make('methodChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for m in by_method %}"{{ m.assessment_method__name|default:'Unknown' }}",{% endfor %}],
+        datasets: [{
+          data: [{% for m in by_method %}{{ m.total }},{% endfor %}],
+          backgroundColor: '#0f766e', borderRadius: 6, maxBarThickness: 28
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 4. Body Parts */
+    make('bodyPartChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for b in by_body_part %}"{{ b.body_part }}",{% endfor %}],
+        datasets: [{
+          data: [{% for b in by_body_part %}{{ b.total }},{% endfor %}],
+          backgroundColor: '#dc2626', borderRadius: 6, maxBarThickness: 40
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 5. Risk by Site */
+    make('siteChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for s in by_site %}"{{ s.plant__name }}",{% endfor %}],
+        datasets: [{
+          data: [{% for s in by_site %}{{ s.total }},{% endfor %}],
+          backgroundColor: '#0d9488', borderRadius: 6, maxBarThickness: 40
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 6. Risk by Shift */
+    make('shiftChart', {
+      type: 'doughnut',
+      data: {
+        labels: [{% for s in by_shift %}"{{ s.shift }}",{% endfor %}],
+        datasets: [{
+          data: [{% for s in by_shift %}{{ s.total }},{% endfor %}],
+          backgroundColor: ['#0d9488', '#0f766e', '#22c55e', '#d97706', '#ea580c', '#dc2626', '#64748b', '#94a3b8'],
+          borderWidth: 0
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        cutout: '60%',
+        plugins: { legend: { position: 'bottom', labels: { font: CHART_FONT, padding: 10, usePointStyle: true } } }
+      })
+    });
+
+    /* 7. Risk by Job */
+    make('jobChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for j in by_job %}"{{ j.job_role|truncatechars:22 }}",{% endfor %}],
+        datasets: [{
+          data: [{% for j in by_job %}{{ j.total }},{% endfor %}],
+          backgroundColor: '#0d9488', borderRadius: 6, maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 8. Risk by Task */
+    make('taskChart', {
+      type: 'bar',
+      data: {
+        labels: [{% for t in by_task %}"{{ t.task|truncatechars:22 }}",{% endfor %}],
+        datasets: [{
+          data: [{% for t in by_task %}{{ t.total }},{% endfor %}],
+          backgroundColor: '#0f766e', borderRadius: 6, maxBarThickness: 30
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          y: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 9. Risk by Month */
+    make('monthChart', {
+      type: 'line',
+      data: {
+        labels: [{% for m in by_month %}"{{ m.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'Assessments',
+          data: [{% for m in by_month %}{{ m.total }},{% endfor %}],
+          borderColor: '#0d9488', backgroundColor: 'rgba(13,148,136,0.10)',
+          fill: true, tension: 0.35, pointBackgroundColor: '#0d9488', pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 10. High-Risk Task Trend */
+    make('highRiskTrendChart', {
+      type: 'line',
+      data: {
+        labels: [{% for t in high_risk_trend %}"{{ t.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'High / Very High',
+          data: [{% for t in high_risk_trend %}{{ t.total }},{% endfor %}],
+          borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.10)',
+          fill: true, tension: 0.35, pointBackgroundColor: '#ea580c', pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 11. MSD Trend */
+    make('msdTrendChart', {
+      type: 'line',
+      data: {
+        labels: [{% for m in msd_trend %}"{{ m.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'MSD Cases',
+          data: [{% for m in msd_trend %}{{ m.total }},{% endfor %}],
+          borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.10)',
+          fill: true, tension: 0.35, pointBackgroundColor: '#dc2626', pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 12. Corrective Action Trend */
+    make('actionTrendChart', {
+      type: 'line',
+      data: {
+        labels: [{% for a in action_trend %}"{{ a.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'New Actions',
+          data: [{% for a in action_trend %}{{ a.total }},{% endfor %}],
+          borderColor: '#0f766e', backgroundColor: 'rgba(15,118,110,0.10)',
+          fill: true, tension: 0.35, pointBackgroundColor: '#0f766e', pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    /* 13. Risk Reduction Trend */
+    make('reductionTrendChart', {
+      type: 'line',
+      data: {
+        labels: [{% for r in reduction_trend %}"{{ r.month|date:'M Y' }}",{% endfor %}],
+        datasets: [{
+          label: 'Avg Reduction %',
+          data: [{% for r in reduction_trend %}{{ r.avg_reduction|floatformat:2 }},{% endfor %}],
+          borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.10)',
+          fill: true, tension: 0.35, pointBackgroundColor: '#22c55e', pointRadius: 4
+        }]
+      },
+      options: Object.assign({}, BASE_OPTS, {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { font: CHART_FONT }, grid: { color: GRID_COLOR } },
+          x: { ticks: { font: CHART_FONT }, grid: { display: false } }
+        }
+      })
+    });
+
+    console.log('Analytics charts initialized.');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCharts);
+  } else {
+    initCharts();
+  }
+})();
+</script>
+{% endblock %}
