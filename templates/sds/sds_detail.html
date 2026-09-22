@@ -1,0 +1,1528 @@
+{% extends 'base/base.html' %} {% load static %} {% block title %}
+{{sds.product_name }} | SDS | EHS-360{% endblock %} {% block extra_css %}
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+  :root {
+    --primary-teal: #0d9488;
+    --primary-teal-dark: #0f766e;
+    --primary-teal-light: rgba(13, 148, 136, 0.08);
+    --secondary-red: #dc2626;
+    --secondary-gold: #d97706;
+    --secondary-green: #22c55e;
+    --secondary-blue: #3b82f6;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-card: #fff;
+    --bg-page: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+    --radius-card: 14px;
+    --radius-sm: 8px;
+  }
+  .content-wrapper {
+    background: var(--bg-page) !important;
+  }
+  .dash-page-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+  .btn-back {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+  }
+  .btn-back:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .btn-edit {
+    background: var(--primary-teal);
+    border: 1px solid var(--primary-teal);
+    color: #fff;
+  }
+  .btn-edit:hover {
+    background: var(--primary-teal-dark);
+    border-color: var(--primary-teal-dark);
+    color: #fff;
+    text-decoration: none;
+  }
+  .btn-document {
+    background: #fff;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+  }
+  .btn-document:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #dc2626;
+    text-decoration: none;
+  }
+  .detail-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .detail-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+  .card-header-custom {
+    padding: 15px 22px;
+    background: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-title i {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 17px;
+  }
+  .header-title h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+  .card-body-custom {
+    padding: 22px 24px;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .status-active {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .status-approved {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+  .status-review {
+    background: #ccfbf1;
+    color: #0f766e;
+  }
+  .status-submitted {
+    background: #fef3c7;
+    color: #d97706;
+  }
+  .status-draft {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .status-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  .status-expired {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  .status-superseded {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .info-item {
+    padding: 13px 15px;
+    background: #fafbfc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+  }
+  .info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .info-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+    word-break: break-word;
+  }
+  .info-value.muted {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .section-title i {
+    color: var(--primary-teal);
+  }
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .detail-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .detail-action:hover {
+    background: var(--primary-teal-light);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .workflow-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .workflow-form select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    background: #fff;
+    color: var(--text-secondary);
+  }
+  .workflow-form button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--primary-teal);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .workflow-form button:hover {
+    background: var(--primary-teal-dark);
+  }
+  .version-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.version-action-button:hover {
+  background: var(--primary-teal-light);
+  border-color: var(--primary-teal);
+  color: var(--primary-teal);
+}
+
+/* =========================================================
+   VERSION HISTORY TABLE
+   ========================================================= */
+.version-history-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.version-history-table {
+  width: 100%;
+  min-width: 1450px;
+  table-layout: fixed;
+}
+
+.version-history-table th {
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.version-history-table td {
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+.version-history-table .version-column {
+  width: 70px;
+  white-space: nowrap;
+}
+
+.version-history-table .revision-column {
+  width: 80px;
+  white-space: nowrap;
+}
+
+.version-history-table .title-column {
+  width: 180px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.version-history-table .date-column {
+  width: 115px;
+  white-space: nowrap;
+}
+
+.version-history-table .review-column {
+  width: 95px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.version-history-table .status-column {
+  width: 105px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.version-history-table .summary-column {
+  width: 230px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.version-history-table .uploaded-column {
+  width: 140px;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.version-history-table .document-column {
+  width: 75px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.version-history-table .action-column {
+  width: 310px;
+  min-width: 310px;
+}
+
+.version-history-table .change-summary {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.version-history-table .review-badge {
+  white-space: nowrap;
+}
+
+.version-history-actions {
+  display: grid;
+  grid-template-columns: repeat(6, 34px);
+  gap: 6px;
+  align-items: center;
+  justify-content: start;
+  width: 100%;
+}
+
+.version-history-actions .detail-action,
+.version-history-actions .version-action-button {
+  width: 34px;
+  height: 32px;
+  min-width: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.version-history-actions form {
+  margin: 0;
+  padding: 0;
+}
+
+.version-history-actions .detail-action i,
+.version-history-actions .version-action-button i {
+  font-size: 11px;
+}
+
+@media (max-width: 768px) {
+  .version-history-table {
+    min-width: 1450px;
+  }
+
+  .version-history-actions {
+    grid-template-columns: repeat(6, 34px);
+  }
+}
+
+
+  .document-card {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+  }
+  .document-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .document-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #fff;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+  }
+  .document-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .document-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .btn-view-document {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    background: #dc2626;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .btn-view-document:hover {
+    background: #b91c1c;
+    color: #fff;
+    text-decoration: none;
+  }
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .detail-table th {
+    background: var(--primary-teal-light);
+    color: var(--text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .detail-table td {
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+  }
+  .detail-table tr:last-child td {
+    border-bottom: 0;
+  }
+  .detail-table tbody tr:hover {
+    background: var(--primary-teal-light);
+  }
+  .empty-small {
+    text-align: center;
+    padding: 25px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .add-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    background: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .add-link:hover {
+    background: #fff;
+    color: var(--primary-teal);
+    text-decoration: none;
+  }
+  .review-pending {
+    background: #fef3c7;
+    color: #d97706;
+  }
+  .review-approved {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .review-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  .review-in {
+    background: #ccfbf1;
+    color: #0f766e;
+  }
+  .review-badge {
+    display: inline-flex;
+    padding: 4px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .danger-card {
+    border-color: #fecaca;
+  }
+  .danger-header {
+    background: #dc2626;
+  }
+  @media (max-width: 1000px) {
+    .info-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .action-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    .dash-page-header {
+      padding: 16px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .header-right {
+      width: 100%;
+    }
+    .btn-header {
+      flex: 1;
+    }
+    .card-body-custom {
+      padding: 18px;
+    }
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    .action-grid {
+      grid-template-columns: 1fr;
+    }
+    .document-card {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .btn-view-document {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  @media (max-width: 480px) {
+    .header-left h1 {
+      font-size: 18px;
+    }
+    .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 17px;
+    }
+    .header-right {
+      flex-direction: column;
+    }
+    .btn-header {
+      width: 100%;
+      flex: none;
+    }
+    .card-header-custom {
+      padding: 13px 16px;
+    }
+    .card-body-custom {
+      padding: 14px;
+    }
+    .workflow-form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .workflow-form select,
+    .workflow-form button {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid" style="padding: 0">
+  <div class="dash-page-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="fas fa-file-alt"></i></div>
+      <div>
+        <h1>{{ sds.product_name }}</h1>
+        <p class="subtitle">
+          SDS Number: {{ sds.sds_number }}{% if sds.product_identifier %} |
+          Product ID: {{ sds.product_identifier }}{% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="{% url 'sds:sds_list' %}" class="btn-header btn-back"
+        ><i class="fas fa-arrow-left"></i>Back</a
+      >
+      {% if sds.document %}<a
+        href="{% url 'sds:sds_document' sds.pk %}"
+        target="_blank"
+        class="btn-header btn-document"
+        ><i class="fas fa-file-pdf"></i>View PDF</a
+      >{% endif %}
+      <a href="{% url 'sds:sds_update' sds.pk %}" class="btn-header btn-edit"
+        ><i class="fas fa-pen"></i>Edit</a
+      >
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-info-circle"></i>
+        <h3>SDS Overview</h3>
+      </div>
+      {% if sds.status == 'ACTIVE' %}<span class="status-badge status-active"
+        ><i class="fas fa-check-circle"></i>Active</span
+      >{% elif sds.status == 'APPROVED' %}<span
+        class="status-badge status-approved"
+        ><i class="fas fa-check"></i>Approved</span
+      >{% elif sds.status == 'UNDER_REVIEW' %}<span
+        class="status-badge status-review"
+        ><i class="fas fa-search"></i>Under Review</span
+      >{% elif sds.status == 'SUBMITTED' %}<span
+        class="status-badge status-submitted"
+        ><i class="fas fa-paper-plane"></i>Submitted</span
+      >{% elif sds.status == 'DRAFT' %}<span class="status-badge status-draft"
+        ><i class="fas fa-edit"></i>Draft</span
+      >{% elif sds.status == 'REJECTED' %}<span
+        class="status-badge status-rejected"
+        ><i class="fas fa-times-circle"></i>Rejected</span
+      >{% elif sds.status == 'EXPIRED' %}<span
+        class="status-badge status-expired"
+        ><i class="fas fa-exclamation-triangle"></i>Expired</span
+      >{% elif sds.status == 'SUPERSEDED' %}<span
+        class="status-badge status-superseded"
+        ><i class="fas fa-history"></i>Superseded</span
+      >{% endif %}
+    </div>
+    <div class="card-body-custom">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">SDS Number</div>
+          <div class="info-value">{{ sds.sds_number }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Product Name</div>
+          <div class="info-value">{{ sds.product_name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Product Identifier</div>
+          <div
+            class="info-value {% if not sds.product_identifier %}muted{% endif %}"
+          >
+            {{ sds.product_identifier|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">SDS Type</div>
+          <div class="info-value">{{ sds.get_sds_type_display }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Issue Date</div>
+          <div class="info-value">
+            {{ sds.issue_date|date:"d M Y"|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Revision Date</div>
+          <div class="info-value">
+            {{ sds.revision_date|date:"d M Y"|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Next Review Date</div>
+          <div class="info-value {% if sds.is_expired %}text-danger{% endif %}">
+            {{ sds.next_review_date|date:"d M Y"|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Current Version</div>
+          <div class="info-value">
+            {{ sds.current_version.version_number|default:"Not versioned" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Record Status</div>
+          <div class="info-value">{{ sds.get_status_display }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-industry"></i>
+        <h3>Manufacturer & Supplier</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Manufacturer</div>
+          <div class="info-value">
+            {{ sds.manufacturer_name|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Manufacturer Phone</div>
+          <div class="info-value">
+            {{ sds.manufacturer_phone|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Manufacturer Email</div>
+          <div class="info-value">
+            {{ sds.manufacturer_email|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item" style="grid-column: 1/-1">
+          <div class="info-label">Manufacturer Address</div>
+          <div class="info-value">
+            {{ sds.manufacturer_address|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Supplier</div>
+          <div class="info-value">
+            {{ sds.supplier_name|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Supplier Phone</div>
+          <div class="info-value">
+            {{ sds.supplier_phone|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Supplier Email</div>
+          <div class="info-value">
+            {{ sds.supplier_email|default:"Not provided" }}
+          </div>
+        </div>
+        <div class="info-item" style="grid-column: 1/-1">
+          <div class="info-label">Supplier Address</div>
+          <div class="info-value">
+            {{ sds.supplier_address|default:"Not provided" }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-map-marker-alt"></i>
+        <h3>Plant & Location</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Plant</div>
+          <div class="info-value">
+            {{ sds.plant.name|default:"Not assigned" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Zone</div>
+          <div class="info-value">
+            {{ sds.zone.name|default:"Not assigned" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Location</div>
+          <div class="info-value">
+            {{ sds.location.name|default:"Not assigned" }}
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Sub-Location</div>
+          <div class="info-value">
+            {{ sds.sublocation.name|default:"Not assigned" }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-file-pdf"></i>
+        <h3>SDS Document</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      {% if sds.document %}
+      <div class="document-card">
+        <div class="document-info">
+          <div class="document-icon"><i class="fas fa-file-pdf"></i></div>
+          <div>
+            <div class="document-name">
+              {{ sds.document_name|default:sds.product_name }}
+            </div>
+            <div class="document-type">
+              PDF{% if sds.document_language %} | Language: {{
+              sds.document_language }}{% endif %}
+            </div>
+          </div>
+        </div>
+        <a
+          href="{% url 'sds:sds_document' sds.pk %}"
+          target="_blank"
+          class="btn-view-document"
+          ><i class="fas fa-eye"></i>View SDS PDF</a
+        >
+      </div>
+      {% else %}
+      <div class="empty-small">
+        <i class="fas fa-file-excel fa-2x mb-2"></i><br />No SDS document has
+        been uploaded.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-tasks"></i>
+        <h3>Workflow</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div class="section-title">
+        <i class="fas fa-exchange-alt"></i>Status Management
+      </div>
+      <div class="workflow-form">
+        {% if sds.status == 'DRAFT' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="SUBMITTED" /><button
+            type="submit"
+          >
+            <i class="fas fa-paper-plane"></i> Submit for Review
+          </button>
+        </form>
+        {% elif sds.status == 'SUBMITTED' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="UNDER_REVIEW" /><button
+            type="submit"
+          >
+            <i class="fas fa-search"></i> Start Review
+          </button>
+        </form>
+        {% elif sds.status == 'UNDER_REVIEW' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="APPROVED" /><button
+            type="submit"
+          >
+            <i class="fas fa-check"></i> Approve
+          </button>
+        </form>
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="REJECTED" /><button
+            type="submit"
+          >
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </form>
+        {% elif sds.status == 'REJECTED' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="DRAFT" /><button
+            type="submit"
+          >
+            <i class="fas fa-redo"></i> Return to Draft
+          </button>
+        </form>
+        {% elif sds.status == 'APPROVED' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="ACTIVE" /><button
+            type="submit"
+          >
+            <i class="fas fa-check-circle"></i> Activate SDS
+          </button>
+        </form>
+        {% elif sds.status == 'ACTIVE' %}
+        <form
+          method="post"
+          action="{% url 'sds:sds_status_update' sds.pk %}"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+          /><input type="hidden" name="status" value="SUPERSEDED" /><button
+            type="submit"
+          >
+            <i class="fas fa-history"></i> Supersede
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-bolt"></i>
+        <h3>Quick Actions</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <div class="action-grid">
+        <a href="{% url 'sds:sds_update' sds.pk %}" class="detail-action"
+          ><i class="fas fa-pen"></i>Edit SDS</a
+        >
+        <a href="{% url 'sds:version_create' sds.pk %}" class="detail-action"
+          ><i class="fas fa-code-branch"></i>Add Version</a
+        >
+        <a href="{% url 'sds:review_list' %}" class="detail-action"
+          ><i class="fas fa-list"></i>Review Register</a
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-code-branch"></i>
+        <h3>Version History</h3>
+      </div>
+      <a href="{% url 'sds:version_create' sds.pk %}" class="add-link"
+        ><i class="fas fa-plus"></i>Add Version</a
+      >
+    </div>
+    <div class="card-body-custom" style="padding: 0">
+      {% if versions %}
+      <div class="version-history-wrapper">
+        <table class="detail-table version-history-table">
+            <thead>
+                <tr>
+                    <th class="version-column">Version</th>
+                    <th class="revision-column">Revision</th>
+                    <th class="title-column">Title</th>
+                    <th class="date-column">Issue Date</th>
+                    <th class="date-column">Effective Date</th>
+                    <th class="date-column">Next Review</th>
+                    <th class="review-column">Review</th>
+                    <th class="status-column">Status</th>
+                    <th class="summary-column">Change Summary</th>
+                    <th class="uploaded-column">Uploaded By</th>
+                    <th class="document-column">Document</th>
+                    <th class="action-column">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for version in versions %}
+                <tr>
+                    <td class="version-column">
+                        <strong>V{{ version.version_number }}</strong>
+                    </td>
+                    <td class="version-column">
+                        {{ version.revision_number|default:"-" }}
+                    </td>
+                    <td class="title-column">
+                        {{ version.version_title|default:"-" }}
+                    </td>
+                    <td class="date-column">
+                        {{ version.issue_date|date:"d M Y"|default:"-" }}
+                    </td>
+                    <td class="date-column">
+                        {{ version.effective_date|date:"d M Y"|default:"-" }}
+                    </td>
+                    <td class="date-column">
+                        {% if version.next_review_date %}
+                            {{ version.next_review_date|date:"d M Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="review-column">
+                        {% if version.review_due_status == 'OVERDUE' %}
+                            <span class="review-badge review-rejected">
+                                Overdue
+                            </span>
+                        {% elif version.review_due_status == 'DUE_SOON' %}
+                            <span class="review-badge review-pending">
+                                Due Soon
+                            </span>
+                        {% elif version.review_due_status == 'NOT_DUE' %}
+                            <span class="review-badge review-approved">
+                                Not Due
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="status-column">
+                        <span
+                            class="review-badge {% if version.status == 'ACTIVE' %}review-approved{% elif version.status == 'APPROVED' %}review-approved{% elif version.status == 'UNDER_REVIEW' %}review-in{% elif version.status == 'REJECTED' %}review-rejected{% elif version.status == 'SUPERSEDED' %}review-pending{% else %}review-pending{% endif %}"
+                        >
+                            {{ version.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="summary-column">
+                        {% if version.change_summary %}
+                            <span title="{{ version.change_summary }}">
+                                {{ version.change_summary|truncatechars:60 }}
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="uploaded-column">
+                        {% if version.uploaded_by %}
+                            {{ version.uploaded_by.get_full_name|default:version.uploaded_by.username }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="document-column">
+                        {% if version.document %}
+                            <a
+                                href="{{ version.document.url }}"
+                                target="_blank"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="View Version Document"
+                            >
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="action-column">
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <!-- =============================================
+                                SDS Section 1 - Identification
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section1' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 1 - Identification"
+                            >
+                                <i class="fas fa-id-card"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 2 - Hazard Identification
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section2' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 2 - Hazard Identification"
+                            >
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 3 - Composition
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section3' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 3 - Composition"
+                            >
+                                <i class="fas fa-flask"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 4 - First-Aid Measures
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section4' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 4 - First-Aid Measures"
+                            >
+                                <i class="fas fa-medkit"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 5 - Fire-Fighting Measures
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section5' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 5 - Fire-Fighting Measures"
+                            >
+                                <i class="fas fa-fire-extinguisher"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 6 - Accidental Release Measures
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section6' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 6 - Accidental Release Measures"
+                            >
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 7 - Handling and Storage
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section7' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 7 - Handling and Storage"
+                            >
+                                <i class="fas fa-box-open"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 8 - Exposure Controls / Personal Protection
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section8' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 8 - Exposure Controls / Personal Protection"
+                            >
+                                <i class="fas fa-shield-alt"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 9 - Physical and Chemical Properties
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section9' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 9 - Physical and Chemical Properties"
+                            >
+                                <i class="fas fa-flask"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 10 - Stability and Reactivity
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section10' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 10 - Stability and Reactivity"
+                            >
+                                <i class="fas fa-sync-alt"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 11 - Toxicological Information
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section11' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 11 - Toxicological Information"
+                            >
+                                <i class="fas fa-heartbeat"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 12 - Ecological Information
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section12' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 12 - Ecological Information"
+                            >
+                                <i class="fas fa-leaf"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 13 - Disposal Considerations
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section13' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 13 - Disposal Considerations"
+                            >
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 14 - Transport Information
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section14' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 14 - Transport Information"
+                            >
+                                <i class="fas fa-truck"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 15 - Regulatory Information
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section15' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 15 - Regulatory Information"
+                            >
+                                <i class="fas fa-gavel"></i>
+                            </a>
+
+                            <!-- =============================================
+                                SDS Section 16 - Other Information
+                                ============================================= -->
+                            <a
+                                href="{% url 'sds:section16' sds_id=sds.pk version_id=version.pk %}"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="Section 16 - Other Information"
+                            >
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+
+                            <!-- =============================================
+                                Version PDF
+                                ============================================= -->
+                            {% if version.document %}
+                            <a
+                                href="{{ version.document.url }}"
+                                target="_blank"
+                                class="detail-action"
+                                style="display: inline-flex; padding: 5px 9px;"
+                                title="View Version Document"
+                            >
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% endif %}
+
+                            <!-- =============================================
+                                VERSION WORKFLOW ACTIONS
+                                ============================================= -->
+                            {% if version.status == 'DRAFT' %}
+                            <form
+                                method="post"
+                                action="{% url 'sds:version_status_update' sds_id=sds.pk version_id=version.pk %}"
+                                style="display: inline;"
+                            >
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="UNDER_REVIEW">
+                                <button
+                                    type="submit"
+                                    class="version-action-button"
+                                    title="Submit Version for Review"
+                                >
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+
+                            {% elif version.status == 'UNDER_REVIEW' %}
+                            <a
+                                href="{% url 'sds:review_create' sds_id=sds.pk version_id=version.pk %}"
+                                class="version-action-button"
+                                style="text-decoration: none;"
+                                title="Review Version"
+                            >
+                                <i class="fas fa-clipboard-check"></i>
+                            </a>
+
+                            {% elif version.status == 'APPROVED' %}
+                            <form
+                                method="post"
+                                action="{% url 'sds:version_status_update' sds_id=sds.pk version_id=version.pk %}"
+                                style="display: inline;"
+                            >
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="ACTIVE">
+                                <button
+                                    type="submit"
+                                    class="version-action-button"
+                                    title="Activate Version"
+                                >
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                            </form>
+
+                            {% elif version.status == 'REJECTED' %}
+                            <form
+                                method="post"
+                                action="{% url 'sds:version_status_update' sds_id=sds.pk version_id=version.pk %}"
+                                style="display: inline;"
+                            >
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="DRAFT">
+                                <button
+                                    type="submit"
+                                    class="version-action-button"
+                                    title="Return Version to Draft"
+                                >
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-small">
+        <i class="fas fa-code-branch"></i> No versions have been created yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-clipboard-check"></i>
+        <h3>Review History</h3>
+      </div>
+    </div>
+    <div class="card-body-custom" style="padding: 0">
+      {% if reviews %}
+      <div class="table-wrapper">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Review Type</th>
+              <th>Version</th>
+              <th>Reviewer</th>
+              <th>Status</th>
+              <th>Reviewed</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for review in reviews %}
+            <tr>
+              <td>{{ review.get_review_type_display }}</td>
+              <td>{{ review.version.version_number|default:"-" }}</td>
+              <td>{{review.reviewer.get_full_name|default:review.reviewer.username|default:"-"}}
+              </td>
+              <td>
+                <span
+                  class="review-badge 
+                  {% if review.status == 'APPROVED' %}review-approved{% elif review.status == 'REJECTED' %}review-rejected{% elif review.status == 'IN_REVIEW' %}review-in{% else %}review-pending{% endif %}">
+                   {{ review.get_status_display }}</span>
+              </td>
+              <td>{{ review.reviewed_at|date:"d M Y"|default:"-" }}</td>
+              <td>{{ review.review_remarks|default:"-"|truncatechars:50 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-small">
+        <i class="fas fa-clipboard-check"></i> No reviews have been created yet.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if sds.remarks %}
+  <div class="detail-card">
+    <div class="card-header-custom">
+      <div class="header-title">
+        <i class="fas fa-comment-alt"></i>
+        <h3>Remarks</h3>
+      </div>
+    </div>
+    <div class="card-body-custom">
+      <p
+        style="
+          font-size: 13px;
+          color: var(--text-secondary);
+          margin: 0;
+          white-space: pre-line;
+        "
+      >
+        {{ sds.remarks }}
+      </p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

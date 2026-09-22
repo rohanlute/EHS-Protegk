@@ -63,6 +63,26 @@ class Chemical(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # =========================================================
+    # SDS INTEGRATION
+    # =========================================================
+    @property
+    def active_sds(self):
+        return self.sds_records.filter(status='ACTIVE',is_active=True).first()
+
+    @property
+    def has_active_sds(self):
+        return self.active_sds is not None
+
+    @property
+    def active_sds_version(self):
+        sds = self.active_sds
+
+        if not sds:
+            return None
+
+        return sds.current_version
+
     def clean(self):
         errors = {}
 

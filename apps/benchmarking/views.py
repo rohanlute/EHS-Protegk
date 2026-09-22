@@ -16,12 +16,11 @@ class BenchmarkAccessMixin(LoginRequiredMixin, PermissionRequiredMixin): permiss
 class DashboardView(BenchmarkAccessMixin, TemplateView):
     template_name = "benchmarking/dashboard.html"
     def get_context_data(self, **kwargs):
-        refresh_live_results(self.request.user)
         context = super().get_context_data(**kwargs)
         results = accessible_results(self.request.user).filter(scope_type="PLANT").select_related("period", "plant").order_by("-period__end_date", "rank")
         latest_date = results.values_list("period__end_date", flat=True).first()
         latest = results.filter(period__end_date=latest_date) if latest_date else results.none()
-        context.update({"results": latest, "latest_date": latest_date, "site_count": latest.count(), "average_score": (sum(r.overall_score for r in latest) / latest.count()) if latest.exists() else None, "best_result": latest.order_by("rank").first(), "high_gap_count": BenchmarkGap.objects.filter(benchmark_result__in=latest, priority="HIGH").count()})
+        context.update({"results": latest, "latest_date": latest_date, "site_count": latest.count(), "average_score": (sum(r.overall_score for r in latest) / latest.count()) if latest.exists() else None, "best_result": latest.order_by("rank").first(), "high_gap_count": BenchmarkGap.objects.filter(benchmark_result__in=latest, priority="HIGH").count(), "can_refresh": self.request.user.is_superuser or self.request.user.has_permission("CALCULATE_BENCHMARK")})
         return context
 
 class FrameworkListView(BenchmarkAccessMixin, ListView): 
@@ -143,6 +142,16 @@ class PeriodCalculateView(LoginRequiredMixin, PermissionRequiredMixin, View):
         except Exception: messages.error(request, "Calculation failed; the period was marked failed.")
         return redirect("benchmarking:period_detail", pk=pk)
 
+
+class PeriodRefreshView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Explicit user-triggered refresh; GET requests never recalculate results."""
+    permission_required = "CALCULATE_BENCHMARK"
+
+    def post(self, request):
+        refresh_live_results(request.user)
+        messages.success(request, "Current unpublished benchmark periods were refreshed for your authorized plants.")
+        return redirect("benchmarking:dashboard")
+
 class PeriodPublishView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = "PUBLISH_BENCHMARK"
     def post(self, request, pk):
@@ -154,7 +163,6 @@ class PeriodPublishView(LoginRequiredMixin, PermissionRequiredMixin, View):
 class ResultListView(BenchmarkAccessMixin, ListView):
     template_name = "benchmarking/result_list.html"; context_object_name = "results"
     def get_queryset(self):
-        refresh_live_results(self.request.user)
         return accessible_results(self.request.user).filter(scope_type="PLANT").order_by("-period__end_date", "rank")
 
 class PerformanceRankingView(BenchmarkAccessMixin, ListView):
@@ -162,7 +170,6 @@ class PerformanceRankingView(BenchmarkAccessMixin, ListView):
     context_object_name = "results"
 
     def get_queryset(self):
-        refresh_live_results(self.request.user)
         results = accessible_results(self.request.user).filter(scope_type="PLANT")
         latest_period_id = results.order_by("-period__end_date", "-period_id").values_list("period_id", flat=True).first()
         if not latest_period_id:
@@ -188,14 +195,12 @@ class PerformanceRankingView(BenchmarkAccessMixin, ListView):
 class GapListView(BenchmarkAccessMixin, ListView):
     template_name = "benchmarking/gap_list.html"; context_object_name = "gaps"
     def get_queryset(self):
-        refresh_live_results(self.request.user)
         return BenchmarkGap.objects.filter(benchmark_result__in=accessible_results(self.request.user)).select_related("benchmark_result", "kpi")
 
 class ExcelExportView(BenchmarkAccessMixin, View):
     permission_required = "EXPORT_BENCHMARK_REPORT"
     def get(self, request):
         from openpyxl import Workbook
-        refresh_live_results(request.user)
         wb = Workbook(); ws = wb.active; ws.title = "Benchmark results"; ws.append(["Period", "Plant", "Score", "Rank", "Trend"])
         for r in accessible_results(request.user).filter(scope_type="PLANT").select_related("period", "plant"): ws.append([str(r.period.end_date), r.plant.name, float(r.overall_score), r.rank, r.trend])
         response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); response["Content-Disposition"] = 'attachment; filename="benchmark-results.xlsx"'; wb.save(response); return response

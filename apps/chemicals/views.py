@@ -26,6 +26,9 @@ class ChemicalCreateView(LoginRequiredMixin, CreateView):
         messages.error(self.request, "Please correct the errors below.")
         return super().form_invalid(form)
 
+# =========================================================
+# CHEMICAL DETAIL
+# =========================================================
 class ChemicalDetailView(LoginRequiredMixin, DetailView):
     model = Chemical
     template_name = 'chemicals/chemical_detail.html'
@@ -42,18 +45,65 @@ class ChemicalDetailView(LoginRequiredMixin, DetailView):
                 'created_by'
             )
         )
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         chemical = self.object
 
+        # =========================================================
+        # EHS COMPLIANCE
+        # =========================================================
         ehs = chemical.ehs_compliance or {}
 
-        context["ghs_list"] = ehs.get("ghs", [])
-        context["ppe_list"] = ehs.get("ppe", [])
+        context['ghs_list'] = ehs.get(
+            'ghs',
+            []
+        )
+
+        context['ppe_list'] = ehs.get(
+            'ppe',
+            []
+        )
+
+        # =========================================================
+        # ACTIVE SDS
+        # =========================================================
+        active_sds = chemical.active_sds
+        active_sds_version = chemical.active_sds_version
+
+        context['active_sds'] = active_sds
+        context['active_sds_version'] = active_sds_version
+        context['has_active_sds'] = chemical.has_active_sds
+
+        # =========================================================
+        # ACTIVE SDS - HAZARD INFORMATION
+        # =========================================================
+        active_sds_hazard = None
+
+        if active_sds_version:
+            active_sds_hazard = getattr(
+                active_sds_version,
+                'section_2',
+                None
+            )
+
+        context['active_sds_hazard'] = active_sds_hazard
+        context['has_active_sds_hazard'] = (
+            active_sds_hazard is not None
+        )
+
+        # =========================================================
+        # SDS HISTORY
+        # =========================================================
+        context['sds_records'] = (
+            chemical.sds_records.order_by(
+                '-created_at'
+            )
+        )
 
         return context
-
+    
 class ChemicalUpdateView(LoginRequiredMixin, UpdateView):
     model = Chemical
     form_class = ChemicalForm

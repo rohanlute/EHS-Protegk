@@ -1,0 +1,866 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Medical Follow-up Dashboard | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --primary-teal-hover:rgba(13,148,136,0.12);
+    --secondary-red:#dc2626;
+    --secondary-gold:#d97706;
+    --secondary-green:#22c55e;
+    --secondary-blue:#3b82f6;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover:0 4px 20px rgba(13,148,136,0.12);
+    --radius-card:14px;
+    --radius-sm:8px;
+}
+
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+
+.dash-page-header {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.dash-page-header .header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dash-page-header .header-left .header-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.dash-page-header .header-left h1 {
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin:0;
+}
+
+.dash-page-header .header-left .subtitle {
+    font-size:13px;
+    color:var(--text-muted);
+    margin:0;
+    font-weight:400;
+}
+
+.dash-page-header .header-right {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn-add-teal {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--primary-teal);
+    color:white!important;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-add-teal:hover {
+    background:var(--primary-teal-dark);
+    color:white;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.25);
+    text-decoration:none;
+}
+
+.btn-back {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 16px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:white;
+    color:var(--text-secondary);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.25s ease;
+}
+
+.btn-back:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+    text-decoration:none;
+}
+
+.dash-stats-grid {
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+    margin-bottom:20px;
+}
+
+.dash-stat-card {
+    background:var(--bg-card);
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    padding:18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    transition:all .25s ease;
+}
+
+.dash-stat-card:hover {
+    box-shadow:var(--shadow-hover);
+    transform:translateY(-2px);
+}
+
+.stat-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+}
+
+.stat-icon.teal {
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+}
+
+.stat-icon.green {
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.stat-icon.red {
+    background:#fef2f2;
+    color:#dc2626;
+}
+
+.stat-icon.blue {
+    background:#eff6ff;
+    color:#3b82f6;
+}
+
+.stat-icon.gold {
+    background:#fef3c7;
+    color:#d97706;
+}
+
+.stat-info {
+    min-width:0;
+}
+
+.stat-value {
+    font-size:22px;
+    font-weight:800;
+    color:var(--text-primary);
+    line-height:1.2;
+}
+
+.stat-label {
+    font-size:11px;
+    color:var(--text-muted);
+    font-weight:600;
+    margin-top:3px;
+}
+
+.dash-main-card {
+    background:var(--bg-card);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    border:1px solid var(--border-color);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.card-header-custom {
+    padding:16px 22px;
+    border-bottom:1px solid var(--border-color);
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.header-title i {
+    color:rgba(255,255,255,.9);
+    font-size:18px;
+}
+
+.header-title h3 {
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    margin:0;
+}
+
+.card-body-custom {
+    padding:22px 24px;
+}
+
+.summary-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+}
+
+.summary-box {
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    padding:16px;
+    background:#fafbfc;
+}
+
+.summary-label {
+    font-size:11px;
+    font-weight:600;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    letter-spacing:.3px;
+    margin-bottom:7px;
+}
+
+.summary-value {
+    font-size:22px;
+    font-weight:800;
+    color:var(--text-primary);
+}
+
+.summary-note {
+    font-size:11px;
+    color:var(--text-muted);
+    margin-top:4px;
+}
+
+.dash-table-wrapper {
+    overflow-x:auto;
+}
+
+.dash-table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+.dash-table th {
+    padding:12px 14px;
+    background:#f8fafc;
+    color:var(--text-muted);
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    text-align:left;
+    border-bottom:1px solid var(--border-color);
+    white-space:nowrap;
+}
+
+.dash-table td {
+    padding:13px 14px;
+    color:var(--text-secondary);
+    font-size:12px;
+    border-bottom:1px solid var(--border-color);
+    vertical-align:middle;
+}
+
+.dash-table tbody tr:hover {
+    background:var(--primary-teal-light);
+}
+
+.employee-info {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.employee-avatar {
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:800;
+    flex-shrink:0;
+}
+
+.employee-name {
+    color:var(--text-primary);
+    font-size:12px;
+    font-weight:700;
+}
+
+.employee-id {
+    color:var(--text-muted);
+    font-size:10px;
+    margin-top:2px;
+}
+
+.dash-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+.badge-success {
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.badge-danger {
+    background:#fef2f2;
+    color:#dc2626;
+}
+
+.badge-secondary {
+    background:#f1f5f9;
+    color:#64748b;
+}
+
+.badge-info {
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+}
+
+.badge-warning {
+    background:#fef3c7;
+    color:#d97706;
+}
+
+.btn-action-group {
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.btn-action {
+    width:30px;
+    height:30px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:6px;
+    text-decoration:none;
+    transition:all .2s ease;
+}
+
+.btn-action.view {
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+}
+
+.btn-action.edit {
+    background:#eff6ff;
+    color:#3b82f6;
+}
+
+.btn-action:hover {
+    transform:translateY(-1px);
+    text-decoration:none;
+}
+
+.empty-state {
+    text-align:center;
+    padding:35px 20px;
+    color:var(--text-muted);
+}
+
+.empty-state i {
+    font-size:32px;
+    margin-bottom:10px;
+    color:#cbd5e1;
+}
+
+@media(max-width:1200px) {
+    .dash-stats-grid {
+        grid-template-columns:repeat(3,1fr);
+    }
+}
+
+@media(max-width:768px) {
+    .dash-page-header {
+        padding:16px 18px;
+        flex-direction:column;
+        align-items:flex-start;
+    }
+    .dash-page-header .header-right {
+        width:100%;
+    }
+    .dash-page-header .header-right a {
+        flex:1;
+    }
+    .dash-stats-grid {
+        grid-template-columns:repeat(2,1fr);
+    }
+    .summary-grid {
+        grid-template-columns:1fr;
+    }
+    .card-body-custom {
+        padding:16px;
+    }
+}
+
+@media(max-width:480px) {
+    .dash-stats-grid {
+        grid-template-columns:1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+    <div class="dash-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+            <div>
+                <h1>Medical Follow-up Dashboard</h1>
+                <p class="subtitle">Medical follow-up monitoring, pending actions and employee health tracking</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'occupational_health:medical_follow_up_list' %}" class="btn-back">
+                <i class="fas fa-list"></i>
+                All Follow-ups
+            </a>
+            <a href="{% url 'occupational_health:medical_follow_up_add' %}" class="btn-add-teal">
+                <i class="fas fa-plus"></i>
+                Add Follow-up
+            </a>
+        </div>
+    </div>
+
+    <div class="dash-stats-grid">
+        <div class="dash-stat-card">
+            <div class="stat-icon teal">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_follow_ups }}</div>
+                <div class="stat-label">Total Follow-ups</div>
+            </div>
+        </div>
+        <div class="dash-stat-card">
+            <div class="stat-icon gold">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ due_today_follow_ups }}</div>
+                <div class="stat-label">Due Today</div>
+            </div>
+        </div>
+        <div class="dash-stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ due_soon_follow_ups }}</div>
+                <div class="stat-label">Due Next 7 Days</div>
+            </div>
+        </div>
+        <div class="dash-stat-card">
+            <div class="stat-icon red">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ overdue_follow_ups }}</div>
+                <div class="stat-label">Overdue Follow-ups</div>
+            </div>
+        </div>
+        <div class="dash-stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ completed_follow_ups }}</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <div class="header-title">
+                <i class="fas fa-chart-pie"></i>
+                <h3>Medical Follow-up Summary</h3>
+            </div>
+        </div>
+        <div class="card-body-custom">
+            <div class="summary-grid">
+                <div class="summary-box">
+                    <div class="summary-label">Pending Follow-ups</div>
+                    <div class="summary-value">{{ pending_follow_ups }}</div>
+                    <div class="summary-note">Follow-ups awaiting scheduling or action</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">Scheduled Follow-ups</div>
+                    <div class="summary-value">{{ scheduled_follow_ups }}</div>
+                    <div class="summary-note">Follow-ups currently scheduled</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">In Progress</div>
+                    <div class="summary-value">{{ in_progress_follow_ups }}</div>
+                    <div class="summary-note">Medical follow-ups currently being handled</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">Due Today</div>
+                    <div class="summary-value">{{ due_today_follow_ups }}</div>
+                    <div class="summary-note">Follow-ups requiring action today</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">Due Next 7 Days</div>
+                    <div class="summary-value">{{ due_soon_follow_ups }}</div>
+                    <div class="summary-note">Upcoming medical follow-ups</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">Overdue</div>
+                    <div class="summary-value">{{ overdue_follow_ups }}</div>
+                    <div class="summary-note">Open follow-ups past their scheduled date</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <div class="header-title">
+                <i class="fas fa-layer-group"></i>
+                <h3>Follow-up Type Summary</h3>
+            </div>
+        </div>
+        <div class="card-body-custom" style="padding:0;">
+            <div class="dash-table-wrapper">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Follow-up Type</th>
+                            <th>Total Follow-ups</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in follow_up_types %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong style="color:var(--text-primary);">
+                                    {{ item.follow_up_type|title }}
+                                </strong>
+                            </td>
+                            <td>{{ item.total }}</td>
+                            <td>
+                                <span class="dash-badge badge-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    In Use
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="fas fa-layer-group"></i>
+                                    <div>No follow-up types found.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <div class="header-title">
+                <i class="fas fa-clock"></i>
+                <h3>Upcoming Medical Follow-ups</h3>
+            </div>
+        </div>
+        <div class="card-body-custom" style="padding:0;">
+            <div class="dash-table-wrapper">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Employee</th>
+                            <th>Follow-up</th>
+                            <th>Type</th>
+                            <th>Scheduled Date</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for follow_up in upcoming_follow_ups %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="employee-info">
+                                    <div class="employee-avatar">
+                                        {% with name=follow_up.employee_health_profile.employee.get_full_name %}
+                                        {% if name %}
+                                            {{ name|slice:":1"|upper }}
+                                        {% else %}
+                                            {{ follow_up.employee_health_profile.employee.username|slice:":1"|upper }}
+                                        {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                    <div>
+                                        <div class="employee-name">
+                                            {% if follow_up.employee_health_profile.employee.get_full_name %}
+                                                {{ follow_up.employee_health_profile.employee.get_full_name }}
+                                            {% else %}
+                                                {{ follow_up.employee_health_profile.employee.username }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="employee-id">
+                                            {{ follow_up.employee_health_profile.employee.employee_id|default:"-" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ follow_up.title }}</td>
+                            <td>
+                                <span class="dash-badge badge-info">
+                                    {{ follow_up.get_follow_up_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ follow_up.scheduled_date|date:"d M Y" }}</td>
+                            <td>
+                                {% if follow_up.priority == 'URGENT' %}
+                                <span class="dash-badge badge-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    Urgent
+                                </span>
+                                {% elif follow_up.priority == 'HIGH' %}
+                                <span class="dash-badge badge-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    High
+                                </span>
+                                {% elif follow_up.priority == 'MEDIUM' %}
+                                <span class="dash-badge badge-info">Medium</span>
+                                {% else %}
+                                <span class="dash-badge badge-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if follow_up.effective_status == 'OVERDUE' %}
+                                <span class="dash-badge badge-danger">Overdue</span>
+                                {% elif follow_up.effective_status == 'COMPLETED' %}
+                                <span class="dash-badge badge-success">Completed</span>
+                                {% elif follow_up.effective_status == 'IN_PROGRESS' %}
+                                <span class="dash-badge badge-info">In Progress</span>
+                                {% elif follow_up.effective_status == 'SCHEDULED' %}
+                                <span class="dash-badge badge-warning">Scheduled</span>
+                                {% elif follow_up.effective_status == 'CANCELLED' %}
+                                <span class="dash-badge badge-secondary">Cancelled</span>
+                                {% else %}
+                                <span class="dash-badge badge-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-action-group">
+                                    <a href="{% url 'occupational_health:medical_follow_up_detail' follow_up.pk %}" class="btn-action view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'occupational_health:medical_follow_up_edit' follow_up.pk %}" class="btn-action edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-notes-medical"></i>
+                                    <div>No upcoming medical follow-ups found.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-main-card">
+        <div class="card-header-custom">
+            <div class="header-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Overdue Medical Follow-ups</h3>
+            </div>
+            <span class="dash-badge badge-danger">
+                {{ overdue_follow_ups }} Overdue
+            </span>
+        </div>
+        <div class="card-body-custom" style="padding:0;">
+            <div class="dash-table-wrapper">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Employee</th>
+                            <th>Follow-up</th>
+                            <th>Type</th>
+                            <th>Scheduled Date</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for follow_up in overdue_records %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="employee-info">
+                                    <div class="employee-avatar">
+                                        {% with name=follow_up.employee_health_profile.employee.get_full_name %}
+                                        {% if name %}
+                                            {{ name|slice:":1"|upper }}
+                                        {% else %}
+                                            {{ follow_up.employee_health_profile.employee.username|slice:":1"|upper }}
+                                        {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                    <div>
+                                        <div class="employee-name">
+                                            {% if follow_up.employee_health_profile.employee.get_full_name %}
+                                                {{ follow_up.employee_health_profile.employee.get_full_name }}
+                                            {% else %}
+                                                {{ follow_up.employee_health_profile.employee.username }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="employee-id">
+                                            {{ follow_up.employee_health_profile.employee.employee_id|default:"-" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ follow_up.title }}</td>
+                            <td>
+                                <span class="dash-badge badge-info">
+                                    {{ follow_up.get_follow_up_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ follow_up.scheduled_date|date:"d M Y" }}</td>
+                            <td>
+                                {% if follow_up.priority == 'URGENT' %}
+                                <span class="dash-badge badge-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    Urgent
+                                </span>
+                                {% elif follow_up.priority == 'HIGH' %}
+                                <span class="dash-badge badge-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    High
+                                </span>
+                                {% elif follow_up.priority == 'MEDIUM' %}
+                                <span class="dash-badge badge-info">Medium</span>
+                                {% else %}
+                                <span class="dash-badge badge-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="dash-badge badge-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    Overdue
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-action-group">
+                                    <a href="{% url 'occupational_health:medical_follow_up_detail' follow_up.pk %}" class="btn-action view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'occupational_health:medical_follow_up_edit' follow_up.pk %}" class="btn-action edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>No overdue medical follow-ups.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

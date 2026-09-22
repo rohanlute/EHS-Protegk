@@ -1,0 +1,3272 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}
+SDS Analytical Dashboard | EHS-360
+{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --primary-teal: #0d9488;
+        --primary-teal-dark: #0f766e;
+        --primary-teal-light: rgba(13,148,136,0.08);
+        --primary-teal-hover: rgba(13,148,136,0.12);
+        --primary-teal-medium: rgba(13,148,136,0.15);
+        --danger: #dc2626;
+        --danger-light: rgba(220,38,38,0.08);
+        --warning: #d97706;
+        --warning-light: rgba(217,119,6,0.08);
+        --success: #16a34a;
+        --success-light: rgba(22,163,74,0.08);
+        --purple: #7c3aed;
+        --purple-light: rgba(124,58,237,0.08);
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --page-bg: #f1f5f9;
+        --white: #ffffff;
+        --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        --card-shadow-hover: 0 8px 24px rgba(13,148,136,0.12);
+        --radius-card: 14px;
+        --radius-sm: 8px;
+    }
+
+    .sds-analytics-page {
+        background: var(--page-bg);
+        min-height: 100vh;
+        padding: 24px;
+    }
+
+    .dash-page-header {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .dash-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .dash-header-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .dash-header-text h1 {
+        margin: 0 0 5px;
+        color: var(--text-primary);
+        font-size: 25px;
+        font-weight: 700;
+    }
+
+    .dash-header-text p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .dash-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dash-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .dash-btn-primary {
+        background: var(--primary-teal);
+        color: var(--white);
+    }
+
+    .dash-btn-primary:hover {
+        background: var(--primary-teal-dark);
+        color: var(--white);
+        text-decoration: none;
+    }
+
+    .dash-btn-outline {
+        background: var(--white);
+        color: var(--primary-teal);
+        border-color: var(--primary-teal);
+    }
+
+    .dash-btn-outline:hover {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal-dark);
+        text-decoration: none;
+    }
+
+    .dash-section-title {
+        margin: 0 0 14px;
+        color: var(--text-primary);
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .dash-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .dash-stat-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: 20px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dash-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .dash-stat-card::after {
+        content: "";
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        right: -25px;
+        top: -25px;
+        background: var(--primary-teal-light);
+    }
+
+    .dash-stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .dash-stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+    }
+
+    .stat-icon-teal {
+        background: var(--primary-teal-light);
+        color: var(--primary-teal);
+    }
+
+    .stat-icon-green {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .stat-icon-red {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+
+    .stat-icon-gold {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .stat-icon-purple {
+        background: var(--purple-light);
+        color: var(--purple);
+    }
+
+    .dash-stat-label {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .dash-stat-value {
+        color: var(--text-primary);
+        font-size: 30px;
+        line-height: 1.1;
+        font-weight: 750;
+        margin-top: 5px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .dash-stat-note {
+        color: var(--text-muted);
+        font-size: 12px;
+        margin-top: 6px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .dash-card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .dash-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .dash-card-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .dash-card-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .dash-card-header span {
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+
+    .dash-card-body {
+        padding: 20px;
+    }
+
+    .compliance-layout {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        align-items: center;
+        gap: 28px;
+    }
+
+    .compliance-circle {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: conic-gradient(
+            var(--primary-teal) {{ sds_coverage_percentage }}%,
+            #e2e8f0 {{ sds_coverage_percentage }}% 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+    }
+
+    .compliance-circle-inner {
+        width: 122px;
+        height: 122px;
+        border-radius: 50%;
+        background: var(--white);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .compliance-percentage {
+        color: var(--text-primary);
+        font-size: 28px;
+        font-weight: 750;
+        line-height: 1;
+    }
+
+    .compliance-label {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+
+    .compliance-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .compliance-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: var(--radius-sm);
+        background: #f8fafc;
+    }
+
+    .compliance-item-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot-green {
+        background: var(--success);
+    }
+
+    .dot-red {
+        background: var(--danger);
+    }
+
+    .dot-gold {
+        background: var(--warning);
+    }
+
+    .dot-teal {
+        background: var(--primary-teal);
+    }
+
+    .compliance-item-value {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .review-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .review-box {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        background: #f8fafc;
+    }
+
+    .review-box-value {
+        font-size: 25px;
+        font-weight: 750;
+        color: var(--text-primary);
+    }
+
+    .review-box-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 5px;
+    }
+
+    .review-box.overdue {
+        background: var(--danger-light);
+        border-color: rgba(220,38,38,0.15);
+    }
+
+    .review-box.overdue .review-box-value {
+        color: var(--danger);
+    }
+
+    .review-box.due-soon {
+        background: var(--warning-light);
+        border-color: rgba(217,119,6,0.15);
+    }
+
+    .review-box.due-soon .review-box-value {
+        color: var(--warning);
+    }
+
+    .kpi-progress {
+        margin-top: 18px;
+    }
+
+    .kpi-progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 7px;
+    }
+
+    .kpi-progress-header span {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .progress-track {
+        width: 100%;
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--primary-teal);
+        border-radius: 20px;
+    }
+
+    .attention-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .attention-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 13px 15px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .attention-item:hover {
+        background: #f8fafc;
+        border-color: var(--primary-teal-medium);
+        text-decoration: none;
+    }
+
+    .attention-left {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .attention-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .attention-title {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .attention-description {
+        color: var(--text-muted);
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .attention-count {
+        min-width: 34px;
+        height: 28px;
+        padding: 0 9px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .badge-danger {
+        color: var(--danger);
+        background: var(--danger-light);
+    }
+
+    .badge-warning {
+        color: var(--warning);
+        background: var(--warning-light);
+    }
+
+    .badge-teal {
+        color: var(--primary-teal-dark);
+        background: var(--primary-teal-light);
+    }
+
+    .badge-purple {
+        color: var(--purple);
+        background: var(--purple-light);
+    }
+
+    .badge-success {
+        color: var(--success);
+        background: var(--success-light);
+    }
+
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .workflow-box {
+        padding: 15px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+    }
+
+    .workflow-box-label {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .workflow-box-value {
+        color: var(--text-primary);
+        font-size: 23px;
+        font-weight: 750;
+        margin-top: 5px;
+    }
+
+    .workflow-box-note {
+        color: var(--text-muted);
+        font-size: 10px;
+        margin-top: 3px;
+    }
+
+    .dashboard-info {
+        margin-top: 4px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: var(--primary-teal-light);
+        border: 1px solid var(--primary-teal-medium);
+        color: var(--text-secondary);
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1100px) {
+        .dash-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .workflow-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 900px) {
+        .dash-card-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .compliance-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sds-analytics-page {
+            padding: 15px;
+        }
+
+        .dash-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dash-header-actions {
+            width: 100%;
+        }
+
+        .dash-btn {
+            flex: 1;
+        }
+
+        .dash-stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .review-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dash-stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .review-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .workflow-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dash-stat-value {
+            font-size: 27px;
+        }
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+    }
+    .chart-empty {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: var(--text-muted);
+        font-size: 13px;
+        gap: 8px;
+    }
+    .chart-empty i {
+        font-size: 30px;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+        .dash-card-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+
+        .dash-card-body > div[style*="repeat(4"] {
+            grid-template-columns:
+                repeat(2,minmax(0,1fr)) !important;
+        }
+
+    }
+
+    @media (max-width: 480px) {
+
+        .dash-card-body > div[style*="repeat(4"] {
+            grid-template-columns: 1fr !important;
+        }
+
+    }
+</style>
+
+<div class="sds-analytics-page">
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================= -->
+    <div class="dash-page-header">
+
+        <div class="dash-header-left">
+
+            <div class="dash-header-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+
+            <div class="dash-header-text">
+
+                <h1>
+                    {{ dashboard_title }}
+                </h1>
+
+                <p>
+                    {{ dashboard_subtitle }}
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="dash-header-actions">
+
+            <a
+                href="{% url 'sds:sds_list' %}"
+                class="dash-btn dash-btn-outline"
+            >
+                <i class="fas fa-file-alt"></i>
+                SDS Register
+            </a>
+
+            <a
+                href="{% url 'sds:sds_create' %}"
+                class="dash-btn dash-btn-primary"
+            >
+                <i class="fas fa-plus"></i>
+                Add SDS
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+         EXECUTIVE KPI CARDS
+    ========================================================= -->
+    <h3 class="dash-section-title">
+        Executive Overview
+    </h3>
+
+    <div class="dash-stats-grid">
+
+        <!-- Total SDS -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-teal">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Total SDS
+            </div>
+
+            <div class="dash-stat-value">
+                {{ total_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                SDS records in the system
+            </div>
+
+        </div>
+
+        <!-- Active SDS -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Active SDS
+            </div>
+
+            <div class="dash-stat-value">
+                {{ active_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                Currently active documents
+            </div>
+
+        </div>
+
+        <!-- Coverage -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-teal">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                SDS Coverage
+            </div>
+
+            <div class="dash-stat-value">
+                {{ sds_coverage_percentage }}%
+            </div>
+
+            <div class="dash-stat-note">
+                Chemicals covered by active SDS
+            </div>
+
+        </div>
+
+        <!-- Overdue -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-red">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Overdue Reviews
+            </div>
+
+            <div class="dash-stat-value">
+                {{ overdue_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                SDS requiring immediate attention
+            </div>
+
+        </div>
+
+        <!-- Due 30 -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-gold">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Due ≤30 Days
+            </div>
+
+            <div class="dash-stat-value">
+                {{ due_30_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                Upcoming review requirement
+            </div>
+
+        </div>
+
+        <!-- Missing SDS -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-red">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Chemicals Without SDS
+            </div>
+
+            <div class="dash-stat-value">
+                {{ chemicals_without_active_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                Chemicals without active SDS
+            </div>
+
+        </div>
+
+        <!-- Section Completion -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-purple">
+                    <i class="fas fa-tasks"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Section Completion
+            </div>
+
+            <div class="dash-stat-value">
+                {{ section_completion_percentage }}%
+            </div>
+
+            <div class="dash-stat-note">
+                Average active SDS completion
+            </div>
+
+        </div>
+
+        <!-- Superseded -->
+        <div class="dash-stat-card">
+
+            <div class="dash-stat-top">
+
+                <div class="dash-stat-icon stat-icon-gold">
+                    <i class="fas fa-history"></i>
+                </div>
+
+            </div>
+
+            <div class="dash-stat-label">
+                Superseded SDS
+            </div>
+
+            <div class="dash-stat-value">
+                {{ superseded_sds }}
+            </div>
+
+            <div class="dash-stat-note">
+                Historical SDS records
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+         COMPLIANCE + REVIEW
+    ========================================================= -->
+    <div class="dash-card-grid">
+
+        <!-- SDS Compliance -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    SDS Compliance Overview
+                </h3>
+
+                <span>
+                    Chemical coverage
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div class="compliance-layout">
+
+                    <div class="compliance-circle">
+
+                        <div class="compliance-circle-inner">
+
+                            <div class="compliance-percentage">
+                                {{ sds_coverage_percentage }}%
+                            </div>
+
+                            <div class="compliance-label">
+                                Coverage
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="compliance-list">
+
+                        <div class="compliance-item">
+
+                            <div class="compliance-item-left">
+                                <span class="status-dot dot-green"></span>
+                                Active SDS
+                            </div>
+
+                            <div class="compliance-item-value">
+                                {{ active_sds }}
+                            </div>
+
+                        </div>
+
+                        <div class="compliance-item">
+
+                            <div class="compliance-item-left">
+                                <span class="status-dot dot-red"></span>
+                                Missing SDS
+                            </div>
+
+                            <div class="compliance-item-value">
+                                {{ chemicals_without_active_sds }}
+                            </div>
+
+                        </div>
+
+                        <div class="compliance-item">
+
+                            <div class="compliance-item-left">
+                                <span class="status-dot dot-red"></span>
+                                Expired SDS
+                            </div>
+
+                            <div class="compliance-item-value">
+                                {{ expired_sds }}
+                            </div>
+
+                        </div>
+
+                        <div class="compliance-item">
+
+                            <div class="compliance-item-left">
+                                <span class="status-dot dot-gold"></span>
+                                Overdue Reviews
+                            </div>
+
+                            <div class="compliance-item-value">
+                                {{ overdue_sds }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Review & Expiry -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    Review & Expiry Monitoring
+                </h3>
+
+                <span>
+                    Upcoming requirements
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div class="review-grid">
+
+                    <div class="review-box overdue">
+
+                        <div class="review-box-value">
+                            {{ overdue_versions }}
+                        </div>
+
+                        <div class="review-box-label">
+                            Overdue
+                        </div>
+
+                    </div>
+
+                    <div class="review-box due-soon">
+
+                        <div class="review-box-value">
+                            {{ due_30_versions }}
+                        </div>
+
+                        <div class="review-box-label">
+                            ≤30 Days
+                        </div>
+
+                    </div>
+
+                    <div class="review-box">
+
+                        <div class="review-box-value">
+                            {{ due_60_versions }}
+                        </div>
+
+                        <div class="review-box-label">
+                            31–60 Days
+                        </div>
+
+                    </div>
+
+                    <div class="review-box">
+
+                        <div class="review-box-value">
+                            {{ due_90_versions }}
+                        </div>
+
+                        <div class="review-box-label">
+                            61–90 Days
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="kpi-progress">
+
+                    <div class="kpi-progress-header">
+
+                        <span>
+                            Review Compliance
+                        </span>
+
+                        <span>
+                            {{ review_compliance_percentage }}%
+                        </span>
+
+                    </div>
+
+                    <div class="progress-track">
+
+                        <div
+                            class="progress-fill"
+                            style="width: {{ review_compliance_percentage }}%;"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+         WORKFLOW STATUS
+    ========================================================= -->
+    <div class="dash-card" style="margin-bottom: 24px;">
+
+        <div class="dash-card-header">
+
+            <h3>
+                SDS Workflow Status
+            </h3>
+
+            <span>
+                Current document lifecycle
+            </span>
+
+        </div>
+
+        <div class="dash-card-body">
+
+            <div class="workflow-grid">
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Draft
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ draft_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Documents being prepared
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Submitted
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ submitted_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Awaiting review process
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Under Review
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ under_review_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Currently under review
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Approved
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ approved_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Approved documents
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Active
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ active_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Currently active SDS
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Rejected
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ rejected_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Rejected documents
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Expired
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ expired_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Expired documents
+                    </div>
+
+                </div>
+
+                <div class="workflow-box">
+
+                    <div class="workflow-box-label">
+                        Superseded
+                    </div>
+
+                    <div class="workflow-box-value">
+                        {{ superseded_sds }}
+                    </div>
+
+                    <div class="workflow-box-note">
+                        Replaced historical records
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+        ANALYTICAL CHARTS
+    ========================================================= -->
+    <div class="dash-card-grid">
+
+        <!-- SDS STATUS DISTRIBUTION -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    SDS Status Distribution
+                </h3>
+
+                <span>
+                    Document lifecycle
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div class="chart-container">
+
+                    <canvas id="sdsStatusChart"></canvas>
+
+                    <div
+                        id="sdsStatusEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+                        <i class="fas fa-chart-pie"></i>
+                        <span>No SDS status data available.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- REVIEW & EXPIRY DISTRIBUTION -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    Review & Expiry Distribution
+                </h3>
+
+                <span>
+                    Review priority
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div class="chart-container">
+
+                    <canvas id="reviewDistributionChart"></canvas>
+
+                    <div
+                        id="reviewDistributionEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+                        <i class="fas fa-calendar-check"></i>
+                        <span>No review data available.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+        PLANT ANALYTICS
+    ========================================================= -->
+    <div id="plant-analytics" class="dash-card-grid">
+
+        <!-- SDS BY PLANT -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    SDS by Plant
+                </h3>
+
+                <span>
+                    Plant-wise distribution
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div class="chart-container">
+
+                    <canvas id="sdsPlantChart"></canvas>
+
+                    <div
+                        id="sdsPlantEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+                        <i class="fas fa-industry"></i>
+
+                        <span>
+                            No plant-wise SDS data available.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PLANT COVERAGE -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    SDS Coverage by Plant
+                </h3>
+
+                <span>
+                    Chemical coverage
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                {% if plant_analytics %}
+
+                    <div style="overflow-x: auto;">
+
+                        <table
+                            style="
+                                width: 100%;
+                                border-collapse: collapse;
+                            "
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th
+                                        style="
+                                            text-align: left;
+                                            padding: 10px;
+                                            border-bottom: 1px solid var(--border);
+                                            color: var(--text-muted);
+                                            font-size: 11px;
+                                            text-transform: uppercase;
+                                        "
+                                    >
+                                        Plant
+                                    </th>
+
+                                    <th
+                                        style="
+                                            text-align: center;
+                                            padding: 10px;
+                                            border-bottom: 1px solid var(--border);
+                                            color: var(--text-muted);
+                                            font-size: 11px;
+                                            text-transform: uppercase;
+                                        "
+                                    >
+                                        Chemicals
+                                    </th>
+
+                                    <th
+                                        style="
+                                            text-align: center;
+                                            padding: 10px;
+                                            border-bottom: 1px solid var(--border);
+                                            color: var(--text-muted);
+                                            font-size: 11px;
+                                            text-transform: uppercase;
+                                        "
+                                    >
+                                        Active SDS
+                                    </th>
+
+                                    <th
+                                        style="
+                                            text-align: center;
+                                            padding: 10px;
+                                            border-bottom: 1px solid var(--border);
+                                            color: var(--text-muted);
+                                            font-size: 11px;
+                                            text-transform: uppercase;
+                                        "
+                                    >
+                                        Coverage
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for plant in plant_analytics %}
+
+                                    <tr>
+
+                                        <td
+                                            style="
+                                                padding: 11px 10px;
+                                                border-bottom: 1px solid var(--border);
+                                                color: var(--text-secondary);
+                                                font-size: 13px;
+                                                font-weight: 600;
+                                            "
+                                        >
+                                            {{ plant.plant_name }}
+                                        </td>
+
+                                        <td
+                                            style="
+                                                padding: 11px 10px;
+                                                border-bottom: 1px solid var(--border);
+                                                text-align: center;
+                                                color: var(--text-primary);
+                                                font-size: 13px;
+                                                font-weight: 600;
+                                            "
+                                        >
+                                            {{ plant.total_chemicals }}
+                                        </td>
+
+                                        <td
+                                            style="
+                                                padding: 11px 10px;
+                                                border-bottom: 1px solid var(--border);
+                                                text-align: center;
+                                                color: var(--text-primary);
+                                                font-size: 13px;
+                                                font-weight: 600;
+                                            "
+                                        >
+                                            {{ plant.active_sds }}
+                                        </td>
+
+                                        <td
+                                            style="
+                                                padding: 11px 10px;
+                                                border-bottom: 1px solid var(--border);
+                                                text-align: center;
+                                            "
+                                        >
+
+                                            {% if plant.coverage_percentage >= 90 %}
+
+                                                <span class="attention-count badge-success">
+                                                    {{ plant.coverage_percentage }}%
+                                                </span>
+
+                                            {% elif plant.coverage_percentage >= 70 %}
+
+                                                <span class="attention-count badge-warning">
+                                                    {{ plant.coverage_percentage }}%
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="attention-count badge-danger">
+                                                    {{ plant.coverage_percentage }}%
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="chart-empty">
+
+                        <i class="fas fa-industry"></i>
+
+                        <span>
+                            No plant data available.
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+        SDS SECTION COMPLETION
+    ========================================================= -->
+    <div class="dash-card-grid">
+
+        <!-- SECTION COMPLETION CHART -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    SDS Section Completion
+                </h3>
+
+                <span>
+                    Average completion across active SDS
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div
+                    class="chart-container"
+                    style="height: 420px;"
+                >
+
+                    <canvas
+                        id="sdsSectionCompletionChart"
+                    ></canvas>
+
+                    <div
+                        id="sdsSectionEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+
+                        <i class="fas fa-file-alt"></i>
+
+                        <span>
+                            No section completion data available.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SECTION COMPLETION SUMMARY -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <h3>
+                    Section Completion Summary
+                </h3>
+
+                <span>
+                    Active SDS quality
+                </span>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns:
+                            repeat(2,1fr);
+                        gap: 12px;
+                    "
+                >
+
+                    <div
+                        style="
+                            padding: 18px;
+                            border: 1px solid var(--border);
+                            border-radius: 10px;
+                            background: #f8fafc;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                text-transform: uppercase;
+                                font-weight: 600;
+                            "
+                        >
+                            Active SDS
+                        </div>
+
+                        <div
+                            style="
+                                margin-top: 6px;
+                                font-size: 26px;
+                                font-weight: 700;
+                                color: var(--text-primary);
+                            "
+                        >
+                            {{ active_version_count }}
+                        </div>
+
+                    </div>
+
+                    <div
+                        style="
+                            padding: 18px;
+                            border: 1px solid var(--border);
+                            border-radius: 10px;
+                            background: #f8fafc;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                text-transform: uppercase;
+                                font-weight: 600;
+                            "
+                        >
+                            Average Completion
+                        </div>
+
+                        <div
+                            style="
+                                margin-top: 6px;
+                                font-size: 26px;
+                                font-weight: 700;
+                                color: var(--primary-teal);
+                            "
+                        >
+                            {{ section_completion_percentage }}%
+                        </div>
+
+                    </div>
+
+                    <div
+                        style="
+                            padding: 18px;
+                            border: 1px solid var(--border);
+                            border-radius: 10px;
+                            background: #f8fafc;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                text-transform: uppercase;
+                                font-weight: 600;
+                            "
+                        >
+                            Fully Completed
+                        </div>
+
+                        <div
+                            style="
+                                margin-top: 6px;
+                                font-size: 26px;
+                                font-weight: 700;
+                                color: #16a34a;
+                            "
+                        >
+                            {{ fully_completed_versions }}
+                        </div>
+
+                    </div>
+
+                    <div
+                        style="
+                            padding: 18px;
+                            border: 1px solid var(--border);
+                            border-radius: 10px;
+                            background: #f8fafc;
+                        "
+                    >
+
+                        <div
+                            style="
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                text-transform: uppercase;
+                                font-weight: 600;
+                            "
+                        >
+                            Incomplete
+                        </div>
+
+                        <div
+                            style="
+                                margin-top: 6px;
+                                font-size: 26px;
+                                font-weight: 700;
+                                color: #dc2626;
+                            "
+                        >
+                            {{ incomplete_versions }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+        SECTION COMPLETION TABLE
+    ========================================================= -->
+    <div class="dash-card" style="margin-bottom: 24px;">
+
+        <div class="dash-card-header">
+
+            <h3>
+                Section-wise Completion
+            </h3>
+
+            <span>
+                Average completion by SDS section
+            </span>
+
+        </div>
+
+        <div class="dash-card-body">
+
+            {% if section_completion %}
+
+                <div style="overflow-x: auto;">
+
+                    <table
+                        style="
+                            width: 100%;
+                            border-collapse: collapse;
+                        "
+                    >
+
+                        <thead>
+
+                            <tr>
+
+                                <th
+                                    style="
+                                        text-align: left;
+                                        padding: 11px;
+                                        border-bottom:
+                                            1px solid var(--border);
+                                        color: var(--text-muted);
+                                        font-size: 11px;
+                                        text-transform: uppercase;
+                                    "
+                                >
+                                    Section
+                                </th>
+
+                                <th
+                                    style="
+                                        text-align: left;
+                                        padding: 11px;
+                                        border-bottom:
+                                            1px solid var(--border);
+                                        color: var(--text-muted);
+                                        font-size: 11px;
+                                        text-transform: uppercase;
+                                    "
+                                >
+                                    Section Name
+                                </th>
+
+                                <th
+                                    style="
+                                        text-align: center;
+                                        padding: 11px;
+                                        border-bottom:
+                                            1px solid var(--border);
+                                        color: var(--text-muted);
+                                        font-size: 11px;
+                                        text-transform: uppercase;
+                                    "
+                                >
+                                    Completion
+                                </th>
+
+                                <th
+                                    style="
+                                        text-align: left;
+                                        padding: 11px;
+                                        border-bottom:
+                                            1px solid var(--border);
+                                        color: var(--text-muted);
+                                        font-size: 11px;
+                                        text-transform: uppercase;
+                                    "
+                                >
+                                    Progress
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for section in section_completion %}
+
+                                <tr>
+
+                                    <td
+                                        style="
+                                            padding: 11px;
+                                            border-bottom:
+                                                1px solid var(--border);
+                                            font-weight: 700;
+                                            color:
+                                                var(--text-primary);
+                                        "
+                                    >
+                                        {{ section.number }}
+                                    </td>
+
+                                    <td
+                                        style="
+                                            padding: 11px;
+                                            border-bottom:
+                                                1px solid var(--border);
+                                            color:
+                                                var(--text-secondary);
+                                            font-size: 13px;
+                                        "
+                                    >
+                                        {{ section.name }}
+                                    </td>
+
+                                    <td
+                                        style="
+                                            padding: 11px;
+                                            border-bottom:
+                                                1px solid var(--border);
+                                            text-align: center;
+                                            font-weight: 700;
+                                        "
+                                    >
+
+                                        {{ section.completion }}%
+
+                                    </td>
+
+                                    <td
+                                        style="
+                                            padding: 11px;
+                                            border-bottom:
+                                                1px solid var(--border);
+                                        "
+                                    >
+
+                                        <div
+                                            style="
+                                                width: 100%;
+                                                height: 8px;
+                                                background:
+                                                    #e2e8f0;
+                                                border-radius: 20px;
+                                                overflow: hidden;
+                                            "
+                                        >
+
+                                            <div
+                                                style="
+                                                    width:
+                                                        {{ section.completion }}%;
+                                                    height: 100%;
+                                                    background:
+                                                        var(--primary-teal);
+                                                    border-radius: 20px;
+                                                "
+                                            ></div>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="chart-empty">
+
+                    <i class="fas fa-file-alt"></i>
+
+                    <span>
+                        No section completion data available.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+        ATTENTION REQUIRED
+    ========================================================= -->
+    <div class="dash-card" style="margin-bottom: 24px;">
+
+        <div class="dash-card-header">
+
+            <div>
+
+                <h3>
+                    Attention Required
+                </h3>
+
+                <span>
+                    Items requiring EHS action
+                </span>
+
+            </div>
+
+            <div
+                style="
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                "
+            >
+
+                <span
+                    class="attention-count badge-danger"
+                >
+                    {{ high_priority_attention }} High
+                </span>
+
+                <span
+                    class="attention-count badge-warning"
+                >
+                    {{ medium_priority_attention }} Medium
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="dash-card-body">
+
+            {% if attention_items %}
+
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns:
+                            repeat(2,minmax(0,1fr));
+                        gap: 14px;
+                    "
+                >
+
+                    {% for item in attention_items %}
+
+                        <div
+                            style="
+                                border: 1px solid var(--border);
+                                border-radius: 12px;
+                                padding: 16px;
+                                background: #ffffff;
+                            "
+                        >
+
+                            <div
+                                style="
+                                    display: flex;
+                                    justify-content:
+                                        space-between;
+                                    align-items: flex-start;
+                                    gap: 12px;
+                                "
+                            >
+
+                                <div>
+
+                                    <div
+                                        style="
+                                            font-size: 14px;
+                                            font-weight: 700;
+                                            color:
+                                                var(--text-primary);
+                                        "
+                                    >
+                                        {{ item.title }}
+                                    </div>
+
+                                    <div
+                                        style="
+                                            margin-top: 5px;
+                                            font-size: 12px;
+                                            line-height: 1.5;
+                                            color:
+                                                var(--text-muted);
+                                        "
+                                    >
+                                        {{ item.description }}
+                                    </div>
+
+                                </div>
+
+                                {% if item.priority == 'HIGH' %}
+
+                                    <span
+                                        class="
+                                            attention-count
+                                            badge-danger
+                                        "
+                                    >
+                                        HIGH
+                                    </span>
+
+                                {% else %}
+
+                                    <span
+                                        class="
+                                            attention-count
+                                            badge-warning
+                                        "
+                                    >
+                                        MEDIUM
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div
+                                style="
+                                    margin-top: 14px;
+                                    display: flex;
+                                    justify-content:
+                                        space-between;
+                                    align-items: center;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        font-size: 26px;
+                                        font-weight: 700;
+                                        color:
+                                            var(--text-primary);
+                                    "
+                                >
+                                    {{ item.count }}
+                                </div>
+
+                                {% if item.type == 'OVERDUE' %}
+
+                                    <a
+                                        href="{% url 'sds:review_list' %}"
+                                        class="dash-action-btn"
+                                    >
+                                        Review
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% elif item.type == 'DUE_SOON' %}
+
+                                    <a
+                                        href="{% url 'sds:review_list' %}"
+                                        class="dash-action-btn"
+                                    >
+                                        Review
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% elif item.type == 'EXPIRED' %}
+
+                                    <a
+                                        href="{% url 'sds:sds_list' %}"
+                                        class="dash-action-btn"
+                                    >
+                                        View SDS
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% elif item.type == 'INCOMPLETE' %}
+
+                                    <a
+                                        href="{% url 'sds:sds_list' %}"
+                                        class="dash-action-btn"
+                                    >
+                                        View SDS
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% elif item.type == 'NO_SDS' %}
+
+                                    <a
+                                        href="{% url 'chemicals:chemical_list' %}"
+                                        class="dash-action-btn"
+                                    >
+                                        View Chemicals
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% elif item.type == 'PLANT_COVERAGE' %}
+
+                                    <a
+                                        href="#plant-analytics"
+                                        class="dash-action-btn"
+                                    >
+                                        View Plants
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 18px;
+                        border: 1px solid #bbf7d0;
+                        border-radius: 10px;
+                        background: #f0fdf4;
+                        color: #166534;
+                    "
+                >
+
+                    <i
+                        class="fas fa-check-circle"
+                        style="font-size: 20px;"
+                    ></i>
+
+                    <div>
+
+                        <div
+                            style="
+                                font-weight: 700;
+                                font-size: 14px;
+                            "
+                        >
+                            No Immediate Attention Required
+                        </div>
+
+                        <div
+                            style="
+                                margin-top: 3px;
+                                font-size: 12px;
+                            "
+                        >
+                            Current SDS compliance indicators
+                            are within the configured thresholds.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+        SDS TREND ANALYTICS
+    ========================================================= -->
+    <div class="dash-card-grid" style="margin-bottom: 24px;">
+
+        <!-- SDS ACTIVITY TREND -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <div>
+
+                    <h3>
+                        SDS Activity Trend
+                    </h3>
+
+                    <span>
+                        SDS activity over the last 12 months
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div
+                    class="chart-container"
+                    style="height: 360px;"
+                >
+
+                    <canvas
+                        id="sdsActivityTrendChart"
+                    ></canvas>
+
+                    <div
+                        id="sdsActivityTrendEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+
+                        <i class="fas fa-chart-line"></i>
+
+                        <span>
+                            No SDS trend data available.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- REVIEW ACTIVITY TREND -->
+        <div class="dash-card">
+
+            <div class="dash-card-header">
+
+                <div>
+
+                    <h3>
+                        Review Activity Trend
+                    </h3>
+
+                    <span>
+                        Review activity over the last 12 months
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="dash-card-body">
+
+                <div
+                    class="chart-container"
+                    style="height: 360px;"
+                >
+
+                    <canvas
+                        id="sdsReviewTrendChart"
+                    ></canvas>
+
+                    <div
+                        id="sdsReviewTrendEmpty"
+                        class="chart-empty"
+                        style="display: none;"
+                    >
+
+                        <i class="fas fa-clipboard-check"></i>
+
+                        <span>
+                            No review trend data available.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+        TREND SUMMARY
+    ========================================================= -->
+    <div class="dash-card"
+        style="margin-top: 18px;">
+
+        <div class="dash-card-header">
+
+            <div>
+
+                <h3>
+                    12-Month Activity Summary
+                </h3>
+
+                <span>
+                    SDS and review management activity
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="dash-card-body">
+
+            <div
+                style="
+                    display: grid;
+                    grid-template-columns:
+                        repeat(4,minmax(0,1fr));
+                    gap: 14px;
+                "
+            >
+
+                <!-- SDS CREATED -->
+                <div
+                    style="
+                        padding: 18px;
+                        border: 1px solid var(--border);
+                        border-radius: 10px;
+                        background: #f8fafc;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size: 11px;
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        "
+                    >
+                        SDS Created
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 7px;
+                            font-size: 26px;
+                            font-weight: 700;
+                            color: var(--text-primary);
+                        "
+                    >
+                        {{ sds_created_last_12_months }}
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 4px;
+                            font-size: 11px;
+                            color: var(--text-muted);
+                        "
+                    >
+                        Last 12 months
+                    </div>
+
+                </div>
+
+                <!-- SDS UPDATED -->
+                <div
+                    style="
+                        padding: 18px;
+                        border: 1px solid var(--border);
+                        border-radius: 10px;
+                        background: #f8fafc;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size: 11px;
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        "
+                    >
+                        SDS Updated
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 7px;
+                            font-size: 26px;
+                            font-weight: 700;
+                            color: var(--primary-teal);
+                        "
+                    >
+                        {{ sds_updated_last_12_months }}
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 4px;
+                            font-size: 11px;
+                            color: var(--text-muted);
+                        "
+                    >
+                        Last 12 months
+                    </div>
+
+                </div>
+
+                <!-- REVIEWS CREATED -->
+                <div
+                    style="
+                        padding: 18px;
+                        border: 1px solid var(--border);
+                        border-radius: 10px;
+                        background: #f8fafc;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size: 11px;
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        "
+                    >
+                        Reviews Created
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 7px;
+                            font-size: 26px;
+                            font-weight: 700;
+                            color: var(--text-primary);
+                        "
+                    >
+                        {{ reviews_created_last_12_months }}
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 4px;
+                            font-size: 11px;
+                            color: var(--text-muted);
+                        "
+                    >
+                        Last 12 months
+                    </div>
+
+                </div>
+
+                <!-- REVIEWS COMPLETED -->
+                <div
+                    style="
+                        padding: 18px;
+                        border: 1px solid var(--border);
+                        border-radius: 10px;
+                        background: #f8fafc;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size: 11px;
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        "
+                    >
+                        Reviews Completed
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 7px;
+                            font-size: 26px;
+                            font-weight: 700;
+                            color: #16a34a;
+                        "
+                    >
+                        {{ reviews_completed_last_12_months }}
+                    </div>
+
+                    <div
+                        style="
+                            margin-top: 4px;
+                            font-size: 11px;
+                            color: var(--text-muted);
+                        "
+                    >
+                        Last 12 months
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+         INFORMATION
+    ========================================================= -->
+    <div class="dashboard-info" style="margin-top: 24px;">
+
+        <strong>SDS Analytical Dashboard:</strong>
+        This dashboard provides an overall view of SDS coverage,
+        document lifecycle, review requirements and SDS section
+        completion. Detailed analytical charts and plant-level
+        analysis will be added in the next dashboard stages.
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // =========================================================
+    // SDS STATUS DISTRIBUTION
+    // =========================================================
+    const statusData = [
+        {% for item in status_distribution %}
+        {
+            label: "{{ item.label|escapejs }}",
+            value: {{ item.value }}
+        },
+        {% endfor %}
+    ];
+
+    const statusLabels = statusData.map(
+        item => item.label
+    );
+
+    const statusValues = statusData.map(
+        item => item.value
+    );
+
+    const statusTotal = statusValues.reduce(
+        (sum, value) => sum + value,
+        0
+    );
+
+    const statusCanvas = document.getElementById(
+        'sdsStatusChart'
+    );
+
+    const statusEmpty = document.getElementById(
+        'sdsStatusEmpty'
+    );
+
+    if (statusTotal > 0) {
+
+        new Chart(statusCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusValues,
+                    backgroundColor: [
+                        '#94a3b8',
+                        '#64748b',
+                        '#d97706',
+                        '#7c3aed',
+                        '#0d9488',
+                        '#dc2626',
+                        '#475569',
+                        '#b91c1c'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 14,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce(
+                                    (sum, item) => sum + item,
+                                    0
+                                );
+
+                                const percentage = total
+                                    ? ((value / total) * 100).toFixed(1)
+                                    : 0;
+
+                                return (
+                                    ' ' +
+                                    context.label +
+                                    ': ' +
+                                    value +
+                                    ' (' +
+                                    percentage +
+                                    '%)'
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+
+        statusCanvas.style.display = 'none';
+        statusEmpty.style.display = 'flex';
+
+    }
+
+    // =========================================================
+    // REVIEW & EXPIRY DISTRIBUTION
+    // =========================================================
+    const reviewData = [
+        {% for item in review_distribution %}
+        {
+            label: "{{ item.label|escapejs }}",
+            value: {{ item.value }}
+        },
+        {% endfor %}
+    ];
+
+    const reviewLabels = reviewData.map(
+        item => item.label
+    );
+
+    const reviewValues = reviewData.map(
+        item => item.value
+    );
+
+    const reviewTotal = reviewValues.reduce(
+        (sum, value) => sum + value,
+        0
+    );
+
+    const reviewCanvas = document.getElementById(
+        'reviewDistributionChart'
+    );
+
+    const reviewEmpty = document.getElementById(
+        'reviewDistributionEmpty'
+    );
+
+    if (reviewTotal > 0) {
+
+        new Chart(reviewCanvas, {
+            type: 'bar',
+            data: {
+                labels: reviewLabels,
+                datasets: [{
+                    label: 'SDS',
+                    data: reviewValues,
+                    backgroundColor: [
+                        '#dc2626',
+                        '#d97706',
+                        '#0d9488',
+                        '#7c3aed'
+                    ],
+                    borderRadius: 7,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return (
+                                    ' SDS: ' +
+                                    context.raw
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+
+        reviewCanvas.style.display = 'none';
+        reviewEmpty.style.display = 'flex';
+
+    }
+
+
+    // =========================================================
+    // SDS BY PLANT
+    // =========================================================
+    const plantData = [
+        {% for plant in plant_chart_data %}
+        {
+            label: "{{ plant.label|escapejs }}",
+            total: {{ plant.total }},
+            active: {{ plant.active }},
+            expired: {{ plant.expired }}
+        },
+        {% endfor %}
+    ];
+
+    const plantLabels = plantData.map(
+        item => item.label
+    );
+
+    const plantTotalValues = plantData.map(
+        item => item.total
+    );
+
+    const plantActiveValues = plantData.map(
+        item => item.active
+    );
+
+    const plantExpiredValues = plantData.map(
+        item => item.expired
+    );
+
+    const plantCanvas = document.getElementById(
+        'sdsPlantChart'
+    );
+
+    const plantEmpty = document.getElementById(
+        'sdsPlantEmpty'
+    );
+
+    if (plantData.length > 0) {
+
+        new Chart(plantCanvas, {
+            type: 'bar',
+            data: {
+                labels: plantLabels,
+                datasets: [
+                    {
+                        label: 'Total SDS',
+                        data: plantTotalValues,
+                        backgroundColor: '#0d9488',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    },
+                    {
+                        label: 'Active SDS',
+                        data: plantActiveValues,
+                        backgroundColor: '#16a34a',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    },
+                    {
+                        label: 'Expired SDS',
+                        data: plantExpiredValues,
+                        backgroundColor: '#dc2626',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 14,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+
+        plantCanvas.style.display = 'none';
+
+        plantEmpty.style.display = 'flex';
+
+    }
+
+
+    // =========================================================
+    // SDS SECTION COMPLETION CHART
+    // =========================================================
+    const sectionCompletionData = [
+        {% for section in section_completion %}
+        {
+            number: {{ section.number }},
+            label: "{{ section.name|escapejs }}",
+            completion: {{ section.completion }}
+        },
+        {% endfor %}
+    ];
+
+    const sectionLabels = sectionCompletionData.map(
+        item => 'Section ' + item.number
+    );
+
+    const sectionValues = sectionCompletionData.map(
+        item => item.completion
+    );
+
+    const sectionCanvas = document.getElementById(
+        'sdsSectionCompletionChart'
+    );
+
+    const sectionEmpty = document.getElementById(
+        'sdsSectionEmpty'
+    );
+
+    if (
+        sectionCompletionData.length > 0
+        && sectionCanvas
+    ) {
+
+        new Chart(sectionCanvas, {
+            type: 'bar',
+            data: {
+                labels: sectionLabels,
+                datasets: [
+                    {
+                        label: 'Completion %',
+                        data: sectionValues,
+                        backgroundColor: '#0d9488',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function (value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return (
+                                    context.raw + '%'
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else if (sectionEmpty) {
+
+        if (sectionCanvas) {
+            sectionCanvas.style.display = 'none';
+        }
+
+        sectionEmpty.style.display = 'flex';
+
+    }
+
+
+    // =========================================================
+    // SDS ACTIVITY TREND
+    // =========================================================
+    const trendData = {{ trend_chart_data|safe }};
+
+    const activityCanvas = document.getElementById(
+        'sdsActivityTrendChart'
+    );
+
+    const activityEmpty = document.getElementById(
+        'sdsActivityTrendEmpty'
+    );
+
+    if (
+        trendData
+        && trendData.labels
+        && trendData.labels.length > 0
+    ) {
+
+        new Chart(activityCanvas, {
+            type: 'line',
+            data: {
+                labels: trendData.labels,
+                datasets: [
+                    {
+                        label: 'SDS Created',
+                        data: trendData.sds_created,
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13,148,136,0.08)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'SDS Updated',
+                        data: trendData.sds_updated,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'transparent',
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 14,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+
+        if (activityCanvas) {
+            activityCanvas.style.display = 'none';
+        }
+
+        if (activityEmpty) {
+            activityEmpty.style.display = 'flex';
+        }
+
+    }
+
+
+    // =========================================================
+    // REVIEW ACTIVITY TREND
+    // =========================================================
+    const reviewTrendCanvas = document.getElementById(
+        'sdsReviewTrendChart'
+    );
+
+    const reviewTrendEmpty = document.getElementById(
+        'sdsReviewTrendEmpty'
+    );
+
+    if (
+        trendData
+        && trendData.labels
+        && trendData.labels.length > 0
+    ) {
+
+        new Chart(reviewTrendCanvas, {
+            type: 'line',
+            data: {
+                labels: trendData.labels,
+                datasets: [
+                    {
+                        label: 'Reviews Created',
+                        data: trendData.reviews_created,
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217,119,6,0.08)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Reviews Completed',
+                        data: trendData.reviews_completed,
+                        borderColor: '#16a34a',
+                        backgroundColor: 'transparent',
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 14,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+
+        if (reviewTrendCanvas) {
+            reviewTrendCanvas.style.display = 'none';
+        }
+
+        if (reviewTrendEmpty) {
+            reviewTrendEmpty.style.display = 'flex';
+        }
+
+    }
+
+});
+</script>
+{% endblock %}

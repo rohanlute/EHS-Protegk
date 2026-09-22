@@ -1,0 +1,802 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}
+{% if object %}Edit SDS{% else %}Add SDS{% endif %} | EHS-360
+{% endblock %}
+{% block extra_css %}
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+:root {
+--primary-teal: #0d9488;
+--primary-teal-dark: #0f766e;
+--primary-teal-light: rgba(13, 148, 136, 0.08);
+--secondary-red: #dc2626;
+--secondary-gold: #d97706;
+--text-primary: #0f172a;
+--text-secondary: #334155;
+--text-muted: #64748b;
+--border-color: #e2e8f0;
+--bg-card: #fff;
+--bg-page: #f1f5f9;
+--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+--shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.12);
+--radius-card: 14px;
+--radius-sm: 8px;
+}
+.content-wrapper {
+background: var(--bg-page) !important;
+}
+.dash-page-header {
+background: var(--bg-card);
+border-radius: var(--radius-card);
+box-shadow: var(--shadow-card);
+border: 1px solid var(--border-color);
+padding: 20px 24px;
+margin-bottom: 24px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 16px;
+}
+.dash-page-header .header-left {
+display: flex;
+align-items: center;
+gap: 14px;
+}
+.dash-page-header .header-icon {
+width: 44px;
+height: 44px;
+border-radius: 12px;
+background: var(--primary-teal-light);
+color: var(--primary-teal);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+}
+.dash-page-header h1 {
+font-size: 20px;
+font-weight: 700;
+color: var(--text-primary);
+margin: 0;
+}
+.dash-page-header .subtitle {
+font-size: 13px;
+color: var(--text-muted);
+margin: 0;
+}
+.header-right {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.btn-back-teal {
+display: inline-flex;
+align-items: center;
+gap: 7px;
+padding: 8px 16px;
+border-radius: var(--radius-sm);
+border: 1px solid var(--border-color);
+background: #fff;
+color: var(--text-secondary);
+font-size: 13px;
+font-weight: 600;
+text-decoration: none;
+transition: all 0.25s ease;
+}
+.btn-back-teal:hover {
+background: var(--primary-teal-light);
+border-color: var(--primary-teal);
+color: var(--primary-teal);
+text-decoration: none;
+}
+.dash-form-card {
+background: var(--bg-card);
+border-radius: var(--radius-card);
+box-shadow: var(--shadow-card);
+border: 1px solid var(--border-color);
+overflow: hidden;
+}
+.dash-form-card:hover {
+box-shadow: var(--shadow-hover);
+}
+.card-header-custom {
+padding: 16px 22px;
+background: var(--primary-teal);
+border-bottom: 1px solid var(--border-color);
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 12px;
+}
+.header-title {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.header-title i {
+color: rgba(255, 255, 255, 0.9);
+font-size: 18px;
+}
+.header-title h3 {
+font-size: 16px;
+font-weight: 700;
+color: #fff;
+margin: 0;
+}
+.header-mode {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 5px 10px;
+border-radius: 20px;
+background: rgba(255, 255, 255, 0.12);
+border: 1px solid rgba(255, 255, 255, 0.2);
+color: #fff;
+font-size: 11px;
+font-weight: 600;
+}
+.card-body-custom {
+padding: 26px 28px;
+}
+.form-section-custom {
+margin-bottom: 24px;
+}
+.form-section-title {
+display: flex;
+align-items: center;
+gap: 9px;
+font-size: 15px;
+font-weight: 700;
+color: var(--text-primary);
+padding-bottom: 10px;
+margin-bottom: 18px;
+border-bottom: 1px solid var(--border-color);
+}
+.form-section-title i {
+color: var(--primary-teal);
+font-size: 15px;
+}
+.sds-form-grid {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 20px;
+}
+.form-group-custom {
+display: flex;
+flex-direction: column;
+}
+.form-group-custom.full-width {
+grid-column: 1/-1;
+}
+.form-group-custom label {
+font-size: 13px;
+font-weight: 600;
+color: var(--text-secondary);
+margin-bottom: 7px;
+}
+.form-group-custom label .required {
+color: var(--secondary-red);
+margin-left: 2px;
+}
+.form-group-custom input,
+.form-group-custom textarea,
+.form-group-custom select {
+width: 100%;
+padding: 9px 12px;
+border: 1px solid var(--border-color);
+border-radius: var(--radius-sm);
+background: #fff;
+color: var(--text-primary);
+font-size: 13px;
+font-family: "Inter", sans-serif;
+transition: all 0.25s ease;
+}
+.form-group-custom input:focus,
+.form-group-custom textarea:focus,
+.form-group-custom select:focus {
+outline: none;
+border-color: var(--primary-teal);
+box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.08);
+}
+.form-group-custom textarea {
+min-height: 100px;
+resize: vertical;
+}
+.form-group-custom input::placeholder,
+.form-group-custom textarea::placeholder {
+color: #94a3b8;
+}
+.helper-text {
+margin-top: 6px;
+font-size: 11px;
+color: var(--text-muted);
+}
+.form-error {
+margin-top: 6px;
+color: var(--secondary-red);
+font-size: 11px;
+font-weight: 500;
+}
+.field-error input,
+.field-error textarea,
+.field-error select {
+border-color: var(--secondary-red);
+}
+.form-alert {
+border-radius: var(--radius-sm);
+border: 1px solid #fecaca;
+background: #fef2f2;
+color: #991b1b;
+padding: 12px 15px;
+margin-bottom: 22px;
+font-size: 13px;
+}
+.form-alert-title {
+display: flex;
+align-items: center;
+gap: 8px;
+font-weight: 700;
+margin-bottom: 5px;
+}
+.form-alert ul {
+margin: 5px 0 0 25px;
+padding: 0;
+}
+.status-card {
+background: var(--primary-teal-light);
+border: 1px solid rgba(13, 148, 136, 0.15);
+border-radius: var(--radius-sm);
+padding: 16px 18px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 15px;
+}
+.status-card-left {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.status-icon {
+width: 38px;
+height: 38px;
+border-radius: 10px;
+background: #fff;
+color: var(--primary-teal);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+box-shadow: var(--shadow-card);
+}
+.status-info strong {
+display: block;
+color: var(--text-primary);
+font-size: 13px;
+font-weight: 700;
+margin-bottom: 2px;
+}
+.status-info span {
+color: var(--text-muted);
+font-size: 11px;
+}
+.custom-check {
+display: flex;
+align-items: flex-start;
+gap: 10px;
+cursor: pointer;
+}
+.custom-check input[type="checkbox"] {
+width: 18px;
+height: 18px;
+margin-top: 1px;
+accent-color: var(--primary-teal);
+cursor: pointer;
+}
+.custom-check-text strong {
+display: block;
+font-size: 13px;
+font-weight: 600;
+color: var(--text-primary);
+}
+.custom-check-text span {
+display: block;
+margin-top: 3px;
+font-size: 11px;
+color: var(--text-muted);
+}
+.document-help {
+background: #eff6ff;
+border: 1px solid #bfdbfe;
+border-radius: var(--radius-sm);
+padding: 12px 14px;
+margin-top: 10px;
+color: #1e40af;
+font-size: 11px;
+}
+.dash-form-footer {
+padding: 16px 28px;
+border-top: 1px solid var(--border-color);
+background: #fafbfc;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+flex-wrap: wrap;
+}
+.footer-left {
+color: var(--text-muted);
+font-size: 11px;
+}
+.footer-actions {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.btn-save-teal,
+.btn-cancel-teal {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 7px;
+padding: 9px 18px;
+border-radius: var(--radius-sm);
+font-size: 13px;
+font-weight: 600;
+font-family: "Inter", sans-serif;
+transition: all 0.25s ease;
+text-decoration: none;
+cursor: pointer;
+}
+.btn-save-teal {
+border: none;
+background: var(--primary-teal);
+color: #fff;
+}
+.btn-save-teal:hover {
+background: var(--primary-teal-dark);
+color: #fff;
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+.btn-cancel-teal {
+border: 1px solid var(--border-color);
+background: #fff;
+color: var(--text-secondary);
+}
+.btn-cancel-teal:hover {
+background: var(--primary-teal-light);
+border-color: var(--primary-teal);
+color: var(--primary-teal);
+text-decoration: none;
+}
+.current-document {
+display: flex;
+align-items: center;
+gap: 10px;
+background: #f8fafc;
+border: 1px solid var(--border-color);
+border-radius: var(--radius-sm);
+padding: 10px 12px;
+margin-top: 8px;
+font-size: 12px;
+}
+.current-document i {
+color: #dc2626;
+}
+.current-document a {
+color: var(--primary-teal);
+font-weight: 600;
+text-decoration: none;
+}
+.current-document a:hover {
+text-decoration: underline;
+}
+@media (max-width: 768px) {
+.dash-page-header {
+padding: 16px 18px;
+flex-direction: column;
+align-items: flex-start;
+}
+.header-right {
+width: 100%;
+}
+.btn-back-teal {
+width: 100%;
+justify-content: center;
+}
+.card-header-custom {
+padding: 13px 17px;
+flex-direction: column;
+align-items: flex-start;
+}
+.card-body-custom {
+padding: 20px 18px;
+}
+.sds-form-grid {
+grid-template-columns: 1fr;
+gap: 16px;
+}
+.form-group-custom.full-width {
+grid-column: auto;
+}
+.status-card {
+align-items: flex-start;
+}
+.dash-form-footer {
+padding: 14px 18px;
+flex-direction: column;
+align-items: stretch;
+}
+.footer-actions {
+width: 100%;
+}
+.footer-actions .btn-save-teal,
+.footer-actions .btn-cancel-teal {
+flex: 1;
+}
+}
+@media (max-width: 480px) {
+.dash-page-header h1 {
+font-size: 18px;
+}
+.dash-page-header .header-icon {
+width: 38px;
+height: 38px;
+font-size: 17px;
+}
+.card-body-custom {
+padding: 16px 14px;
+}
+.dash-form-footer {
+padding: 12px 14px;
+}
+.footer-actions {
+flex-direction: column;
+}
+.footer-actions .btn-save-teal,
+.footer-actions .btn-cancel-teal {
+width: 100%;
+flex: none;
+}
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid" style="padding: 0">
+<div class="dash-page-header">
+<div class="header-left">
+<div class="header-icon"><i class="fas fa-file-alt"></i></div>
+<div>
+<h1>{% if object %}Edit Safety Data Sheet{% else %}Add Safety Data Sheet{% endif %}</h1>
+<p class="subtitle">Manage Safety Data Sheet and chemical product information</p>
+</div>
+</div>
+<div class="header-right">
+<a href="{% url 'sds:sds_list' %}" class="btn-back-teal"><i class="fas fa-arrow-left"></i> Back to SDS Register</a>
+</div>
+</div>
+<div class="dash-form-card">
+<div class="card-header-custom">
+<div class="header-title">
+<i class="fas fa-file-contract"></i>
+<h3>{% if object %}Update SDS Details{% else %}SDS Details{% endif %}</h3>
+</div>
+<div class="header-mode">
+{% if object %}
+<i class="fas fa-pen"></i> Edit Mode
+{% else %}
+<i class="fas fa-plus"></i> Create Mode
+{% endif %}
+</div>
+</div>
+<form method="post" enctype="multipart/form-data" novalidate>
+{% csrf_token %}
+<div class="card-body-custom">
+{% if form.non_field_errors %}
+<div class="form-alert">
+<div class="form-alert-title">
+<i class="fas fa-exclamation-triangle"></i> Please correct the following errors
+</div>
+{{ form.non_field_errors }}
+</div>
+{% endif %}
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-info-circle"></i> SDS Identification
+</div>
+<div class="sds-form-grid">
+{% if object %}
+<div class="form-group-custom">
+<label>SDS Number</label>
+<div class="current-document" style="margin-top:0;">
+<i class="fas fa-barcode"></i>
+<span>{{ object.sds_number }}</span>
+</div>
+<div class="helper-text">SDS number is system generated and cannot be changed.</div>
+</div>
+{% endif %}
+<div class="form-group-custom {% if form.chemical.errors %}field-error{% endif %}">
+<label for="{{ form.chemical.id_for_label }}">Chemical<span class="required">*</span></label>
+{{ form.chemical }}
+{% for error in form.chemical.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+<div class="helper-text">Select the chemical from Chemical Management.</div>
+</div>
+<div class="form-group-custom {% if form.sds_type.errors %}field-error{% endif %}">
+<label for="{{ form.sds_type.id_for_label }}">SDS Type<span class="required">*</span></label>
+{{ form.sds_type }}
+{% for error in form.sds_type.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.product_name.errors %}field-error{% endif %}">
+<label for="{{ form.product_name.id_for_label }}">Product Name<span class="required">*</span></label>
+{{ form.product_name }}
+{% for error in form.product_name.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.product_identifier.errors %}field-error{% endif %}">
+<label for="{{ form.product_identifier.id_for_label }}">Product Identifier</label>
+{{ form.product_identifier }}
+{% for error in form.product_identifier.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+<div class="helper-text">CAS number, product code or other identifying reference.</div>
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-industry"></i> Manufacturer Information
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom {% if form.manufacturer_name.errors %}field-error{% endif %}">
+<label for="{{ form.manufacturer_name.id_for_label }}">Manufacturer Name</label>
+{{ form.manufacturer_name }}
+{% for error in form.manufacturer_name.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.manufacturer_phone.errors %}field-error{% endif %}">
+<label for="{{ form.manufacturer_phone.id_for_label }}">Phone</label>
+{{ form.manufacturer_phone }}
+{% for error in form.manufacturer_phone.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.manufacturer_email.errors %}field-error{% endif %}">
+<label for="{{ form.manufacturer_email.id_for_label }}">Email</label>
+{{ form.manufacturer_email }}
+{% for error in form.manufacturer_email.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom full-width {% if form.manufacturer_address.errors %}field-error{% endif %}">
+<label for="{{ form.manufacturer_address.id_for_label }}">Address</label>
+{{ form.manufacturer_address }}
+{% for error in form.manufacturer_address.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-truck"></i> Supplier Information
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom {% if form.supplier_name.errors %}field-error{% endif %}">
+<label for="{{ form.supplier_name.id_for_label }}">Supplier Name</label>
+{{ form.supplier_name }}
+{% for error in form.supplier_name.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.supplier_phone.errors %}field-error{% endif %}">
+<label for="{{ form.supplier_phone.id_for_label }}">Phone</label>
+{{ form.supplier_phone }}
+{% for error in form.supplier_phone.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.supplier_email.errors %}field-error{% endif %}">
+<label for="{{ form.supplier_email.id_for_label }}">Email</label>
+{{ form.supplier_email }}
+{% for error in form.supplier_email.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom full-width {% if form.supplier_address.errors %}field-error{% endif %}">
+<label for="{{ form.supplier_address.id_for_label }}">Address</label>
+{{ form.supplier_address }}
+{% for error in form.supplier_address.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-map-marker-alt"></i> Plant & Location
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom {% if form.plant.errors %}field-error{% endif %}">
+<label for="{{ form.plant.id_for_label }}">Plant</label>
+{{ form.plant }}
+{% for error in form.plant.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.zone.errors %}field-error{% endif %}">
+<label for="{{ form.zone.id_for_label }}">Zone</label>
+{{ form.zone }}
+{% for error in form.zone.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.location.errors %}field-error{% endif %}">
+<label for="{{ form.location.id_for_label }}">Location</label>
+{{ form.location }}
+{% for error in form.location.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.sublocation.errors %}field-error{% endif %}">
+<label for="{{ form.sublocation.id_for_label }}">Sub-Location</label>
+{{ form.sublocation }}
+{% for error in form.sublocation.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-file-pdf"></i> SDS Document
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom {% if form.document.errors %}field-error{% endif %}">
+<label for="{{ form.document.id_for_label }}">SDS PDF Document</label>
+{{ form.document }}
+{% for error in form.document.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+<div class="document-help">
+<i class="fas fa-info-circle"></i> Upload the official SDS document in PDF format.
+</div>
+{% if object and object.document %}
+<div class="current-document">
+<i class="fas fa-file-pdf"></i>
+<span>Current document:</span>
+<a href="{% url 'sds:sds_document' object.pk %}" target="_blank">View PDF</a>
+</div>
+{% endif %}
+</div>
+<div class="form-group-custom {% if form.document_name.errors %}field-error{% endif %}">
+<label for="{{ form.document_name.id_for_label }}">Document Name</label>
+{{ form.document_name }}
+{% for error in form.document_name.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.document_language.errors %}field-error{% endif %}">
+<label for="{{ form.document_language.id_for_label }}">Document Language</label>
+{{ form.document_language }}
+{% for error in form.document_language.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-calendar-alt"></i> Revision & Review
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom {% if form.issue_date.errors %}field-error{% endif %}">
+<label for="{{ form.issue_date.id_for_label }}">Issue Date</label>
+{{ form.issue_date }}
+{% for error in form.issue_date.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.revision_date.errors %}field-error{% endif %}">
+<label for="{{ form.revision_date.id_for_label }}">Revision Date</label>
+{{ form.revision_date }}
+{% for error in form.revision_date.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.next_review_date.errors %}field-error{% endif %}">
+<label for="{{ form.next_review_date.id_for_label }}">Next Review Date</label>
+{{ form.next_review_date }}
+{% for error in form.next_review_date.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+<div class="form-group-custom {% if form.status.errors %}field-error{% endif %}">
+<label for="{{ form.status.id_for_label }}">Status<span class="required">*</span></label>
+{{ form.status }}
+{% for error in form.status.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-toggle-on"></i> Status & Control
+</div>
+<div class="status-card">
+<div class="status-card-left">
+<div class="status-icon"><i class="fas fa-shield-alt"></i></div>
+<div class="status-info">
+<strong>SDS Availability</strong>
+<span>Active SDS records are available for EHS users and future employee access.</span>
+</div>
+</div>
+<label class="custom-check">
+{{ form.is_active }}
+<span class="custom-check-text">
+<strong>Active</strong>
+<span>Make this SDS available for use.</span>
+</span>
+</label>
+</div>
+</div>
+<div class="form-section-custom">
+<div class="form-section-title">
+<i class="fas fa-comment-alt"></i> Remarks
+</div>
+<div class="sds-form-grid">
+<div class="form-group-custom full-width {% if form.remarks.errors %}field-error{% endif %}">
+<label for="{{ form.remarks.id_for_label }}">Remarks</label>
+{{ form.remarks }}
+{% for error in form.remarks.errors %}
+<div class="form-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+{% endfor %}
+</div>
+</div>
+</div>
+</div>
+<div class="dash-form-footer">
+<div class="footer-left">
+<i class="fas fa-shield-alt"></i> Safety Data Sheet Management
+</div>
+<div class="footer-actions">
+<a href="{% url 'sds:sds_list' %}" class="btn-cancel-teal"><i class="fas fa-times"></i> Cancel</a>
+<button type="submit" class="btn-save-teal" id="saveSdsBtn">
+{% if object %}
+<i class="fas fa-save"></i> Update SDS
+{% else %}
+<i class="fas fa-plus"></i> Create SDS
+{% endif %}
+</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+const form = document.querySelector("form");
+const saveButton = document.getElementById("saveSdsBtn");
+if (form && saveButton) {
+form.addEventListener("submit", function () {
+if (form.checkValidity()) {
+saveButton.disabled = true;
+saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+}
+});
+}
+});
+</script>
+{% endblock %}
