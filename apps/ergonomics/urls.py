@@ -132,4 +132,9 @@ path(
     name="observation_convert_confirm",
 ),
 path("benchmarks/", views.SiteBenchmarksView.as_view(), name="site_benchmarks"),
+path(
+        "reports/ergonomic.pdf",
+        views.ErgonomicsReportPDFView.as_view(),
+        name="ergonomic_report_pdf",
+    ),
 ]

@@ -1345,7 +1345,34 @@ class ErgonomicsReportExportView(ErgonomicsAccessMixin, View):
     def get(self, request):
         return workbook_response(filter_assessments(request))
 
+# =============================================================================
+# ERGONOMIC PDF EXPORT
+# =============================================================================
+from .ergonomic_pdf_generators import generate_ergonomic_report_pdf
+from django.http import HttpResponse
 
+
+class ErgonomicsReportPDFView(ErgonomicsAccessMixin, View):
+    """
+    Export the Ergonomics module as a polished CAPA-style PDF report.
+
+    Uses the same filters as the dashboard (plant, department, risk level,
+    status, date range) so the PDF matches what the user currently sees.
+    """
+
+    def get(self, request, *args, **kwargs):
+        assessments = filter_assessments(request)
+        pdf_bytes = generate_ergonomic_report_pdf(
+            assessments=assessments,
+            request=request,
+        )
+
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            'attachment; filename="Ergonomic_Report_'
+            + timezone.now().strftime("%Y%m%d_%H%M") + '.pdf"'
+        )
+        return response
 class ErgonomicsAnalyticsView(ErgonomicsAccessMixin, TemplateView):
     template_name = "ergonomics/analytics.html"
 
