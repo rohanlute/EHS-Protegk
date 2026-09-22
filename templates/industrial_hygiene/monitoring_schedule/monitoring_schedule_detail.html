@@ -1,0 +1,978 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}Monitoring Schedule Details | EHS-360{% endblock %}
+{% block extra_css %}
+<style>
+:root {
+    --primary-teal:#0d9488;
+    --primary-teal-dark:#0f766e;
+    --primary-teal-light:rgba(13,148,136,0.08);
+    --success:#16a34a;
+    --success-light:#dcfce7;
+    --danger:#dc2626;
+    --danger-light:#fef2f2;
+    --warning:#d97706;
+    --warning-light:#fef3c7;
+    --blue:#2563eb;
+    --blue-light:#eff6ff;
+    --text-primary:#0f172a;
+    --text-secondary:#334155;
+    --text-muted:#64748b;
+    --border-color:#e2e8f0;
+    --bg-card:#ffffff;
+    --bg-page:#f1f5f9;
+    --radius-card:14px;
+    --radius-sm:8px;
+    --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+}
+.content-wrapper {
+    background:var(--bg-page)!important;
+}
+.ih-page {
+    width:100%;
+    padding:20px 24px 30px;
+}
+.dash-page-header {
+    background:var(--bg-card);
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    padding:20px 24px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+}
+.header-left {
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+.header-icon {
+    width:46px;
+    height:46px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:21px;
+    flex-shrink:0;
+}
+.page-title {
+    margin:0;
+    font-size:21px;
+    font-weight:700;
+    color:var(--text-primary);
+}
+.page-subtitle {
+    margin:4px 0 0;
+    font-size:13px;
+    color:var(--text-muted);
+}
+.header-right {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.btn-header {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:40px;
+    padding:0 15px;
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none!important;
+    transition:all 0.2s ease;
+}
+.btn-back {
+    border:1px solid var(--border-color);
+    background:#ffffff;
+    color:var(--text-secondary);
+}
+.btn-back:hover {
+    background:var(--primary-teal-light);
+    border-color:var(--primary-teal);
+    color:var(--primary-teal);
+}
+.btn-edit {
+    border:1px solid var(--primary-teal);
+    background:var(--primary-teal);
+    color:#ffffff!important;
+}
+.btn-edit:hover {
+    background:var(--primary-teal-dark);
+    border-color:var(--primary-teal-dark);
+    color:#ffffff!important;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(13,148,136,0.22);
+}
+.dash-main-card {
+    background:var(--bg-card);
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    overflow:hidden;
+    margin-bottom:20px;
+}
+.card-header-custom {
+    padding:17px 22px;
+    background:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    flex-wrap:wrap;
+}
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.header-title i {
+    color:rgba(255,255,255,0.9);
+    font-size:17px;
+}
+.header-title h3 {
+    margin:0;
+    color:#ffffff;
+    font-size:15px;
+    font-weight:700;
+}
+.header-description {
+    color:rgba(255,255,255,0.82);
+    font-size:12px;
+    margin:0;
+}
+.card-body-custom {
+    padding:24px;
+}
+.schedule-banner {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    padding:18px;
+    margin-bottom:26px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafcfc;
+    flex-wrap:wrap;
+}
+.schedule-info {
+    display:flex;
+    align-items:center;
+    gap:13px;
+}
+.schedule-icon {
+    width:52px;
+    height:52px;
+    border-radius:12px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    flex-shrink:0;
+}
+.schedule-name {
+    color:var(--text-primary);
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:3px;
+}
+.schedule-code {
+    color:var(--text-muted);
+    font-size:12px;
+}
+.status-wrapper {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.dash-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+}
+.badge-success {
+    background:var(--success-light);
+    color:var(--success);
+}
+.badge-danger {
+    background:var(--danger-light);
+    color:var(--danger);
+}
+.badge-warning {
+    background:var(--warning-light);
+    color:var(--warning);
+}
+.badge-blue {
+    background:var(--blue-light);
+    color:var(--blue);
+}
+.badge-secondary {
+    background:#f1f5f9;
+    color:var(--text-muted);
+}
+.section-block {
+    margin-bottom:28px;
+}
+.section-block:last-child {
+    margin-bottom:0;
+}
+.section-title {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:16px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border-color);
+}
+.section-title-icon {
+    width:29px;
+    height:29px;
+    border-radius:7px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+}
+.section-title h4 {
+    margin:0;
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+}
+.section-title p {
+    margin:2px 0 0;
+    color:var(--text-muted);
+    font-size:11px;
+}
+.details-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:1px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+    background:var(--border-color);
+}
+.detail-item {
+    background:#ffffff;
+    padding:13px 15px;
+    min-width:0;
+}
+.detail-item.full-width {
+    grid-column:1/-1;
+}
+.detail-label {
+    display:block;
+    margin-bottom:5px;
+    color:var(--text-muted);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.35px;
+}
+.detail-value {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:600;
+    word-break:break-word;
+}
+.monitoring-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+}
+.monitoring-item {
+    padding:15px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafcfc;
+}
+.monitoring-icon {
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:9px;
+}
+.monitoring-label {
+    display:block;
+    margin-bottom:4px;
+    color:var(--text-muted);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+.monitoring-value {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:600;
+}
+.timeline-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+.timeline-item {
+    padding:15px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafcfc;
+}
+.timeline-icon {
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    background:var(--primary-teal-light);
+    color:var(--primary-teal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:9px;
+}
+.timeline-label {
+    display:block;
+    margin-bottom:4px;
+    color:var(--text-muted);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+.timeline-value {
+    color:var(--text-primary);
+    font-size:13px;
+    font-weight:600;
+}
+.audit-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+}
+.audit-item {
+    padding:12px 14px;
+    border:1px solid var(--border-color);
+    border-radius:var(--radius-sm);
+    background:#fafcfc;
+}
+.audit-label {
+    display:block;
+    margin-bottom:4px;
+    color:var(--text-muted);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+.audit-value {
+    color:var(--text-secondary);
+    font-size:12px;
+    font-weight:600;
+    word-break:break-word;
+}
+.text-content {
+    color:var(--text-secondary);
+    font-size:13px;
+    line-height:1.7;
+    white-space:pre-line;
+}
+.empty-value {
+    color:#94a3b8;
+    font-weight:400;
+}
+.card-footer-custom {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    padding:16px 24px;
+    border-top:1px solid var(--border-color);
+    background:#fafcfc;
+}
+.btn-footer {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:40px;
+    padding:0 17px;
+    border-radius:var(--radius-sm);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none!important;
+    transition:all 0.2s ease;
+}
+.btn-footer-back {
+    border:1px solid var(--border-color);
+    background:#ffffff;
+    color:var(--text-secondary);
+}
+.btn-footer-back:hover {
+    background:#f1f5f9;
+    color:var(--text-primary);
+}
+.btn-footer-edit {
+    border:1px solid var(--primary-teal);
+    background:var(--primary-teal);
+    color:#ffffff!important;
+}
+.btn-footer-edit:hover {
+    background:var(--primary-teal-dark);
+    border-color:var(--primary-teal-dark);
+    color:#ffffff!important;
+}
+@media (max-width:900px) {
+    .monitoring-grid,
+    .audit-grid {
+        grid-template-columns:1fr 1fr;
+    }
+}
+@media (max-width:768px) {
+    .ih-page {
+        padding:15px;
+    }
+    .dash-page-header {
+        padding:17px;
+        align-items:flex-start;
+        flex-direction:column;
+    }
+    .header-right {
+        width:100%;
+    }
+    .header-right .btn-header {
+        flex:1;
+    }
+    .card-header-custom {
+        padding:15px 17px;
+        align-items:flex-start;
+        flex-direction:column;
+    }
+    .card-body-custom {
+        padding:18px 16px;
+    }
+    .details-grid {
+        grid-template-columns:1fr;
+    }
+    .detail-item.full-width {
+        grid-column:auto;
+    }
+    .monitoring-grid,
+    .timeline-grid,
+    .audit-grid {
+        grid-template-columns:1fr;
+    }
+    .schedule-banner {
+        align-items:flex-start;
+        flex-direction:column;
+    }
+    .status-wrapper {
+        width:100%;
+    }
+    .card-footer-custom {
+        padding:15px 16px;
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .btn-footer {
+        width:100%;
+    }
+}
+@media (max-width:480px) {
+    .page-title {
+        font-size:18px;
+    }
+    .page-subtitle {
+        font-size:12px;
+    }
+    .header-icon {
+        width:40px;
+        height:40px;
+        font-size:18px;
+    }
+    .schedule-icon {
+        width:44px;
+        height:44px;
+        font-size:17px;
+    }
+    .schedule-name {
+        font-size:15px;
+    }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid" style="padding:0;">
+    <div class="ih-page">
+        <div class="dash-page-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Monitoring Schedule Details</h1>
+                    <p class="page-subtitle">View Industrial Hygiene monitoring schedule and execution information.</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_list' %}" class="btn-header btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Schedules
+                </a>
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_edit' object.pk %}" class="btn-header btn-edit">
+                    <i class="fas fa-edit"></i>
+                    Edit Schedule
+                </a>
+            </div>
+        </div>
+        <div class="dash-main-card">
+            <div class="card-header-custom">
+                <div class="header-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Industrial Hygiene Monitoring Schedule Information</h3>
+                </div>
+                <p class="header-description">Monitoring schedule management record</p>
+            </div>
+            <div class="card-body-custom">
+                <div class="schedule-banner">
+                    <div class="schedule-info">
+                        <div class="schedule-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div>
+                            <div class="schedule-name">{{ object.schedule_name }}</div>
+                            <div class="schedule-code">Schedule Code: {{ object.schedule_code }}</div>
+                        </div>
+                    </div>
+                    <div class="status-wrapper">
+                        {% if object.status == "SCHEDULED" %}
+                        <span class="dash-badge badge-blue">
+                            <i class="fas fa-calendar-check"></i>
+                            Scheduled
+                        </span>
+                        {% elif object.status == "IN_PROGRESS" %}
+                        <span class="dash-badge badge-warning">
+                            <i class="fas fa-spinner"></i>
+                            In Progress
+                        </span>
+                        {% elif object.status == "COMPLETED" %}
+                        <span class="dash-badge badge-success">
+                            <i class="fas fa-check-double"></i>
+                            Completed
+                        </span>
+                        {% elif object.status == "OVERDUE" %}
+                        <span class="dash-badge badge-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Overdue
+                        </span>
+                        {% elif object.status == "CANCELLED" %}
+                        <span class="dash-badge badge-secondary">
+                            <i class="fas fa-ban"></i>
+                            Cancelled
+                        </span>
+                        {% else %}
+                        <span class="dash-badge badge-secondary">
+                            <i class="fas fa-file-alt"></i>
+                            {{ object.status }}
+                        </span>
+                        {% endif %}
+                        {% if object.is_active %}
+                        <span class="dash-badge badge-success">
+                            <i class="fas fa-toggle-on"></i>
+                            Available
+                        </span>
+                        {% else %}
+                        <span class="dash-badge badge-secondary">
+                            <i class="fas fa-toggle-off"></i>
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h4>Schedule Details</h4>
+                            <p>Basic information about the Industrial Hygiene monitoring schedule.</p>
+                        </div>
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Schedule Name</span>
+                            <div class="detail-value">{{ object.schedule_name }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Schedule Code</span>
+                            <div class="detail-value">{{ object.schedule_code }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Monitoring Plan</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan %}
+                                {{ object.monitoring_plan.plan_name }}
+                                {% else %}
+                                <span class="empty-value">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Plan Code</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan %}
+                                {{ object.monitoring_plan.plan_code }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">IH Program</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan and object.monitoring_plan.ih_program %}
+                                {{ object.monitoring_plan.ih_program.program_name }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Plant</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan and object.monitoring_plan.plant %}
+                                {{ object.monitoring_plan.plant.name }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Hazard</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan and object.monitoring_plan.hazard %}
+                                {{ object.monitoring_plan.hazard.hazard }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Area / Location</span>
+                            <div class="detail-value">
+                                {% if object.monitoring_plan and object.monitoring_plan.area_or_location %}
+                                {{ object.monitoring_plan.area_or_location }}
+                                {% else %}
+                                <span class="empty-value">Not Specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-vials"></i>
+                        </div>
+                        <div>
+                            <h4>Monitoring Configuration</h4>
+                            <p>Monitoring configuration inherited from the selected Monitoring Plan.</p>
+                        </div>
+                    </div>
+                    <div class="monitoring-grid">
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                            <span class="monitoring-label">Monitoring Type</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.monitoring_type %}
+                                {{ object.monitoring_plan.monitoring_type.monitoring_type }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <span class="monitoring-label">Monitoring Parameter</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.monitoring_parameter %}
+                                {{ object.monitoring_plan.monitoring_parameter.parameter_name }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-ruler"></i>
+                            </div>
+                            <span class="monitoring-label">Unit</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.unit %}
+                                {{ object.monitoring_plan.unit.unit_name }} ({{ object.monitoring_plan.unit.unit_symbol }})
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <span class="monitoring-label">Exposure Limit</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.exposure_limit %}
+                                {{ object.monitoring_plan.exposure_limit.limit_value }} {{ object.monitoring_plan.unit.unit_symbol }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-redo"></i>
+                            </div>
+                            <span class="monitoring-label">Plan Frequency</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.monitoring_frequency %}
+                                {{ object.monitoring_plan.monitoring_frequency }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="monitoring-item">
+                            <div class="monitoring-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <span class="monitoring-label">Exposure Group / SEG</span>
+                            <div class="monitoring-value">
+                                {% if object.monitoring_plan.exposure_group %}
+                                {{ object.monitoring_plan.exposure_group.exposure_group }}
+                                {% else %}
+                                <span class="empty-value">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4>Schedule & Sampling</h4>
+                            <p>Planned execution dates and sample requirements for this schedule.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-grid">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <span class="timeline-label">Planned Date</span>
+                            <div class="timeline-value">
+                                {% if object.planned_date %}
+                                {{ object.planned_date|date:"d M Y" }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-redo"></i>
+                            </div>
+                            <span class="timeline-label">Frequency</span>
+                            <div class="timeline-value">
+                                {% if object.frequency %}
+                                {{ object.frequency }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <span class="timeline-label">Scheduled Start Date</span>
+                            <div class="timeline-value">
+                                {% if object.scheduled_start_date %}
+                                {{ object.scheduled_start_date|date:"d M Y" }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-stop"></i>
+                            </div>
+                            <span class="timeline-label">Scheduled End Date</span>
+                            <div class="timeline-value">
+                                {% if object.scheduled_end_date %}
+                                {{ object.scheduled_end_date|date:"d M Y" }}
+                                {% else %}
+                                <span class="empty-value">Not Set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-vials"></i>
+                            </div>
+                            <span class="timeline-label">Sample Count</span>
+                            <div class="timeline-value">
+                                {{ object.sample_count }}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <span class="timeline-label">Assigned To</span>
+                            <div class="timeline-value">
+                                {% if object.assigned_to %}
+                                {{ object.assigned_to.get_full_name|default:object.assigned_to.username }}
+                                {% else %}
+                                <span class="empty-value">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4>Responsibility</h4>
+                            <p>People responsible for managing and executing the monitoring schedule.</p>
+                        </div>
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Responsible Person</span>
+                            <div class="detail-value">
+                                {% if object.responsible_person %}
+                                {{ object.responsible_person.get_full_name|default:object.responsible_person.username }}
+                                {% else %}
+                                <span class="empty-value">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Assigned To</span>
+                            <div class="detail-value">
+                                {% if object.assigned_to %}
+                                {{ object.assigned_to.get_full_name|default:object.assigned_to.username }}
+                                {% else %}
+                                <span class="empty-value">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-comment-alt"></i>
+                        </div>
+                        <div>
+                            <h4>Remarks</h4>
+                            <p>Additional information related to the monitoring schedule.</p>
+                        </div>
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item full-width">
+                            <div class="text-content">
+                                {% if object.remarks %}
+                                {{ object.remarks }}
+                                {% else %}
+                                <span class="empty-value">No additional remarks provided.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-block">
+                    <div class="section-title">
+                        <div class="section-title-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div>
+                            <h4>Record Information</h4>
+                            <p>System audit information for this monitoring schedule.</p>
+                        </div>
+                    </div>
+                    <div class="audit-grid">
+                        <div class="audit-item">
+                            <span class="audit-label">Created At</span>
+                            <div class="audit-value">
+                                {% if object.created_at %}
+                                {{ object.created_at|date:"d M Y, h:i A" }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="audit-item">
+                            <span class="audit-label">Last Updated</span>
+                            <div class="audit-value">
+                                {% if object.updated_at %}
+                                {{ object.updated_at|date:"d M Y, h:i A" }}
+                                {% else %}
+                                <span class="empty-value">—</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="audit-item">
+                            <span class="audit-label">Schedule ID</span>
+                            <div class="audit-value">#{{ object.pk }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_list' %}" class="btn-footer btn-footer-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Schedules
+                </a>
+                <a href="{% url 'industrial_hygiene:monitoring_schedule_edit' object.pk %}" class="btn-footer btn-footer-edit">
+                    <i class="fas fa-edit"></i>
+                    Edit Monitoring Schedule
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
