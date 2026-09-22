@@ -4,11 +4,13 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView, View
+from django.db.models import Avg
 from apps.accounts.mixins import PermissionRequiredMixin
 from apps.organizations.models import Plant
 from .forms import CategoryForm, FrameworkForm, KPIForm, PeriodForm, TargetForm, PerformanceLevelForm
 from .models import *
 from .services import accessible_results, calculate_period, refresh_live_results
+from .sources import registered_calculators
 
 
 class BenchmarkAccessMixin(LoginRequiredMixin, PermissionRequiredMixin): permission_required = "VIEW_BENCHMARKING"
@@ -130,8 +132,152 @@ class TargetListView(BenchmarkAccessMixin, ListView):
             return qs
         return qs.filter(plant__in=self.request.user.get_all_plants())
 class PerformanceLevelListView(BenchmarkAccessMixin, ListView): model = BenchmarkPerformanceLevel; template_name = "benchmarking/performance_level_list.html"
-class PeriodListView(BenchmarkAccessMixin, ListView): model = BenchmarkPeriod; template_name = "benchmarking/period_list.html"
-class PeriodDetailView(BenchmarkAccessMixin, DetailView): model = BenchmarkPeriod; template_name = "benchmarking/period_detail.html"
+class PeriodListView(BenchmarkAccessMixin, ListView):
+    model = BenchmarkPeriod
+    template_name = "benchmarking/period_list.html"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("framework")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["can_create_period"] = (
+            self.request.user.is_superuser
+            or self.request.user.has_permission("CALCULATE_BENCHMARK")
+        )
+        return context
+
+
+class PeriodCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Create an open reporting window before its plant results are calculated."""
+    permission_required = "CALCULATE_BENCHMARK"
+    model = BenchmarkPeriod
+    form_class = PeriodForm
+    template_name = "benchmarking/period_form.html"
+    success_url = reverse_lazy("benchmarking:period_list")
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, "Benchmark period created. You can calculate it when the source data is ready.")
+        return super().form_valid(form)
+
+
+class PeriodDetailView(BenchmarkAccessMixin, DetailView):
+    """Display a read-only, plant-scoped report for one benchmark period."""
+    model = BenchmarkPeriod
+    template_name = "benchmarking/period_detail.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # This report deliberately returns 403 for an authenticated user who
+        # lacks read access, rather than exposing any period context.
+        if request.user.is_authenticated and not (
+            request.user.is_superuser or request.user.has_permission("VIEW_BENCHMARKING")
+        ):
+            return HttpResponseForbidden("You do not have permission to view benchmarking.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        period = self.object
+        user = self.request.user
+        results = accessible_results(user).filter(
+            period=period, scope_type=BenchmarkResult.Scope.PLANT
+        ).select_related("plant", "performance_level").order_by("rank", "-overall_score", "plant__name")
+        result_list = list(results)
+        result_count = len(result_list)
+        levels = list(period.framework.performance_levels.filter(is_active=True).order_by("display_order", "-minimum_score"))
+        kpi_results = list(BenchmarkKPIResult.objects.filter(
+            benchmark_result__in=results
+        ).select_related("benchmark_result__plant", "kpi__category", "performance_level"))
+
+        def level_for(score):
+            if score is None:
+                return None
+            return next((level for level in levels if level.minimum_score <= score <= level.maximum_score), None)
+
+        category_values = {}
+        for item in kpi_results:
+            category_values.setdefault(item.kpi.category_id, {
+                "name": item.kpi.category.name,
+                "code": item.kpi.category.code,
+                "weight": item.kpi.category.weightage,
+                "plants": {},
+            })["plants"].setdefault(item.benchmark_result_id, []).append(item.score)
+
+        previous_period = BenchmarkPeriod.objects.filter(
+            framework=period.framework, end_date__lt=period.start_date
+        ).order_by("-end_date").first()
+        previous_averages = {}
+        if previous_period:
+            previous_items = BenchmarkKPIResult.objects.filter(
+                benchmark_result__in=accessible_results(user).filter(
+                    period=previous_period, scope_type=BenchmarkResult.Scope.PLANT
+                ), score__isnull=False
+            ).values("kpi__category_id").annotate(average=Avg("score"))
+            previous_averages = {item["kpi__category_id"]: item["average"] for item in previous_items}
+
+        category_rows = []
+        heatmap = {}
+        for result in result_list:
+            heatmap[result.plant.name] = {}
+        for category_id, details in category_values.items():
+            plant_scores = []
+            for result in result_list:
+                scores = [score for score in details["plants"].get(result.pk, []) if score is not None]
+                score = sum(scores) / len(scores) if scores else None
+                if score is not None:
+                    plant_scores.append((result.plant.name, score))
+                level = level_for(score)
+                heatmap[result.plant.name][details["code"]] = {
+                    "score": score,
+                    "level_name": level.name if level else "Not rated",
+                    "level_indicator": level.display_indicator if level else "",
+                }
+            average = sum(score for _, score in plant_scores) / len(plant_scores) if plant_scores else None
+            previous_average = previous_averages.get(category_id)
+            category_rows.append({
+                "name": details["name"], "code": details["code"], "weight": details["weight"],
+                "average": average,
+                "best": max(plant_scores, key=lambda item: item[1]) if plant_scores else None,
+                "worst": min(plant_scores, key=lambda item: item[1]) if plant_scores else None,
+                "delta": average - previous_average if average is not None and previous_average is not None else None,
+            })
+
+        priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+        top_gaps = sorted(
+            BenchmarkGap.objects.filter(benchmark_result__in=results).select_related("kpi", "benchmark_result__plant"),
+            key=lambda gap: (priority_order.get(gap.priority, 3), -abs(gap.gap_value)),
+        )[:10]
+        insights = sorted(
+            BenchmarkInsight.objects.filter(benchmark_result__in=results, status="OPEN").select_related("related_kpi", "benchmark_result__plant"),
+            key=lambda insight: priority_order.get(insight.priority, 3),
+        )[:10]
+        can = lambda code: user.is_superuser or user.has_permission(code)
+        average_score = sum(result.overall_score for result in result_list) / result_count if result_count else None
+        best_result = result_list[0] if result_list else None
+        worst_result = result_list[-1] if result_count > 1 else None
+
+        context.update({
+            "results": result_list, "result_count": result_count, "average_score": average_score,
+            "best_result": best_result, "worst_result": worst_result,
+            "above_target_count": sum(1 for result in result_list if result.target_score is not None and result.overall_score >= result.target_score),
+            "distribution": [{"level_name": level.name, "level_color": level.display_indicator, "count": sum(1 for result in result_list if result.performance_level_id == level.id)} for level in levels],
+            "category_rows": category_rows, "heatmap": heatmap,
+            "heatmap_categories": [row["code"] for row in category_rows],
+            "top_gaps": top_gaps, "insights": insights,
+            "sibling_periods": BenchmarkPeriod.objects.filter(framework=period.framework, period_type=period.period_type).order_by("start_date"),
+            "is_locked": period.status == BenchmarkPeriod.Status.PUBLISHED,
+            "can_calculate": period.status in {BenchmarkPeriod.Status.OPEN, BenchmarkPeriod.Status.CALCULATED, BenchmarkPeriod.Status.FAILED} and can("CALCULATE_BENCHMARK"),
+            "can_publish": period.status == BenchmarkPeriod.Status.CALCULATED and can("PUBLISH_BENCHMARK"),
+            "can_edit": period.status not in {BenchmarkPeriod.Status.PUBLISHED, BenchmarkPeriod.Status.CALCULATING} and can("MANAGE_BENCHMARK_PERIOD"),
+            "can_export": result_count > 0 and can("EXPORT_BENCHMARK_REPORT"),
+            "can_generate": can("MANAGE_BENCHMARK_PERIOD"),
+            "registered_calculator_count": len(registered_calculators),
+            "total_kpi_count": len(kpi_results),
+            "populated_kpi_count": sum(1 for item in kpi_results if item.score is not None),
+            "skipped_kpi_count": sum(1 for item in kpi_results if item.score is None),
+        })
+        return context
 
 class PeriodCalculateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = "CALCULATE_BENCHMARK"

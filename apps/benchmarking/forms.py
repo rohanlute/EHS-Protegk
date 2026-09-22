@@ -88,4 +88,12 @@ class PerformanceLevelForm(forms.ModelForm):
     class Meta: model = BenchmarkPerformanceLevel; fields = ["framework", "name", "minimum_score", "maximum_score", "display_indicator", "is_active", "display_order"]
 
 class PeriodForm(forms.ModelForm):
-    class Meta: model = BenchmarkPeriod; fields = ["framework", "period_type", "start_date", "end_date"]
+    class Meta:
+        model = BenchmarkPeriod
+        fields = ["framework", "period_type", "start_date", "end_date"]
+        widgets = {
+            "framework": forms.Select(attrs={"class": "form-control"}),
+            "period_type": forms.Select(attrs={"class": "form-control"}),
+            "start_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "end_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        }
