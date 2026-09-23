@@ -97,7 +97,12 @@ class Command(BaseCommand):
         methods = []
         creator_cycle = cycle(users)
         for name, code, description in methods_seed:
+            # Reuse an existing method by code first, then by unique name.
+            # This keeps the command safe when master data was already seeded
+            # by another management command or manually in the database.
             method = ErgonomicAssessmentMethod.objects.filter(code=code).first()
+            if not method:
+                method = ErgonomicAssessmentMethod.objects.filter(name=name).first()
             if not method:
                 method = ErgonomicAssessmentMethod.objects.create(
                     name=name,
