@@ -50,14 +50,40 @@ class Command(BaseCommand):
         parser.add_argument(
             "--count",
             type=int,
-            choices=[5, 10, 15, 20, 50],
-            default=5,
-            help="Number of existing employees to use: 5, 10, 15 or 20.",
+            default=None,
+            help="Number of existing employees to use. If omitted, all eligible employees are used.",
+        )
+        parser.add_argument(
+            "--records",
+            type=int,
+            default=100,
+            help="Number of Occupational Health transaction records to generate.",
         )
 
     @transaction.atomic
     def handle(self, *args, **options):
         count = options["count"]
+        records = options["records"]
+
+        if records < 1:
+            raise CommandError("Records must be greater than 0.")
+
+        if count is not None and count < 1:
+            raise CommandError("Employee count must be greater than 0.")
+
+        # Current Indian financial year: 1 April 2026 to today (23 September 2026).
+        # The end date automatically follows the server date when the command is run.
+        today = timezone.localdate()
+        current_fy_start = date(
+            today.year if today.month >= 4 else today.year - 1,
+            4,
+            1,
+        )
+        current_fy_end = today
+
+        self.fy_start = current_fy_start
+        self.fy_end = current_fy_end
+        self.demo_records = records
 
         self.stdout.write("")
         self.stdout.write(
@@ -87,13 +113,22 @@ class Command(BaseCommand):
             .order_by("id")
         )
 
-        if len(users) < count:
-            raise CommandError(
-                f"Requested {count} employees, but only {len(users)} "
-                "active employees are available."
-            )
+        if not users:
+            raise CommandError("No active employees are available for demo data.")
 
-        selected_users = users[:count]
+        if count is None:
+            selected_users = users
+        else:
+            if len(users) < count:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Requested {count} employees, but only {len(users)} "
+                        "active employees are available. Using all {len(users)} employees."
+                    )
+                )
+                selected_users = users
+            else:
+                selected_users = users[:count]
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -226,12 +261,11 @@ class Command(BaseCommand):
         examinations = []
         test_results = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             user = profile.employee
 
-            examination_date = timezone.localdate() - timedelta(
-                days=30 + (index * 5)
-            )
+            examination_date = self.demo_date(index)
 
             follow_up_required = index % 3 == 0
             follow_up_date = (
@@ -276,7 +310,11 @@ class Command(BaseCommand):
                 ),
                 follow_up_required=follow_up_required,
                 follow_up_date=follow_up_date,
-                status="COMPLETED",
+                status=(
+                    "COMPLETED"
+                    if index % 10 not in [7, 8]
+                    else ("SCHEDULED" if index % 10 == 7 else "CANCELLED")
+                ),
                 created_by=user,
             )
 
@@ -295,8 +333,12 @@ class Command(BaseCommand):
                 reference_range="100-140 mmHg",
                 result_status=(
                     "BORDERLINE"
-                    if index % 4 == 0
-                    else "NORMAL"
+                    if index % 5 == 0
+                    else (
+                        "ABNORMAL"
+                        if index % 17 == 0
+                        else ("PENDING" if index % 11 == 0 else "NORMAL")
+                    )
                 ),
                 findings=(
                     "Blood pressure within acceptable range."
@@ -323,8 +365,16 @@ class Command(BaseCommand):
                 result_value=str(96 - (index % 3)),
                 unit="%",
                 reference_range="95-100%",
-                result_status="NORMAL",
-                findings="Oxygen saturation within normal range.",
+                result_status=(
+                    "NORMAL"
+                    if index % 12 != 0
+                    else "PENDING"
+                ),
+                findings=(
+                    "Oxygen saturation within normal range."
+                    if index % 12 != 0
+                    else "Test result is awaiting final review."
+                ),
                 recommendations="No specific action required.",
                 doctor_comments="Normal screening result.",
                 follow_up_required=False,
@@ -352,12 +402,13 @@ class Command(BaseCommand):
 
         fitness_records = []
 
-        for index, profile in enumerate(profiles):
-            assessment_date = timezone.localdate() - timedelta(
-                days=20 + index
-            )
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
+            assessment_date = self.demo_date(index)
 
             is_restricted = index % 5 == 0
+            is_temporarily_unfit = index % 23 == 0
+            is_unfit = index % 47 == 0
 
             fitness = FitnessToWork.objects.create(
                 medical_examination=examinations[index],
@@ -365,9 +416,17 @@ class Command(BaseCommand):
                 assessment_date=assessment_date,
                 assessment_type="PERIODIC",
                 fitness_status=(
-                    "FIT_WITH_RESTRICTIONS"
-                    if is_restricted
-                    else "FIT"
+                    "UNFIT"
+                    if is_unfit
+                    else (
+                        "TEMPORARILY_UNFIT"
+                        if is_temporarily_unfit
+                        else (
+                            "FIT_WITH_RESTRICTIONS"
+                            if is_restricted
+                            else "FIT"
+                        )
+                    )
                 ),
                 valid_from=assessment_date,
                 valid_until=assessment_date + relativedelta(months=12),
@@ -375,9 +434,13 @@ class Command(BaseCommand):
                     "Employee medically fit for assigned duties."
                 ),
                 work_recommendations=(
-                    "Normal work permitted."
-                    if not is_restricted
-                    else "Avoid prolonged heavy lifting."
+                    "Employee temporarily not fit for assigned duties."
+                    if is_unfit or is_temporarily_unfit
+                    else (
+                        "Avoid prolonged heavy lifting."
+                        if is_restricted
+                        else "Normal work permitted."
+                    )
                 ),
                 doctor_comments="Fitness assessment completed.",
                 follow_up_required=False,
@@ -389,6 +452,10 @@ class Command(BaseCommand):
             if is_restricted:
                 fitness.restrictions.add(
                     masters["restrictions"][0]
+                )
+            elif is_temporarily_unfit:
+                fitness.restrictions.add(
+                    masters["restrictions"][2]
                 )
 
             fitness_records.append(fitness)
@@ -405,8 +472,9 @@ class Command(BaseCommand):
 
         surveillance_records = []
 
-        for index, profile in enumerate(profiles):
-            start_date = timezone.localdate() - timedelta(days=15)
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
+            start_date = self.demo_date(index)
 
             surveillance = HealthSurveillance.objects.create(
                 employee_health_profile=profile,
@@ -424,8 +492,20 @@ class Command(BaseCommand):
                     "YEARLY",
                 ][index % 4],
                 start_date=start_date,
-                next_due_date=start_date + relativedelta(months=6),
-                end_date=None,
+                next_due_date=(
+                    self.fy_end - timedelta(days=5)
+                    if index % 11 == 0
+                    else (
+                        self.fy_end - timedelta(days=15)
+                        if index % 7 == 0
+                        else self.fy_end + timedelta(days=45 + (index % 60))
+                    )
+                ),
+                end_date=(
+                    self.demo_date(index)
+                    if index % 19 == 0
+                    else None
+                ),
                 responsible_medical_professional=masters["professionals"][
                     index % len(masters["professionals"])
                 ],
@@ -437,8 +517,20 @@ class Command(BaseCommand):
                     "exposure and occupational risks."
                 ),
                 remarks="Demo surveillance record.",
-                status="ACTIVE",
-                is_active=True,
+                status=(
+                    "COMPLETED"
+                    if index % 19 == 0
+                    else (
+                        "SUSPENDED"
+                        if index % 13 == 0
+                        else (
+                            "CLOSED"
+                            if index % 29 == 0
+                            else "ACTIVE"
+                        )
+                    )
+                ),
+                is_active=(index % 19 != 0 and index % 29 != 0),
                 created_by=profile.employee,
             )
 
@@ -460,7 +552,8 @@ class Command(BaseCommand):
 
         exposures = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             exposure = EmployeeExposure.objects.create(
                 employee_health_profile=profile,
                 exposure_type=masters["exposure_types"][
@@ -482,10 +575,12 @@ class Command(BaseCommand):
                 ][index % 5],
                 work_area=profile.work_area,
                 job_role=profile.job_role,
-                exposure_start_date=(
-                    timezone.localdate() - timedelta(days=180 + index * 10)
+                exposure_start_date=self.demo_date(index),
+                exposure_end_date=(
+                    min(self.demo_date(index) + timedelta(days=20), self.fy_end)
+                    if index % 13 == 0
+                    else None
                 ),
-                exposure_end_date=None,
                 exposure_frequency="Daily",
                 exposure_duration="4-6 hours/day",
                 exposure_level=[
@@ -503,8 +598,12 @@ class Command(BaseCommand):
                 health_surveillance_required=True,
                 health_surveillance=surveillance_records[index],
                 remarks="Demo occupational exposure record.",
-                status="ACTIVE",
-                is_active=True,
+                status=(
+                    "CLOSED"
+                    if index % 13 == 0
+                    else ("INACTIVE" if index % 17 == 0 else "ACTIVE")
+                ),
+                is_active=(index % 17 != 0),
                 created_by=profile.employee,
             )
 
@@ -522,7 +621,8 @@ class Command(BaseCommand):
 
         follow_ups = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             follow_up = MedicalFollowUp.objects.create(
                 employee_health_profile=profile,
                 medical_examination=examinations[index],
@@ -535,10 +635,16 @@ class Command(BaseCommand):
                 description=(
                     "Routine follow-up for occupational health assessment."
                 ),
-                scheduled_date=timezone.localdate() + timedelta(
-                    days=15 + index
+                scheduled_date=(
+                    self.fy_end - timedelta(days=5)
+                    if index % 9 == 0
+                    else self.fy_end + timedelta(days=5 + (index % 20))
                 ),
-                completed_date=None,
+                completed_date=(
+                    self.fy_end - timedelta(days=2)
+                    if index % 9 == 0
+                    else None
+                ),
                 priority=[
                     "LOW",
                     "MEDIUM",
@@ -551,7 +657,16 @@ class Command(BaseCommand):
                 medical_facility=masters["facilities"][
                     index % len(masters["facilities"])
                 ],
-                status="SCHEDULED",
+                status=(
+                    "COMPLETED"
+                    if index % 9 == 0
+                    else "SCHEDULED"
+                ),
+                outcome=(
+                    "Follow-up completed and employee advised to continue routine monitoring."
+                    if index % 9 == 0
+                    else ""
+                ),
                 remarks="Demo follow-up record.",
                 created_by=profile.employee,
             )
@@ -570,18 +685,28 @@ class Command(BaseCommand):
 
         vaccinations = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             vaccination = EmployeeVaccination.objects.create(
                 employee_health_profile=profile,
                 vaccination=masters["vaccinations"][
                     index % len(masters["vaccinations"])
                 ],
-                dose_number=1,
-                vaccination_date=(
-                    timezone.localdate() - timedelta(days=90 + index)
+                dose_number=(
+                    2 if index % 5 == 0 and masters["vaccinations"][index % len(masters["vaccinations"])].recommended_doses >= 2
+                    else 1
                 ),
-                dose_status="COMPLETED",
-                vaccination_status="ACTIVE",
+                vaccination_date=self.demo_date(index),
+                dose_status=(
+                    "CANCELLED"
+                    if index % 23 == 0
+                    else ("MISSED" if index % 17 == 0 else "COMPLETED")
+                ),
+                vaccination_status=(
+                    "CANCELLED"
+                    if index % 23 == 0
+                    else "ACTIVE"
+                ),
                 medical_professional=masters["professionals"][
                     index % len(masters["professionals"])
                 ],
@@ -611,8 +736,9 @@ class Command(BaseCommand):
 
         diseases = []
 
-        for index, profile in enumerate(profiles):
-            # Create disease record for approximately half the employees.
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
+            # Create disease records for approximately half the transaction records.
             if index % 2 != 0:
                 continue
 
@@ -628,8 +754,18 @@ class Command(BaseCommand):
                 ],
                 reported_date=reported_date,
                 diagnosis_date=diagnosis_date,
-                disease_status="UNDER_REVIEW",
-                severity="MILD",
+                disease_status=[
+                    "SUSPECTED",
+                    "UNDER_REVIEW",
+                    "CONFIRMED",
+                    "CLOSED",
+                ][index % 4],
+                severity=[
+                    "MILD",
+                    "MODERATE",
+                    "SEVERE",
+                    "MILD",
+                ][index % 4],
                 symptoms="Mild occupational health symptoms reported.",
                 diagnosis_details=(
                     "Preliminary assessment indicates a condition "
@@ -647,13 +783,29 @@ class Command(BaseCommand):
                 job_role=profile.job_role,
                 treatment_details="Routine medical monitoring advised.",
                 work_restrictions="Avoid prolonged exposure where applicable.",
-                follow_up_required=True,
-                follow_up_date=reported_date + timedelta(days=30),
-                investigation_required=False,
-                investigation_findings="",
-                corrective_actions="",
+                follow_up_required=(index % 4 != 3),
+                follow_up_date=(
+                    min(reported_date + timedelta(days=30), self.fy_end)
+                    if index % 4 != 3
+                    else None
+                ),
+                investigation_required=(index % 3 == 0),
+                investigation_findings=(
+                    "Workplace exposure and medical history reviewed."
+                    if index % 3 == 0
+                    else ""
+                ),
+                corrective_actions=(
+                    "Continue exposure controls and periodic medical surveillance."
+                    if index % 3 == 0
+                    else ""
+                ),
                 remarks="Demo occupational disease record.",
-                status="FOLLOW_UP",
+                status=(
+                    "CLOSED"
+                    if index % 4 == 3
+                    else ("UNDER_INVESTIGATION" if index % 3 == 0 else "FOLLOW_UP")
+                ),
                 created_by=profile.employee,
             )
 
@@ -671,10 +823,9 @@ class Command(BaseCommand):
 
         incidents = []
 
-        for index, profile in enumerate(profiles):
-            incident_date = timezone.localdate() - timedelta(
-                days=40 + index
-            )
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
+            incident_date = self.demo_date(index)
 
             incident = HealthIncident.objects.create(
                 employee_health_profile=profile,
@@ -714,16 +865,42 @@ class Command(BaseCommand):
                     else None
                 ),
                 exposure=exposures[index],
-                hospitalization_required=False,
-                hospitalization_details="",
-                work_restriction_required=False,
-                work_restriction_details="",
-                follow_up_required=True,
-                follow_up_date=incident_date + timedelta(days=14),
-                investigation_required=False,
-                investigation_findings="",
-                corrective_actions="",
-                status="TREATED",
+                hospitalization_required=(index % 31 == 0),
+                hospitalization_details=(
+                    "Employee was admitted for observation and discharged after medical clearance."
+                    if index % 31 == 0
+                    else ""
+                ),
+                work_restriction_required=(index % 11 == 0),
+                work_restriction_details=(
+                    "Temporary restriction from the affected work area."
+                    if index % 11 == 0
+                    else ""
+                ),
+                follow_up_required=(index % 6 != 5),
+                follow_up_date=(
+                    min(incident_date + timedelta(days=14), self.fy_end)
+                    if index % 6 != 5
+                    else None
+                ),
+                investigation_required=(index % 8 == 0),
+                investigation_findings=(
+                    "Incident reviewed by EHS and Occupational Health team."
+                    if index % 8 == 0
+                    else ""
+                ),
+                corrective_actions=(
+                    "Reinforce workplace controls and employee awareness."
+                    if index % 8 == 0
+                    else ""
+                ),
+                status=[
+                    "REPORTED",
+                    "UNDER_REVIEW",
+                    "UNDER_INVESTIGATION",
+                    "TREATED",
+                    "CLOSED",
+                ][index % 5],
                 remarks="Demo health incident record.",
                 created_by=profile.employee,
             )
@@ -742,20 +919,28 @@ class Command(BaseCommand):
 
         return_to_work_records = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             if index % 2 != 0:
                 continue
 
-            absence_start = timezone.localdate() - timedelta(days=25 + index)
+            absence_start = max(
+                self.fy_start,
+                self.demo_date(index) - timedelta(days=6)
+            )
             absence_end = absence_start + timedelta(days=5)
-            expected_return = absence_end + timedelta(days=1)
+            expected_return = min(absence_end + timedelta(days=1), self.fy_end)
 
             rtw = ReturnToWork.objects.create(
                 employee_health_profile=profile,
                 absence_start_date=absence_start,
                 absence_end_date=absence_end,
                 expected_return_date=expected_return,
-                actual_return_date=expected_return,
+                actual_return_date=(
+                    expected_return
+                    if index % 4 in [0, 1, 3]
+                    else None
+                ),
                 return_reason="ILLNESS",
                 reason_details="Medical leave due to temporary illness.",
                 medical_examination=examinations[index],
@@ -781,7 +966,13 @@ class Command(BaseCommand):
                 medical_recommendations="Continue routine health surveillance.",
                 follow_up_required=False,
                 follow_up_date=None,
-                status="COMPLETED",
+                status=[
+                    "COMPLETED",
+                    "APPROVED",
+                    "APPROVED_WITH_RESTRICTIONS",
+                    "MEDICAL_ASSESSMENT",
+                    "PENDING",
+                ][index % 5],
                 remarks="Demo return-to-work record.",
                 created_by=profile.employee,
             )
@@ -805,7 +996,8 @@ class Command(BaseCommand):
 
         medical_records = []
 
-        for index, profile in enumerate(profiles):
+        for index in range(records):
+            profile = profiles[index % len(profiles)]
             employee = profile.employee
 
             record = MedicalRecord(
@@ -828,7 +1020,12 @@ class Command(BaseCommand):
                     "document generated for testing."
                 ),
                 confidential=True,
-                record_status="ACTIVE",
+                record_status=[
+                    "ACTIVE",
+                    "ARCHIVED",
+                    "ACTIVE",
+                    "CANCELLED",
+                ][index % 4],
                 remarks="Demo medical record.",
                 created_by=employee,
             )
@@ -889,7 +1086,7 @@ class Command(BaseCommand):
                     camp_mode="ON_SITE",
                     plant=plant,
                     location=plant.name,
-                    camp_date=timezone.localdate() - timedelta(days=10 + index),
+                    camp_date=(self.demo_date(0) if index == 0 else self.fy_end),
                     start_time=time(9, 30),
                     end_time=time(16, 30),
                     organizer="EHS Department",
@@ -907,13 +1104,17 @@ class Command(BaseCommand):
                         "General health screening, vital signs and "
                         "occupational health consultation."
                     ),
-                    target_employee_count=count,
+                    target_employee_count=len(selected_users),
                     registered_employee_count=0,
                     attended_employee_count=0,
                     findings_count=0,
                     referral_count=0,
                     follow_up_required_count=0,
-                    status="COMPLETED",
+                    status=(
+                        "COMPLETED"
+                        if index % 3 == 0
+                        else ("IN_PROGRESS" if index % 3 == 1 else "SCHEDULED")
+                    ),
                     remarks="Demo health camp.",
                     created_by=selected_users[0],
                 )
@@ -948,12 +1149,24 @@ class Command(BaseCommand):
                     health_camp=camp,
                     employee_health_profile=profile,
                     registration_date=camp.camp_date,
-                    attendance_status="ATTENDED",
-                    attendance_time=time(10, 15),
+                    attendance_status=(
+                        "ATTENDED"
+                        if camp.status in ["COMPLETED", "IN_PROGRESS"]
+                        else "REGISTERED"
+                    ),
+                    attendance_time=(
+                        time(10, 15)
+                        if camp.status in ["COMPLETED", "IN_PROGRESS"]
+                        else None
+                    ),
                     screening_status=(
                         "ABNORMAL"
-                        if index % 5 == 0
-                        else "NORMAL"
+                        if camp.status in ["COMPLETED", "IN_PROGRESS"] and index % 5 == 0
+                        else (
+                            "NORMAL"
+                            if camp.status in ["COMPLETED", "IN_PROGRESS"]
+                            else "NOT_SCREENED"
+                        )
                     ),
                     screening_findings=(
                         "Routine health screening completed."
@@ -971,10 +1184,12 @@ class Command(BaseCommand):
                     ),
                     referral_required=False,
                     referral_details="",
-                    follow_up_required=(index % 5 == 0),
+                    follow_up_required=(
+                        camp.status in ["COMPLETED", "IN_PROGRESS"] and index % 5 == 0
+                    ),
                     follow_up_date=(
-                        camp.camp_date + timedelta(days=30)
-                        if index % 5 == 0
+                        min(camp.camp_date + timedelta(days=30), self.fy_end)
+                        if camp.status in ["COMPLETED", "IN_PROGRESS"] and index % 5 == 0
                         else None
                     ),
                     follow_up_notes=(
@@ -1024,6 +1239,34 @@ class Command(BaseCommand):
         )
 
         # ============================================================
+        # FY-wise Summary
+        # ============================================================
+
+        self.stdout.write("")
+        self.stdout.write(
+            self.style.MIGRATE_HEADING(
+                f"FY-wise Demo Data: FY {self.fy_start.year}-{str(self.fy_end.year)[-2:]}"
+            )
+        )
+        self.stdout.write(
+            f"  Date Range: {self.fy_start.strftime('%d %b %Y')} to "
+            f"{self.fy_end.strftime('%d %b %Y')}"
+        )
+        self.stdout.write(f"  Medical Examinations: {len(examinations)}")
+        self.stdout.write(f"  Medical Test Results: {len(test_results)}")
+        self.stdout.write(f"  Fitness To Work: {len(fitness_records)}")
+        self.stdout.write(f"  Health Surveillance: {len(surveillance_records)}")
+        self.stdout.write(f"  Employee Exposure: {len(exposures)}")
+        self.stdout.write(f"  Medical Follow-up: {len(follow_ups)}")
+        self.stdout.write(f"  Employee Vaccinations: {len(vaccinations)}")
+        self.stdout.write(f"  Occupational Diseases: {len(diseases)}")
+        self.stdout.write(f"  Health Incidents: {len(incidents)}")
+        self.stdout.write(f"  Return To Work: {len(return_to_work_records)}")
+        self.stdout.write(f"  Medical Records: {len(medical_records)}")
+        self.stdout.write(f"  Health Camps: {len(health_camps)}")
+        self.stdout.write(f"  Health Camp Participation: {participation_count}")
+
+        # ============================================================
         # Final Summary
         # ============================================================
 
@@ -1045,6 +1288,17 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
+                f"Requested transaction records: {records}"
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Financial Year: FY {self.fy_start.year}-{str(self.fy_end.year)[-2:]} "
+                f"({self.fy_start.strftime('%d %b %Y')} to {self.fy_end.strftime('%d %b %Y')})"
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
                 "Existing organization records were reused."
             )
         )
@@ -1061,6 +1315,25 @@ class Command(BaseCommand):
         )
         self.stdout.write("")
 
+
+    # ============================================================
+    # Demo Date Helper
+    # Generates dates only inside the current financial year.
+    # ============================================================
+
+    def demo_date(self, index, offset_days=0):
+        total_days = (self.fy_end - self.fy_start).days
+        if total_days <= 0:
+            return self.fy_start
+
+        if self.demo_records <= 1:
+            base_date = self.fy_start
+        else:
+            base_date = self.fy_start + timedelta(
+                days=(index * total_days) // (self.demo_records - 1)
+            )
+
+        return min(base_date + timedelta(days=offset_days), self.fy_end)
 
     # ============================================================
     # Reusable Master Data Helper
