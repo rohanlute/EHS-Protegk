@@ -1,4 +1,10 @@
 # ============================================================
+## run to generate data:
+## python manage.py demo_data_occupational_health
+## Or explicitly for related to employees available:
+## python manage.py demo_data_occupational_health --count 13 --records 100
+# ============================================================
+# ============================================================
 # Occupational Health Demo Data Seeder
 # Creates realistic demo data using existing users and
 # existing organization assignments.
