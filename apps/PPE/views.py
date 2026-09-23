@@ -38,7 +38,7 @@ def category_create(request):
         'action': 'Create',
         'title': 'Create New Category'
     }
-    return render(request, 'PPE/configuration/category_form.html', context)
+    return render(request, 'ppe/configuration/category_form.html', context)
 @login_required
 def category_edit(request, pk):
     """Edit existing category"""
@@ -57,7 +57,7 @@ def category_edit(request, pk):
         'title': f'Edit Category: {category.category_name}',
         'category': category
     }
-    return render(request, 'PPE/configuration/category_form.html', context)
+    return render(request, 'ppe/configuration/category_form.html', context)
 
 @login_required
 def category_list(request):
@@ -81,7 +81,7 @@ def category_list(request):
         'page_obj': page_obj,
         'search': search
     }
-    return render(request, 'PPE/configuration/category_list.html', context)
+    return render(request, 'ppe/configuration/category_list.html', context)
 
 @login_required
 def category_delete(request, pk):
@@ -95,7 +95,7 @@ def category_delete(request, pk):
     context = {
         'category': category
     }
-    return render(request, 'PPE/configuration/category_confirm_delete.html', context)
+    return render(request, 'ppe/configuration/category_confirm_delete.html', context)
 @login_required
 def master_list(request):
     ppe_list = PPEItem.objects.all()
@@ -111,7 +111,7 @@ def master_list(request):
     page_obj = paginator.get_page(page_number)
     return render(
         request,
-        'PPE/configuration/master_list.html',
+        'ppe/configuration/master_list.html',
         {
             'page_obj': page_obj,
             'search': query,
@@ -178,7 +178,7 @@ def master_edit(request, pk):
         form = PPEItemForm(instance=ppe)
     return render(
         request,
-        'PPE/configuration/create_ppe.html',
+        'ppe/configuration/create_ppe.html',
         {
             'form': form,
             'ppe': ppe,
@@ -218,7 +218,7 @@ def create_ppe(request):
         form = PPEItemForm()
     return render(
         request,
-        'PPE/configuration/create_ppe.html',
+        'ppe/configuration/create_ppe.html',
         {
             'form': form,
             'categories': PPECategory.objects.filter(
@@ -237,7 +237,7 @@ def ppe_detail(request, pk):
         'ppe': ppe,
         'size_quantities' : size_quantities,
     }
-    return render(request, 'PPE/configuration/ppe_detail.html', context)
+    return render(request, 'ppe/configuration/ppe_detail.html', context)
 @login_required
 def ppe_delete(request, pk):
     ppe = get_object_or_404(PPEItem, pk=pk)
@@ -246,7 +246,7 @@ def ppe_delete(request, pk):
         ppe.delete()
         messages.success(request, f'PPE Item "{ppe_name}" deleted successfully!')
         return redirect('PPE:master_list')
-    return render(request, 'PPE/configuration/ppe_delete.html', {
+    return render(request, 'ppe/configuration/ppe_delete.html', {
         'ppe': ppe
     })
 @login_required
