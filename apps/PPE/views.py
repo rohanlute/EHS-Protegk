@@ -872,11 +872,8 @@ def IssueManagement_create(request):
         "employees": employees,
         "issue_date": issue_date,
     }
-    return render(
-        request,
-        "ppe/Management/IssueManagement_create.html",
-        context
-    )
+    return render(request,"ppe/Management/IssueManagement_create.html",context)
+
 @login_required
 def get_employee_department(request):
     employee_id = request.GET.get(
@@ -1192,7 +1189,7 @@ def issue_delete(request, pk):
         )
     return render(
         request,
-        'ppe/management/issue_delete.html',
+        'ppe/Management/issue_delete.html',
         {
             'issue': issue
         }
@@ -1240,7 +1237,7 @@ def return_list(request):
         returns = returns.filter(query)
     return render(
         request,
-        'PPE/management/return_list.html',
+        'ppe/Management/return_list.html',
         {
             'page_obj': returns,
             'search': search,
@@ -1394,7 +1391,7 @@ def return_create(request):
         )
     return render(
         request,
-        'PPE/management/return_create.html',
+        'ppe/Management/return_create.html',
         {
             'form': form,
             'return_date': date.today().strftime(
@@ -1488,7 +1485,7 @@ def return_delete(request, pk):
         )
     return render(
         request,
-        'PPE/management/return_delete.html',
+        'ppe/Management/return_delete.html',
         {
             'return_obj': return_obj
         }
@@ -1699,7 +1696,7 @@ def return_edit(request, pk):
     }
     return render(
         request,
-        'PPE/management/return_create.html',
+        'ppe/Management/return_create.html',
         context
     )
 @login_required
@@ -1745,7 +1742,7 @@ def return_detail(request, pk):
     }
     return render(
         request,
-        'PPE/management/return_detail.html',
+        'ppe/Management/return_detail.html',
         context
     )
 @login_required
@@ -1887,7 +1884,7 @@ def schedule_create(request):
     }
     return render(
         request,
-        'ppe/management/inspection_schedule.html',
+        'ppe/Management/inspection_schedule.html',
         context
     )
 @login_required
@@ -2013,7 +2010,7 @@ def schedule_list(request):
     }
     return render(
         request,
-        'ppe/management/ppe_schedule_list.html',
+        'ppe/Management/ppe_schedule_list.html',
         context
     )
 def schedule_detail(request, pk):
@@ -2033,7 +2030,7 @@ def schedule_detail(request, pk):
     }
     return render(
         request,
-        'PPE/management/schedule_detail.html',
+        'ppe/Management/schedule_detail.html',
         context
     )
 def schedule_edit(request, pk):
@@ -2083,7 +2080,7 @@ def schedule_edit(request, pk):
     }
     return render(
         request,
-        "PPE/management/inspection_schedule.html",
+        "ppe/Management/inspection_schedule.html",
         context
     )
 def schedule_delete(request, pk):
@@ -2130,7 +2127,7 @@ def my_ppe_inspections(request):
     }
     return render(
         request,
-        'ppe/management/my_ppe_inspections.html',
+        'ppe/Management/my_ppe_inspections.html',
         context
     )
 @login_required
@@ -2153,7 +2150,7 @@ def start_inspection(request, schedule_id):
     }
     return render(
         request,
-        'PPE/management/start_inspection.html',
+        'ppe/Management/start_inspection.html',
         context
     )
 @login_required
@@ -2476,6 +2473,6 @@ def dashboard(request):
 
     return render(
         request,
-        'PPE/management/dashboard.html',
+        'ppe/Management/dashboard.html',
         context
     )
