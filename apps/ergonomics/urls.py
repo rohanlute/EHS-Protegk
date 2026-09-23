@@ -97,7 +97,6 @@ urlpatterns = [
     path("reports/export/", views.ErgonomicsReportExportView.as_view(), name="report_export"),
     path("reports/department/export/", views.DepartmentReportExportView.as_view(), name="department_report_export"),
     path("reports/management/export/", views.ManagementReportExportView.as_view(), name="management_report_export"),
-    path("analytics/", views.ErgonomicsAnalyticsView.as_view(), name="analytics"),
     path("api/site-benchmarks/", views.SiteBenchmarksAPIView.as_view(), name="site_benchmarks_api"),
     
     # Verification queue

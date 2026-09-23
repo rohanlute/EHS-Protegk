@@ -140,6 +140,40 @@ class ErgonomicsAccessMixin(LoginRequiredMixin):
 
 
 # =============================================================================
+# ROLE-GUARD HELPERS (used by verification & my-actions views)
+# =============================================================================
+def _is_plant_head(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    role_name = user.role.name if getattr(user, "role", None) else ""
+    return role_name == "PLANT HEAD"
+
+
+def _can_access_my_actions(user):
+    """
+    True if the user can open the My Actions page.
+
+    Rules:
+      - Superuser          → always
+      - SAFETY MANAGER     → always
+      - Any user with at least one corrective action assigned to them
+    """
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+
+    role_name = user.role.name if getattr(user, "role", None) else ""
+    if role_name == "SAFETY MANAGER":
+        return True
+
+    # Anyone with actions assigned to them
+    return user.assigned_ergonomic_actions.exists()
+
+
+# =============================================================================
 # DASHBOARD
 # =============================================================================
 class ErgonomicsDashboardView(ErgonomicsAccessMixin, TemplateView):
@@ -762,7 +796,7 @@ class CorrectiveActionListView(ErgonomicsAccessMixin, ListView):
         qs = (
             ErgonomicCorrectiveAction.objects
             .select_related("assessment", "responsible_person", "department")
-            .order_by("-created_at", "-id")           # ← ADD THIS
+            .order_by("-created_at", "-id")
         )
         if self.request.GET.get("status"):
             qs = qs.filter(status=self.request.GET["status"])
@@ -808,6 +842,7 @@ class CorrectiveActionCreateView(RelatedCreateView):
         if assessment_id:
             return reverse_lazy("ergonomics:detail", kwargs={"pk": assessment_id})
         return reverse_lazy("ergonomics:actions")
+
 
 class CorrectiveActionDetailView(ErgonomicsAccessMixin, DetailView):
     model = ErgonomicCorrectiveAction
@@ -874,6 +909,15 @@ class VerificationListView(ErgonomicsAccessMixin, ListView):
     context_object_name = "actions"
     paginate_by = 25
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _is_plant_head(request.user):
+            messages.error(request, "Only Plant Heads can access the verification queue.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         ErgonomicCorrectiveAction.objects.refresh_overdue()
 
@@ -893,10 +937,6 @@ class VerificationListView(ErgonomicsAccessMixin, ListView):
         user = self.request.user
         if user.is_superuser:
             return qs
-
-        role_name = user.role.name if getattr(user, "role", None) else ""
-        if role_name not in self.verify_roles:
-            return qs.none()
 
         if hasattr(user, "get_all_plants"):
             plants = user.get_all_plants()
@@ -920,6 +960,15 @@ class VerificationDetailView(ErgonomicsAccessMixin, DetailView):
     template_name = "ergonomics/verification_detail.html"
     context_object_name = "action"
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _is_plant_head(request.user):
+            messages.error(request, "Only Plant Heads can access the verification queue.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = ErgonomicCorrectiveAction.objects.select_related(
             "assessment",
@@ -933,10 +982,6 @@ class VerificationDetailView(ErgonomicsAccessMixin, DetailView):
         user = self.request.user
         if user.is_superuser:
             return qs
-
-        role_name = user.role.name if getattr(user, "role", None) else ""
-        if role_name not in self.verify_roles:
-            return qs.none()
 
         if hasattr(user, "get_all_plants"):
             plants = user.get_all_plants()
@@ -953,6 +998,15 @@ class VerificationDetailView(ErgonomicsAccessMixin, DetailView):
 
 
 class ApproveActionView(ErgonomicsAccessMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _is_plant_head(request.user):
+            messages.error(request, "Only Plant Heads can verify actions.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, pk):
         action = get_object_or_404(
             ErgonomicCorrectiveAction,
@@ -992,6 +1046,15 @@ class ApproveActionView(ErgonomicsAccessMixin, View):
 
 
 class RejectActionView(ErgonomicsAccessMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _is_plant_head(request.user):
+            messages.error(request, "Only Plant Heads can reject actions.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, pk):
         action = get_object_or_404(
             ErgonomicCorrectiveAction,
@@ -1044,6 +1107,15 @@ class MyErgonomicActionsView(LoginRequiredMixin, ListView):
     context_object_name = "actions"
     paginate_by = 25
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _can_access_my_actions(request.user):
+            messages.error(request, "You don't have permission to access My Actions.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = (
             ErgonomicCorrectiveAction.objects
@@ -1079,6 +1151,15 @@ class MyActionUpdateView(LoginRequiredMixin, UpdateView):
     context_object_name = "action"
 
     READONLY_STATUSES = {"PENDING_VERIFICATION", "COMPLETED", "CLOSED"}
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not _can_access_my_actions(request.user):
+            messages.error(request, "You don't have permission to access My Actions.")
+            return redirect("dashboards:home")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return ErgonomicCorrectiveAction.objects.filter(
@@ -1280,7 +1361,9 @@ class MSDDiscomfortCreateView(GenericErgonomicsCreateView):
     model = MSDDiscomfort
     form_class = MSDDiscomfortForm
     template_name = "ergonomics/msd_form.html"
-    success_url = reverse_lazy("ergonomics:msd_list")
+
+    def get_success_url(self):
+        return reverse_lazy("ergonomics:msd_list")
 
 
 # =============================================================================
@@ -1345,6 +1428,7 @@ class ErgonomicsReportExportView(ErgonomicsAccessMixin, View):
     def get(self, request):
         return workbook_response(filter_assessments(request))
 
+
 # =============================================================================
 # ERGONOMIC PDF EXPORT
 # =============================================================================
@@ -1373,82 +1457,6 @@ class ErgonomicsReportPDFView(ErgonomicsAccessMixin, View):
             + timezone.now().strftime("%Y%m%d_%H%M") + '.pdf"'
         )
         return response
-class ErgonomicsAnalyticsView(ErgonomicsAccessMixin, TemplateView):
-    template_name = "ergonomics/analytics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assessments = filter_assessments(self.request)
-
-        context.update(
-            plants=Plant.objects.filter(is_active=True),
-            departments=Department.objects.filter(is_active=True),
-            methods=ErgonomicAssessmentMethod.objects.filter(is_active=True),
-        )
-
-        context.update(
-            by_risk=assessments.values("risk_level").annotate(total=Count("id")),
-            by_department=assessments.values("department__name").annotate(total=Count("id")).order_by("-total"),
-            by_method=assessments.values("assessment_method__name").annotate(total=Count("id")).order_by("-total"),
-            by_body_part=MSDDiscomfort.objects.values("body_part").annotate(total=Count("id")).order_by("-total"),
-        )
-
-        context["by_site"] = (
-            assessments.values("plant__name")
-            .annotate(total=Count("id"))
-            .order_by("-total")
-        )
-        context["by_job"] = (
-            assessments.values("job_role")
-            .annotate(total=Count("id"))
-            .order_by("-total")[:10]
-        )
-        context["by_task"] = (
-            assessments.values("task")
-            .annotate(total=Count("id"))
-            .order_by("-total")[:10]
-        )
-        context["by_shift"] = (
-            assessments.exclude(shift="")
-            .values("shift")
-            .annotate(total=Count("id"))
-            .order_by("-total")
-        )
-        context["by_month"] = (
-            assessments.annotate(month=TruncMonth("assessment_date"))
-            .values("month")
-            .annotate(total=Count("id"))
-            .order_by("month")
-        )
-        context["high_risk_trend"] = (
-            assessments.filter(risk_level__in=["HIGH", "VERY_HIGH"])
-            .annotate(month=TruncMonth("assessment_date"))
-            .values("month")
-            .annotate(total=Count("id"))
-            .order_by("month")
-        )
-        context["msd_trend"] = (
-            MSDDiscomfort.objects.annotate(month=TruncMonth("date_reported"))
-            .values("month")
-            .annotate(total=Count("id"))
-            .order_by("month")
-        )
-        context["action_trend"] = (
-            ErgonomicCorrectiveAction.objects.filter(assessment__in=assessments)
-            .annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(total=Count("id"))
-            .order_by("month")
-        )
-        context["reduction_trend"] = (
-            ErgonomicReassessment.objects.filter(assessment__in=assessments)
-            .annotate(month=TruncMonth("reassessment_date"))
-            .values("month")
-            .annotate(avg_reduction=Avg("risk_reduction_percent"))
-            .order_by("month")
-        )
-
-        return context
 
 
 class DepartmentReportExportView(ErgonomicsAccessMixin, View):

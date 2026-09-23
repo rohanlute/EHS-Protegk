@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.db.models.functions import Lower
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404, render
 from django.http import JsonResponse
@@ -183,8 +184,9 @@ class UserListView(LoginRequiredMixin,CanCreateUsersMixin,ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        # Exclude superuser accounts
-        queryset = User.objects.filter(is_superuser=False).select_related('role').order_by('-date_joined')
+        queryset = User.objects.filter(is_superuser=False)\
+            .select_related('role')\
+            .order_by(Lower('first_name'), Lower('last_name'))
 
         # ============================================
         # Non-admin: show only users from their plants
