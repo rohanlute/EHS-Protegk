@@ -777,9 +777,21 @@ class EnvironmentalQuestionsManagerView(LoginRequiredMixin, View):
                 # ✅ Handle different field types
                 if q.filter_field == 'incident_type':
                     try:
-                        incident_type = IncidentType.objects.get(id=q.filter_value)
-                        filter_value_display = f"{incident_type.code} - {incident_type.name}"
-                    except IncidentType.DoesNotExist:
+                        # filter_value is stored as text, so validate it before
+                        # using it as a numeric IncidentType primary key.
+                        incident_type = None
+                        if str(q.filter_value).isdigit():
+                            incident_type = IncidentType.objects.filter(
+                                id=int(q.filter_value)
+                            ).first()
+
+                        if incident_type:
+                            filter_value_display = f"{incident_type.code} - {incident_type.name}"
+                        else:
+                            # Keep invalid/legacy values visible without crashing
+                            # the Questions Manager.
+                            filter_value_display = q.filter_value
+                    except (ValueError, TypeError, IncidentType.DoesNotExist):
                         filter_value_display = q.filter_value
                 
                 elif q.filter_field == 'hazard_type':
@@ -863,9 +875,19 @@ class EnvironmentalQuestionsManagerView(LoginRequiredMixin, View):
                     
                     if q.filter_field_2 == 'incident_type':
                         try:
-                            incident_type_2 = IncidentType.objects.get(id=q.filter_value_2)
-                            filter_value_2_display = f"{incident_type_2.code} - {incident_type_2.name}"
-                        except IncidentType.DoesNotExist:
+                            # Validate the stored text value before using it
+                            # as an IncidentType primary key.
+                            incident_type_2 = None
+                            if str(q.filter_value_2).isdigit():
+                                incident_type_2 = IncidentType.objects.filter(
+                                    id=int(q.filter_value_2)
+                                ).first()
+
+                            if incident_type_2:
+                                filter_value_2_display = f"{incident_type_2.code} - {incident_type_2.name}"
+                            else:
+                                filter_value_2_display = q.filter_value_2
+                        except (ValueError, TypeError, IncidentType.DoesNotExist):
                             filter_value_2_display = q.filter_value_2
                     
                     elif q.filter_field_2 == 'hazard_type':
@@ -1468,23 +1490,91 @@ class EnvironmentalDashboardView(LoginRequiredMixin, TemplateView):
                             model, plant_field = model_tuple
                             filters = {f"{plant_field}": plant,"created_at__gte": start_date,"created_at__lt": end_date,}
 
+                            # Build primary filter safely.
+                            # filter_value is stored as text, while some source fields
+                            # are ForeignKeys. Resolve those values before querying.
                             if q.filter_field and q.filter_value:
                                 field = q.filter_field
+                                filter_value = q.filter_value
+
                                 if q.source_type == "INSPECTION":
                                     if field == "inspection_type":
                                         field = "template__inspection_type"
                                     elif field == "template":
                                         field = "template_id"
-                                filters[field] = q.filter_value
 
+                                try:
+                                    model_field = model._meta.get_field(field)
+                                    if getattr(model_field, "is_relation", False) and getattr(model_field, "many_to_one", False):
+                                        related_model = model_field.remote_field.model
+                                        related_object = None
+
+                                        if str(filter_value).isdigit():
+                                            related_object = related_model.objects.filter(
+                                                pk=int(filter_value)
+                                            ).first()
+                                        else:
+                                            for lookup in ("code", "name", "slug"):
+                                                field_names = {
+                                                    getattr(f, "name", "")
+                                                    for f in related_model._meta.get_fields()
+                                                }
+                                                if lookup in field_names:
+                                                    related_object = related_model.objects.filter(
+                                                        **{lookup: filter_value}
+                                                    ).first()
+                                                    if related_object:
+                                                        break
+
+                                        filters[f"{field}_id"] = related_object.pk if related_object else -1
+                                    else:
+                                        filters[field] = filter_value
+                                except Exception:
+                                    # Invalid/non-existent fields must not crash the dashboard.
+                                    # Ignore the filter so the base source count can still render.
+                                    pass
+
+                            # Build secondary filter with the same ForeignKey handling.
                             if q.filter_field_2 and q.filter_value_2:
                                 field = q.filter_field_2
+                                filter_value = q.filter_value_2
+
                                 if q.source_type == "INSPECTION":
                                     if field == "inspection_type":
                                         field = "template__inspection_type"
                                     elif field == "template":
                                         field = "template_id"
-                                filters[field] = q.filter_value_2
+
+                                try:
+                                    model_field = model._meta.get_field(field)
+                                    if getattr(model_field, "is_relation", False) and getattr(model_field, "many_to_one", False):
+                                        related_model = model_field.remote_field.model
+                                        related_object = None
+
+                                        if str(filter_value).isdigit():
+                                            related_object = related_model.objects.filter(
+                                                pk=int(filter_value)
+                                            ).first()
+                                        else:
+                                            for lookup in ("code", "name", "slug"):
+                                                field_names = {
+                                                    getattr(f, "name", "")
+                                                    for f in related_model._meta.get_fields()
+                                                }
+                                                if lookup in field_names:
+                                                    related_object = related_model.objects.filter(
+                                                        **{lookup: filter_value}
+                                                    ).first()
+                                                    if related_object:
+                                                        break
+
+                                        filters[f"{field}_id"] = related_object.pk if related_object else -1
+                                    else:
+                                        filters[field] = filter_value
+                                except Exception:
+                                    # Invalid/non-existent fields must not crash the dashboard.
+                                    # Ignore the filter so the base source count can still render.
+                                    pass
 
                             value = model.objects.filter(**filters).count()
 
