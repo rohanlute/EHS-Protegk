@@ -156,7 +156,7 @@ class Command(BaseCommand):
             ("Water Recycled", "MANUAL", "water_type", "RECYCLED", "Water", "m3"),
             ("Environmental Incident Count", "INCIDENT", "incident_type", "ENVIRONMENTAL", None, None),
             ("Environmental Hazard Count", "HAZARD", "hazard_type", "ENVIRONMENTAL", None, None),
-            ("Fire Inspection Environmental Findings", "INSPECTION", "finding_type", "ENVIRONMENTAL", None, None),
+            ("Fire Inspection Environmental Findings", "INSPECTION", "inspection_type", "FIRE", None, None),
             ("Manual Environmental Observation", "MANUAL", None, None, None, None),
             ("Green Energy Percentage", "MANUAL", "energy_type", "GREEN", None, None),
         ]
