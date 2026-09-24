@@ -353,58 +353,104 @@
         color: #64748b;
     }
 
+    /* ========================================================== */
+    /* FILTER BAR — individual fields, search+clear on right      */
+    /* ========================================================== */
     .filter-bar {
+        padding: 16px 24px 4px 24px;
+    }
+
+    .filter-form {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
         align-items: center;
-        margin-bottom: 16px;
+        width: 100%;
+        margin: 0;
     }
 
-    .filter-bar select,
-    .filter-bar input {
+    /* Individual form fields — same size, no grouping */
+    .filter-form input[type="text"],
+    .filter-form select {
         padding: 8px 12px;
         border: 1.5px solid #e2e8f0;
         border-radius: 8px;
         font-size: 13px;
         background: white;
         transition: all 0.3s ease;
-        min-width: 150px;
+        height: 40px;
     }
 
-    .filter-bar select:focus,
-    .filter-bar input:focus {
+    .filter-form input[type="text"] {
+        min-width: 220px;
+        flex: 1 1 220px;
+        max-width: 340px;
+    }
+
+    .filter-form select {
+        min-width: 160px;
+        max-width: 200px;
+    }
+
+    .filter-form input[type="text"]:focus,
+    .filter-form select:focus {
         border-color: var(--primary-teal);
         box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
         outline: none;
     }
 
-    .filter-bar .search-wrapper {
+    /* Search + Clear grouped together and pinned to the right end */
+    .filter-form .filter-actions {
         display: flex;
-        gap: 6px;
-        flex: 1;
-        min-width: 200px;
+        gap: 8px;
+        align-items: center;
+        margin-left: auto;
     }
 
-    .filter-bar .search-wrapper input {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    .filter-bar .search-wrapper button {
-        padding: 8px 16px;
+    .filter-form .filter-actions .btn-search {
+        padding: 8px 18px;
         background: var(--primary-teal);
         color: white;
-        border: none;
+        border: 1.5px solid var(--primary-teal);
         border-radius: 8px;
         font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        white-space: nowrap;
+    }
+
+    .filter-form .filter-actions .btn-search:hover {
+        background: var(--primary-teal-dark);
+        border-color: var(--primary-teal-dark);
+    }
+
+    .filter-form .filter-actions .btn-clear {
+        padding: 8px 16px;
+        background: white;
+        color: #64748b;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        text-decoration: none;
         transition: all 0.3s ease;
         white-space: nowrap;
     }
 
-    .filter-bar .search-wrapper button:hover {
-        background: var(--primary-teal-dark);
+    .filter-form .filter-actions .btn-clear:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        color: #0f172a;
+        text-decoration: none;
     }
 
     .empty-state {
@@ -450,19 +496,27 @@
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .filter-bar {
+        .filter-form {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .filter-bar .search-wrapper {
-            flex-direction: column;
+        .filter-form input[type="text"],
+        .filter-form select {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
         }
 
-        .filter-bar select,
-        .filter-bar input {
+        .filter-form .filter-actions {
+            margin-left: 0;
             width: 100%;
-            min-width: unset;
+        }
+
+        .filter-form .filter-actions .btn-search,
+        .filter-form .filter-actions .btn-clear {
+            flex: 1;
+            justify-content: center;
         }
 
         .table thead th,
@@ -575,13 +629,10 @@
         </div>
         <div class="card-body">
             <!-- Filters -->
-            <div class="filter-bar" style="padding: 16px 24px 0 24px;">
-                <form method="get" style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; align-items: center;">
-                    <div class="search-wrapper">
-                        <input type="text" name="search" placeholder="Search by code, contractor..." value="{{ search }}">
-                        <button type="submit"><i class="fas fa-search"></i> Search</button>
-                    </div>
-                    
+            <div class="filter-bar">
+                <form method="get" class="filter-form">
+                    <input type="text" name="search" placeholder="Search by code, contractor..." value="{{ search }}">
+
                     <select name="status" onchange="this.form.submit()">
                         <option value="">All Status</option>
                         {% for value, label in status_choices %}
@@ -607,11 +658,16 @@
                         {% endfor %}
                     </select>
 
-                    {% if search or selected_status or selected_contractor or selected_plant %}
-                        <a href="{% url 'contractor:inspection_list' %}" class="btn-outline-secondary" style="padding: 6px 14px; font-size: 12px;">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
-                    {% endif %}
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-search">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        {% if search or selected_status or selected_contractor or selected_plant %}
+                            <a href="{% url 'contractor:inspection_list' %}" class="btn-clear">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        {% endif %}
+                    </div>
                 </form>
             </div>
 
