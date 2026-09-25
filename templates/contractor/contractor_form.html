@@ -827,344 +827,181 @@
 </div>
 
 <script>
-  // Set default dropdown values on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    // Get the current form mode
-    const formMode = '{{ form_mode }}';
-    
-    // If in add mode, reset dropdown values to empty
-    if (formMode === 'add') {
-      const contractorTypeSelect = document.getElementById('id_contractor_type');
-      const workCategorySelect = document.getElementById('id_work_category');
-      
-      if (contractorTypeSelect) {
-        contractorTypeSelect.value = '';
-      }
-      if (workCategorySelect) {
-        workCategorySelect.value = '';
-      }
-    }
-  });
-
   // ==========================================================
   // VALIDATION FUNCTIONS
   // ==========================================================
 
-  function validateField(fieldId, errorId, condition, errorMessage) {
-    const field = document.getElementById(fieldId);
-    const error = document.getElementById(errorId);
-    
-    if (!field) return true;
-    
+  // Validation rules map: field id -> [conditionFn, errorMessage]
+  const VALIDATION_RULES = {
+    'id_contractor_name':       [(f) => f.value.trim().length >= 2, 'Contractor name must be at least 2 characters long.'],
+    'id_contractor_type':       [(f) => f.value !== '', 'Please select a contractor type.'],
+    'id_pan_number':            [(f) => f.value.trim() === '' || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(f.value.trim().toUpperCase()), 'PAN number must be 10 characters in format: ABCDE1234F'],
+    'id_gstin':                 [(f) => f.value.trim() === '' || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(f.value.trim().toUpperCase()), 'GSTIN must be 15 characters in valid format'],
+    'id_establishment_year':    [(f) => f.value.trim() === '' || (parseInt(f.value, 10) >= 1900 && parseInt(f.value, 10) <= 2100), 'Establishment year must be between 1900 and 2100'],
+    'id_contact_person':        [(f) => f.value.trim().length >= 2, 'Contact person name must be at least 2 characters long.'],
+    'id_designation':           [(f) => f.value.trim().length >= 2, 'Designation must be at least 2 characters long.'],
+    'id_mobile':                [(f) => /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')), 'Enter a valid mobile number (10-15 digits).'],
+    'id_email':                 [(f) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(f.value), 'Enter a valid email address.'],
+    'id_alternate_mobile':      [(f) => f.value.trim() === '' || /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')), 'Enter a valid alternate mobile number (10-15 digits).'],
+    'id_address_line1':         [(f) => f.value.trim().length >= 3, 'Address Line 1 must be at least 3 characters long.'],
+    'id_country':               [(f) => f.value.trim().length >= 2, 'Country must be at least 2 characters long.'],
+    'id_state':                 [(f) => f.value.trim().length >= 2, 'State must be at least 2 characters long.'],
+    'id_city':                  [(f) => f.value.trim().length >= 2, 'City must be at least 2 characters long.'],
+    'id_pincode':               [(f) => /^[0-9]{5,6}$/.test(f.value.trim()), 'Enter a valid pincode (5-6 digits).'],
+    'id_nature_of_business':    [(f) => f.value.trim().length >= 3, 'Nature of business must be at least 3 characters long.'],
+    'id_work_category':         [(f) => f.value !== '', 'Please select a work category.'],
+    'id_service_description':   [(f) => f.value.trim().length >= 10, 'Service description must be at least 10 characters long.'],
+    'id_years_of_experience':   [(f) => f.value.trim() === '' || parseInt(f.value, 10) >= 0, 'Years of experience cannot be negative.'],
+    'id_number_of_workers':     [(f) => f.value.trim() === '' || parseInt(f.value, 10) >= 0, 'Number of workers cannot be negative.'],
+    'id_ehs_officer_name':      [(f) => f.value.trim().length >= 2, 'EHS officer name must be at least 2 characters long.'],
+    'id_ehs_mobile':            [(f) => /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')), 'Enter a valid EHS mobile number (10-15 digits).'],
+    'id_ehs_email':             [(f) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(f.value), 'Enter a valid EHS email address.'],
+  };
+
+  // Friendly labels for the global error summary
+  const FIELD_LABELS = {
+    'id_contractor_name': 'Contractor Name',
+    'id_contractor_type': 'Contractor Type',
+    'id_pan_number': 'PAN Number',
+    'id_gstin': 'GSTIN',
+    'id_establishment_year': 'Establishment Year',
+    'id_contact_person': 'Contact Person',
+    'id_designation': 'Designation',
+    'id_mobile': 'Mobile Number',
+    'id_email': 'Email',
+    'id_alternate_mobile': 'Alternate Mobile',
+    'id_address_line1': 'Address Line 1',
+    'id_country': 'Country',
+    'id_state': 'State',
+    'id_city': 'City',
+    'id_pincode': 'Pincode',
+    'id_nature_of_business': 'Nature of Business',
+    'id_work_category': 'Work Category',
+    'id_service_description': 'Service Description',
+    'id_years_of_experience': 'Years of Experience',
+    'id_number_of_workers': 'Number of Workers',
+    'id_ehs_officer_name': 'EHS Officer Name',
+    'id_ehs_mobile': 'EHS Mobile',
+    'id_ehs_email': 'EHS Email',
+  };
+
+  // Validate a single field, updating its visual state and error message
+  function validateSingleField(field) {
+    if (!field || !field.id) return true;
+    const rule = VALIDATION_RULES[field.id];
+    if (!rule) return true;
+
+    const [condition, message] = rule;
+    const formGroup = field.closest('.form-group');
+    const errorEl = formGroup ? formGroup.querySelector('.error-message') : null;
+
     if (condition(field)) {
       field.classList.remove('is-invalid');
       field.classList.add('is-valid');
-      if (error) error.classList.remove('show');
+      if (errorEl) errorEl.classList.remove('show');
       return true;
     } else {
       field.classList.remove('is-valid');
       field.classList.add('is-invalid');
-      if (error) {
-        error.textContent = errorMessage || error.textContent;
-        error.classList.add('show');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
       }
       return false;
     }
   }
 
+  // Full-form validation (called on submit)
   function validateForm() {
     let isValid = true;
     const errors = [];
+    const fieldsToCheck = Object.keys(VALIDATION_RULES);
 
-    // 1. Contractor Type
-    if (!validateField('id_contractor_type', 'contractor_type_error',
-        (f) => f.value !== '',
-        'Please select a contractor type.'
-    )) {
-      isValid = false;
-      errors.push('Contractor Type');
-    }
-
-    // 2. PAN Number (optional)
-    const panField = document.getElementById('id_pan_number');
-    if (panField && panField.value.trim() !== '') {
-      if (!validateField('id_pan_number', 'pan_number_error',
-          (f) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(f.value.trim().toUpperCase()),
-          'PAN number must be 10 characters in format: ABCDE1234F'
-      )) {
+    // Validate each registered field
+    fieldsToCheck.forEach(function (fieldId) {
+      const field = document.getElementById(fieldId);
+      if (!field) return;
+      if (!validateSingleField(field)) {
         isValid = false;
-        errors.push('PAN Number');
+        errors.push(FIELD_LABELS[fieldId] || fieldId);
       }
-    }
+    });
 
-    // 3. GSTIN (optional)
-    const gstinField = document.getElementById('id_gstin');
-    if (gstinField && gstinField.value.trim() !== '') {
-      if (!validateField('id_gstin', 'gstin_error',
-          (f) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(f.value.trim().toUpperCase()),
-          'GSTIN must be 15 characters in valid format'
-      )) {
-        isValid = false;
-        errors.push('GSTIN');
-      }
-    }
-
-    // 4. Establishment Year (optional)
-    const yearField = document.getElementById('id_establishment_year');
-    if (yearField && yearField.value.trim() !== '') {
-      const year = parseInt(yearField.value);
-      if (!validateField('id_establishment_year', 'establishment_year_error',
-          (f) => !isNaN(year) && year >= 1900 && year <= 2100,
-          'Establishment year must be between 1900 and 2100'
-      )) {
-        isValid = false;
-        errors.push('Establishment Year');
-      }
-    }
-
-    // 5. Contact Person
-    if (!validateField('id_contact_person', 'contact_person_error',
-        (f) => f.value.trim().length >= 2,
-        'Contact person name must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Contact Person');
-    }
-
-    // 6. Designation
-    if (!validateField('id_designation', 'designation_error',
-        (f) => f.value.trim().length >= 2,
-        'Designation must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Designation');
-    }
-
-    // 7. Mobile
-    if (!validateField('id_mobile', 'mobile_error',
-        (f) => /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')),
-        'Enter a valid mobile number (10-15 digits).'
-    )) {
-      isValid = false;
-      errors.push('Mobile Number');
-    }
-
-    // 8. Email
-    if (!validateField('id_email', 'email_error',
-        (f) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(f.value),
-        'Enter a valid email address.'
-    )) {
-      isValid = false;
-      errors.push('Email');
-    }
-
-    // 9. Alternate Mobile (optional)
-    const altMobileField = document.getElementById('id_alternate_mobile');
-    if (altMobileField && altMobileField.value.trim() !== '') {
-      if (!validateField('id_alternate_mobile', 'alternate_mobile_error',
-          (f) => /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')),
-          'Enter a valid alternate mobile number (10-15 digits).'
-      )) {
-        isValid = false;
-        errors.push('Alternate Mobile');
-      }
-    }
-
-    // 10. Address Line 1
-    if (!validateField('id_address_line1', 'address_line1_error',
-        (f) => f.value.trim().length >= 3,
-        'Address Line 1 must be at least 3 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Address Line 1');
-    }
-
-    // 11. Country
-    if (!validateField('id_country', 'country_error',
-        (f) => f.value.trim().length >= 2,
-        'Country must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Country');
-    }
-
-    // 12. State
-    if (!validateField('id_state', 'state_error',
-        (f) => f.value.trim().length >= 2,
-        'State must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('State');
-    }
-
-    // 13. City
-    if (!validateField('id_city', 'city_error',
-        (f) => f.value.trim().length >= 2,
-        'City must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('City');
-    }
-
-    // 14. Pincode
-    if (!validateField('id_pincode', 'pincode_error',
-        (f) => /^[0-9]{5,6}$/.test(f.value.trim()),
-        'Enter a valid pincode (5-6 digits).'
-    )) {
-      isValid = false;
-      errors.push('Pincode');
-    }
-
-    // 15. Nature of Business
-    if (!validateField('id_nature_of_business', 'nature_of_business_error',
-        (f) => f.value.trim().length >= 3,
-        'Nature of business must be at least 3 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Nature of Business');
-    }
-
-    // 16. Work Category
-    if (!validateField('id_work_category', 'work_category_error',
-        (f) => f.value !== '',
-        'Please select a work category.'
-    )) {
-      isValid = false;
-      errors.push('Work Category');
-    }
-
-    // 17. Service Description
-    if (!validateField('id_service_description', 'service_description_error',
-        (f) => f.value.trim().length >= 10,
-        'Service description must be at least 10 characters long.'
-    )) {
-      isValid = false;
-      errors.push('Service Description');
-    }
-
-    // 18. Years of Experience (optional)
-    const expField = document.getElementById('id_years_of_experience');
-    if (expField && expField.value.trim() !== '') {
-      const exp = parseInt(expField.value);
-      if (!validateField('id_years_of_experience', 'years_of_experience_error',
-          (f) => !isNaN(exp) && exp >= 0,
-          'Years of experience cannot be negative.'
-      )) {
-        isValid = false;
-        errors.push('Years of Experience');
-      }
-    }
-
-    // 19. Number of Workers (optional)
-    const workersField = document.getElementById('id_number_of_workers');
-    if (workersField && workersField.value.trim() !== '') {
-      const workers = parseInt(workersField.value);
-      if (!validateField('id_number_of_workers', 'number_of_workers_error',
-          (f) => !isNaN(workers) && workers >= 0,
-          'Number of workers cannot be negative.'
-      )) {
-        isValid = false;
-        errors.push('Number of Workers');
-      }
-    }
-
-    // 20. EHS Officer Name
-    if (!validateField('id_ehs_officer_name', 'ehs_officer_name_error',
-        (f) => f.value.trim().length >= 2,
-        'EHS officer name must be at least 2 characters long.'
-    )) {
-      isValid = false;
-      errors.push('EHS Officer Name');
-    }
-
-    // 21. EHS Mobile
-    if (!validateField('id_ehs_mobile', 'ehs_mobile_error',
-        (f) => /^\+?[0-9]{10,15}$/.test(f.value.replace(/[\s\-\(\)\.]/g, '')),
-        'Enter a valid EHS mobile number (10-15 digits).'
-    )) {
-      isValid = false;
-      errors.push('EHS Mobile');
-    }
-
-    // 22. EHS Email
-    if (!validateField('id_ehs_email', 'ehs_email_error',
-        (f) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(f.value),
-        'Enter a valid EHS email address.'
-    )) {
-      isValid = false;
-      errors.push('EHS Email');
-    }
-
-    // 23. Cross-field validation: Mobile vs Alternate Mobile
+    // Cross-field validation: Alternate Mobile vs Primary Mobile
     const mobile = document.getElementById('id_mobile');
     const altMobile = document.getElementById('id_alternate_mobile');
-    if (mobile && altMobile && altMobile.value.trim() !== '') {
+    if (mobile && altMobile && altMobile.value.trim() !== '' && mobile.value.trim() !== '') {
       const mobileClean = mobile.value.replace(/[\s\-\(\)\+\.]/g, '');
       const altMobileClean = altMobile.value.replace(/[\s\-\(\)\+\.]/g, '');
       if (mobileClean === altMobileClean) {
-        showError('Alternate mobile cannot be the same as primary mobile.');
+        altMobile.classList.remove('is-valid');
         altMobile.classList.add('is-invalid');
-        document.getElementById('alternate_mobile_error').textContent = 'Alternate mobile cannot be the same as primary mobile.';
-        document.getElementById('alternate_mobile_error').classList.add('show');
+        const altError = document.getElementById('alternate_mobile_error');
+        if (altError) {
+          altError.textContent = 'Alternate mobile cannot be the same as primary mobile.';
+          altError.classList.add('show');
+        }
         isValid = false;
         errors.push('Alternate Mobile (same as primary)');
       }
     }
 
-    // Show error summary if invalid
+    // Show/hide global error summary
+    const errorDiv = document.getElementById('formErrors');
+    const errorText = document.getElementById('formErrorText');
+
     if (!isValid) {
-      const errorDiv = document.getElementById('formErrors');
-      const errorText = document.getElementById('formErrorText');
       errorText.textContent = 'Please fix the following errors: ' + errors.join(', ');
       errorDiv.style.display = 'block';
-      
-      // Scroll to first error
+
       const firstError = document.querySelector('.is-invalid');
       if (firstError) {
         firstError.focus();
         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      
       return false;
     }
 
+    errorDiv.style.display = 'none';
     return true;
-  }
-
-  function showError(message) {
-    const errorDiv = document.getElementById('formErrors');
-    const errorText = document.getElementById('formErrorText');
-    errorText.textContent = message;
-    errorDiv.style.display = 'block';
   }
 
   // ==========================================================
   // EVENT LISTENERS
   // ==========================================================
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // Auto-uppercase for PAN and GSTIN
+  document.addEventListener('DOMContentLoaded', function () {
+    // If in add mode, ensure dropdowns start empty
+    const formMode = '{{ form_mode }}';
+    if (formMode === 'add') {
+      const contractorTypeSelect = document.getElementById('id_contractor_type');
+      const workCategorySelect = document.getElementById('id_work_category');
+      if (contractorTypeSelect) contractorTypeSelect.value = '';
+      if (workCategorySelect) workCategorySelect.value = '';
+    }
+
+    // Auto-uppercase for PAN and GSTIN; restrict PAN to alphanumerics
     const panInput = document.getElementById('id_pan_number');
     const gstinInput = document.getElementById('id_gstin');
-    
+
     if (panInput) {
-      panInput.addEventListener('input', function() {
+      panInput.addEventListener('input', function () {
         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       });
     }
-    
+
     if (gstinInput) {
-      gstinInput.addEventListener('input', function() {
+      gstinInput.addEventListener('input', function () {
         this.value = this.value.toUpperCase();
       });
     }
 
-    // Status switch
+    // Status switch text toggle
     const switchInput = document.getElementById('id_is_active');
     const statusText = document.getElementById('statusText');
-    
+
     if (switchInput && statusText) {
-      switchInput.addEventListener('change', function() {
+      switchInput.addEventListener('change', function () {
         if (this.checked) {
           statusText.textContent = 'Active';
           statusText.className = 'status-text active';
@@ -1175,43 +1012,51 @@
       });
     }
 
-    // Real-time validation on input
-    document.querySelectorAll('.form-control, .form-select').forEach(function(element) {
-      element.addEventListener('input', function() {
+    // Per-field validation on input / blur
+    document.querySelectorAll('.form-control, .form-select').forEach(function (element) {
+      // While typing: clear existing error state for THIS field only
+      element.addEventListener('input', function () {
         if (this.classList.contains('is-invalid') || this.classList.contains('is-valid')) {
           this.classList.remove('is-invalid', 'is-valid');
-          const error = this.closest('.form-group').querySelector('.error-message');
+        }
+        const formGroup = this.closest('.form-group');
+        if (formGroup) {
+          const error = formGroup.querySelector('.error-message');
           if (error) error.classList.remove('show');
         }
-        // Hide global error when user types
-        document.getElementById('formErrors').style.display = 'none';
+        // Hide global error summary when user types
+        const globalErr = document.getElementById('formErrors');
+        if (globalErr) globalErr.style.display = 'none';
       });
-      
-      element.addEventListener('blur', function() {
-        if (!this.hasAttribute('required') && this.value.trim() !== '') {
-          validateForm();
+
+      // On blur: validate ONLY this field (never the whole form)
+      element.addEventListener('blur', function () {
+        // Skip validation on empty optional fields
+        const hasValue = this.value.trim() !== '';
+        const isRequired = this.hasAttribute('required');
+        if (isRequired || hasValue) {
+          validateSingleField(this);
         }
       });
     });
 
-    // Prevent numbers in name fields
-    const nameFields = ['id_contact_person', 'id_ehs_officer_name'];
-    nameFields.forEach(function(id) {
-      const field = document.getElementById(id);
-      if (field) {
-        field.addEventListener('input', function() {
-          this.value = this.value.replace(/[0-9]/g, '');
-        });
-      }
-    });
-
-    // Only numbers in pincode
+    // Restrict pincode to digits only
     const pincodeInput = document.getElementById('id_pincode');
     if (pincodeInput) {
-      pincodeInput.addEventListener('input', function() {
+      pincodeInput.addEventListener('input', function () {
         this.value = this.value.replace(/[^0-9]/g, '');
       });
     }
+
+    // Restrict numeric fields to non-negative integers
+    ['id_establishment_year', 'id_years_of_experience', 'id_number_of_workers'].forEach(function (id) {
+      const field = document.getElementById(id);
+      if (field) {
+        field.addEventListener('input', function () {
+          this.value = this.value.replace(/[^0-9]/g, '');
+        });
+      }
+    });
   });
 </script>
 
