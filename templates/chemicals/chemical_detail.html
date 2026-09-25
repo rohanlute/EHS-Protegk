@@ -1,11 +1,12 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Chemical Detail | EHS-360{% endblock %}
+{% block title %}{{ chemical.chemical_name }} | Chemical Detail | EHS-360{% endblock %}
 
 {% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboards:home' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'chemicals:chemical_list' %}">Chemicals</a></li>
-<li class="breadcrumb-item active">{{ chemical.cas_number }}</li>
+<li class="breadcrumb-item active">{{ chemical.chemical_name|truncatechars:30 }}</li>
 {% endblock %}
 
 {% block extra_css %}
@@ -16,31 +17,46 @@
   :root {
     --primary-teal: #0d9488;
     --primary-teal-dark: #0f766e;
+    --primary-teal-darker: #115e59;
     --primary-teal-light: rgba(13, 148, 136, 0.08);
-    --primary-teal-hover: rgba(13, 148, 136, 0.12);
-    --primary-teal-medium: rgba(13, 148, 136, 0.15);
-    
+    --primary-teal-soft: rgba(13, 148, 136, 0.04);
+
     --secondary-red: #dc2626;
-    --secondary-green: #22c55e;
+    --secondary-red-light: rgba(220, 38, 38, 0.10);
+    --secondary-green: #10b981;
+    --secondary-green-light: rgba(16, 185, 129, 0.10);
     --secondary-gold: #d97706;
+    --secondary-gold-light: rgba(217, 119, 6, 0.10);
     --secondary-blue: #3b82f6;
-    
+    --secondary-blue-light: rgba(59, 130, 246, 0.10);
+    --secondary-purple: #7c3aed;
+    --secondary-purple-light: rgba(124, 58, 237, 0.10);
+
     --text-primary: #0f172a;
     --text-secondary: #334155;
     --text-muted: #64748b;
-    
+    --text-soft: #94a3b8;
+
     --border-color: #e2e8f0;
+    --border-soft: #f1f5f9;
     --bg-card: #ffffff;
     --bg-page: #f8fafc;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-hover: 0 4px 20px rgba(13, 148, 136, 0.10);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
-    --radius-card: 12px;
-    --radius-sm: 6px;
+    --bg-soft: #f8fafc;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-hover: 0 10px 30px rgba(13, 148, 136, 0.15);
+
+    --radius-card: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
   }
 
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
   .content-wrapper {
@@ -52,14 +68,16 @@
   /* ========================================================== */
   .breadcrumb {
     background: transparent;
-    padding: 0.4rem 0;
+    padding: 0.5rem 0;
     font-weight: 500;
-    margin: 0;
+    font-size: 0.82rem;
+    margin: 0 0 14px 0;
   }
 
   .breadcrumb-item a {
     color: var(--primary-teal);
     text-decoration: none;
+    transition: color 0.2s;
   }
 
   .breadcrumb-item a:hover {
@@ -72,249 +90,396 @@
   }
 
   /* ========================================================== */
-  /* PAGE HEADER                                                */
+  /* PAGE HEADER (hero)                                         */
   /* ========================================================== */
   .dash-page-header {
-    background: var(--bg-card);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     border: 1px solid var(--border-color);
-    padding: 12px 20px;
-    margin-bottom: 18px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.06) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   .dash-page-header .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
   }
 
   .dash-page-header .header-left .header-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: var(--primary-teal-light);
-    color: var(--primary-teal);
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 20px;
     flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
   }
 
   .dash-page-header .header-left .header-text h1 {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 19px;
+    font-weight: 800;
     color: var(--text-primary);
     margin: 0;
     line-height: 1.2;
+    letter-spacing: -0.02em;
   }
 
   .dash-page-header .header-left .header-text .subtitle {
-    font-size: 11px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    margin: 0;
-    font-weight: 400;
-    line-height: 1.3;
+    margin: 3px 0 0 0;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dash-page-header .header-left .header-text .subtitle i {
+    color: var(--primary-teal);
+    font-size: 11px;
   }
 
   .header-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
   }
 
   /* ========================================================== */
   /* BUTTONS                                                    */
   /* ========================================================== */
-  .btn-secondary-custom {
+  .btn-secondary-custom,
+  .btn-primary-custom,
+  .btn-danger-custom,
+  .btn-success-custom,
+  .btn-ghost-custom {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 6px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    padding: 7px 16px;
     border-radius: var(--radius-sm);
     font-weight: 600;
     font-size: 0.8rem;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.4;
   }
 
+  .btn-secondary-custom {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+  }
   .btn-secondary-custom:hover {
     background: var(--primary-teal-light);
     border-color: var(--primary-teal);
     color: var(--primary-teal);
     text-decoration: none;
+    transform: translateY(-1px);
   }
 
   .btn-primary-custom {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
     background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
-    border: none;
     color: white;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
-    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.20);
   }
-
   .btn-primary-custom:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35);
     color: white;
     text-decoration: none;
   }
 
   .btn-danger-custom {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
     background: linear-gradient(135deg, var(--secondary-red), #b91c1c);
-    border: none;
     color: white;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.2);
-    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.20);
   }
-
   .btn-danger-custom:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 5px 16px rgba(220, 38, 38, 0.35);
     color: white;
     text-decoration: none;
   }
 
   .btn-success-custom {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
-    background: linear-gradient(135deg, var(--secondary-green), #16a34a);
-    border: none;
+    background: linear-gradient(135deg, var(--secondary-green), #059669);
     color: white;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.20);
+  }
+  .btn-success-custom:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(16, 185, 129, 0.35);
+    color: white;
     text-decoration: none;
   }
 
-  .btn-success-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 16px rgba(34, 197, 94, 0.35);
-    color: white;
+  .btn-ghost-custom {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--border-color);
+  }
+  .btn-ghost-custom:hover {
+    background: var(--primary-teal-soft);
+    color: var(--primary-teal);
+    border-color: var(--primary-teal);
     text-decoration: none;
+  }
+
+  .btn-sm-custom {
+    padding: 5px 12px;
+    font-size: 0.75rem;
   }
 
   /* ========================================================== */
   /* CARDS                                                      */
   /* ========================================================== */
-  .card {
+  .detail-card {
     background: var(--bg-card);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     border: 1px solid var(--border-color);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 20px;
   }
 
-  .card:hover {
-    box-shadow: var(--shadow-hover);
+  .detail-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(13, 148, 136, 0.15);
   }
 
-  .card-header {
-    padding: 12px 18px;
-    border-bottom: none;
+  /* Card header - clean, no heavy gradient */
+  .detail-card-header {
+    padding: 16px 22px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .detail-card-header .header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .detail-card-header .header-icon-sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .detail-card-header .header-icon-sm.gray {
+    background: rgba(100, 116, 139, 0.10);
+    color: var(--text-muted);
+  }
+
+  .detail-card-header .header-icon-sm.red {
+    background: var(--secondary-red-light);
+    color: var(--secondary-red);
+  }
+
+  .detail-card-header .header-icon-sm.green {
+    background: var(--secondary-green-light);
+    color: var(--secondary-green);
+  }
+
+  .detail-card-header .header-icon-sm.gold {
+    background: var(--secondary-gold-light);
+    color: var(--secondary-gold);
+  }
+
+  .detail-card-header h3 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .detail-card-header .header-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .detail-card-header .header-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 4px 10px;
+    background: var(--bg-page);
+    border-radius: 20px;
+    border: 1px solid var(--border-soft);
+    white-space: nowrap;
+  }
+
+  .detail-card-body {
+    padding: 22px;
+  }
+
+  /* ========================================================== */
+  /* CHEMICAL HERO (top of main card)                           */
+  /* ========================================================== */
+  .chemical-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed var(--border-color);
+    flex-wrap: wrap;
+  }
+
+  .chemical-hero .chemical-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .chemical-hero .chemical-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .chemical-hero .chemical-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chemical-hero .chemical-meta i {
+    color: var(--primary-teal);
+    font-size: 11px;
+  }
+
+  /* ========================================================== */
+  /* INFO GRID (2-col layout for key/value pairs)               */
+  /* ========================================================== */
+  .info-section {
+    margin-bottom: 22px;
+  }
+
+  .info-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .info-section-title {
     display: flex;
     align-items: center;
     gap: 8px;
-  }
-
-  .card-header.bg-primary {
-    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
-    color: white;
-  }
-
-  .card-header.bg-secondary {
-    background: linear-gradient(135deg, #64748b, #475569);
-    color: white;
-  }
-
-  .card-header .card-title {
-    margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.78rem;
     font-weight: 700;
-  }
-
-  .card-header .card-title i {
-    margin-right: 8px;
-  }
-
-  .card-body {
-    padding: 18px 20px;
-  }
-
-  /* ========================================================== */
-  /* INFO BOX                                                   */
-  /* ========================================================== */
-  .info-box {
-    border-left: 4px solid var(--primary-teal);
-    padding: 12px 16px;
-    background: var(--primary-teal-light);
-    margin-bottom: 12px;
-    border-radius: var(--radius-sm);
-  }
-
-  .info-box .info-label {
-    font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-soft);
   }
 
-  .info-box .info-value {
+  .info-section-title i {
+    color: var(--primary-teal);
+    font-size: 12px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 24px;
+  }
+
+  .info-grid.three-col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .info-grid.four-col {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .info-item .info-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .info-item .info-value {
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text-primary);
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  .info-item .info-value.muted {
+    color: var(--text-soft);
+    font-weight: 500;
+    font-style: italic;
   }
 
   /* ========================================================== */
-  /* SECTION TITLE                                              */
-  /* ========================================================== */
-  .section-title {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--primary-teal);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .section-title i {
-    font-size: 0.9rem;
-  }
-
-  /* ========================================================== */
-  /* BADGE LIST                                                 */
+  /* BADGE LISTS                                                */
   /* ========================================================== */
   .badge-list {
     display: flex;
@@ -323,94 +488,498 @@
   }
 
   .badge-item {
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 20px;
+    font-size: 0.72rem;
     font-weight: 600;
     background: var(--bg-page);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .badge-item i {
+    font-size: 10px;
   }
 
   .badge-item.danger {
-    background: rgba(220, 38, 38, 0.08);
-    border-color: rgba(220, 38, 38, 0.15);
+    background: var(--secondary-red-light);
+    border-color: rgba(220, 38, 38, 0.18);
     color: var(--secondary-red);
   }
 
   .badge-item.warning {
-    background: rgba(217, 119, 6, 0.08);
-    border-color: rgba(217, 119, 6, 0.15);
+    background: var(--secondary-gold-light);
+    border-color: rgba(217, 119, 6, 0.18);
     color: var(--secondary-gold);
   }
 
   .badge-item.success {
-    background: rgba(34, 197, 94, 0.08);
-    border-color: rgba(34, 197, 94, 0.15);
+    background: var(--secondary-green-light);
+    border-color: rgba(16, 185, 129, 0.18);
     color: var(--secondary-green);
   }
 
+  .badge-item.info {
+    background: var(--secondary-blue-light);
+    border-color: rgba(59, 130, 246, 0.18);
+    color: var(--secondary-blue);
+  }
+
   /* ========================================================== */
-  /* BADGE LG                                                   */
+  /* STATUS BADGE (large)                                       */
   /* ========================================================== */
-  .badge-lg {
-    padding: 6px 16px;
+  .status-badge-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
-    border-radius: 20px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
   }
 
-  .badge-success {
-    background: rgba(34, 197, 94, 0.12);
+  .status-badge-lg i {
+    font-size: 10px;
+  }
+
+  .status-badge-lg.success {
+    background: var(--secondary-green-light);
     color: var(--secondary-green);
   }
 
-  .badge-warning {
-    background: rgba(217, 119, 6, 0.12);
+  .status-badge-lg.warning {
+    background: var(--secondary-gold-light);
     color: var(--secondary-gold);
   }
 
-  .badge-danger {
-    background: rgba(220, 38, 38, 0.12);
+  .status-badge-lg.danger {
+    background: var(--secondary-red-light);
     color: var(--secondary-red);
   }
 
-  .badge-secondary {
+  .status-badge-lg.secondary {
     background: rgba(100, 116, 139, 0.12);
     color: var(--text-secondary);
   }
 
   /* ========================================================== */
-  /* ACTION STACK                                               */
+  /* SDS BOX                                                    */
   /* ========================================================== */
+  .sds-info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-soft);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft);
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+
+  .sds-info-box:hover {
+    border-color: rgba(13, 148, 136, 0.20);
+    background: var(--bg-card);
+  }
+
+  .sds-info-box .sds-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .sds-info-box .sds-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sds-info-box .sds-label {
+    font-size: 10.5px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .sds-info-box .sds-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .sds-empty-state {
+    text-align: center;
+    padding: 26px 20px;
+    background: var(--secondary-gold-light);
+    border-radius: var(--radius-md);
+    border: 1px dashed rgba(217, 119, 6, 0.30);
+  }
+
+  .sds-empty-state .empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--secondary-gold);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .sds-empty-state p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--secondary-gold);
+    font-weight: 600;
+  }
+
+  /* ========================================================== */
+  /* HAZARD INFO GRID                                           */
+  /* ========================================================== */
+  .hazard-info-box {
+    padding: 12px 14px;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--secondary-red);
+    margin-bottom: 10px;
+  }
+
+  .hazard-info-box .hazard-label {
+    font-size: 10.5px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .hazard-info-box .hazard-value {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .hazard-info-box .hazard-value.muted {
+    color: var(--text-soft);
+    font-style: italic;
+  }
+
+  /* ========================================================== */
+  /* TABLE (SDS HISTORY)                                        */
+  /* ========================================================== */
+  .sds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .sds-table thead th {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .sds-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+  }
+
+  .sds-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .sds-table tbody tr:hover {
+    background: var(--primary-teal-soft);
+  }
+
+  .sds-table .sds-number {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+  }
+
+  /* ========================================================== */
+  /* SIDEBAR                                                    */
+  /* ========================================================== */
+  .sidebar-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(13, 148, 136, 0.15);
+  }
+
+  .sidebar-card-header {
+    padding: 14px 18px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-card-header .sidebar-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-card-header h4 {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .sidebar-card-body {
+    padding: 16px 18px;
+  }
+
+  /* Sidebar info rows */
+  .sidebar-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+
+  .sidebar-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .sidebar-info-row:first-child {
+    padding-top: 0;
+  }
+
+  .sidebar-info-row .row-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .sidebar-info-row .row-value {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
+    min-width: 0;
+  }
+
+  .sidebar-info-row .row-value.muted {
+    color: var(--text-soft);
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  /* Action stack */
   .action-stack {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
 
-  .action-stack .btn {
+  .action-stack .btn-primary-custom,
+  .action-stack .btn-secondary-custom,
+  .action-stack .btn-danger-custom,
+  .action-stack .btn-success-custom {
     width: 100%;
+    padding: 9px 16px;
+    font-size: 0.82rem;
+  }
+
+  /* ========================================================== */
+  /* QUICK STATS (sidebar)                                      */
+  /* ========================================================== */
+  .quick-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+
+  .quick-stat-row:last-child {
+    border-bottom: none;
+  }
+
+  .quick-stat-row .qs-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .quick-stat-row .qs-icon.teal {
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+  }
+
+  .quick-stat-row .qs-icon.gold {
+    background: var(--secondary-gold-light);
+    color: var(--secondary-gold);
+  }
+
+  .quick-stat-row .qs-icon.blue {
+    background: var(--secondary-blue-light);
+    color: var(--secondary-blue);
+  }
+
+  .quick-stat-row .qs-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .quick-stat-row .qs-label {
+    font-size: 10.5px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .quick-stat-row .qs-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   /* ========================================================== */
   /* RESPONSIVE                                                 */
   /* ========================================================== */
+  @media (max-width: 992px) {
+    .info-grid.three-col,
+    .info-grid.four-col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 768px) {
     .dash-page-header {
-      padding: 10px 14px;
+      padding: 16px 18px;
       flex-direction: column;
       align-items: flex-start;
-      gap: 8px;
+      gap: 14px;
     }
 
     .dash-page-header .header-left .header-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
+      width: 42px;
+      height: 42px;
+      font-size: 17px;
+      border-radius: 12px;
+    }
+
+    .dash-page-header .header-left .header-text h1 {
+      font-size: 17px;
+    }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .header-actions .btn-primary-custom,
+    .header-actions .btn-secondary-custom,
+    .header-actions .btn-danger-custom,
+    .header-actions .btn-success-custom {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.75rem;
+      padding: 8px 12px;
+    }
+
+    .detail-card-body,
+    .sidebar-card-body {
+      padding: 16px 18px;
+    }
+
+    .info-grid,
+    .info-grid.three-col,
+    .info-grid.four-col {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .chemical-hero .chemical-name {
+      font-size: 1.15rem;
+    }
+
+    .sds-table thead th,
+    .sds-table tbody td {
+      padding: 8px 10px;
+      font-size: 0.75rem;
+    }
+
+    .sds-table .sds-number {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dash-page-header {
+      padding: 14px 16px;
+    }
+
+    .dash-page-header .header-left .header-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 16px;
     }
 
     .dash-page-header .header-left .header-text h1 {
@@ -418,84 +987,30 @@
     }
 
     .dash-page-header .header-left .header-text .subtitle {
-      font-size: 10px;
+      font-size: 11px;
     }
 
-    .header-actions {
-      width: 100%;
-      flex-direction: column;
+    .detail-card-header,
+    .sidebar-card-header {
+      padding: 12px 14px;
     }
 
-    .header-actions .btn {
-      width: 100%;
-      justify-content: center;
+    .detail-card-body,
+    .sidebar-card-body {
+      padding: 14px;
     }
 
-    .card-body {
-      padding: 14px 16px;
-    }
-
-    .btn-secondary-custom,
-    .btn-primary-custom,
-    .btn-danger-custom,
-    .btn-success-custom {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .breadcrumb {
-      font-size: 0.7rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .dash-page-header {
-      padding: 8px 10px;
-    }
-
-    .dash-page-header .header-left .header-icon {
-      width: 28px;
-      height: 28px;
-      font-size: 12px;
-      border-radius: 8px;
-    }
-
-    .dash-page-header .header-left .header-text h1 {
-      font-size: 13px;
-    }
-
-    .dash-page-header .header-left .header-text .subtitle {
-      font-size: 9px;
-    }
-
-    .card-header {
-      padding: 10px 14px;
-    }
-
-    .card-header .card-title {
-      font-size: 0.85rem;
-    }
-
-    .card-body {
-      padding: 10px 12px;
-    }
-
-    .section-title {
-      font-size: 0.8rem;
+    .chemical-hero .chemical-name {
+      font-size: 1.05rem;
     }
 
     .badge-item {
-      font-size: 0.6rem;
-      padding: 3px 10px;
+      font-size: 0.68rem;
+      padding: 3px 9px;
     }
 
-    .badge-lg {
-      font-size: 0.65rem;
-      padding: 4px 12px;
-    }
-
-    .info-box {
-      padding: 8px 12px;
+    .breadcrumb {
+      font-size: 0.72rem;
     }
   }
 </style>
@@ -513,7 +1028,9 @@
     </div>
     <div class="header-text">
       <h1>Chemical Details</h1>
-      <p class="subtitle"><i class="fas fa-barcode mr-1"></i> CAS: {{ chemical.cas_number }}</p>
+      <p class="subtitle">
+        <i class="fas fa-barcode"></i> CAS: {{ chemical.cas_number }}
+      </p>
     </div>
   </div>
   <div class="header-actions">
@@ -521,7 +1038,7 @@
       <i class="fas fa-arrow-left"></i> Back
     </a>
     <a href="{% url 'chemicals:chemical_edit' chemical.pk %}" class="btn-primary-custom">
-      <i class="fas fa-edit"></i> Edit Chemical
+      <i class="fas fa-edit"></i> Edit
     </a>
     <a href="{% url 'chemicals:chemical_pdf' chemical.pk %}" class="btn-danger-custom">
       <i class="fas fa-file-pdf"></i> Download PDF
@@ -537,399 +1054,620 @@
   <!-- ========================================================== -->
   <!-- LEFT SIDE                                                  -->
   <!-- ========================================================== -->
-  <div class="col-md-8">
+  <div class="col-lg-8">
 
-    <!-- BASIC INFO CARD -->
-    <div class="card">
-      <div class="card-header bg-primary">
-        <h3 class="card-title">
-          <i class="fas fa-info-circle"></i> Chemical Information
-        </h3>
-      </div>
-      <div class="card-body">
-
-        <!-- Header Row -->
-        <div class="row mb-3">
-          <div class="col-md-8">
-            <h5 style="color: var(--primary-teal); font-weight: 700; font-size: 1.1rem;">{{ chemical.chemical_name }}</h5>
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">Chemical Name</p>
+    <!-- ========================================================== -->
+    <!-- CHEMICAL INFORMATION CARD                                   -->
+    <!-- ========================================================== -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <div class="header-title-wrap">
+          <div class="header-icon-sm">
+            <i class="fas fa-info-circle"></i>
           </div>
-          <div class="col-md-4 text-right">
-            <span class="badge-lg {% if chemical.status == 'ACTIVE' %}badge-success{% elif chemical.status == 'EXPIRED' %}badge-danger{% elif chemical.status == 'LOW_STOCK' %}badge-warning{% else %}badge-secondary{% endif %}">
+          <div>
+            <h3>Chemical Information</h3>
+            <span class="header-sub">Detailed record of this chemical</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-card-body">
+
+        <!-- Chemical Hero -->
+        <div class="chemical-hero">
+          <div>
+            <h2 class="chemical-name">{{ chemical.chemical_name }}</h2>
+            <div class="chemical-meta">
+              {% if chemical.trade_name %}
+              <span><i class="fas fa-tag"></i> {{ chemical.trade_name }}</span>
+              {% endif %}
+              {% if chemical.owner %}
+              <span><i class="fas fa-user"></i> {{ chemical.owner }}</span>
+              {% endif %}
+              {% if chemical.supplier %}
+              <span><i class="fas fa-truck"></i> {{ chemical.supplier }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <span class="status-badge-lg
+              {% if chemical.status == 'ACTIVE' %}success
+              {% elif chemical.status == 'EXPIRED' %}danger
+              {% elif chemical.status == 'LOW_STOCK' %}warning
+              {% else %}secondary{% endif %}">
+              <i class="fas fa-circle"></i>
               {{ chemical.get_status_display }}
             </span>
           </div>
         </div>
 
-        <hr style="border-color: var(--border-color);">
-
         <!-- Identification -->
-        <h5 class="section-title"><i class="fas fa-tag"></i> Identification</h5>
-        <div class="row">
-          <div class="col-md-6"><strong>Trade Name:</strong> {{ chemical.trade_name|default:"-" }}</div>
-          <div class="col-md-6"><strong>Owner:</strong> {{ chemical.owner|default:"-" }}</div>
-          <div class="col-md-6"><strong>CAS Number:</strong> {{ chemical.cas_number }}</div>
-          <div class="col-md-6"><strong>UN Number:</strong> {{ chemical.un_number|default:"-" }}</div>
+        <div class="info-section">
+          <div class="info-section-title">
+            <i class="fas fa-fingerprint"></i> Identification
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Trade Name</span>
+              <span class="info-value {% if not chemical.trade_name %}muted{% endif %}">
+                {{ chemical.trade_name|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Owner</span>
+              <span class="info-value {% if not chemical.owner %}muted{% endif %}">
+                {{ chemical.owner|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">CAS Number</span>
+              <span class="info-value">{{ chemical.cas_number }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">UN Number</span>
+              <span class="info-value {% if not chemical.un_number %}muted{% endif %}">
+                {{ chemical.un_number|default:"Not specified" }}
+              </span>
+            </div>
+          </div>
         </div>
-
-        <hr style="border-color: var(--border-color);">
 
         <!-- Inventory -->
-        <h5 class="section-title"><i class="fas fa-boxes"></i> Inventory</h5>
-        <div class="row">
-          <div class="col-md-6"><strong>Supplier:</strong> {{ chemical.supplier|default:"-" }}</div>
-          <div class="col-md-6"><strong>Lot Number:</strong> {{ chemical.lot_number|default:"-" }}</div>
-          <div class="col-md-6"><strong>Quantity:</strong> {{ chemical.quantity }} {{ chemical.quantity_unit }}</div>
-          <div class="col-md-6"><strong>Storage:</strong> {{ chemical.storage_location|default:"-" }}</div>
-          <div class="col-md-6"><strong>Receipt Date:</strong> {{ chemical.receipt_date|date:"d M Y"|default:"-" }}</div>
-          <div class="col-md-6"><strong>Expiry Date:</strong> {{ chemical.expiration_date|date:"d M Y"|default:"-" }}</div>
+        <div class="info-section">
+          <div class="info-section-title">
+            <i class="fas fa-boxes"></i> Inventory
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Quantity</span>
+              <span class="info-value">
+                {{ chemical.quantity }} {{ chemical.quantity_unit }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Lot Number</span>
+              <span class="info-value {% if not chemical.lot_number %}muted{% endif %}">
+                {{ chemical.lot_number|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Supplier</span>
+              <span class="info-value {% if not chemical.supplier %}muted{% endif %}">
+                {{ chemical.supplier|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Storage Location</span>
+              <span class="info-value {% if not chemical.storage_location %}muted{% endif %}">
+                {{ chemical.storage_location|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Receipt Date</span>
+              <span class="info-value {% if not chemical.receipt_date %}muted{% endif %}">
+                {{ chemical.receipt_date|date:"d M Y"|default:"Not specified" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Expiry Date</span>
+              <span class="info-value {% if not chemical.expiration_date %}muted{% endif %}">
+                {{ chemical.expiration_date|date:"d M Y"|default:"Not specified" }}
+              </span>
+            </div>
+          </div>
         </div>
-
-        <hr style="border-color: var(--border-color);">
 
         <!-- Location -->
-        <h5 class="section-title"><i class="fas fa-map-marker-alt"></i> Location</h5>
-        <div class="row">
-          <div class="col-md-3"><strong>Plant:</strong> {{ chemical.plant|default:"-" }}</div>
-          <div class="col-md-3"><strong>Zone:</strong> {{ chemical.zone|default:"-" }}</div>
-          <div class="col-md-3"><strong>Location:</strong> {{ chemical.location|default:"-" }}</div>
-          <div class="col-md-3"><strong>Sub Location:</strong> {{ chemical.sublocation|default:"-" }}</div>
+        <div class="info-section">
+          <div class="info-section-title">
+            <i class="fas fa-map-marker-alt"></i> Location
+          </div>
+          <div class="info-grid four-col">
+            <div class="info-item">
+              <span class="info-label">Plant</span>
+              <span class="info-value {% if not chemical.plant %}muted{% endif %}">
+                {{ chemical.plant|default:"—" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Zone</span>
+              <span class="info-value {% if not chemical.zone %}muted{% endif %}">
+                {{ chemical.zone|default:"—" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Location</span>
+              <span class="info-value {% if not chemical.location %}muted{% endif %}">
+                {{ chemical.location|default:"—" }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Sub Location</span>
+              <span class="info-value {% if not chemical.sublocation %}muted{% endif %}">
+                {{ chemical.sublocation|default:"—" }}
+              </span>
+            </div>
+          </div>
         </div>
-
-        <hr style="border-color: var(--border-color);">
 
         <!-- EHS Compliance -->
-        <h5 class="section-title"><i class="fas fa-shield-alt"></i> EHS Compliance</h5>
+        <div class="info-section">
+          <div class="info-section-title">
+            <i class="fas fa-shield-alt"></i> EHS Compliance
+          </div>
 
-        <strong>GHS Hazards:</strong><br>
-        <div class="badge-list mb-2">
-          {% for ghs in chemical.ehs_compliance.ghs %}
-            <span class="badge-item danger">{{ ghs }}</span>
-          {% empty %}
-            <span class="text-muted" style="font-size: 0.85rem;">No hazards selected</span>
-          {% endfor %}
+          <div class="info-item mb-3">
+            <span class="info-label" style="margin-bottom: 8px; display: block;">GHS Hazards</span>
+            <div class="badge-list">
+              {% for ghs in chemical.ehs_compliance.ghs %}
+                <span class="badge-item danger">
+                  <i class="fas fa-triangle-exclamation"></i> {{ ghs }}
+                </span>
+              {% empty %}
+                <span class="info-value muted" style="font-size: 0.82rem;">No hazards selected</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label" style="margin-bottom: 8px; display: block;">Required PPE</span>
+            <div class="badge-list">
+              {% for ppe in chemical.ehs_compliance.ppe %}
+                <span class="badge-item warning">
+                  <i class="fas fa-helmet-safety"></i> {{ ppe }}
+                </span>
+              {% empty %}
+                <span class="info-value muted" style="font-size: 0.82rem;">No PPE specified</span>
+              {% endfor %}
+            </div>
+          </div>
         </div>
 
-        <strong>Required PPE:</strong><br>
-        <div class="badge-list">
-          {% for ppe in chemical.ehs_compliance.ppe %}
-            <span class="badge-item warning">{{ ppe }}</span>
-          {% empty %}
-            <span class="text-muted" style="font-size: 0.85rem;">No PPE specified</span>
-          {% endfor %}
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- SAFETY DATA SHEET CARD                                      -->
+    <!-- ========================================================== -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <div class="header-title-wrap">
+          <div class="header-icon-sm {% if has_active_sds %}green{% else %}gold{% endif %}">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <div>
+            <h3>Safety Data Sheet (SDS)</h3>
+            <span class="header-sub">
+              {% if has_active_sds %}
+                Active SDS record available
+              {% else %}
+                No active SDS on file
+              {% endif %}
+            </span>
+          </div>
         </div>
+        {% if has_active_sds %}
+        <span class="header-meta">
+          <i class="fas fa-check-circle"></i> Active
+        </span>
+        {% endif %}
+      </div>
 
-        <hr style="border-color: var(--border-color);">
-
-        <!-- ========================================================== -->
-        <!-- SAFETY DATA SHEET                                          -->
-        <!-- ========================================================== -->
-        <h5 class="section-title">
-        <i class="fas fa-file-pdf"></i> Safety Data Sheet (SDS)
-        </h5>
+      <div class="detail-card-body">
 
         {% if has_active_sds %}
-            <div class="info-box">
-                <div class="info-label">SDS Number</div>
-                <div class="info-value">{{ active_sds.sds_number }}</div>
+          <!-- SDS INFO GRID -->
+          <div class="info-grid" style="margin-bottom: 20px;">
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-hashtag"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">SDS Number</div>
+                <div class="sds-value">{{ active_sds.sds_number }}</div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Product Name</div>
-                <div class="info-value">{{ active_sds.product_name }}</div>
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-box"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Product Name</div>
+                <div class="sds-value">{{ active_sds.product_name }}</div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Status</div>
-                <div class="info-value">
-                    <span class="badge-lg badge-success">
-                        {{ active_sds.get_status_display }}
-                    </span>
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-circle-check"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Status</div>
+                <div class="sds-value">
+                  <span class="status-badge-lg success" style="font-size: 0.7rem; padding: 3px 10px;">
+                    {{ active_sds.get_status_display }}
+                  </span>
                 </div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Current Version</div>
-                <div class="info-value">
-                    {% if active_sds_version %}
-                        Version {{ active_sds_version.version_number }}
-                    {% else %}
-                        Not Available
-                    {% endif %}
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-code-branch"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Current Version</div>
+                <div class="sds-value">
+                  {% if active_sds_version %}
+                    Version {{ active_sds_version.version_number }}
+                  {% else %}
+                    <span class="text-muted">Not Available</span>
+                  {% endif %}
                 </div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Issue Date</div>
-                <div class="info-value">
-                    {{ active_sds.issue_date|date:"d M Y"|default:"-" }}
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-calendar-plus"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Issue Date</div>
+                <div class="sds-value">
+                  {{ active_sds.issue_date|date:"d M Y"|default:"—" }}
                 </div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Revision Date</div>
-                <div class="info-value">
-                    {{ active_sds.revision_date|date:"d M Y"|default:"-" }}
+            <div class="sds-info-box">
+              <div class="sds-icon"><i class="fas fa-rotate"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Revision Date</div>
+                <div class="sds-value">
+                  {{ active_sds.revision_date|date:"d M Y"|default:"—" }}
                 </div>
+              </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Next Review Date</div>
-                <div class="info-value">
-                    {{ active_sds.next_review_date|date:"d M Y"|default:"-" }}
+            <div class="sds-info-box" style="grid-column: 1 / -1;">
+              <div class="sds-icon"><i class="fas fa-calendar-check"></i></div>
+              <div class="sds-content">
+                <div class="sds-label">Next Review Date</div>
+                <div class="sds-value">
+                  {{ active_sds.next_review_date|date:"d M Y"|default:"—" }}
                 </div>
+              </div>
             </div>
+          </div>
 
-            <a
-                href="{% url 'sds:sds_detail' active_sds.pk %}"
-                class="btn-success-custom"
-            >
-                <i class="fas fa-file-pdf"></i> View Active SDS
-            </a>
-            {% else %}
-            <div class="info-box">
-                <div class="info-label">SDS Status</div>
-                <div class="info-value">
-                    <span class="badge-lg badge-warning">
-                        Not Available
-                    </span>
-                </div>
+          <a href="{% url 'sds:sds_detail' active_sds.pk %}" class="btn-success-custom">
+            <i class="fas fa-file-pdf"></i> View Active SDS
+          </a>
+
+        {% else %}
+          <div class="sds-empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-file-circle-exclamation"></i>
             </div>
-
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">
-                <i class="fas fa-exclamation-triangle me-1"></i>
-                No active Safety Data Sheet is currently available for this chemical.
+            <p>No active Safety Data Sheet is currently available for this chemical.</p>
+            <p style="font-size: 0.78rem; font-weight: 500; margin-top: 6px; opacity: 0.85;">
+              Please upload an SDS to comply with EHS requirements.
             </p>
+          </div>
         {% endif %}
 
         <!-- =========================================================
-            ACTIVE SDS - GHS HAZARD INFORMATION
+            GHS HAZARD INFORMATION
             ========================================================= -->
         {% if has_active_sds and has_active_sds_hazard %}
-        <div class="mt-4">
-            <h5 class="section-title">
-                <i class="fas fa-triangle-exclamation"></i>
-                GHS Hazard Information
-            </h5>
-            <div class="info-box">
-                <div class="info-label">Signal Word</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.signal_word %}
-                        <span class="badge-lg badge-danger">
-                            {{ active_sds_hazard.signal_word }}
-                        </span>
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+        <div style="margin-top: 26px;">
+          <div class="info-section-title">
+            <i class="fas fa-triangle-exclamation"></i> GHS Hazard Information
+          </div>
+
+          <div class="info-grid" style="margin-bottom: 12px;">
+            <div class="hazard-info-box">
+              <div class="hazard-label">Signal Word</div>
+              <div class="hazard-value">
+                {% if active_sds_hazard.signal_word %}
+                  <span class="badge-item danger" style="font-size: 0.75rem; padding: 5px 14px;">
+                    <i class="fas fa-exclamation-triangle"></i> {{ active_sds_hazard.signal_word }}
+                  </span>
+                {% else %}
+                  <span class="muted">Not Specified</span>
+                {% endif %}
+              </div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Hazard Classification</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.hazard_classification %}
-                        {{ active_sds_hazard.hazard_classification|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+
+            <div class="hazard-info-box">
+              <div class="hazard-label">GHS Pictograms</div>
+              <div class="hazard-value">
+                {% if active_sds_hazard.ghs_pictograms %}
+                  {{ active_sds_hazard.ghs_pictograms|linebreaksbr }}
+                {% else %}
+                  <span class="muted">Not Specified</span>
+                {% endif %}
+              </div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Hazard Statements</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.hazard_statements %}
-                        {{ active_sds_hazard.hazard_statements|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+          </div>
+
+          <div class="hazard-info-box">
+            <div class="hazard-label">Hazard Classification</div>
+            <div class="hazard-value">
+              {% if active_sds_hazard.hazard_classification %}
+                {{ active_sds_hazard.hazard_classification|linebreaksbr }}
+              {% else %}
+                <span class="muted">Not Specified</span>
+              {% endif %}
             </div>
-            <div class="info-box">
-                <div class="info-label">Precautionary Statements</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.precautionary_statements %}
-                        {{ active_sds_hazard.precautionary_statements|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+          </div>
+
+          <div class="hazard-info-box">
+            <div class="hazard-label">Hazard Statements</div>
+            <div class="hazard-value">
+              {% if active_sds_hazard.hazard_statements %}
+                {{ active_sds_hazard.hazard_statements|linebreaksbr }}
+              {% else %}
+                <span class="muted">Not Specified</span>
+              {% endif %}
             </div>
-            <div class="info-box">
-                <div class="info-label">GHS Pictograms</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.ghs_pictograms %}
-                        {{ active_sds_hazard.ghs_pictograms|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+          </div>
+
+          <div class="hazard-info-box">
+            <div class="hazard-label">Precautionary Statements</div>
+            <div class="hazard-value">
+              {% if active_sds_hazard.precautionary_statements %}
+                {{ active_sds_hazard.precautionary_statements|linebreaksbr }}
+              {% else %}
+                <span class="muted">Not Specified</span>
+              {% endif %}
             </div>
-            <div class="info-box">
-                <div class="info-label">Other Hazards</div>
-                <div class="info-value">
-                    {% if active_sds_hazard.other_hazards %}
-                        {{ active_sds_hazard.other_hazards|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">Not Specified</span>
-                    {% endif %}
-                </div>
+          </div>
+
+          <div class="hazard-info-box">
+            <div class="hazard-label">Other Hazards</div>
+            <div class="hazard-value">
+              {% if active_sds_hazard.other_hazards %}
+                {{ active_sds_hazard.other_hazards|linebreaksbr }}
+              {% else %}
+                <span class="muted">Not Specified</span>
+              {% endif %}
             </div>
-            {% if active_sds_hazard.additional_information %}
-            <div class="info-box">
-                <div class="info-label">Additional Information</div>
-                <div class="info-value">
-                    {{ active_sds_hazard.additional_information|linebreaksbr }}
-                </div>
+          </div>
+
+          {% if active_sds_hazard.additional_information %}
+          <div class="hazard-info-box">
+            <div class="hazard-label">Additional Information</div>
+            <div class="hazard-value">
+              {{ active_sds_hazard.additional_information|linebreaksbr }}
             </div>
-            {% endif %}
+          </div>
+          {% endif %}
         </div>
+
         {% elif has_active_sds %}
-        <div class="mt-4">
-            <h5 class="section-title">
-                <i class="fas fa-triangle-exclamation"></i>
-                GHS Hazard Information
-            </h5>
-            <div class="info-box">
-                <div class="info-label">Hazard Information</div>
-                <div class="info-value">
-                    <span class="text-muted">
-                        Section 2 hazard information is not available for the active SDS version.
-                    </span>
-                </div>
+        <div style="margin-top: 26px;">
+          <div class="info-section-title">
+            <i class="fas fa-triangle-exclamation"></i> GHS Hazard Information
+          </div>
+          <div class="hazard-info-box">
+            <div class="hazard-label">Hazard Information</div>
+            <div class="hazard-value muted">
+              Section 2 hazard information is not available for the active SDS version.
             </div>
+          </div>
         </div>
         {% endif %}
 
-        <!-- ========================================================== -->
-        <!-- SDS HISTORY                                                -->
-        <!-- ========================================================== -->
-        {% if sds_records %}
-        <hr style="border-color: var(--border-color);">
+      </div>
+    </div>
 
-        <h5 class="section-title">
-            <i class="fas fa-clock-rotate-left"></i> SDS History
-        </h5>
+    <!-- ========================================================== -->
+    <!-- SDS HISTORY CARD                                            -->
+    <!-- ========================================================== -->
+    {% if sds_records %}
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <div class="header-title-wrap">
+          <div class="header-icon-sm">
+            <i class="fas fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3>SDS History</h3>
+            <span class="header-sub">All SDS records for this chemical</span>
+          </div>
+        </div>
+        <span class="header-meta">
+          {{ sds_records|length }} record{{ sds_records|length|pluralize }}
+        </span>
+      </div>
 
+      <div class="detail-card-body" style="padding: 0;">
         <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
+          <table class="sds-table">
             <thead>
-                <tr>
+              <tr>
                 <th>SDS Number</th>
                 <th>Product</th>
                 <th>Status</th>
-                <th>Current Version</th>
-                <th class="text-right">Action</th>
-                </tr>
+                <th>Version</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
             </thead>
             <tbody>
-                {% for sds in sds_records %}
-                <tr>
-                    <td>
-                    <strong>{{ sds.sds_number }}</strong>
-                    </td>
-                    <td>
-                    {{ sds.product_name }}
-                    </td>
-                    <td>
-                    {% if sds.status == 'ACTIVE' %}
-                        <span class="badge-lg badge-success">
-                        Active
-                        </span>
-                    {% elif sds.status == 'SUPERSEDED' %}
-                        <span class="badge-lg badge-secondary">
-                        Superseded
-                        </span>
-                    {% elif sds.status == 'APPROVED' %}
-                        <span class="badge-lg badge-success">
-                        Approved
-                        </span>
-                    {% elif sds.status == 'REJECTED' %}
-                        <span class="badge-lg badge-danger">
-                        Rejected
-                        </span>
-                    {% else %}
-                        <span class="badge-lg badge-warning">
-                        {{ sds.get_status_display }}
-                        </span>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {% if sds.current_version %}
-                        Version {{ sds.current_version.version_number }}
-                    {% else %}
-                        <span class="text-muted">Not Available</span>
-                    {% endif %}
-                    </td>
-                    <td class="text-right">
-                    <a
-                        href="{% url 'sds:sds_detail' sds.pk %}"
-                        class="btn-secondary-custom"
-                    >
-                        <i class="fas fa-eye"></i> View
-                    </a>
-                    </td>
-                </tr>
-                {% endfor %}
+              {% for sds in sds_records %}
+              <tr>
+                <td>
+                  <span class="sds-number">{{ sds.sds_number }}</span>
+                </td>
+                <td>{{ sds.product_name }}</td>
+                <td>
+                  {% if sds.status == 'ACTIVE' or sds.status == 'APPROVED' %}
+                    <span class="status-badge-lg success" style="font-size: 0.68rem; padding: 3px 10px;">
+                      {{ sds.get_status_display }}
+                    </span>
+                  {% elif sds.status == 'SUPERSEDED' %}
+                    <span class="status-badge-lg secondary" style="font-size: 0.68rem; padding: 3px 10px;">
+                      {{ sds.get_status_display }}
+                    </span>
+                  {% elif sds.status == 'REJECTED' %}
+                    <span class="status-badge-lg danger" style="font-size: 0.68rem; padding: 3px 10px;">
+                      {{ sds.get_status_display }}
+                    </span>
+                  {% else %}
+                    <span class="status-badge-lg warning" style="font-size: 0.68rem; padding: 3px 10px;">
+                      {{ sds.get_status_display }}
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if sds.current_version %}
+                    Version {{ sds.current_version.version_number }}
+                  {% else %}
+                    <span class="text-muted">Not Available</span>
+                  {% endif %}
+                </td>
+                <td style="text-align: right;">
+                  <a href="{% url 'sds:sds_detail' sds.pk %}" class="btn-secondary-custom btn-sm-custom">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
             </tbody>
-            </table>
+          </table>
         </div>
-        {% endif %}
-
-        </div>
+      </div>
     </div>
+    {% endif %}
+
   </div>
 
   <!-- ========================================================== -->
-  <!-- RIGHT SIDE                                                 -->
+  <!-- RIGHT SIDE (SIDEBAR)                                       -->
   <!-- ========================================================== -->
-  <div class="col-md-4">
+  <div class="col-lg-4">
 
-    <!-- STATUS INFO CARD -->
-    <div class="card">
-      <div class="card-header bg-secondary">
-        <h3 class="card-title">
-          <i class="fas fa-chart-simple"></i> Status Info
-        </h3>
+    <!-- QUICK STATS -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <div class="sidebar-icon">
+          <i class="fas fa-chart-simple"></i>
+        </div>
+        <h4>Quick Stats</h4>
       </div>
-      <div class="card-body">
-        <div class="info-box">
-          <div class="info-label">Status</div>
-          <div class="info-value">{{ chemical.get_status_display }}</div>
+      <div class="sidebar-card-body">
+
+        <div class="quick-stat-row">
+          <div class="qs-icon teal">
+            <i class="fas fa-cubes"></i>
+          </div>
+          <div class="qs-content">
+            <div class="qs-label">Quantity</div>
+            <div class="qs-value">{{ chemical.quantity }} {{ chemical.quantity_unit }}</div>
+          </div>
         </div>
 
-        <div class="info-box">
-          <div class="info-label">Created By</div>
-          <div class="info-value">{{ chemical.created_by|default:"-" }}</div>
+        <div class="quick-stat-row">
+          <div class="qs-icon gold">
+            <i class="fas fa-calendar-xmark"></i>
+          </div>
+          <div class="qs-content">
+            <div class="qs-label">Expiry Date</div>
+            <div class="qs-value">
+              {{ chemical.expiration_date|date:"d M Y"|default:"Not set" }}
+            </div>
+          </div>
         </div>
 
-        <div class="info-box">
-          <div class="info-label">Created At</div>
-          <div class="info-value">{{ chemical.created_at|date:"d M Y H:i"|default:"-" }}</div>
+        <div class="quick-stat-row">
+          <div class="qs-icon blue">
+            <i class="fas fa-file-shield"></i>
+          </div>
+          <div class="qs-content">
+            <div class="qs-label">SDS Status</div>
+            <div class="qs-value">
+              {% if has_active_sds %}
+                <span style="color: var(--secondary-green);">Active</span>
+              {% else %}
+                <span style="color: var(--secondary-gold);">Not Available</span>
+              {% endif %}
+            </div>
+          </div>
         </div>
 
-        <div class="info-box">
-          <div class="info-label">Last Updated</div>
-          <div class="info-value">{{ chemical.updated_at|date:"d M Y H:i"|default:"-" }}</div>
-        </div>
       </div>
     </div>
 
-    <!-- QUICK ACTIONS CARD -->
-    <div class="card">
-      <div class="card-header bg-secondary">
-        <h3 class="card-title">
-          <i class="fas fa-bolt"></i> Quick Actions
-        </h3>
+    <!-- RECORD INFO -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <div class="sidebar-icon">
+          <i class="fas fa-circle-info"></i>
+        </div>
+        <h4>Record Info</h4>
       </div>
-      <div class="card-body">
+      <div class="sidebar-card-body">
+
+        <div class="sidebar-info-row">
+          <span class="row-label">Status</span>
+          <span class="row-value">{{ chemical.get_status_display }}</span>
+        </div>
+
+        <div class="sidebar-info-row">
+          <span class="row-label">Created By</span>
+          <span class="row-value {% if not chemical.created_by %}muted{% endif %}">
+            {{ chemical.created_by|default:"—" }}
+          </span>
+        </div>
+
+        <div class="sidebar-info-row">
+          <span class="row-label">Created At</span>
+          <span class="row-value {% if not chemical.created_at %}muted{% endif %}">
+            {{ chemical.created_at|date:"d M Y H:i"|default:"—" }}
+          </span>
+        </div>
+
+        <div class="sidebar-info-row">
+          <span class="row-label">Last Updated</span>
+          <span class="row-value {% if not chemical.updated_at %}muted{% endif %}">
+            {{ chemical.updated_at|date:"d M Y H:i"|default:"—" }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">
+        <div class="sidebar-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <h4>Quick Actions</h4>
+      </div>
+      <div class="sidebar-card-body">
         <div class="action-stack">
-          <a href="{% url 'chemicals:chemical_list' %}" class="btn-secondary-custom">
-            <i class="fas fa-arrow-left"></i> Back to List
-          </a>
           <a href="{% url 'chemicals:chemical_edit' chemical.pk %}" class="btn-primary-custom">
             <i class="fas fa-edit"></i> Edit Chemical
           </a>
           <a href="{% url 'chemicals:chemical_pdf' chemical.pk %}" class="btn-danger-custom">
             <i class="fas fa-file-pdf"></i> Download PDF
+          </a>
+          <a href="{% url 'chemicals:chemical_list' %}" class="btn-secondary-custom">
+            <i class="fas fa-arrow-left"></i> Back to List
           </a>
         </div>
       </div>

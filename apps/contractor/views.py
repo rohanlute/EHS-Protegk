@@ -3070,18 +3070,54 @@ class ContractorPerformanceDetailView(LoginRequiredMixin, DetailView):
 
         return context
 
+# ==========================================================
+# CONTRACTOR OVERVIEW DASHBOARD — LIVE DATA ONLY
+# ==========================================================
 
 class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
     """
-    Contractor Analytics Dashboard — LIVE performance data.
+    Contractor Analytics Dashboard — fully driven by live database data.
+
+    Provides:
+      - overview            : KPI counts
+      - risk_stats          : risk level breakdown
+      - document_stats      : document status breakdown
+      - performance_stats   : performance rating breakdown
+      - approval_rate       : onboarding approval rate
+      - avg_compliance      : avg score per compliance dimension (live)
+      - trend_chart_data    : 6-month overall score trend (live)
+      - monthly_activity    : 6-month activity counters (live)
+      - document_chart_data : pie data for document health
+      - inspection_chart_data: pipeline chart data
+
+      - funnel              : onboarding funnel with real conversions
+      - funnel_conversion   : overall funnel conversion %
+      - top_performers      : ranked contractors with real scores
+      - performers_avg      : avg score of top performers
+      - workload_total      : total monthly workload
+      - work_orders_pct     : % of workload from work orders
+      - inspections_pct     : % of workload from inspections
+      - trainings_pct       : % of workload from trainings
+      - busiest_month       : month with highest activity
+      - leading_category    : 'WO' / 'INSP' / 'TRAIN'
+      - leading_category_short : short label
+      - document_legend     : list of dicts for docs legend UI
+      - document_total      : total documents
+      - document_health_pct : % of valid documents
+      - inspection_legend   : list of dicts for inspection legend UI
+      - inspection_total
+      - inspection_completed
+      - inspection_completed_pct
+      - inspection_segments : segments list for stacked bar
+      - selected_plant / plants
     """
     template_name = 'contractor/reports/overview_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        from apps.organizations.models import Plant
-        from datetime import timedelta, date
+        from datetime import date, timedelta
+        from django.db.models import Q
 
         today = timezone.now().date()
 
@@ -3090,6 +3126,7 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
         def _avg(lst):
             return round(sum(lst) / len(lst), 1) if lst else 0
 
+        # ---------------- Plant filter ----------------
         plant_id = self.request.GET.get('plant')
         selected_plant = None
         if plant_id:
@@ -3101,6 +3138,7 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
                 work_orders__plant=selected_plant
             ).distinct()
 
+        # ---------------- Overview KPIs ----------------
         total_contractors = contractors_qs.count()
         active_contractors = contractors_qs.filter(is_active=True).count()
         inactive_contractors = contractors_qs.filter(is_active=False).count()
@@ -3122,6 +3160,7 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
             'rejected_contractors': rejected_contractors,
         }
 
+        # ---------------- Risk stats ----------------
         pre_qual_qs = ContractorPreQualification.objects.filter(status='APPROVED')
         if selected_plant:
             pre_qual_qs = pre_qual_qs.filter(
@@ -3135,19 +3174,50 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
             'low_risk_contractors': pre_qual_qs.filter(risk_level='LOW').count(),
         }
 
+        # ---------------- Document stats ----------------
         doc_qs = OnboardingDocumentRequirement.objects.all()
         if selected_plant:
             doc_qs = doc_qs.filter(
                 onboarding__contractor__work_orders__plant=selected_plant
             ).distinct()
 
+        valid_docs = doc_qs.filter(status='VERIFIED').count()
+        uploaded_docs = doc_qs.filter(status='UPLOADED').count()
+        rejected_docs = doc_qs.filter(status='REJECTED').count()
+        pending_docs = doc_qs.filter(status='PENDING').count()
+        total_docs = valid_docs + uploaded_docs + rejected_docs + pending_docs
+
         context['document_stats'] = {
-            'valid_documents': doc_qs.filter(status='VERIFIED').count(),
-            'expiring_soon_documents': doc_qs.filter(status='UPLOADED').count(),
-            'expired_documents': doc_qs.filter(status='REJECTED').count(),
-            'pending_documents': doc_qs.filter(status='PENDING').count(),
+            'valid_documents': valid_docs,
+            'expiring_soon_documents': uploaded_docs,
+            'expired_documents': rejected_docs,
+            'pending_documents': pending_docs,
+        }
+        context['document_total'] = total_docs
+        context['document_health_pct'] = (
+            round((valid_docs / total_docs) * 100) if total_docs else 0
+        )
+
+        # Legend for the frontend — labels, counts, percentages, colors
+        if total_docs:
+            def _pct(n):
+                return round((n / total_docs) * 100)
+
+            context['document_legend'] = [
+                {'label': 'Valid',    'value': valid_docs,    'pct': _pct(valid_docs),    'color': '#16a34a'},
+                {'label': 'Expiring', 'value': uploaded_docs, 'pct': _pct(uploaded_docs), 'color': '#f59e0b'},
+                {'label': 'Expired',  'value': rejected_docs, 'pct': _pct(rejected_docs), 'color': '#dc2626'},
+                {'label': 'Pending',  'value': pending_docs,  'pct': _pct(pending_docs),  'color': '#3b82f6'},
+            ]
+        else:
+            context['document_legend'] = []
+
+        context['document_chart_data'] = {
+            'labels': ['Valid', 'Expiring Soon', 'Expired', 'Pending'],
+            'values': [valid_docs, uploaded_docs, rejected_docs, pending_docs],
         }
 
+        # ---------------- Live performance per contractor (this month) ----------------
         current_month = today.month
         current_year = today.year
 
@@ -3165,12 +3235,18 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
             'work_order': [],
         }
 
+        # Keep per-contractor metrics so we can build "top performers" later
+        contractor_metrics_map = {}
+
         for c in contractors_qs:
             lm = _live_engine._calculate_live_metrics(
                 c, live_period_start, live_period_end
             )
             if lm is None:
                 continue
+
+            contractor_metrics_map[c.id] = lm
+
             live_scores.append(lm['overall_score'])
             live_compliance_scores['onboarding'].append(lm['onboarding_score'])
             live_compliance_scores['training'].append(lm['training_score'])
@@ -3185,20 +3261,42 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
             'poor_count': len([s for s in live_scores if s < 60]),
         }
 
+        # ---------------- Approval rate ----------------
         total_onb = onboarding_qs.count()
         approved_onb = onboarding_qs.filter(status='APPROVED').count()
         approval_rate = round((approved_onb / total_onb * 100), 1) if total_onb else 0
         context['approval_rate'] = approval_rate
 
+        # ---------------- Avg compliance ----------------
         context['avg_compliance'] = {
             'onboarding': _avg(live_compliance_scores['onboarding']),
             'training':   _avg(live_compliance_scores['training']),
             'inspection': _avg(live_compliance_scores['inspection']),
             'work_order': _avg(live_compliance_scores['work_order']),
+            'overall': _avg(live_scores),
         }
 
+        # Strongest / weakest dimensions (needed by template footer)
+        compliance_items = [
+            ('Onboarding', context['avg_compliance']['onboarding']),
+            ('Training',   context['avg_compliance']['training']),
+            ('Inspection', context['avg_compliance']['inspection']),
+            ('Work Order', context['avg_compliance']['work_order']),
+        ]
+        strongest = max(compliance_items, key=lambda x: x[1])
+        weakest = min(compliance_items, key=lambda x: x[1])
+        context['strongest_dim'] = strongest[0]
+        context['strongest_val'] = strongest[1]
+        context['weakest_dim'] = weakest[0]
+        context['weakest_val'] = weakest[1]
+
+        # ---------------- 6-month trend ----------------
         trend_labels = []
         trend_values = []
+        trend_peak_val = None
+        trend_peak_label = ''
+        trend_low_val = None
+        trend_low_label = ''
 
         for i in range(5, -1, -1):
             m = today.month - i
@@ -3219,38 +3317,60 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
                 if lm is not None:
                     month_scores.append(lm['overall_score'])
 
-            trend_labels.append(date(y, m, 1).strftime('%b %Y'))
-            trend_values.append(_avg(month_scores))
+            label = date(y, m, 1).strftime('%b %Y')
+            value = _avg(month_scores)
+
+            trend_labels.append(label)
+            trend_values.append(value)
+
+            if trend_peak_val is None or value > trend_peak_val:
+                trend_peak_val = value
+                trend_peak_label = label
+            if trend_low_val is None or value < trend_low_val:
+                trend_low_val = value
+                trend_low_label = label
 
         context['trend_chart_data'] = {
             'labels': trend_labels,
             'values': trend_values,
         }
+        context['peak_month'] = trend_peak_label
+        context['peak_value'] = trend_peak_val or 0
+        context['low_month'] = trend_low_label
+        context['low_value'] = trend_low_val or 0
 
+        # ---------------- 6-month monthly activity ----------------
         monthly_labels = []
         monthly_wo = []
         monthly_insp = []
         monthly_train = []
 
         for i in range(5, -1, -1):
-            d = today.replace(day=1) - timedelta(days=i * 30)
-            m_start = d.replace(day=1)
+            m = today.month - i
+            y = today.year
+            while m <= 0:
+                m += 12
+                y -= 1
 
-            if m_start.month == 12:
-                m_end = m_start.replace(year=m_start.year + 1, month=1, day=1)
+            m_start = date(y, m, 1)
+            if m == 12:
+                m_end = date(y + 1, 1, 1)
             else:
-                m_end = m_start.replace(month=m_start.month + 1, day=1)
+                m_end = date(y, m + 1, 1)
 
-            monthly_labels.append(d.strftime('%b %Y'))
+            monthly_labels.append(date(y, m, 1).strftime('%b %Y'))
 
             wo_m = WorkOrder.objects.filter(
-                created_at__gte=m_start, created_at__lt=m_end
+                created_at__date__gte=m_start,
+                created_at__date__lt=m_end,
             )
             insp_m = ContractorInspection.objects.filter(
-                created_at__gte=m_start, created_at__lt=m_end
+                created_at__date__gte=m_start,
+                created_at__date__lt=m_end,
             )
             ts_m = TrainingSignOff.objects.filter(
-                created_at__gte=m_start, created_at__lt=m_end
+                created_at__date__gte=m_start,
+                created_at__date__lt=m_end,
             )
 
             if selected_plant:
@@ -3268,36 +3388,218 @@ class ContractorOverviewDashboardView(LoginRequiredMixin, TemplateView):
             'trainings': monthly_train,
         }
 
-        context['document_chart_data'] = {
-            'labels': ['Valid', 'Expiring Soon', 'Expired', 'Pending'],
-            'values': [
-                context['document_stats']['valid_documents'],
-                context['document_stats']['expiring_soon_documents'],
-                context['document_stats']['expired_documents'],
-                context['document_stats']['pending_documents'],
-            ],
-        }
+        # ------------------------------
+        # Workload totals + percentages
+        # ------------------------------
+        current_wo = monthly_wo[-1] if monthly_wo else 0
+        current_insp = monthly_insp[-1] if monthly_insp else 0
+        current_train = monthly_train[-1] if monthly_train else 0
 
+        workload_total = current_wo + current_insp + current_train
+        context['workload_total'] = workload_total
+
+        if workload_total > 0:
+            context['monthly_activity']['work_orders_pct'] = round(
+                (current_wo / workload_total) * 100
+            )
+            context['monthly_activity']['inspections_pct'] = round(
+                (current_insp / workload_total) * 100
+            )
+            context['monthly_activity']['trainings_pct'] = round(
+                (current_train / workload_total) * 100
+            )
+        else:
+            context['monthly_activity']['work_orders_pct'] = 0
+            context['monthly_activity']['inspections_pct'] = 0
+            context['monthly_activity']['trainings_pct'] = 0
+
+        # Busiest month (by total workload)
+        totals_per_month = [
+            monthly_wo[i] + monthly_insp[i] + monthly_train[i]
+            for i in range(len(monthly_labels))
+        ]
+        if totals_per_month:
+            busiest_idx = totals_per_month.index(max(totals_per_month))
+            context['busiest_month'] = monthly_labels[busiest_idx].split(' ')[0]
+        else:
+            context['busiest_month'] = '—'
+
+        # Leading category
+        category_totals = {
+            'Work Orders': sum(monthly_wo),
+            'Inspections': sum(monthly_insp),
+            'Trainings':   sum(monthly_train),
+        }
+        leading = max(category_totals, key=category_totals.get) if category_totals else '—'
+        context['leading_category'] = leading
+        context['leading_category_short'] = {
+            'Work Orders': 'WO',
+            'Inspections': 'INSP',
+            'Trainings':   'TRAIN',
+        }.get(leading, '—')
+
+        # ---------------- Inspection pipeline data ----------------
         insp_qs = ContractorInspection.objects.all()
         if selected_plant:
             insp_qs = insp_qs.filter(plant=selected_plant)
 
+        scheduled_ct   = insp_qs.filter(status='SCHEDULED').count()
+        in_progress_ct = insp_qs.filter(status='IN_PROGRESS').count()
+        closed_ct      = insp_qs.filter(status='CLOSED').count()
+        overdue_ct     = insp_qs.filter(status='OVERDUE').count()
+        cancelled_ct   = insp_qs.filter(status='CANCELLED').count()
+
+        inspection_total = (
+            scheduled_ct + in_progress_ct + closed_ct + overdue_ct + cancelled_ct
+        )
+
+        context['inspection_total'] = inspection_total
+        context['inspection_completed'] = closed_ct
+        context['inspection_completed_pct'] = (
+            round((closed_ct / inspection_total) * 100) if inspection_total else 0
+        )
+
         context['inspection_chart_data'] = {
             'labels': ['Scheduled', 'In Progress', 'Closed', 'Overdue', 'Cancelled'],
-            'values': [
-                insp_qs.filter(status='SCHEDULED').count(),
-                insp_qs.filter(status='IN_PROGRESS').count(),
-                insp_qs.filter(status='CLOSED').count(),
-                insp_qs.filter(status='OVERDUE').count(),
-                insp_qs.filter(status='CANCELLED').count(),
-            ],
+            'values': [scheduled_ct, in_progress_ct, closed_ct, overdue_ct, cancelled_ct],
         }
 
+        # Segment colours matching the template
+        context['inspection_legend'] = [
+            {'label': 'Completed',   'value': closed_ct,      'color': '#16a34a'},
+            {'label': 'Scheduled',   'value': scheduled_ct,   'color': '#f59e0b'},
+            {'label': 'In Progress', 'value': in_progress_ct, 'color': '#3b82f6'},
+            {'label': 'Overdue',     'value': overdue_ct,     'color': '#dc2626'},
+            {'label': 'Cancelled',   'value': cancelled_ct,   'color': '#94a3b8'},
+        ]
+        context['inspection_segments'] = [
+            {'label': 'Completed',   'value': closed_ct,      'color': '#16a34a'},
+            {'label': 'Scheduled',   'value': scheduled_ct,   'color': '#f59e0b'},
+            {'label': 'In Progress', 'value': in_progress_ct, 'color': '#3b82f6'},
+            {'label': 'Overdue',     'value': overdue_ct,     'color': '#dc2626'},
+            {'label': 'Cancelled',   'value': cancelled_ct,   'color': '#94a3b8'},
+        ]
+
+        # ---------------- Onboarding Funnel (real) ----------------
+        # 4 stages:
+        #   1) Registered          — every contractor in scope
+        #   2) Docs Verified       — onboarding approved
+        #   3) Training Complete   — has at least one completed sign-off
+        #   4) Active On-Site      — contractor.is_active = True
+
+        registered_count = total_contractors
+
+        approved_onb_contractor_ids = set(
+            onboarding_qs.filter(status='APPROVED').values_list('contractor_id', flat=True)
+        )
+        docs_verified_count = len(approved_onb_contractor_ids)
+
+        trained_contractor_ids = set(
+            TrainingSignOff.objects
+            .filter(contractor_id__in=approved_onb_contractor_ids, status='COMPLETED')
+            .values_list('contractor_id', flat=True)
+        )
+        trained_count = len(trained_contractor_ids)
+
+        active_onsite_count = contractors_qs.filter(
+            id__in=trained_contractor_ids, is_active=True
+        ).count()
+
+        def _pct_change(base, num):
+            return round((num / base) * 100) if base else 0
+
+        docs_verified_pct = _pct_change(registered_count, docs_verified_count)
+        trained_pct       = _pct_change(registered_count, trained_count)
+        active_pct        = _pct_change(registered_count, active_onsite_count)
+
+        docs_verified_conv = _pct_change(registered_count, docs_verified_count)
+        trained_conv       = _pct_change(docs_verified_count, trained_count) if docs_verified_count else 0
+        active_conv        = _pct_change(trained_count, active_onsite_count) if trained_count else 0
+
+        context['funnel'] = {
+            'registered': registered_count,
+            'docs_verified': docs_verified_count,
+            'trained': trained_count,
+            'active': active_onsite_count,
+            'docs_verified_pct': docs_verified_pct,
+            'trained_pct': trained_pct,
+            'active_pct': active_pct,
+            'docs_verified_conv': docs_verified_conv,
+            'trained_conv': trained_conv,
+            'active_conv': active_conv,
+            'dropoff': max(0, 100 - _pct_change(registered_count, active_onsite_count)),
+        }
+        context['funnel_conversion'] = _pct_change(registered_count, active_onsite_count)
+
+        # ---------------- Top Performers (real) ----------------
+        # Rank contractors by their live overall score this month.
+        # Show only those with actual data (at least one activity).
+
+        AVATAR_COLORS = [
+            ('linear-gradient(135deg,#14b8a6,#0f766e)', '#0d9488'),
+            ('linear-gradient(135deg,#60a5fa,#2563eb)', '#3b82f6'),
+            ('linear-gradient(135deg,#a78bfa,#7c3aed)', '#8b5cf6'),
+            ('linear-gradient(135deg,#fbbf24,#d97706)', '#f59e0b'),
+            ('linear-gradient(135deg,#f87171,#dc2626)', '#dc2626'),
+            ('linear-gradient(135deg,#34d399,#059669)', '#16a34a'),
+        ]
+
+        def _initials(name):
+            parts = [p for p in name.split() if p]
+            if not parts:
+                return '?'
+            if len(parts) == 1:
+                return parts[0][:2].upper()
+            return (parts[0][0] + parts[-1][0]).upper()
+
+        performer_candidates = []
+        for c in contractors_qs:
+            lm = contractor_metrics_map.get(c.id)
+            if lm is None:
+                continue
+
+            has_data = (
+                lm['inspections_count'] > 0
+                or lm['work_orders_count'] > 0
+                or lm['training_count'] > 0
+            )
+            if not has_data:
+                continue
+
+            performer_candidates.append({
+                'contractor': c,
+                'score': lm['overall_score'],
+                'work_orders': lm['work_orders_count'],
+            })
+
+        performer_candidates.sort(key=lambda x: x['score'], reverse=True)
+
+        top_performers = []
+        for idx, item in enumerate(performer_candidates[:5]):
+            c = item['contractor']
+            gradient, hex_color = AVATAR_COLORS[idx % len(AVATAR_COLORS)]
+
+            top_performers.append({
+                'name': c.contractor_name,
+                'initials': _initials(c.contractor_name),
+                'category': c.get_work_category_display(),
+                'work_orders': item['work_orders'],
+                'score': round(item['score']),
+                'color': gradient,
+                'color_hex': hex_color,
+            })
+
+        context['top_performers'] = top_performers
+        context['performers_avg'] = (
+            round(sum(p['score'] for p in top_performers) / len(top_performers))
+            if top_performers else 0
+        )
+
+        # ---------------- Plant list for filter ----------------
         context['plants'] = Plant.objects.filter(is_active=True).order_by('name')
         context['selected_plant'] = plant_id
 
         return context
-
 
 class ContractorReportsView(LoginRequiredMixin, TemplateView):
     """
