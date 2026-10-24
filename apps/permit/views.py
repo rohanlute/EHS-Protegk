@@ -7,7 +7,6 @@ from .models import *
 from django.db.models import Q, Prefetch, Count
 from .forms import *
 from django.utils import timezone
-from django.http import JsonResponse
 from datetime import timedelta
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
@@ -210,93 +209,6 @@ class PermitListView(LoginRequiredMixin, ListView):
         return context
 
 
-class PermitAnalyticsRealtimeView(LoginRequiredMixin, View):
-    """Lightweight JSON endpoint polled by the dashboard every N seconds."""
-
-    def get(self, request, *args, **kwargs):
-        from datetime import timedelta
-        from django.utils import timezone
-        from django.db.models import Count
-
-        now = timezone.now()
-        period_days = int(request.GET.get('period', 30))
-        if period_days not in [7, 30, 90, 365]:
-            period_days = 30
-        period_start = now - timedelta(days=period_days)
-
-        permits = Permit.objects.all()
-        active_statuses = ['approved', 'active']
-
-        # Stat counters
-        data = {
-            'active_permits_count': permits.filter(status__in=active_statuses).count(),
-            'total_permits_count': permits.count(),
-            'pending_permits_count': permits.filter(status__in=['pending', 'reapproval']).count(),
-            'expired_permits_count': permits.filter(
-                status__in=active_statuses, end_date__lt=now
-            ).count(),
-            'new_permits_this_week': permits.filter(
-                created_at__gte=now - timedelta(days=7)
-            ).count(),
-            'permits_this_month': permits.filter(
-                created_at__year=now.year, created_at__month=now.month
-            ).count(),
-            'server_time': now.isoformat(),
-        }
-
-        # Live status distribution (period-scoped)
-        period_qs = permits.filter(created_at__gte=period_start)
-        status_rows = period_qs.values('status').annotate(total=Count('id'))
-        data['status_distribution'] = {r['status']: r['total'] for r in status_rows}
-
-        # Live type distribution
-        type_rows = (
-            period_qs.values('permit_type__name')
-            .annotate(total=Count('id'))
-            .order_by('-total')
-        )
-        data['type_distribution'] = [
-            {'label': r['permit_type__name'] or 'Unknown', 'value': r['total']}
-            for r in type_rows
-        ]
-
-        # Recent activity feed (latest 8 log entries)
-        logs = (
-            PermitApprovalLog.objects
-            .select_related('permit', 'performed_by')
-            .order_by('-timestamp')[:8]
-        )
-        data['recent_activity'] = [
-            {
-                'permit_number': log.permit.permit_number,
-                'permit_pk': log.permit.pk,
-                'action': log.get_action_display(),
-                'action_raw': log.action,
-                'to_status': log.to_status,
-                'performed_by': (
-                    log.performed_by.get_full_name()
-                    if log.performed_by and log.performed_by.get_full_name()
-                    else (log.performed_by.username if log.performed_by else 'System')
-                ),
-                'timestamp': log.timestamp.isoformat(),
-                'ago': self._humanize(log.timestamp, now),
-            }
-            for log in logs
-        ]
-
-        return JsonResponse(data)
-
-    @staticmethod
-    def _humanize(ts, now):
-        delta = now - ts
-        secs = int(delta.total_seconds())
-        if secs < 60:
-            return f"{secs}s ago"
-        if secs < 3600:
-            return f"{secs // 60}m ago"
-        if secs < 86400:
-            return f"{secs // 3600}h ago"
-        return f"{secs // 86400}d ago"
 class PermitAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'permit/permit_analytics_dashboard.html'
 
@@ -317,50 +229,37 @@ class PermitAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
         )
 
         period_permits = permits.filter(created_at__gte=period_start)
-        previous_period_permits = permits.filter(
-            created_at__gte=previous_period_start, created_at__lt=period_start
-        )
+        previous_period_permits = permits.filter(created_at__gte=previous_period_start, created_at__lt=period_start)
 
         active_statuses = ['approved', 'active']
         active_permits_count = permits.filter(status__in=active_statuses).count()
         total_permits_count = permits.count()
         pending_permits_count = permits.filter(status__in=['pending', 'reapproval']).count()
-        expired_permits_count = permits.filter(
-            status__in=active_statuses, end_date__lt=now
-        ).count()
+        expired_permits_count = permits.filter(status__in=active_statuses, end_date__lt=now).count()
 
-        pending_previous = previous_period_permits.filter(
-            status__in=['pending', 'reapproval']
-        ).count()
+        pending_previous = previous_period_permits.filter(status__in=['pending', 'reapproval']).count()
         pending_change = pending_permits_count - pending_previous
 
-        new_permits_this_week = permits.filter(
-            created_at__gte=now - timedelta(days=7)
-        ).count()
-        permits_this_month = permits.filter(
-            created_at__year=now.year, created_at__month=now.month
-        ).count()
+        new_permits_this_week = permits.filter(created_at__gte=now - timedelta(days=7)).count()
+        permits_this_month = permits.filter(created_at__year=now.year, created_at__month=now.month).count()
 
-        # ---- Weekly ranges (last 5 weeks) ----
-        weekly_ranges, weekly_labels = [], []
+        weekly_ranges = []
+        weekly_labels = []
         for i in range(4, -1, -1):
-            start = (now - timedelta(days=(i + 1) * 7 - 1)).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-            end = (now - timedelta(days=i * 7)).replace(
-                hour=23, minute=59, second=59, microsecond=999999
-            )
+            start = (now - timedelta(days=(i + 1) * 7 - 1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            end = (now - timedelta(days=i * 7)).replace(hour=23, minute=59, second=59, microsecond=999999)
             weekly_ranges.append((start, end))
             weekly_labels.append(f"Week {5 - i}")
 
-        submitted_trend, approved_trend, rejected_trend, weekly_activity = [], [], [], []
+        submitted_trend = []
+        approved_trend = []
+        rejected_trend = []
+        weekly_activity = []
         for start, end in weekly_ranges:
             week_qs = permits.filter(created_at__gte=start, created_at__lte=end)
             week_count = week_qs.count()
             submitted_trend.append(week_count)
-            approved_trend.append(
-                week_qs.filter(status__in=['approved', 'active', 'closed']).count()
-            )
+            approved_trend.append(week_qs.filter(status__in=['approved', 'active', 'closed']).count())
             rejected_trend.append(week_qs.filter(status='rejected').count())
 
             if week_count <= 5:
@@ -373,56 +272,34 @@ class PermitAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
                 risk_class = 'risk-critical'
             weekly_activity.append({'count': week_count, 'risk_class': risk_class})
 
-        # ---- Permit type distribution ----
         type_counts = list(
-            period_permits.values('permit_type__name')
-            .annotate(total=Count('id'))
-            .order_by('-total')
+            period_permits.values('permit_type__name').annotate(total=Count('id')).order_by('-total')
         )
         type_labels = [item['permit_type__name'] or 'Unknown' for item in type_counts]
         type_data = [item['total'] for item in type_counts]
 
-        # ---- Status distribution ----
         status_order = ['active', 'approved', 'pending', 'reapproval', 'closed', 'rejected', 'draft']
         status_label_map = dict(Permit.STATUS_CHOICES)
         status_counts_map = {key: 0 for key, _ in Permit.STATUS_CHOICES}
         for row in period_permits.values('status').annotate(total=Count('id')):
             status_counts_map[row['status']] = row['total']
-        status_labels = [status_label_map[k] for k in status_order if status_counts_map.get(k)]
-        status_data = [status_counts_map[k] for k in status_order if status_counts_map.get(k)]
+        status_labels = [status_label_map[key] for key in status_order if status_counts_map.get(key)]
+        status_data = [status_counts_map[key] for key in status_order if status_counts_map.get(key)]
 
-        # ---- Department performance ----
         dept_rows = []
-        department_qs = (
-            period_permits.values('department__name')
-            .annotate(total_permits=Count('id'))
-            .order_by('-total_permits')[:5]
-        )
+        department_qs = period_permits.values('department__name').annotate(total_permits=Count('id')).order_by('-total_permits')[:5]
         for row in department_qs:
             dept_name = row['department__name'] or 'Unassigned'
             dept_permits = period_permits.filter(department__name=row['department__name'])
-            approved_count = dept_permits.filter(
-                status__in=['approved', 'active', 'closed']
-            ).count()
-            approval_rate = (
-                round((approved_count / row['total_permits']) * 100, 1)
-                if row['total_permits'] else 0
-            )
+            approved_count = dept_permits.filter(status__in=['approved', 'active', 'closed']).count()
+            approval_rate = round((approved_count / row['total_permits']) * 100, 1) if row['total_permits'] else 0
 
             processing_hours = []
             for permit in dept_permits:
-                approved_log = next(
-                    (log for log in permit.approval_logs.all() if log.to_status == 'approved'),
-                    None,
-                )
+                approved_log = next((log for log in permit.approval_logs.all() if log.to_status == 'approved'), None)
                 if approved_log:
-                    processing_hours.append(
-                        round((approved_log.timestamp - permit.created_at).total_seconds() / 3600, 2)
-                    )
-            avg_processing = (
-                round(sum(processing_hours) / len(processing_hours), 1)
-                if processing_hours else 0
-            )
+                    processing_hours.append(round((approved_log.timestamp - permit.created_at).total_seconds() / 3600, 2))
+            avg_processing = round(sum(processing_hours) / len(processing_hours), 1) if processing_hours else 0
 
             dept_rows.append({
                 'name': dept_name,
@@ -434,26 +311,25 @@ class PermitAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
         processing_labels = [item['name'] for item in dept_rows]
         processing_data = [item['avg_processing_time'] for item in dept_rows]
 
-        # ---- Risk breakdown ----
         risk_counts = {
-            'minor':    period_permits.filter(hazard_risk_level='minor').count(),
+            'minor': period_permits.filter(hazard_risk_level='minor').count(),
             'moderate': period_permits.filter(hazard_risk_level='moderate').count(),
-            'major':    period_permits.filter(hazard_risk_level='major').count(),
+            'major': period_permits.filter(hazard_risk_level='major').count(),
             'critical': period_permits.filter(hazard_risk_level='critical').count(),
         }
         total_risk_permits = sum(risk_counts.values()) or 1
 
-        low_risk_permits      = risk_counts['minor']
-        medium_risk_permits   = risk_counts['moderate']
-        high_risk_permits     = risk_counts['major']
+        low_risk_permits = risk_counts['minor']
+        medium_risk_permits = risk_counts['moderate']
+        high_risk_permits = risk_counts['major']
         critical_risk_permits = risk_counts['critical']
 
-        # ---- Processing improvement ----
         processing_improvement = 0
         current_approved_logs = [
             round((log.timestamp - log.permit.created_at).total_seconds() / 3600, 2)
             for log in PermitApprovalLog.objects.select_related('permit').filter(
-                permit__created_at__gte=period_start, to_status='approved',
+                permit__created_at__gte=period_start,
+                to_status='approved',
             )
         ]
         prev_approved_logs = [
@@ -484,7 +360,6 @@ class PermitAnalyticsDashboardView(LoginRequiredMixin, TemplateView):
             'medium_risk_permits': medium_risk_permits,
             'high_risk_permits': high_risk_permits,
             'critical_risk_permits': critical_risk_permits,
-            'total_risk_permits': total_risk_permits,
             'low_risk_percentage': round((low_risk_permits / total_risk_permits) * 100, 1),
             'medium_risk_percentage': round((medium_risk_permits / total_risk_permits) * 100, 1),
             'high_risk_percentage': round((high_risk_permits / total_risk_permits) * 100, 1),

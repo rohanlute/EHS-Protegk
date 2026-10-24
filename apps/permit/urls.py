@@ -13,25 +13,17 @@ urlpatterns = [
     # Permit URLs
     path('permits/create/', PermitCreateView.as_view(), name='permit_create'),
     path('permits/permit-list/', PermitListView.as_view(), name='permit_list'),
-
-    # === ANALYTICS — dashboard MUST come before /realtime/ ===
-    path(
-        'analytics/',
-        PermitAnalyticsDashboardView.as_view(),
-        name='permit_analytics',
-    ),
-    path(
-        'analytics/realtime/',
-        PermitAnalyticsRealtimeView.as_view(),
-        name='permit_analytics_realtime',
-    ),
-
+    path('permits/analytics/', PermitAnalyticsDashboardView.as_view(), name='permit_analytics'),
     path('permits/<int:pk>/', PermitDetailView.as_view(), name='permit_detail'),
     path('permits/<int:pk>/edit/', PermitUpdateView.as_view(), name='permit_update'),
+    path('permits/approvals/', PermitApprovalDashboardView.as_view(), name='permit_approvals'),
+    path('permits/<int:pk>/approve/', PermitApprovalView.as_view(), name='permit_approve'),
     path('permits/approvals/', PermitApprovalDashboardView.as_view(), name='permit_approvals'),
     path('permits/<int:pk>/approve/', PermitApprovalView.as_view(), name='permit_approve'),
     path('permits/<int:pk>/reject/', PermitRejectView.as_view(), name='permit_reject'),
     path('permits/<int:pk>/close/', PermitCloseView.as_view(), name='permit_close'),
     path('permits/<int:pk>/extend/', PermitExtensionRequestView.as_view(), name='permit_extend'),
     path('permits/<int:pk>/pdf/', PermitPDFView.as_view(), name='permit_pdf'),
-]
+    # path('extensions/<int:pk>/review/', PermitExtensionReviewView.as_view(), name='extension_review'),
+
+    ]
