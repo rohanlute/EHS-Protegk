@@ -18,17 +18,17 @@ class KaizenCategoryForm(forms.ModelForm):
                 'placeholder': 'e.g., Occupational Health & Ergonomics'
             }),
             'code': forms.TextInput(attrs={
-                'class': 'form-comtrol',
+                'class': 'form-control',
                 'placeholder': 'e.g., OHE',
                 'maxlength': '20'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholde': 'Enter description...'
+                'placeholder': 'Enter description...'
             }),
         }
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
