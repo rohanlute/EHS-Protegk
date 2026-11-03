@@ -1,0 +1,584 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}Kaizen History{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}">
+        {{ kaizen.kaizen_id|default:kaizen.title }}
+    </a>
+</li>
+<li class="breadcrumb-item active">History</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ================================
+   KAIZEN WORKFLOW HISTORY
+================================ */
+
+.kz-history {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding-bottom: 25px;
+}
+
+/* Page Header */
+
+.kz-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin: 15px 0 22px;
+}
+
+.kz-history-heading h1 {
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 750;
+    margin: 0 0 6px;
+}
+
+.kz-history-heading p {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Back Button */
+
+.kz-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all .2s ease;
+}
+
+.kz-back-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+/* ================================
+   SUMMARY CARD
+================================ */
+
+.kz-history-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f0fdfa;
+    border: 1px solid #ccfbf1;
+    border-radius: 11px;
+    padding: 17px 20px;
+    margin-bottom: 20px;
+}
+
+.kz-history-summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 43px;
+    height: 43px;
+    border-radius: 10px;
+    background: #ccfbf1;
+    color: #0f766e;
+    font-size: 18px;
+}
+
+.kz-history-summary-content {
+    min-width: 0;
+}
+
+.kz-history-summary-content span {
+    display: block;
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+}
+
+.kz-history-summary-content strong {
+    display: block;
+    color: #134e4a;
+    font-size: 14px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+
+.kz-history-summary-content p {
+    color: #0f766e;
+    font-size: 12px;
+    margin: 3px 0 0;
+}
+
+/* ================================
+   HISTORY CARD
+================================ */
+
+.kz-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, .05);
+}
+
+.kz-card-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.kz-card-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: #f0fdfa;
+    color: #0d9488;
+    font-size: 15px;
+}
+
+.kz-card-header h3 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 750;
+    margin: 0 0 3px;
+}
+
+.kz-card-header p {
+    color: #64748b;
+    font-size: 11px;
+    margin: 0;
+}
+
+/* ================================
+   TIMELINE
+================================ */
+
+.kz-history-body {
+    padding: 10px 24px 20px;
+}
+
+.kz-event {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    padding: 19px 0;
+    border-bottom: 1px solid #edf1f4;
+}
+
+.kz-event:last-child {
+    border-bottom: 0;
+}
+
+/* Timeline Marker */
+
+.kz-event-marker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 28px;
+}
+
+.kz-event-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #99f6e4;
+    border-radius: 50%;
+    background: #f0fdfa;
+    color: #0d9488;
+    font-size: 11px;
+    z-index: 1;
+}
+
+.kz-event:not(:last-child) .kz-event-marker::after {
+    content: "";
+    position: absolute;
+    top: 29px;
+    bottom: -20px;
+    width: 2px;
+    background: #ccfbf1;
+}
+
+/* Event Content */
+
+.kz-event-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.kz-event-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+    margin-bottom: 9px;
+}
+
+.kz-event-title {
+    color: #0f766e;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.5;
+}
+
+.kz-event-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.kz-event-date i {
+    color: #94a3b8;
+}
+
+/* User Details */
+
+.kz-event-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.kz-event-user i {
+    color: #0d9488;
+}
+
+/* Status Transition */
+
+.kz-status-transition {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.kz-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.kz-status-new {
+    background: #f0fdfa;
+    border-color: #ccfbf1;
+    color: #0f766e;
+}
+
+.kz-transition-arrow {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* Comments */
+
+.kz-event-comments {
+    background: #f8fafc;
+    border-left: 3px solid #0d9488;
+    border-radius: 0 7px 7px 0;
+    padding: 10px 13px;
+    margin-top: 8px;
+}
+
+.kz-event-comments label {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 4px;
+}
+
+.kz-event-comments p {
+    color: #334155;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    margin: 0;
+}
+
+/* ================================
+   EMPTY STATE
+================================ */
+
+.kz-empty-state {
+    text-align: center;
+    padding: 55px 20px;
+}
+
+.kz-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: #f0fdfa;
+    color: #0d9488;
+    font-size: 23px;
+}
+
+.kz-empty-state h4 {
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 750;
+    margin-bottom: 6px;
+}
+
+.kz-empty-state p {
+    color: #64748b;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ================================
+   FOOTER
+================================ */
+
+.kz-history-footer {
+    display: flex;
+    justify-content: flex-start;
+    padding: 17px 22px;
+    border-top: 1px solid #e2e8f0;
+    background: #fafafa;
+}
+
+.kz-detail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #0f766e;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.kz-detail-link:hover {
+    color: #0d9488;
+    text-decoration: underline;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 650px) {
+    .kz-history-header {
+        flex-direction: column;
+    }
+
+    .kz-history-heading h1 {
+        font-size: 21px;
+    }
+
+    .kz-history-summary {
+        padding: 14px;
+    }
+
+    .kz-history-body {
+        padding: 8px 15px 15px;
+    }
+
+    .kz-event {
+        gap: 11px;
+    }
+
+    .kz-event-top {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .kz-event-date {
+        white-space: normal;
+    }
+
+    .kz-card-header {
+        padding: 15px;
+    }
+
+    .kz-history-footer {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kz-history">
+
+    <!-- Page Header -->
+    <div class="kz-history-header">
+        <div class="kz-history-heading">
+            <h1>
+                <i class="fas fa-history" style="color:#0d9488;"></i>
+                Workflow History
+            </h1>
+            <p>Track all status changes, activities, and updates recorded for this Kaizen initiative.</p>
+        </div>
+
+        <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}" class="kz-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Kaizen
+        </a>
+    </div>
+
+    <!-- Kaizen Summary -->
+    <section class="kz-history-summary">
+        <div class="kz-history-summary-icon">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+
+        <div class="kz-history-summary-content">
+            <span>Kaizen Reference</span>
+            <strong>{{ kaizen.kaizen_id|default:kaizen.title }}</strong>
+            <p>{{ kaizen.title }}</p>
+        </div>
+    </section>
+
+    <!-- Workflow Timeline -->
+    <section class="kz-card">
+
+        <header class="kz-card-header">
+            <div class="kz-card-header-icon">
+                <i class="fas fa-stream"></i>
+            </div>
+
+            <div>
+                <h3>Activity Timeline</h3>
+                <p>Complete record of Kaizen workflow activities</p>
+            </div>
+        </header>
+
+        <div class="kz-history-body">
+
+            {% for event in history %}
+
+            <div class="kz-event">
+
+                <!-- Timeline Marker -->
+                <div class="kz-event-marker">
+                    <div class="kz-event-dot">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+
+                <!-- Event Details -->
+                <div class="kz-event-content">
+
+                    <div class="kz-event-top">
+                        <div class="kz-event-title">
+                            {{ event.action|default:'Status updated' }}
+                        </div>
+
+                        <div class="kz-event-date">
+                            <i class="far fa-clock"></i>
+                            {{ event.changed_at|date:'d M Y, H:i' }}
+                        </div>
+                    </div>
+
+                    <div class="kz-event-user">
+                        <i class="fas fa-user-circle"></i>
+                        {{ event.changed_by|default:'System' }}
+                    </div>
+
+                    <div class="kz-status-transition">
+                        <span class="kz-status">
+                            {{ event.previous_status|default:'Start' }}
+                        </span>
+
+                        <i class="fas fa-arrow-right kz-transition-arrow"></i>
+
+                        <span class="kz-status kz-status-new">
+                            {{ event.new_status }}
+                        </span>
+                    </div>
+
+                    {% if event.comments %}
+                    <div class="kz-event-comments">
+                        <label>
+                            <i class="far fa-comment-dots"></i>
+                            Comments / Remarks
+                        </label>
+                        <p>{{ event.comments }}</p>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% empty %}
+
+            <div class="kz-empty-state">
+                <div class="kz-empty-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+
+                <h4>No Workflow History Available</h4>
+                <p>No workflow events have been recorded for this Kaizen initiative yet.</p>
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="kz-history-footer">
+            <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}" class="kz-detail-link">
+                <i class="fas fa-arrow-left"></i>
+                Return to Kaizen Details
+            </a>
+        </footer>
+
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,734 @@
+
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Kaizen Ideas | EHS-360{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item active">My Ideas</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --kz-primary: #0d9488;
+    --kz-primary-dark: #0f766e;
+    --kz-primary-light: #f0fdfa;
+    --kz-text: #0f172a;
+    --kz-muted: #64748b;
+    --kz-border: #e2e8f0;
+    --kz-bg: #f8fafc;
+    --kz-white: #ffffff;
+}
+
+.kz-page {
+    max-width: 1450px;
+    margin: 0 auto;
+    padding-bottom: 25px;
+    color: var(--kz-text);
+}
+
+/* PAGE HEADER */
+
+.kz-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid var(--kz-border);
+    border-radius: 13px;
+    padding: 22px 25px;
+    margin: 10px 0 20px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+}
+
+.kz-header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.kz-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 49px;
+    height: 49px;
+    flex-shrink: 0;
+    background: var(--kz-primary-light);
+    color: var(--kz-primary);
+    border-radius: 12px;
+    font-size: 21px;
+}
+
+.kz-header-text h1 {
+    color: var(--kz-text);
+    font-size: 22px;
+    font-weight: 750;
+    margin: 0 0 5px;
+}
+
+.kz-header-text p {
+    color: var(--kz-muted);
+    font-size: 12.5px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* BUTTONS */
+
+.kz-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px 17px;
+    border: 1px solid var(--kz-primary);
+    border-radius: 8px;
+    background: var(--kz-primary);
+    color: #fff !important;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+
+.kz-btn:hover {
+    background: var(--kz-primary-dark);
+    border-color: var(--kz-primary-dark);
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, .15);
+}
+
+.kz-btn-light {
+    background: #fff;
+    border-color: var(--kz-border);
+    color: #475569 !important;
+}
+
+.kz-btn-light:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--kz-text) !important;
+}
+
+/* OVERVIEW */
+
+.kz-overview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(110deg, #f0fdfa, #ffffff);
+    border: 1px solid #ccfbf1;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+}
+
+.kz-overview-left {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.kz-overview-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    background: #ccfbf1;
+    color: var(--kz-primary-dark);
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+.kz-overview-label {
+    display: block;
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 3px;
+}
+
+.kz-overview-title {
+    color: #134e4a;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.kz-overview-count {
+    color: var(--kz-primary-dark);
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* MAIN CARD */
+
+.kz-card {
+    background: var(--kz-white);
+    border: 1px solid var(--kz-border);
+    border-radius: 12px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+}
+
+.kz-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 21px;
+    border-bottom: 1px solid var(--kz-border);
+}
+
+.kz-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--kz-text);
+    font-size: 15px;
+    font-weight: 750;
+    margin: 0;
+}
+
+.kz-card-title i {
+    color: var(--kz-primary);
+    font-size: 16px;
+}
+
+.kz-record-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 20px;
+    background: var(--kz-primary-light);
+    color: var(--kz-primary-dark);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* TABLE */
+
+.kz-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.kz-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.kz-table thead th {
+    padding: 14px 17px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 10.5px;
+    font-weight: 750;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--kz-border);
+}
+
+.kz-table tbody td {
+    padding: 16px 17px;
+    color: #334155;
+    font-size: 12.5px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf1f4;
+}
+
+.kz-table tbody tr {
+    transition: background .2s ease;
+}
+
+.kz-table tbody tr:hover {
+    background: #f8fcfb;
+}
+
+.kz-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* REFERENCE */
+
+.kz-reference {
+    display: inline-block;
+    color: var(--kz-primary-dark);
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+/* IDEA TITLE */
+
+.kz-idea-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 180px;
+}
+
+.kz-idea-link {
+    display: inline-block;
+    max-width: 310px;
+    color: var(--kz-text) !important;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-decoration: none !important;
+}
+
+.kz-idea-link:hover {
+    color: var(--kz-primary-dark) !important;
+}
+
+.kz-idea-subtitle {
+    color: #94a3b8;
+    font-size: 10.5px;
+}
+
+/* CATEGORY */
+
+.kz-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+/* STATUS */
+
+.kz-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.kz-status:before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.kz-status-initial-review,
+.kz-status-pending,
+.kz-status-under-review,
+.kz-status-submitted,
+.kz-status-under-technical-evaluation,
+.kz-status-pending-approval {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.kz-status-approved,
+.kz-status-completed,
+.kz-status-implemented,
+.kz-status-closed,
+.kz-status-approved-for-implementation {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.kz-status-rejected,
+.kz-status-cancelled,
+.kz-status-returned-for-clarification,
+.kz-status-returned-for-revision {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.kz-status-in-progress,
+.kz-status-verification-failed {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+/* DATE */
+
+.kz-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #64748b;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+
+.kz-date i {
+    color: #94a3b8;
+}
+
+/* ACTION */
+
+.kz-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    height: 33px;
+    border: 1px solid #ccfbf1;
+    border-radius: 8px;
+    background: #f0fdfa;
+    color: var(--kz-primary-dark) !important;
+    text-decoration: none !important;
+    transition: all .2s ease;
+}
+
+.kz-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.kz-action-btn:hover {
+    background: var(--kz-primary);
+    border-color: var(--kz-primary);
+    color: #fff !important;
+}
+
+/* EMPTY STATE */
+
+.kz-empty {
+    padding: 65px 20px !important;
+    text-align: center !important;
+}
+
+.kz-empty-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 15px;
+    background: var(--kz-primary-light);
+    border-radius: 50%;
+    color: var(--kz-primary);
+    font-size: 24px;
+}
+
+.kz-empty strong {
+    display: block;
+    color: var(--kz-text);
+    font-size: 15px;
+    margin-bottom: 7px;
+}
+
+.kz-empty p {
+    max-width: 390px;
+    margin: 0 auto 17px;
+    color: var(--kz-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.kz-empty .kz-btn {
+    margin-top: 2px;
+}
+
+/* FOOTER */
+
+.kz-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 13px 20px;
+    background: #fafafa;
+    border-top: 1px solid var(--kz-border);
+    color: var(--kz-muted);
+    font-size: 11px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+    .kz-page-header {
+        padding: 17px;
+    }
+
+    .kz-header-text h1 {
+        font-size: 19px;
+    }
+
+    .kz-overview {
+        padding: 15px;
+    }
+
+    .kz-card-header {
+        padding: 15px;
+    }
+
+    .kz-table {
+        min-width: 750px;
+    }
+}
+
+@media (max-width: 550px) {
+    .kz-page-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .kz-page-header > .kz-btn {
+        width: 100%;
+    }
+
+    .kz-header-icon {
+        width: 43px;
+        height: 43px;
+    }
+
+    .kz-header-text h1 {
+        font-size: 18px;
+    }
+
+    .kz-overview {
+        align-items: flex-start;
+    }
+
+    .kz-overview-count {
+        font-size: 22px;
+    }
+
+    .kz-card-header {
+        align-items: flex-start;
+    }
+
+    .kz-card-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="kz-page">
+
+    <!-- PAGE HEADER -->
+    <header class="kz-page-header">
+
+        <div class="kz-header-left">
+            <div class="kz-header-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+
+            <div class="kz-header-text">
+                <h1>My Kaizen Ideas</h1>
+                <p>Track and manage your submitted improvement ideas.</p>
+            </div>
+        </div>
+
+        <a class="kz-btn" href="{% url 'kaizen:kaizen_create' %}">
+            <i class="fas fa-plus"></i>
+            Submit New Idea
+        </a>
+
+    </header>
+
+    <!-- OVERVIEW -->
+    <section class="kz-overview">
+
+        <div class="kz-overview-left">
+            <div class="kz-overview-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+
+            <div>
+                <span class="kz-overview-label">My Kaizen Workspace</span>
+                <div class="kz-overview-title">Your submitted improvement ideas</div>
+            </div>
+        </div>
+
+        <div class="kz-overview-count">
+            {{ kaizens|length }}
+        </div>
+
+    </section>
+
+    <!-- IDEAS TABLE -->
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+
+            <h3 class="kz-card-title">
+                <i class="fas fa-list-alt"></i>
+                My Submitted Ideas
+            </h3>
+
+            <span class="kz-record-count">
+                <i class="fas fa-file-alt"></i>
+                {{ kaizens|length }} Records
+            </span>
+
+        </div>
+
+        <div class="kz-table-wrapper">
+
+            <table class="kz-table">
+
+                <thead>
+                    <tr>
+                        <th>Kaizen ID</th>
+                        <th>Idea Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in kaizens %}
+
+                    <tr>
+
+                        <td>
+                            <span class="kz-reference">
+                                {{ item.kaizen_id|default:'—' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="kz-idea-info">
+                                <a
+                                    class="kz-idea-link"
+                                    href="{% url 'kaizen:kaizen_detail' item.pk %}"
+                                    title="{{ item.title }}"
+                                >
+                                    {{ item.title|truncatechars:60 }}
+                                </a>
+                                <span class="kz-idea-subtitle">
+                                    Improvement initiative
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="kz-category">
+                                {{ item.category|default:'—' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="kz-status kz-status-{{ item.status|lower }}">
+                                {{ item.get_status_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="kz-date">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ item.created_at|date:'d M Y' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="kz-action-group">
+                            <a
+                                href="{% url 'kaizen:kaizen_detail' item.pk %}"
+                                class="kz-action-btn"
+                                title="View Kaizen Details"
+                                aria-label="View Kaizen Details"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a
+                                href="{% url 'kaizen:final_report' item.pk %}"
+                                class="kz-action-btn"
+                                title="Download kaizen pdf"
+                                aria-label="Download kaizen pdf"
+                            >
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="kz-empty">
+
+                            <div class="kz-empty-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+
+                            <strong>No Kaizen Ideas Yet</strong>
+
+                            <p>
+                                You haven't submitted any improvement ideas yet.
+                                Start by sharing your first Kaizen idea and contribute
+                                towards continuous improvement.
+                            </p>
+
+                            <a
+                                href="{% url 'kaizen:kaizen_create' %}"
+                                class="kz-btn"
+                            >
+                                <i class="fas fa-plus"></i>
+                                Submit Your First Idea
+                            </a>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+        <footer class="kz-card-footer">
+            <span>
+                <i class="fas fa-info-circle"></i>
+                Select an idea to view its details and workflow progress.
+            </span>
+            <span>My Kaizen Ideas</span>
+        </footer>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,342 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ stage_title|default:'Initial Review' }} | Kaizen
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item active">
+    {{ stage_title|default:'Initial Review' }}
+</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --kz-primary: #0d9488;
+        --kz-primary-dark: #0f766e;
+        --kz-primary-light: #f0fdfa;
+        --kz-border: #e2e8f0;
+        --kz-text: #1e293b;
+        --kz-muted: #64748b;
+    }
+
+    /* Main Page */
+    .kz-stage-initial_review {
+        max-width: 1050px;
+        margin: 0 auto;
+        padding-bottom: 30px;
+    }
+
+    .kz-stage-initial_review .kz-form {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Page Header */
+    .kz-stage-initial_review .kz-form-head {
+        margin: 20px 0 22px;
+    }
+
+    .kz-stage-initial_review .kz-form-head h1 {
+        font-size: 25px;
+        font-weight: 750;
+        color: #0f172a;
+        margin: 10px 0 7px;
+        letter-spacing: -.4px;
+    }
+
+    .kz-stage-initial_review .kz-form-head > p {
+        color: var(--kz-muted);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .kz-stage-initial_review .kz-form-head a {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--kz-muted);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .kz-stage-initial_review .kz-form-head a:hover {
+        color: var(--kz-primary);
+    }
+
+    /* Kaizen Information */
+    .kz-stage-initial_review .kz-form-note {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        background: linear-gradient(110deg, #fff 0%, #f8fffe 100%);
+        border: 1px solid #d7e9e6;
+        border-left: 4px solid var(--kz-primary);
+        border-radius: 12px;
+        padding: 16px 18px;
+        color: var(--kz-text);
+        margin-top: 17px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+    }
+
+    .kz-stage-initial_review .kz-form-note-details {
+        min-width: 0;
+    }
+
+    .kz-stage-initial_review .kz-form-note-label,
+    .kz-stage-initial_review .kz-form-note-status > span {
+        display: block;
+        color: var(--kz-muted);
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: .08em;
+        line-height: 1.3;
+        text-transform: uppercase;
+    }
+
+    .kz-stage-initial_review .kz-form-note-title {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 8px 11px;
+        margin-top: 5px;
+    }
+
+    .kz-stage-initial_review .kz-form-note-title strong {
+        flex: 0 0 auto;
+        color: var(--kz-primary-dark);
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .kz-stage-initial_review .kz-form-note-title > span {
+        color: #1e293b;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-stage-initial_review .kz-form-note-status {
+        flex: 0 0 auto;
+        display: grid;
+        justify-items: end;
+        gap: 5px;
+        padding-left: 18px;
+        border-left: 1px solid #dce8e7;
+    }
+
+    .kz-stage-initial_review .kz-form-note-status strong {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 1px solid #b7e4dc;
+        border-radius: 999px;
+        background: #ecfdf8;
+        color: #0f766e;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        padding: 6px 10px;
+    }
+
+    .kz-stage-initial_review .kz-form-note-status strong::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        content: "";
+    }
+
+    /* Form Card */
+    .kz-stage-initial_review .kz-card {
+        background: #fff;
+        border: 1px solid var(--kz-border);
+        border-top: 3px solid var(--kz-primary);
+        border-radius: 12px;
+        padding: 25px 24px;
+        margin: 20px 0;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+    }
+
+    /* Form Fields */
+    .kz-stage-initial_review .kz-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px 20px;
+        align-items: start;
+    }
+
+    .kz-stage-initial_review .kz-fields p {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .kz-stage-initial_review .kz-fields p:has(select) {
+        grid-column: 1 / -1;
+    }
+
+    .kz-stage-initial_review .kz-fields label {
+        display: block;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 650;
+        margin-bottom: 8px;
+    }
+
+    .kz-stage-initial_review .kz-fields input:not([type="checkbox"]):not([type="radio"]),
+    .kz-stage-initial_review .kz-fields select,
+    .kz-stage-initial_review .kz-fields textarea {
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 12px;
+        border: 1px solid #dbe3e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #1e293b;
+        font-size: 13px;
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .kz-stage-initial_review .kz-fields textarea {
+        min-height: 115px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .kz-stage-initial_review .kz-fields input:focus,
+    .kz-stage-initial_review .kz-fields select:focus,
+    .kz-stage-initial_review .kz-fields textarea:focus {
+        border-color: var(--kz-primary);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, .10);
+    }
+
+    .kz-stage-initial_review .kz-fields input[type="checkbox"],
+    .kz-stage-initial_review .kz-fields input[type="radio"] {
+        accent-color: var(--kz-primary);
+    }
+
+    .kz-stage-initial_review .kz-fields small {
+        display: block;
+        color: var(--kz-muted);
+        font-size: 11px;
+        line-height: 1.5;
+        margin-top: 6px;
+    }
+
+    .kz-stage-initial_review .kz-errors {
+        display: block;
+        color: #b91c1c;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .kz-stage-initial_review .kz-fields p:has(label[for*="clarification_required"]) textarea,
+    .kz-stage-initial_review .kz-fields p:has(label[for*="clarification-required"]) textarea {
+        min-height: 105px;
+    }
+
+    /* Non-field Errors */
+    .kz-stage-initial_review .kz-card > ul,
+    .kz-stage-initial_review .kz-card .errorlist {
+        color: #b91c1c;
+        font-size: 12px;
+    }
+
+    /* Form Actions */
+    .kz-stage-initial_review .kz-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 11px;
+        margin-top: 20px;
+    }
+
+    .kz-stage-initial_review .kz-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px 19px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: var(--kz-primary);
+        color: #fff !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+    .kz-stage-initial_review .kz-btn:hover {
+        background: var(--kz-primary-dark);
+        color: #fff !important;
+    }
+
+    .kz-stage-initial_review .kz-btn-light {
+        background: #fff;
+        border-color: #dbe3e8;
+        color: #475569 !important;
+    }
+
+    .kz-stage-initial_review .kz-btn-light:hover {
+        background: #f8fafc;
+        color: #1e293b !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 650px) {
+        .kz-stage-initial_review .kz-fields {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .kz-stage-initial_review .kz-card {
+            padding: 17px;
+        }
+
+        .kz-stage-initial_review .kz-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .kz-stage-initial_review .kz-actions > * {
+            width: 100%;
+            text-align: center;
+        }
+
+        .kz-stage-initial_review .kz-form-head h1 {
+            font-size: 21px;
+        }
+
+        .kz-stage-initial_review .kz-form-note {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .kz-stage-initial_review .kz-form-note-status {
+            justify-items: start;
+            padding: 10px 0 0;
+            border-top: 1px solid #dce8e7;
+            border-left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kz-stage-initial_review">
+    {% include 'kaizen/includes/stage_form_content.html' %}
+</div>
+{% endblock %}

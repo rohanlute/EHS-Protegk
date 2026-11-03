@@ -1,0 +1,1042 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}Kaizen Management Dashboard | EHS-360{% endblock %}
+{% block page_title %}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Kaizen Dashboard</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --kz-primary: #0d9488;
+    --kz-primary-dark: #0f766e;
+    --kz-primary-light: #f0fdfa;
+    --kz-ink: #0f172a;
+    --kz-muted: #64748b;
+    --kz-border: #e2e8f0;
+    --kz-bg: #f1f5f9;
+    --kz-success: #16a34a;
+    --kz-warning: #d97706;
+    --kz-danger: #dc2626;
+    --kz-radius: 12px;
+    --kz-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper {
+    background: var(--kz-bg) !important;
+}
+
+.kz-dashboard {
+    width: 100%;
+    color: var(--kz-ink);
+    font-family: Inter, Arial, sans-serif;
+}
+
+/* Common cards */
+.kz-card,
+.kz-page-header,
+.kz-shortcuts {
+    background: #fff;
+    border: 1px solid var(--kz-border);
+    border-radius: var(--kz-radius);
+    box-shadow: var(--kz-shadow);
+}
+
+.kz-card {
+    height: 100%;
+    overflow: hidden;
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+.kz-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .07);
+}
+
+.kz-card-body {
+    padding: 20px;
+}
+
+/* Page header */
+.kz-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 21px 24px;
+    margin-bottom: 17px;
+}
+
+.kz-header-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.kz-header-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: grid;
+    place-items: center;
+    background: var(--kz-primary-light);
+    color: var(--kz-primary);
+    border-radius: 12px;
+    font-size: 21px;
+}
+
+.kz-page-header h1 {
+    margin: 0;
+    color: var(--kz-ink);
+    font-size: 20px;
+    font-weight: 750;
+}
+
+.kz-page-header p {
+    margin: 5px 0 0;
+    color: var(--kz-muted);
+    font-size: 13px;
+}
+
+.kz-primary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    min-height: 40px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--kz-primary);
+    color: #fff !important;
+    text-decoration: none !important;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.kz-primary-btn:hover {
+    background: var(--kz-primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Quick navigation */
+.kz-shortcuts {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    padding: 12px 14px;
+    margin-bottom: 19px;
+}
+
+.kz-shortcuts a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid var(--kz-border);
+    border-radius: 7px;
+    color: #334155;
+    background: #fff;
+    text-decoration: none !important;
+    font-size: 12px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.kz-shortcuts a i {
+    color: var(--kz-primary);
+}
+
+.kz-shortcuts a:hover {
+    border-color: var(--kz-primary);
+    background: var(--kz-primary-light);
+    color: var(--kz-primary-dark);
+}
+
+/* Statistics */
+.kz-stat-link {
+    display: block;
+    height: 100%;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.kz-stat-card {
+    position: relative;
+    min-height: 137px;
+    padding: 20px;
+    border-left: 4px solid var(--kz-primary);
+}
+
+.kz-stat-card.primary {
+    border-left-color: var(--kz-primary);
+}
+
+.kz-stat-card.success {
+    border-left-color: var(--kz-success);
+}
+
+.kz-stat-card.warning {
+    border-left-color: var(--kz-warning);
+}
+
+.kz-stat-card.danger {
+    border-left-color: var(--kz-danger);
+}
+
+.kz-stat-icon {
+    position: absolute;
+    top: 19px;
+    right: 19px;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--kz-primary-light);
+    color: var(--kz-primary);
+    font-size: 19px;
+}
+
+.kz-stat-card.success .kz-stat-icon {
+    background: #f0fdf4;
+    color: var(--kz-success);
+}
+
+.kz-stat-card.warning .kz-stat-icon {
+    background: #fffbeb;
+    color: var(--kz-warning);
+}
+
+.kz-stat-card.danger .kz-stat-icon {
+    background: #fef2f2;
+    color: var(--kz-danger);
+}
+
+.kz-stat-number {
+    margin: 0 0 8px;
+    color: var(--kz-ink);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.kz-stat-label {
+    margin: 0;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+}
+
+.kz-stat-meta {
+    display: block;
+    margin-top: 9px;
+    color: #8491a2;
+    font-size: 11px;
+}
+
+.kz-stat-link:hover .kz-stat-card {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(13, 148, 136, .10);
+}
+
+/* Section headings */
+.kz-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 13px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--kz-border);
+}
+
+.kz-section-title {
+    margin: 0;
+    color: var(--kz-ink);
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.kz-section-title i {
+    margin-right: 7px;
+    color: var(--kz-primary);
+}
+
+.kz-section-subtitle {
+    display: block;
+    margin-top: 5px;
+    color: var(--kz-muted);
+    font-size: 11px;
+}
+
+.kz-panel-link {
+    flex-shrink: 0;
+    color: var(--kz-primary);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.kz-panel-link:hover {
+    color: var(--kz-primary-dark);
+}
+
+/* Charts */
+.kz-chart-container {
+    position: relative;
+    width: 100%;
+    height: 290px;
+    padding: 5px;
+}
+
+.kz-chart-container.kz-chart-small {
+    height: 290px;
+}
+
+/* Overdue actions */
+.kz-overdue-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.kz-overdue-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 2px;
+    border-bottom: 1px solid #edf1f4;
+}
+
+.kz-overdue-list li:last-child {
+    border-bottom: 0;
+}
+
+.kz-overdue-days {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: #fef2f2;
+    color: var(--kz-danger);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.kz-overdue-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.kz-overdue-title {
+    display: block;
+    overflow: hidden;
+    color: var(--kz-ink);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kz-overdue-title:hover {
+    color: var(--kz-primary);
+}
+
+.kz-overdue-meta {
+    margin-top: 5px;
+    color: var(--kz-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* Recent records table */
+.kz-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.kz-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+}
+
+.kz-table th {
+    padding: 12px 13px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--kz-border);
+    color: #64748b;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.kz-table td {
+    padding: 13px;
+    border-bottom: 1px solid #edf1f4;
+    color: #475569;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.kz-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.kz-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.kz-table a {
+    color: var(--kz-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.kz-table a:hover {
+    color: var(--kz-primary-dark);
+    text-decoration: underline;
+}
+
+.kz-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #edf6f5;
+    color: var(--kz-primary-dark);
+    font-size: 10px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+/* Empty states */
+.kz-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding: 25px 15px;
+    color: var(--kz-muted);
+    text-align: center;
+    font-size: 12px;
+}
+
+.kz-empty i {
+    margin-bottom: 10px;
+    color: #94a3b8;
+    font-size: 25px;
+}
+
+.kz-empty p {
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .kz-chart-container,
+    .kz-chart-container.kz-chart-small {
+        height: 270px;
+    }
+}
+
+@media (max-width: 767px) {
+    .kz-page-header {
+        padding: 17px;
+        align-items: flex-start;
+    }
+
+    .kz-header-content {
+        align-items: flex-start;
+    }
+
+    .kz-page-header h1 {
+        font-size: 17px;
+    }
+
+    .kz-page-header p {
+        line-height: 1.5;
+    }
+
+    .kz-primary-btn {
+        width: 100%;
+    }
+
+    .kz-shortcuts {
+        gap: 7px;
+    }
+
+    .kz-shortcuts a {
+        flex: 1 1 calc(50% - 7px);
+        justify-content: center;
+    }
+
+    .kz-stat-card {
+        min-height: 120px;
+        padding: 17px;
+    }
+
+    .kz-stat-number {
+        font-size: 26px;
+    }
+
+    .kz-card-body {
+        padding: 16px;
+    }
+
+    .kz-chart-container,
+    .kz-chart-container.kz-chart-small {
+        height: 250px;
+    }
+}
+
+@media (max-width: 420px) {
+    .kz-shortcuts a {
+        flex-basis: 100%;
+        justify-content: flex-start;
+    }
+
+    .kz-header-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid kz-dashboard" style="padding: 0;">
+
+    <!-- Page Header -->
+    <header class="kz-page-header">
+        <div class="kz-header-content">
+            <div class="kz-header-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div>
+                <h1>Kaizen Management Dashboard</h1>
+                <p>Monitor continuous improvement ideas from submission through closure.</p>
+            </div>
+        </div>
+
+        <a href="{% url 'kaizen:kaizen_create' %}" class="kz-primary-btn">
+            <i class="fas fa-plus-circle"></i>
+            Submit Kaizen
+        </a>
+    </header>
+
+    <!-- Quick Navigation -->
+    <nav class="kz-shortcuts">
+        <a href="{% url 'kaizen:kaizen_list' %}">
+            <i class="fas fa-list"></i>
+            All Kaizen
+        </a>
+
+        <a href="{% url 'kaizen:my_kaizens' %}">
+            <i class="fas fa-user"></i>
+            My Kaizen ({{ my_kaizens_count }})
+        </a>
+
+        <a href="{% url 'kaizen:my_actions' %}">
+            <i class="fas fa-tasks"></i>
+            My Actions ({{ my_actions_count }})
+        </a>
+
+        <a href="{% url 'kaizen:category_list' %}">
+            <i class="fas fa-tags"></i>
+            Categories
+        </a>
+    </nav>
+
+    <!-- Statistics -->
+    <div class="row mb-3">
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <a href="{% url 'kaizen:kaizen_list' %}" class="kz-stat-link">
+                <div class="kz-card kz-stat-card primary">
+                    <div class="kz-stat-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <p class="kz-stat-number">{{ total_kaizens }}</p>
+                    <p class="kz-stat-label">Total Kaizen Ideas</p>
+                    <small class="kz-stat-meta">
+                        {{ submitted_kaizens }} submitted · {{ draft_kaizens }} drafts
+                    </small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <a href="{% url 'kaizen:kaizen_list' %}?status=CLOSED" class="kz-stat-link">
+                <div class="kz-card kz-stat-card success">
+                    <div class="kz-stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <p class="kz-stat-number">{{ closed_kaizens }}</p>
+                    <p class="kz-stat-label">Closed Kaizen</p>
+                    <small class="kz-stat-meta">Successfully completed</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <a href="{% url 'kaizen:kaizen_list' %}" class="kz-stat-link">
+                <div class="kz-card kz-stat-card warning">
+                    <div class="kz-stat-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <p class="kz-stat-number">{{ in_progress_kaizens }}</p>
+                    <p class="kz-stat-label">In Progress</p>
+                    <small class="kz-stat-meta">
+                        Implementation, verification, and closure
+                    </small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <a href="{% url 'kaizen:my_actions' %}" class="kz-stat-link">
+                <div class="kz-card kz-stat-card danger">
+                    <div class="kz-stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <p class="kz-stat-number">{{ overdue_actions_count }}</p>
+                    <p class="kz-stat-label">Overdue Implementations</p>
+                    <small class="kz-stat-meta">Past planned completion date</small>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Monthly Trend and Status Distribution -->
+    <div class="row mb-3">
+
+        <div class="col-lg-8 mb-3">
+            <section class="kz-card">
+                <div class="kz-card-body">
+                    <div class="kz-section-header">
+                        <div>
+                            <h5 class="kz-section-title">
+                                <i class="fas fa-chart-line"></i>
+                                Monthly Trend
+                            </h5>
+                            <small class="kz-section-subtitle">
+                                Kaizen submitted vs closed, last 6 months
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="kz-chart-container">
+                        <canvas id="kaizenTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <section class="kz-card">
+                <div class="kz-card-body">
+                    <div class="kz-section-header">
+                        <div>
+                            <h5 class="kz-section-title">
+                                <i class="fas fa-tasks"></i>
+                                Status Distribution
+                            </h5>
+                            <small class="kz-section-subtitle">
+                                Current workflow state of every record
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="kz-chart-container kz-chart-small">
+                        <canvas id="kaizenStatusChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <!-- Department Performance and Overdue Actions -->
+    <div class="row mb-3">
+
+        <div class="col-lg-8 mb-3">
+            <section class="kz-card">
+                <div class="kz-card-body">
+                    <div class="kz-section-header">
+                        <div>
+                            <h5 class="kz-section-title">
+                                <i class="fas fa-building"></i>
+                                Department Performance
+                            </h5>
+                            <small class="kz-section-subtitle">
+                                Submitted vs closed by department
+                            </small>
+                        </div>
+                    </div>
+
+                    {% if department_performance %}
+                        <div class="kz-chart-container">
+                            <canvas id="kaizenDepartmentChart"></canvas>
+                        </div>
+                    {% else %}
+                        <div class="kz-empty">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>
+                                Department performance will appear when ideas have department information.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <section class="kz-card">
+                <div class="kz-card-body">
+
+                    <div class="kz-section-header">
+                        <div>
+                            <h5 class="kz-section-title">
+                                <i class="fas fa-clock"></i>
+                                Overdue Actions
+                            </h5>
+                            <small class="kz-section-subtitle">
+                                Implementation plans past due date
+                            </small>
+                        </div>
+
+                        <a href="{% url 'kaizen:my_actions' %}" class="kz-panel-link">
+                            All <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    {% if overdue_implementations %}
+                        <ul class="kz-overdue-list">
+                            {% for implementation in overdue_implementations %}
+                                <li>
+                                    <span class="kz-overdue-days">
+                                        {{ implementation.overdue_days }}d
+                                    </span>
+
+                                    <div class="kz-overdue-content">
+                                        <a
+                                            class="kz-overdue-title"
+                                            href="{% url 'kaizen:kaizen_detail' implementation.kaizen.pk %}"
+                                            title="{{ implementation.kaizen.title }}"
+                                        >
+                                            {{ implementation.kaizen.title }}
+                                        </a>
+
+                                        <div class="kz-overdue-meta">
+                                            {{ implementation.implementation_owner }}
+                                            · Due {{ implementation.planned_end_date|date:'d M Y' }}
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="kz-empty">
+                            <i class="fas fa-check-circle"></i>
+                            <p>No implementation plans are overdue.</p>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <!-- Recent Kaizen Ideas -->
+    <section class="kz-card mb-3">
+        <div class="kz-card-body">
+
+            <div class="kz-section-header">
+                <div>
+                    <h5 class="kz-section-title">
+                        <i class="fas fa-history"></i>
+                        Recent Kaizen Ideas
+                    </h5>
+                    <small class="kz-section-subtitle">
+                        Latest Kaizen ideas submitted in the system
+                    </small>
+                </div>
+
+                <a href="{% url 'kaizen:kaizen_list' %}" class="kz-panel-link">
+                    View all <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            {% if recent_kaizens %}
+                <div class="kz-table-wrap">
+                    <table class="kz-table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Idea</th>
+                                <th>Department</th>
+                                <th>Submitted By</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in recent_kaizens %}
+                                <tr>
+                                    <td>{{ item.kaizen_id|default:'—' }}</td>
+
+                                    <td>
+                                        <a href="{% url 'kaizen:kaizen_detail' item.pk %}">
+                                            {{ item.title }}
+                                        </a>
+                                    </td>
+
+                                    <td>{{ item.department|default:'—' }}</td>
+
+                                    <td>{{ item.submitted_by }}</td>
+
+                                    <td>
+                                        <span class="kz-status">
+                                            {{ item.get_status_display }}
+                                        </span>
+                                    </td>
+
+                                    <td>{{ item.created_at|date:'d M Y' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="kz-empty">
+                    <i class="fas fa-lightbulb"></i>
+                    <p>No Kaizen ideas are available yet.</p>
+                </div>
+            {% endif %}
+
+        </div>
+    </section>
+
+</div>
+
+<!-- Chart Data -->
+{{ status_distribution|json_script:'kaizen-status-data' }}
+{{ trend_labels|json_script:'kaizen-trend-labels' }}
+{{ trend_submitted|json_script:'kaizen-trend-submitted' }}
+{{ trend_closed|json_script:'kaizen-trend-closed' }}
+{{ department_performance|json_script:'kaizen-department-data' }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+{{ block.super }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (typeof Chart === 'undefined') {
+        return;
+    }
+
+    const data = function (id) {
+        const element = document.getElementById(id);
+        return element ? JSON.parse(element.textContent) : [];
+    };
+
+    const colors = [
+        '#0d9488',
+        '#2563eb',
+        '#22c55e',
+        '#d97706',
+        '#dc2626',
+        '#7c3aed',
+        '#0891b2',
+        '#64748b',
+        '#ea580c',
+        '#65a30d',
+        '#db2777',
+        '#94a3b8',
+        '#155e75',
+        '#f59e0b'
+    ];
+
+    const legend = {
+        position: 'bottom',
+        labels: {
+            usePointStyle: true,
+            boxWidth: 8,
+            padding: 16,
+            font: {
+                size: 11
+            }
+        }
+    };
+
+    const commonScales = {
+        y: {
+            beginAtZero: true,
+            ticks: {
+                precision: 0
+            },
+            grid: {
+                color: '#e9eef3'
+            }
+        },
+        x: {
+            grid: {
+                display: false
+            }
+        }
+    };
+
+    /* Status Distribution */
+    const statuses = data('kaizen-status-data').filter(function (item) {
+        return item.value > 0;
+    });
+
+    const statusCanvas = document.getElementById('kaizenStatusChart');
+
+    if (statusCanvas) {
+        new Chart(statusCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: statuses.map(function (item) {
+                    return item.label;
+                }),
+                datasets: [{
+                    data: statuses.map(function (item) {
+                        return item.value;
+                    }),
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '58%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: false,
+                            boxWidth: 8,
+                            padding: 8,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /* Monthly Trend */
+    const trendCanvas = document.getElementById('kaizenTrendChart');
+
+    if (trendCanvas) {
+        new Chart(trendCanvas, {
+            type: 'line',
+            data: {
+                labels: data('kaizen-trend-labels'),
+                datasets: [
+                    {
+                        label: 'Submitted',
+                        data: data('kaizen-trend-submitted'),
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13, 148, 136, .12)',
+                        fill: true,
+                        tension: .3,
+                        pointRadius: 3
+                    },
+                    {
+                        label: 'Closed',
+                        data: data('kaizen-trend-closed'),
+                        borderColor: '#22a45a',
+                        backgroundColor: 'rgba(34, 164, 90, .08)',
+                        fill: true,
+                        tension: .3,
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: legend
+                },
+                scales: commonScales
+            }
+        });
+    }
+
+    /* Department Performance */
+    const departments = data('kaizen-department-data');
+    const departmentCanvas = document.getElementById('kaizenDepartmentChart');
+
+    if (departmentCanvas) {
+        new Chart(departmentCanvas, {
+            type: 'bar',
+            data: {
+                labels: departments.map(function (item) {
+                    return item.department__name;
+                }),
+                datasets: [
+                    {
+                        label: 'Submitted',
+                        data: departments.map(function (item) {
+                            return item.submitted;
+                        }),
+                        backgroundColor: '#0d748b',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Closed',
+                        data: departments.map(function (item) {
+                            return item.closed;
+                        }),
+                        backgroundColor: '#299b62',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: legend
+                },
+                scales: commonScales
+            }
+        });
+    }
+
+});
+</script>
+{% endblock %}
