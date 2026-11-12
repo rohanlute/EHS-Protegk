@@ -48,6 +48,11 @@ urlpatterns = [
     path('hira/', include('apps.hira.urls')),
     #path('observations/', include('apps.observations.urls')),
     path("reports/", include("apps.reports.urls", namespace="reports")),
+    path('occupational-health/',include('apps.occupational_health.urls')),
+    path('sds/',include('apps.sds.urls')),
+    path('ergonomics/', include('apps.ergonomics.urls')),
+    path('industrial_hygiene/',include('apps.industrial_hygiene.urls')),
+    path('kaizen/',include('apps.kaizen.urls')),
 
     # Redirect root to login
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),

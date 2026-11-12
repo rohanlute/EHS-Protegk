@@ -10,6 +10,29 @@ from .related_records import RELATED_RECORD_MODELS
 
 User = get_user_model()
 
+def _set_select_placeholder(form, field_name, label):
+    field = form.fields[field_name]
+    if isinstance(field, forms.ModelChoiceField):
+        field.empty_label = label
+    elif isinstance(field, forms.ChoiceField):
+        choices = list(field.choices)
+        if choices and choices[0][0] == '':
+            choices = choices[1:]
+        field.choices = [('', label), *choices]
+    elif isinstance(field.widget, forms.Select):
+        choices = list(field.widget.choices)
+        if choices and choices[0][0] == '':
+            choices = choices[1:]
+        field.widget.choices = [('', label), *choices]
+    else:
+        raise TypeError(
+            f'{field_name} does not use a select field or widget.'
+        )
+
+    if not form.is_bound and not getattr(form.instance, 'pk', None):
+        form.initial[field_name] = ''
+
+
 class KaizenCategoryForm(forms.ModelForm):
     class Meta:
         model = KaizenCategory
@@ -175,7 +198,6 @@ class KaizenForm(forms.ModelForm):
         self.fields['category'].queryset = KaizenCategory.objects.filter(
             is_active=True
         )
-
         allowed_types = [
             (app_label, model_name)
             for app_label, model_name in RELATED_RECORD_MODELS.values()
@@ -205,12 +227,26 @@ class KaizenForm(forms.ModelForm):
         self.fields['location_record'].empty_label = 'Select Zone First'
         self.fields['sublocation'].empty_label = 'Select Location First'
         self.fields['department'].queryset = Department.objects.filter(is_active=True).order_by('name')
+        self.fields['department'].empty_label = '-- Select Department --'
 
         self.fields['zone'].label_from_instance = lambda obj: f'{obj.name} ({obj.code})'
         self.fields['location_record'].label_from_instance = lambda obj: f'{obj.name} ({obj.code})'
         self.fields['sublocation'].label_from_instance = lambda obj: (
             f'{obj.name} ({obj.code})' if obj.code else obj.name
         )
+        for field_name, label in (
+            ('category', '-- Select Category --'),
+            ('plant', '-- Select Plant --'),
+            ('department', '-- Select Department --'),
+            ('zone', '-- Select Zone --'),
+            ('location_record', '-- Select Location --'),
+            ('sublocation', '-- Select Sub-Location --'),
+            ('benefit_type', '-- Select Benefit Type --'),
+            ('priority', '-- Select Priority --'),
+            ('has_related_record', '-- Select Has Related Record --'),
+            ('related_module', '-- Select Related Module --'),
+        ):
+            _set_select_placeholder(self, field_name, label)
 
         if self.is_bound:
             plant_id = self.data.get(self.add_prefix('plant'))
@@ -380,6 +416,12 @@ class KaizenInitialReviewForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        _set_select_placeholder(self, 'decision', '-- Select Decision --')
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -453,6 +495,15 @@ class KaizenTechnicalEvaluationForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        _set_select_placeholder(self, 'decision', '-- Select Decision --')
+        _set_select_placeholder(self, 'feasibility', '-- Select Feasibility --')
+
+        self.fields['feasibility'].required = True
+
     def clean(self):
         cleaned_data = super().clean()
         decision = cleaned_data.get('decision')
@@ -503,6 +554,13 @@ class KaizenApprovalForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        _set_select_placeholder(self, 'decision', '-- Select Decision --')
+        self.fields['decision'].required = True
+
     def clean(self):
         cleaned_data = super().clean()
         decision = cleaned_data.get('decision')
@@ -524,21 +582,45 @@ class KaizenApprovalForm(forms.ModelForm):
 # IMPLEMENTATION FORM
 class KaizenImplementationForm(forms.ModelForm):
 
-    def __init__(self, *args, plant=None, **kwargs):
+    def __init__(self, *args, plant=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # Implementation owners must belong to the plant where this Kaizen
-        # was reported, either through their primary plant or assigned plants.
+
+        # Implementation owners must belong to the selected plant,
+        # either through their primary plant or assigned plants.
         self.fields['implementation_owner'].queryset = User.objects.none()
+
         if plant is not None:
-            self.fields['implementation_owner'].queryset = User.objects.filter(
-                is_active=True,
-            ).filter(
-                Q(plant=plant) | Q(assigned_plants=plant)
-            ).distinct().order_by('first_name', 'last_name', 'username')
+            self.fields['implementation_owner'].queryset = (
+                User.objects.filter(
+                    is_active=True,
+                ).filter(
+                    Q(plant=plant) | Q(assigned_plants=plant)
+                ).distinct().order_by(
+                    'first_name', 'last_name', 'username'
+                )
+            )
+
+        # Exclude the currently logged-in user from the dropdown.
+        if user:
+            self.fields['implementation_owner'].queryset = (
+                self.fields['implementation_owner'].queryset.exclude(
+                    pk=user.pk
+                )
+            )
+        _set_select_placeholder(
+            self, 'implementation_owner', '-- Select Implementation Owner --'
+        )
+
         self.fields['implementation_status'].choices = [
-            choice for choice in self.fields['implementation_status'].choices
-            if choice[0] != KaizenImplementation.ImplementationStatusChoices.COMPLETED
+            *[
+                choice
+                for choice in self.fields['implementation_status'].choices
+                if choice[0] != KaizenImplementation.ImplementationStatusChoices.COMPLETED
+            ],
         ]
+        _set_select_placeholder(
+            self, 'implementation_status', '-- Select Implementation Status --'
+        )
 
     class Meta:
         model = KaizenImplementation
@@ -695,6 +777,10 @@ class KaizenVerificationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        _set_select_placeholder(self, 'result', '-- Select Result --')
+        _set_select_placeholder(
+            self, 'rework_required', '-- Select Rework Required --'
+        )
         if self.instance and self.instance.pk and self.instance.rework_required is not None:
             self.initial['rework_required'] = '1' if self.instance.rework_required else '0'
 
@@ -723,6 +809,12 @@ class KaizenVerificationForm(forms.ModelForm):
 
 # KAIZEN ATTACHMENT FORM
 class KaizenAttachmentForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _set_select_placeholder(
+            self, 'attachment_type', '-- Select Attachment Type --'
+        )
+
     class Meta:
         model = KaizenAttachment
         fields = [

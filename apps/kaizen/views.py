@@ -730,6 +730,7 @@ class KaizenImplementationCreateView(KaizenStageContextMixin, LoginRequiredMixin
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['plant'] = self.kaizen.plant
+        kwargs['user'] = self.request.user
         return kwargs
 
     def dispatch(self, request, *args, **kwargs):
@@ -785,6 +786,7 @@ class KaizenImplementationUpdateView(KaizenStageContextMixin, LoginRequiredMixin
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['plant'] = self.object.kaizen.plant
+        kwargs['user'] = self.request.user
         return kwargs
 
     def get_queryset(self):
