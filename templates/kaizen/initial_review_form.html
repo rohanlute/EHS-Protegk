@@ -1,0 +1,417 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ stage_title|default:'Initial Review' }} | Kaizen
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item active">
+    {{ stage_title|default:'Initial Review' }}
+</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --kz-primary: #0d9488;
+    --kz-primary-dark: #0f766e;
+    --kz-primary-light: #f0fdfa;
+    --kz-ink: #0f172a;
+    --kz-text: #334155;
+    --kz-muted: #64748b;
+    --kz-border: #e2e8f0;
+    --kz-bg: #f1f5f9;
+    --kz-danger: #dc2626;
+    --kz-radius: 12px;
+    --kz-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+/* Main Container */
+.content-wrapper {
+    background: var(--kz-bg) !important;
+}
+
+.kz-stage-initial_review {
+    width: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 5px 0 35px;
+    color: var(--kz-ink);
+    font-family: Inter, Arial, sans-serif;
+}
+
+.kz-stage-initial_review .kz-form {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* Page Header - White Card Background */
+.kz-stage-initial_review .kz-form-head {
+    padding: 22px 24px;
+    margin: 17px 0 20px;
+    border: 1px solid var(--kz-border);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.kz-stage-initial_review .kz-form-head h1 {
+    margin: 10px 0 7px;
+    color: var(--kz-ink);
+    font-size: 24px;
+    font-weight: 750;
+    letter-spacing: -.4px;
+    line-height: 1.35;
+}
+
+.kz-stage-initial_review .kz-form-head > p {
+    margin: 0;
+    color: var(--kz-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.kz-stage-initial_review .kz-form-head a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--kz-muted);
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.kz-stage-initial_review .kz-form-head a:hover {
+    color: var(--kz-primary);
+}
+
+/* Kaizen Information Panel */
+.kz-stage-initial_review .kz-form-note {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 17px 20px;
+    margin-top: 17px;
+    border: 1px solid #d7e9e6;
+    border-left: 4px solid var(--kz-primary);
+    border-radius: var(--kz-radius);
+    background: linear-gradient(110deg, #fff 0%, #f8fffe 100%);
+    box-shadow: var(--kz-shadow);
+}
+
+.kz-stage-initial_review .kz-form-note-details {
+    min-width: 0;
+}
+
+.kz-stage-initial_review .kz-form-note-label,
+.kz-stage-initial_review .kz-form-note-status > span {
+    display: block;
+    color: var(--kz-muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+.kz-stage-initial_review .kz-form-note-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px 11px;
+    margin-top: 6px;
+}
+
+.kz-stage-initial_review .kz-form-note-title strong {
+    flex: 0 0 auto;
+    color: var(--kz-primary-dark);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.kz-stage-initial_review .kz-form-note-title > span {
+    color: var(--kz-ink);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.kz-stage-initial_review .kz-form-note-status {
+    flex: 0 0 auto;
+    display: grid;
+    justify-items: end;
+    gap: 7px;
+    padding-left: 20px;
+    border-left: 1px solid #dce8e7;
+}
+
+.kz-stage-initial_review .kz-form-note-status strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border: 1px solid #b7e4dc;
+    border-radius: 30px;
+    background: #ecfdf8;
+    color: var(--kz-primary-dark);
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1.3;
+}
+
+.kz-stage-initial_review .kz-form-note-status strong::before {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+}
+
+/* Form Card */
+.kz-stage-initial_review .kz-card {
+    padding: 25px 25px;
+    margin: 20px 0;
+    border: 1px solid var(--kz-border);
+    border-top: 3px solid var(--kz-primary);
+    border-radius: var(--kz-radius);
+    background: #fff;
+    box-shadow: var(--kz-shadow);
+}
+
+/* Form Fields Layout */
+.kz-stage-initial_review .kz-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 22px 20px;
+}
+
+.kz-stage-initial_review .kz-fields p {
+    min-width: 0;
+    margin: 0;
+}
+
+.kz-stage-initial_review .kz-fields p:has(select) {
+    grid-column: 1 / -1;
+}
+
+/* Labels */
+.kz-stage-initial_review .kz-fields label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--kz-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Inputs */
+.kz-stage-initial_review .kz-fields input:not([type="checkbox"]):not([type="radio"]),
+.kz-stage-initial_review .kz-fields select,
+.kz-stage-initial_review .kz-fields textarea {
+    display: block;
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    background: #fff;
+    color: var(--kz-ink);
+    font-family: inherit;
+    font-size: 13px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.kz-stage-initial_review .kz-fields select {
+    cursor: pointer;
+}
+
+.kz-stage-initial_review .kz-fields textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.65;
+}
+
+.kz-stage-initial_review .kz-fields input::placeholder,
+.kz-stage-initial_review .kz-fields textarea::placeholder {
+    color: #94a3b8;
+}
+
+.kz-stage-initial_review .kz-fields input:focus,
+.kz-stage-initial_review .kz-fields select:focus,
+.kz-stage-initial_review .kz-fields textarea:focus {
+    border-color: var(--kz-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, .10);
+}
+
+.kz-stage-initial_review .kz-fields input[type="checkbox"],
+.kz-stage-initial_review .kz-fields input[type="radio"] {
+    accent-color: var(--kz-primary);
+}
+
+/* Help Text */
+.kz-stage-initial_review .kz-fields small {
+    display: block;
+    margin-top: 6px;
+    color: var(--kz-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* Validation Errors */
+.kz-stage-initial_review .kz-errors {
+    display: block;
+    margin-top: 6px;
+    color: var(--kz-danger);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.kz-stage-initial_review .kz-card > ul,
+.kz-stage-initial_review .kz-card .errorlist {
+    padding-left: 18px;
+    color: #b91c1c;
+    font-size: 12px;
+}
+
+.kz-stage-initial_review .kz-fields p:has(label[for*="clarification_required"]) textarea,
+.kz-stage-initial_review .kz-fields p:has(label[for*="clarification-required"]) textarea {
+    min-height: 105px;
+}
+
+/* Form Actions */
+.kz-stage-initial_review .kz-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 11px;
+    padding-top: 19px;
+    margin-top: 23px;
+    border-top: 1px solid #edf1f4;
+}
+
+.kz-stage-initial_review .kz-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 19px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--kz-primary);
+    color: #fff !important;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.kz-stage-initial_review .kz-btn:hover {
+    background: var(--kz-primary-dark);
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+.kz-stage-initial_review .kz-btn:focus-visible {
+    outline: 3px solid rgba(13, 148, 136, .2);
+    outline-offset: 2px;
+}
+
+.kz-stage-initial_review .kz-btn-light {
+    border-color: #dbe3e8;
+    background: #fff;
+    color: #475569 !important;
+}
+
+.kz-stage-initial_review .kz-btn-light:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: var(--kz-ink) !important;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .kz-stage-initial_review {
+        padding-bottom: 20px;
+    }
+
+    .kz-stage-initial_review .kz-form-head {
+        padding: 18px;
+    }
+
+    .kz-stage-initial_review .kz-form-head h1 {
+        font-size: 21px;
+    }
+
+    .kz-stage-initial_review .kz-card {
+        padding: 19px;
+    }
+}
+
+@media (max-width: 650px) {
+    .kz-stage-initial_review .kz-fields {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .kz-stage-initial_review .kz-fields p:has(select) {
+        grid-column: auto;
+    }
+
+    .kz-stage-initial_review .kz-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .kz-stage-initial_review .kz-actions > * {
+        width: 100%;
+        text-align: center;
+    }
+
+    .kz-stage-initial_review .kz-form-note {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 13px;
+        padding: 15px;
+    }
+
+    .kz-stage-initial_review .kz-form-note-status {
+        justify-items: start;
+        padding: 12px 0 0;
+        border-top: 1px solid #dce8e7;
+        border-left: 0;
+    }
+}
+
+@media (max-width: 420px) {
+    .kz-stage-initial_review .kz-card {
+        padding: 15px;
+    }
+
+    .kz-stage-initial_review .kz-form-head {
+        padding: 15px;
+    }
+
+    .kz-stage-initial_review .kz-form-head h1 {
+        font-size: 19px;
+    }
+}
+{% include 'kaizen/includes/stage_form_styles.html' %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kz-stage-initial_review">
+    {% include 'kaizen/includes/stage_form_content.html' %}
+</div>
+{% endblock %}

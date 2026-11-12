@@ -1,0 +1,48 @@
+<main class="kz-form kz-stage-page kz-stage-{{ stage_key }}">
+    {% with related_kaizen=stage_kaizen %}
+    <div class="kz-form-head">
+        {% if related_kaizen %}<a href="{% url 'kaizen:kaizen_detail' related_kaizen.pk %}" class="text-muted"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to {{ related_kaizen.kaizen_id|default:related_kaizen.title }}</a>{% else %}<a href="{% url 'kaizen:dashboard' %}" class="text-muted"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Kaizen</a>{% endif %}
+        <h1>{{ stage_title|default:'Record workflow activity' }}</h1>
+        <p class="text-muted mb-3">{{ stage_description|default:'Complete the fields below to record this stage.' }}</p>
+        {% if related_kaizen %}
+            {% if stage_key == 'initial_review' or stage_key == 'approval' or stage_key == 'implementation' or stage_key == 'implementation_update' or stage_key == 'verification' %}
+                <div class="kz-form-note kz-form-note-summary">
+                    <div class="kz-form-note-details">
+                        <span class="kz-form-note-label">Kaizen idea</span>
+                        <div class="kz-form-note-title">
+                            <strong>{{ related_kaizen.kaizen_id|default:'Kaizen' }}</strong>
+                            <span>{{ related_kaizen.title }}</span>
+                        </div>
+                    </div>
+                    <div class="kz-form-note-status">
+                        <span>Current status</span>
+                        <strong>{{ related_kaizen.get_status_display }}</strong>
+                    </div>
+                </div>
+            {% else %}
+                <div class="kz-form-note"><strong>{{ related_kaizen.kaizen_id|default:'Kaizen' }}</strong> &mdash; {{ related_kaizen.title }} <span class="ms-2">Current status: {{ related_kaizen.get_status_display }}</span></div>
+            {% endif %}
+        {% endif %}
+    </div>
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <section class="kz-card">
+            {{ form.non_field_errors }}
+            <div class="kz-fields">
+                {% for field in form %}
+                <p>
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span style="color:#dc2626">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}<span class="kz-errors">{{ error }}</span>{% endfor %}
+                </p>
+                {% endfor %}
+            </div>
+        </section>
+        <div class="kz-actions">
+            {% if related_kaizen %}<a class="kz-btn kz-btn-light" href="{% url 'kaizen:kaizen_detail' related_kaizen.pk %}">Cancel</a>{% else %}<a class="kz-btn kz-btn-light" href="{% url 'kaizen:dashboard' %}">Cancel</a>{% endif %}
+            <button class="kz-btn" type="submit">{{ submit_label|default:'Save and continue' }}</button>
+        </div>
+    </form>
+    {% endwith %}
+</main>

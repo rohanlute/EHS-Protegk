@@ -1,0 +1,1267 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}{{ kaizen.kaizen_id|default:kaizen.title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:kaizen_list' %}">Register</a>
+</li>
+<li class="breadcrumb-item active">
+    {{ kaizen.kaizen_id|default:kaizen.pk }}
+</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --kz-primary: #0d9488;
+        --kz-primary-dark: #0f766e;
+        --kz-primary-light: #f0fdfa;
+        --kz-primary-border: #ccfbf1;
+        --kz-text: #0f172a;
+        --kz-muted: #64748b;
+        --kz-border: #e2e8f0;
+        --kz-bg: #f8fafc;
+    }
+
+    .kz-detail {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 8px 0 30px;
+        color: var(--kz-text);
+    }
+
+    /* Page Header */
+    .kz-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        background: #ffffff;
+        border: 1px solid var(--kz-border);
+        border-top: 3px solid var(--kz-primary);
+        border-radius: 12px;
+        padding: 21px 24px;
+        margin: 12px 0 20px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .035);
+    }
+
+    .kz-title-area {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .kz-title-area h1 {
+        font-size: 22px;
+        font-weight: 750;
+        color: var(--kz-text);
+        margin: 0;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 17px;
+        color: var(--kz-muted);
+        font-size: 12px;
+        margin-top: 9px;
+        line-height: 1.6;
+    }
+
+    .kz-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .kz-meta i {
+        color: var(--kz-primary);
+        font-size: 12px;
+    }
+
+    /* Status */
+    .kz-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 13px;
+        border: 1px solid #99f6e4;
+        border-radius: 30px;
+        background: var(--kz-primary-light);
+        color: var(--kz-primary-dark);
+        font-size: 11px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .kz-status::before {
+        content: "";
+        height: 7px;
+        width: 7px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    /* Common Cards */
+    .kz-card {
+        background: #ffffff;
+        border: 1px solid var(--kz-border);
+        border-top: 2px solid var(--kz-primary);
+        border-radius: 12px;
+        padding: 21px 22px;
+        margin-bottom: 17px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .025);
+    }
+
+    .kz-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 19px;
+    }
+
+    .kz-card h2 {
+        font-size: 15px;
+        font-weight: 750;
+        color: var(--kz-text);
+        margin: 0;
+    }
+
+    .kz-card h2 i {
+        color: var(--kz-primary);
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+
+    .kz-section-subtitle {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    /* Buttons */
+    .kz-actions {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 14px;
+    }
+
+    .kz-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        background: var(--kz-primary);
+        color: #ffffff !important;
+        border: 1px solid var(--kz-primary);
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: all .2s ease;
+        cursor: pointer;
+    }
+
+    .kz-btn:hover {
+        background: var(--kz-primary-dark);
+        border-color: var(--kz-primary-dark);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(13, 148, 136, .15);
+    }
+
+    .kz-btn.light {
+        background: var(--kz-primary-light);
+        border-color: var(--kz-primary-border);
+        color: var(--kz-primary-dark) !important;
+    }
+
+    .kz-btn.light:hover {
+        background: #ccfbf1;
+        border-color: #99f6e4;
+        color: var(--kz-primary-dark) !important;
+    }
+
+    /* Workflow Tracker */
+    .kz-workflow-card {
+        overflow: hidden;
+    }
+
+    .kz-workflow {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .kz-stage {
+        min-height: 80px;
+        padding: 12px 8px;
+        border: 1px solid var(--kz-border);
+        border-radius: 9px;
+        background: var(--kz-bg);
+        color: var(--kz-muted);
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+        line-height: 1.4;
+    }
+
+    .kz-stage-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+    }
+
+    .kz-stage.done {
+        background: var(--kz-primary-light);
+        border-color: #99f6e4;
+        color: var(--kz-primary-dark);
+    }
+
+    .kz-stage.done .kz-stage-number {
+        background: var(--kz-primary);
+        color: #ffffff;
+    }
+
+    /* Details Grid */
+    .kz-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px 24px;
+    }
+
+    .kz-field {
+        min-width: 0;
+    }
+
+    .kz-label {
+        font-size: 10px;
+        color: var(--kz-muted);
+        text-transform: uppercase;
+        letter-spacing: .055em;
+        font-weight: 750;
+        margin-bottom: 6px;
+    }
+
+    .kz-value {
+        color: #263648;
+        font-size: 12px;
+        line-height: 1.7;
+        font-weight: 550;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-field.full {
+        grid-column: 1 / -1;
+        padding-top: 13px;
+        border-top: 1px solid #edf2f5;
+    }
+
+    .kz-field.full .kz-value {
+        background: var(--kz-bg);
+        border: 1px solid #edf2f5;
+        padding: 12px 14px;
+        border-radius: 8px;
+        font-weight: 400;
+    }
+
+    /* Priority */
+    .kz-priority {
+        display: inline-block;
+        padding: 5px 10px;
+        border: 1px solid var(--kz-primary-border);
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 750;
+        background: var(--kz-primary-light);
+        color: var(--kz-primary-dark);
+    }
+
+    /* Evidence */
+    .kz-evidence-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 13px 0;
+        border-top: 1px solid #edf2f4;
+    }
+
+    .kz-evidence-item:first-child {
+        border-top: 0;
+    }
+
+    .kz-evidence-info {
+        min-width: 0;
+    }
+
+    .kz-evidence-info a {
+        color: var(--kz-primary-dark);
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-evidence-info a:hover {
+        text-decoration: underline;
+    }
+
+    .kz-evidence-meta {
+        color: #94a3b8;
+        font-size: 10px;
+        margin-top: 5px;
+        line-height: 1.6;
+    }
+
+    .kz-evidence-description {
+        color: var(--kz-muted);
+        font-size: 11px;
+        margin: 6px 0 0;
+        line-height: 1.6;
+    }
+
+    /* Review and Workflow Records */
+    .kz-record {
+        padding: 15px 0;
+        border-top: 1px solid #edf2f4;
+    }
+
+    .kz-record:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    .kz-record-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .kz-record-title {
+        color: var(--kz-text);
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .kz-record-meta {
+        color: #94a3b8;
+        font-size: 10px;
+    }
+
+    .kz-record p {
+        color: var(--kz-muted);
+        font-size: 11px;
+        line-height: 1.7;
+        margin: 8px 0 0;
+        white-space: pre-line;
+    }
+
+    .kz-record-label {
+        color: #334155;
+        font-weight: 750;
+    }
+
+    .kz-action-item {
+        background: var(--kz-bg);
+        border: 1px solid #e8eef2;
+        border-radius: 9px;
+        padding: 14px;
+        margin-top: 12px;
+    }
+
+    .kz-action-item h3 {
+        font-size: 12px;
+        font-weight: 750;
+        margin: 0 0 7px;
+        color: var(--kz-text);
+    }
+
+    .kz-assignment {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #eef5f5;
+        color: #475569;
+        border-radius: 6px;
+        padding: 5px 8px;
+        margin: 7px 5px 0 0;
+        font-size: 10px;
+    }
+
+    .kz-assignment i {
+        color: var(--kz-primary);
+    }
+
+    /* Closure */
+    .kz-closure {
+        background: var(--kz-primary-light);
+        border: 1px solid var(--kz-primary-border);
+        border-radius: 9px;
+        padding: 16px;
+    }
+
+    .kz-closure p {
+        color: #334155;
+        font-size: 11px;
+        line-height: 1.7;
+        margin: 0 0 10px;
+        white-space: pre-line;
+    }
+
+    .kz-closure p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Empty State */
+    .kz-empty {
+        color: #94a3b8;
+        font-size: 11px;
+        padding: 15px 0 5px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1050px) {
+        .kz-workflow {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .kz-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 650px) {
+        .kz-header {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 17px;
+        }
+
+        .kz-title-area h1 {
+            font-size: 19px;
+        }
+
+        .kz-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .kz-card {
+            padding: 16px;
+        }
+
+        .kz-workflow {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .kz-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .kz-field.full {
+            grid-column: auto;
+        }
+
+        .kz-evidence-item {
+            flex-direction: column;
+        }
+
+        .kz-card-header {
+            align-items: flex-start;
+        }
+
+        .kz-actions {
+            align-items: stretch;
+        }
+
+        .kz-btn {
+            flex: 0 0 auto;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .kz-workflow {
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+        }
+
+        .kz-stage {
+            font-size: 9px;
+            padding: 10px 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<main class="kz-detail">
+
+    <!-- Page Header -->
+    <div class="kz-header">
+
+        <div class="kz-title-area">
+            <h1>{{ kaizen.title }}</h1>
+
+            <div class="kz-meta">
+                <span>
+                    <i class="fas fa-hashtag"></i>
+                    {{ kaizen.kaizen_id|default:kaizen.pk }}
+                </span>
+
+                <span>
+                    <i class="fas fa-user"></i>
+                    Submitted by {{ kaizen.submitted_by }}
+                </span>
+
+                <span>
+                    <i class="far fa-calendar-alt"></i>
+                    Submitted On {{ kaizen.submission_date|default:kaizen.created_at|date:'d M Y, H:i' }}
+                </span>
+            </div>
+        </div>
+
+        <span class="kz-status">
+            {{ kaizen.get_status_display }}
+        </span>
+
+    </div>
+
+
+    <!-- Workflow Progress -->
+    <section class="kz-card kz-workflow-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-project-diagram"></i>
+                    Kaizen Workflow Progress
+                </h2>
+                <div class="kz-section-subtitle">
+                    Track the progress of this improvement idea.
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-workflow">
+
+            <div class="kz-stage done">
+                <span class="kz-stage-number">01</span>
+                <span>Idea Submission</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage != 'SUBMISSION' %}done{% endif %}">
+                <span class="kz-stage-number">02</span>
+                <span>Initial Review</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage == 'APPROVAL' or kaizen.current_stage == 'IMPLEMENTATION' or kaizen.current_stage == 'VERIFICATION' or kaizen.current_stage == 'CLOSURE' or kaizen.current_stage == 'CLOSED' %}done{% endif %}">
+                <span class="kz-stage-number">03</span>
+                <span>Technical Evaluation</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage == 'IMPLEMENTATION' or kaizen.current_stage == 'VERIFICATION' or kaizen.current_stage == 'CLOSURE' or kaizen.current_stage == 'CLOSED' %}done{% endif %}">
+                <span class="kz-stage-number">04</span>
+                <span>Approval</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage == 'VERIFICATION' or kaizen.current_stage == 'CLOSURE' or kaizen.current_stage == 'CLOSED' %}done{% endif %}">
+                <span class="kz-stage-number">05</span>
+                <span>Implementation</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage == 'CLOSURE' or kaizen.current_stage == 'CLOSED' %}done{% endif %}">
+                <span class="kz-stage-number">06</span>
+                <span>Verification</span>
+            </div>
+
+            <div class="kz-stage {% if kaizen.current_stage == 'CLOSED' %}done{% endif %}">
+                <span class="kz-stage-number">07</span>
+                <span>Closure</span>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- Workflow Actions -->
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-tasks"></i>
+                    Workflow Actions
+                </h2>
+                <div class="kz-section-subtitle">
+                    Available actions based on the current Kaizen status and permissions.
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-actions">
+
+            {% if kaizen.status == 'DRAFT' or kaizen.status == 'RETURNED_FOR_CLARIFICATION' or kaizen.status == 'RETURNED_FOR_REVISION' %}
+                {% if kaizen.submitted_by_id == request.user.id %}
+                    <a class="kz-btn" href="{% url 'kaizen:kaizen_edit' kaizen.pk %}">
+                        <i class="fas fa-edit"></i>
+                        Edit and Resubmit Idea
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            {% if kaizen.status == 'SUBMITTED' or kaizen.status == 'UNDER_INITIAL_REVIEW' %}
+                <a class="kz-btn" href="{% url 'kaizen:initial_review' kaizen.pk %}">
+                    <i class="fas fa-clipboard-check"></i>
+                    Record Initial Review
+                </a>
+            {% endif %}
+
+            {% if kaizen.status == 'UNDER_TECHNICAL_EVALUATION' %}
+                <a class="kz-btn" href="{% url 'kaizen:technical_evaluation' kaizen.pk %}">
+                    <i class="fas fa-microscope"></i>
+                    Add Technical Evaluation
+                </a>
+            {% endif %}
+
+            {% if kaizen.status == 'PENDING_APPROVAL' %}
+                <a class="kz-btn" href="{% url 'kaizen:approval' kaizen.pk %}">
+                    <i class="fas fa-check-circle"></i>
+                    Record Approval
+                </a>
+            {% endif %}
+
+            {% if kaizen.status == 'APPROVED_FOR_IMPLEMENTATION' and not kaizen.implementations.all %}
+                <a class="kz-btn" href="{% url 'kaizen:implementation_create' kaizen.pk %}">
+                    <i class="fas fa-play-circle"></i>
+                    Plan Implementation
+                </a>
+            {% endif %}
+
+            {% for implementation in kaizen.implementations.all %}
+                {% if kaizen.status == 'APPROVED_FOR_IMPLEMENTATION' or kaizen.status == 'IN_PROGRESS' or kaizen.status == 'ON_HOLD' or kaizen.status == 'VERIFICATION_FAILED' %}
+                    <a class="kz-btn" href="{% url 'kaizen:implementation_update' implementation.pk %}">
+                        <i class="fas fa-edit"></i>
+                        Update Implementation
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if kaizen.status == 'PENDING_VERIFICATION' %}
+                <a class="kz-btn" href="{% url 'kaizen:verification' kaizen.pk %}">
+                    <i class="fas fa-clipboard-check"></i>
+                    Record Verification
+                </a>
+            {% endif %}
+
+            {% if kaizen.status == 'PENDING_CLOSURE' %}
+                <a class="kz-btn" href="{% url 'kaizen:closure' kaizen.pk %}">
+                    <i class="fas fa-lock"></i>
+                    Close Kaizen
+                </a>
+            {% endif %}
+
+            <a class="kz-btn" href="{% url 'kaizen:final_report' kaizen.pk %}">
+                <i class="fas fa-file-pdf"></i>
+                {% if kaizen.status == 'CLOSED' %}Download Final Report{% else %}Download Progress Report{% endif %}
+            </a>
+
+            <a class="kz-btn light" href="{% url 'kaizen:history' kaizen.pk %}">
+                <i class="fas fa-history"></i>
+                View Workflow History
+            </a>
+
+        </div>
+    </section>
+
+
+    <!-- Idea Details -->
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-lightbulb"></i>
+                    Idea Details
+                </h2>
+                <div class="kz-section-subtitle">
+                    Basic information and details of the submitted improvement idea.
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-grid">
+
+            <div class="kz-field">
+                <div class="kz-label">Category</div>
+                <div class="kz-value">{{ kaizen.category }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Submitted By</div>
+                <div class="kz-value">{{ kaizen.submitted_by|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Submitted On</div>
+                <div class="kz-value">{{ kaizen.submission_date|default:kaizen.created_at|date:'d M Y, H:i' }}</div>
+            </div>
+
+            {% if kaizen.has_related_record %}
+            <div class="kz-field">
+                <div class="kz-label">Related Module</div>
+                <div class="kz-value">{{ kaizen.get_related_module_display|default:kaizen.related_module|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Related Record</div>
+                <div class="kz-value">{{ kaizen.related_record|default:kaizen.related_object_id|default:'—' }}</div>
+            </div>
+
+            {% elif kaizen.manual_source_reference %}
+            <div class="kz-field">
+                <div class="kz-label">Manual Source Reference</div>
+                <div class="kz-value">{{ kaizen.manual_source_reference }}</div>
+            </div>
+            {% endif %}
+
+            <div class="kz-field">
+                <div class="kz-label">Plant</div>
+                <div class="kz-value">{{ kaizen.plant|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Department</div>
+                <div class="kz-value">{{ kaizen.department|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Zone</div>
+                <div class="kz-value">{{ kaizen.zone|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Location</div>
+                <div class="kz-value">{{ kaizen.location_record|default:kaizen.location|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Sub-Location</div>
+                <div class="kz-value">{{ kaizen.sublocation|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Additional Location Details</div>
+                <div class="kz-value">{{ kaizen.additional_location_details|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Priority</div>
+                <div class="kz-value">
+                    <span class="kz-priority">{{ kaizen.get_priority_display }}</span>
+                </div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Benefit Type</div>
+                <div class="kz-value">{{ kaizen.get_benefit_type_display }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Estimated Cost</div>
+                <div class="kz-value">{{ kaizen.estimated_cost|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Description</div>
+                <div class="kz-value">{{ kaizen.description|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Problem Statement</div>
+                <div class="kz-value">{{ kaizen.problem_statement|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Proposed Solution</div>
+                <div class="kz-value">{{ kaizen.proposed_solution|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Expected Benefits</div>
+                <div class="kz-value">{{ kaizen.expected_benefits|default:'—' }}</div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- Supporting Evidence -->
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-paperclip"></i>
+                    Supporting Evidence
+                </h2>
+                <div class="kz-section-subtitle">
+                    Documents and attachments related to this Kaizen idea.
+                </div>
+            </div>
+
+            {% if kaizen.status != 'CLOSED' %}
+                <a class="kz-btn light" href="{% url 'kaizen:attachment_create' kaizen.pk %}">
+                    <i class="fas fa-upload"></i>
+                    Upload Evidence
+                </a>
+            {% endif %}
+        </div>
+
+        {% for attachment in kaizen.attachments.all %}
+            <div class="kz-evidence-item">
+
+                <div class="kz-evidence-info">
+                    <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-file-alt"></i>
+                        {{ attachment.file.name }}
+                    </a>
+
+                    <div class="kz-evidence-meta">
+                        {{ attachment.get_attachment_type_display }}
+                        &nbsp;·&nbsp;
+                        Uploaded by {{ attachment.uploaded_by|default:'—' }}
+                        &nbsp;·&nbsp;
+                        {{ attachment.uploaded_at|date:'d M Y' }}
+                    </div>
+
+                    {% if attachment.description %}
+                        <p class="kz-evidence-description">
+                            {{ attachment.description }}
+                        </p>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% empty %}
+            {% if not kaizen.related_attachment %}
+                <div class="kz-empty">
+                    <i class="fas fa-info-circle"></i>
+                    No supporting evidence has been uploaded.
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% if kaizen.related_attachment %}
+            <div class="kz-evidence-item">
+                <div class="kz-evidence-info">
+                    <a href="{{ kaizen.related_attachment.url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-link"></i>
+                        Related record evidence
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </section>
+
+
+    <!-- Initial Reviews -->
+    {% if kaizen.initial_reviews.all %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-clipboard-check"></i>
+                    Initial Reviews
+                </h2>
+                <div class="kz-section-subtitle">
+                    Review decisions and clarification details.
+                </div>
+            </div>
+        </div>
+
+        {% for entry in kaizen.initial_reviews.all %}
+            <div class="kz-record">
+
+                <div class="kz-record-top">
+                    <div class="kz-record-title">
+                        {{ entry.get_decision_display }}
+                    </div>
+
+                    <div class="kz-record-meta">
+                        {{ entry.reviewed_by }} · {{ entry.review_date|date:'d M Y, H:i' }}
+                    </div>
+                </div>
+
+                <p>{{ entry.review_comments }}</p>
+
+                {% if entry.clarification_required %}
+                    <p>
+                        <span class="kz-record-label">Clarification Required:</span>
+                        {{ entry.clarification_required }}
+                    </p>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+    </section>
+    {% endif %}
+
+
+    <!-- Technical Evaluation -->
+    {% if kaizen.technical_evaluations.all %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-microscope"></i>
+                    Technical Evaluation
+                </h2>
+                <div class="kz-section-subtitle">
+                    Technical assessment, feasibility and recommendations.
+                </div>
+            </div>
+        </div>
+
+        {% for entry in kaizen.technical_evaluations.all %}
+            <div class="kz-record">
+
+                <div class="kz-record-top">
+                    <div class="kz-record-title">
+                        {{ entry.get_decision_display }} · {{ entry.get_feasibility_display }}
+                    </div>
+
+                    <div class="kz-record-meta">
+                        Evaluated by {{ entry.evaluated_by }}
+                    </div>
+                </div>
+
+                <p>{{ entry.technical_comments }}</p>
+
+                <p>
+                    <span class="kz-record-label">Recommendation:</span>
+                    {{ entry.recommendation }}
+                </p>
+
+                <div class="kz-grid">
+                    <div class="kz-field">
+                        <div class="kz-label">Safety Impact</div>
+                        <div class="kz-value">{{ entry.safety_impact|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Operational Impact</div>
+                        <div class="kz-value">{{ entry.operational_impact|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Resources Required</div>
+                        <div class="kz-value">{{ entry.resource_requirements|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Estimated Implementation Cost</div>
+                        <div class="kz-value">{{ entry.estimated_implementation_cost|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Estimated Completion</div>
+                        <div class="kz-value">{{ entry.estimated_completion_date|date:'d M Y'|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Evaluation Date</div>
+                        <div class="kz-value">{{ entry.evaluation_date|date:'d M Y, H:i' }}</div>
+                    </div>
+                </div>
+
+            </div>
+        {% endfor %}
+
+    </section>
+    {% endif %}
+
+
+    <!-- Approval -->
+    {% if kaizen.approvals.all %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-check-circle"></i>
+                    Approval Records
+                </h2>
+                <div class="kz-section-subtitle">
+                    Approval decisions and comments.
+                </div>
+            </div>
+        </div>
+
+        {% for entry in kaizen.approvals.all %}
+            <div class="kz-record">
+
+                <div class="kz-record-top">
+                    <div class="kz-record-title">
+                        {{ entry.get_decision_display }}
+                    </div>
+
+                    <div class="kz-record-meta">
+                        Approved by {{ entry.approved_by }} · {{ entry.approval_date|date:'d M Y, H:i' }}
+                    </div>
+                </div>
+
+                <p>{{ entry.approval_comments }}</p>
+
+            </div>
+        {% endfor %}
+
+    </section>
+    {% endif %}
+
+
+    <!-- Implementation -->
+    {% for implementation in kaizen.implementations.all %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-tools"></i>
+                    Implementation
+                </h2>
+                <div class="kz-section-subtitle">
+                    {{ implementation.get_implementation_status_display }}
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-grid">
+
+            <div class="kz-field">
+                <div class="kz-label">Implementation Owner</div>
+                <div class="kz-value">{{ implementation.implementation_owner|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Planned Schedule</div>
+                <div class="kz-value">
+                    {{ implementation.planned_start_date|date:'d M Y'|default:'—' }}
+                    – {{ implementation.planned_end_date|date:'d M Y'|default:'—' }}
+                </div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Actual Schedule</div>
+                <div class="kz-value">
+                    {{ implementation.actual_start_date|date:'d M Y'|default:'—' }}
+                    – {{ implementation.actual_end_date|date:'d M Y'|default:'—' }}
+                </div>
+            </div>
+
+            <div class="kz-field">
+                <div class="kz-label">Actual Cost</div>
+                <div class="kz-value">{{ implementation.actual_cost|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Implementation Plan / Actions</div>
+                <div class="kz-value">{{ implementation.implementation_actions|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Resources Used</div>
+                <div class="kz-value">{{ implementation.resources_used|default:'—' }}</div>
+            </div>
+
+            <div class="kz-field full">
+                <div class="kz-label">Implementation Remarks</div>
+                <div class="kz-value">{{ implementation.implementation_remarks|default:'—' }}</div>
+            </div>
+
+        </div>
+
+        {% if implementation.implementation_owner_id == request.user.id and kaizen.status == 'IN_PROGRESS' or implementation.implementation_owner_id == request.user.id and kaizen.status == 'ON_HOLD' or implementation.implementation_owner_id == request.user.id and kaizen.status == 'VERIFICATION_FAILED' %}
+            <div class="kz-actions">
+                <a class="kz-btn" href="{% url 'kaizen:implementation_completion' implementation.pk %}">
+                    <i class="fas fa-check"></i>
+                    Complete My Implementation
+                </a>
+            </div>
+        {% endif %}
+
+    </section>
+    {% endfor %}
+
+
+    <!-- Verification -->
+    {% if kaizen.verifications.all %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-search"></i>
+                    Verification Records
+                </h2>
+                <div class="kz-section-subtitle">
+                    Verification results and improvement outcomes.
+                </div>
+            </div>
+        </div>
+
+        {% for entry in kaizen.verifications.all %}
+            <div class="kz-record">
+
+                <div class="kz-record-top">
+                    <div class="kz-record-title">
+                        {{ entry.get_result_display }}
+                    </div>
+
+                    <div class="kz-record-meta">
+                        {{ entry.verified_by }} · {{ entry.verification_date|date:'d M Y' }}
+                    </div>
+                </div>
+
+                <p>{{ entry.verification_comments }}</p>
+
+                <div class="kz-grid">
+
+                    <div class="kz-field">
+                        <div class="kz-label">Verification Method</div>
+                        <div class="kz-value">{{ entry.verification_method|default:'—' }}</div>
+                    </div>
+
+                    {% if entry.result == 'PARTIAL' %}
+                    <div class="kz-field">
+                        <div class="kz-label">Rework Required</div>
+                        <div class="kz-value">
+                            {% if entry.rework_required %}Yes{% else %}No{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="kz-field">
+                        <div class="kz-label">Evidence Details</div>
+                        <div class="kz-value">{{ entry.evidence_details|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">Before Improvement</div>
+                        <div class="kz-value">{{ entry.before_improvement|default:'—' }}</div>
+                    </div>
+
+                    <div class="kz-field">
+                        <div class="kz-label">After Improvement</div>
+                        <div class="kz-value">{{ entry.after_improvement|default:'—' }}</div>
+                    </div>
+
+                </div>
+
+                <p>
+                    <span class="kz-record-label">Benefits Achieved:</span>
+                    {{ entry.actual_benefits }}
+                </p>
+
+            </div>
+        {% endfor %}
+
+    </section>
+    {% endif %}
+
+
+    <!-- Closure Summary -->
+    {% if kaizen.closure %}
+    <section class="kz-card">
+
+        <div class="kz-card-header">
+            <div>
+                <h2>
+                    <i class="fas fa-flag-checkered"></i>
+                    Closure Summary
+                </h2>
+                <div class="kz-section-subtitle">
+                    Final outcome and closure details of this Kaizen idea.
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-closure">
+
+            <p>
+                <strong>Final Outcome:</strong>
+                {{ kaizen.closure.final_outcome }}
+            </p>
+
+            <p>
+                <strong>Benefits:</strong>
+                {{ kaizen.closure.actual_benefits }}
+            </p>
+
+            <p>
+                <strong>Lessons Learned:</strong>
+                {{ kaizen.closure.lessons_learned }}
+            </p>
+
+            <p>
+                <strong>Actual Implementation Cost:</strong>
+                {{ kaizen.closure.actual_implementation_cost|default:'—' }}
+            </p>
+
+            <p>
+                <strong>Closure Comments:</strong>
+                {{ kaizen.closure.closure_comments|default:'—' }}
+            </p>
+
+            <p>
+                <strong>Closed By:</strong>
+                {{ kaizen.closure.closed_by }}
+                &nbsp;·&nbsp;
+                {{ kaizen.closure.closure_date|date:'d M Y' }}
+            </p>
+
+        </div>
+
+    </section>
+    {% endif %}
+
+</main>
+{% endblock %}

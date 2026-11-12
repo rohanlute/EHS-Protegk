@@ -1,0 +1,657 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}Kaizen History{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}">
+        {{ kaizen.kaizen_id|default:kaizen.title }}
+    </a>
+</li>
+<li class="breadcrumb-item active">History</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --kz-primary: #0d9488;
+        --kz-primary-dark: #0f766e;
+        --kz-primary-light: #f0fdfa;
+        --kz-border: #e2e8f0;
+        --kz-text: #1e293b;
+        --kz-muted: #64748b;
+    }
+
+    /* Main Container */
+    .kz-history {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 8px 35px;
+        box-sizing: border-box;
+    }
+
+    .kz-history *,
+    .kz-history *::before,
+    .kz-history *::after {
+        box-sizing: border-box;
+    }
+
+    /* Page Header */
+    .kz-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        width: 100%;
+        background: #fff;
+        border: 1px solid var(--kz-border);
+        border-top: 3px solid var(--kz-primary);
+        border-radius: 12px;
+        padding: 23px 24px;
+        margin: 16px 0 20px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+    }
+
+    .kz-history-heading {
+        min-width: 0;
+    }
+
+    .kz-history-heading h1 {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #0f172a;
+        font-size: 27px;
+        font-weight: 750;
+        line-height: 1.35;
+        letter-spacing: -.4px;
+        margin: 0 0 8px;
+    }
+
+    .kz-history-heading h1 i {
+        color: var(--kz-primary);
+        font-size: 24px;
+    }
+
+    .kz-history-heading p {
+        color: var(--kz-muted);
+        font-size: 15px;
+        line-height: 1.65;
+        margin: 0;
+    }
+
+    /* Back Button */
+    .kz-back-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 43px;
+        padding: 10px 16px;
+        border: 1px solid #dbe3e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 650;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: all .2s ease;
+    }
+
+    .kz-back-btn:hover {
+        background: #f0fdfa;
+        border-color: #99f6e4;
+        color: var(--kz-primary-dark);
+        text-decoration: none;
+    }
+
+    /* Summary Card */
+    .kz-history-summary {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        background: linear-gradient(110deg, #fff 0%, #f8fffe 100%);
+        border: 1px solid #d7e9e6;
+        border-left: 4px solid var(--kz-primary);
+        border-radius: 11px;
+        padding: 19px 21px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+    }
+
+    .kz-history-summary-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: #ccfbf1;
+        color: #0f766e;
+        font-size: 21px;
+    }
+
+    .kz-history-summary-content {
+        min-width: 0;
+    }
+
+    .kz-history-summary-content span {
+        display: block;
+        color: #0f766e;
+        font-size: 12px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        margin-bottom: 5px;
+    }
+
+    .kz-history-summary-content strong {
+        display: block;
+        color: #134e4a;
+        font-size: 16px;
+        font-weight: 750;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-history-summary-content p {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 4px 0 0;
+    }
+
+    /* History Card */
+    .kz-card {
+        width: 100%;
+        min-width: 0;
+        background: #fff;
+        border: 1px solid var(--kz-border);
+        border-top: 3px solid var(--kz-primary);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+    }
+
+    .kz-card-header {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 19px 24px;
+        border-bottom: 1px solid var(--kz-border);
+        background: #fff;
+    }
+
+    .kz-card-header-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 42px;
+        height: 42px;
+        border-radius: 9px;
+        background: var(--kz-primary-light);
+        color: var(--kz-primary);
+        font-size: 17px;
+    }
+
+    .kz-card-header h3 {
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 750;
+        line-height: 1.4;
+        margin: 0 0 4px;
+    }
+
+    .kz-card-header p {
+        color: var(--kz-muted);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* Timeline */
+    .kz-history-body {
+        padding: 12px 26px 22px;
+    }
+
+    .kz-event {
+        position: relative;
+        display: flex;
+        gap: 18px;
+        padding: 22px 0;
+        border-bottom: 1px solid #edf1f4;
+    }
+
+    .kz-event:last-child {
+        border-bottom: 0;
+    }
+
+    /* Timeline Marker */
+    .kz-event-marker {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        width: 32px;
+    }
+
+    .kz-event-dot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid #99f6e4;
+        border-radius: 50%;
+        background: #f0fdfa;
+        color: #0d9488;
+        font-size: 12px;
+        z-index: 1;
+    }
+
+    .kz-event:not(:last-child) .kz-event-marker::after {
+        content: "";
+        position: absolute;
+        top: 33px;
+        bottom: -23px;
+        width: 2px;
+        background: #ccfbf1;
+    }
+
+    /* Event Content */
+    .kz-event-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kz-event-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 9px 16px;
+        margin-bottom: 10px;
+    }
+
+    .kz-event-title {
+        color: var(--kz-primary-dark);
+        font-size: 16px;
+        font-weight: 750;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-event-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--kz-muted);
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: nowrap;
+    }
+
+    .kz-event-date i {
+        color: #94a3b8;
+    }
+
+    /* User Details */
+    .kz-event-user {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .kz-event-user i {
+        color: var(--kz-primary);
+        font-size: 15px;
+    }
+
+    /* Status Transition */
+    .kz-status-transition {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-bottom: 11px;
+    }
+
+    .kz-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .kz-status-new {
+        background: #f0fdfa;
+        border-color: #ccfbf1;
+        color: #0f766e;
+    }
+
+    .kz-transition-arrow {
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    /* Comments */
+    .kz-event-comments {
+        background: #f8fafc;
+        border-left: 3px solid var(--kz-primary);
+        border-radius: 0 8px 8px 0;
+        padding: 12px 15px;
+        margin-top: 10px;
+    }
+
+    .kz-event-comments label {
+        display: block;
+        color: var(--kz-muted);
+        font-size: 12px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 6px;
+    }
+
+    .kz-event-comments p {
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+        margin: 0;
+    }
+
+    /* Empty State */
+    .kz-empty-state {
+        text-align: center;
+        padding: 65px 20px;
+    }
+
+    .kz-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 17px;
+        border-radius: 50%;
+        background: var(--kz-primary-light);
+        color: var(--kz-primary);
+        font-size: 25px;
+    }
+
+    .kz-empty-state h4 {
+        color: #1e293b;
+        font-size: 17px;
+        font-weight: 750;
+        margin-bottom: 8px;
+    }
+
+    .kz-empty-state p {
+        color: var(--kz-muted);
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Footer */
+    .kz-history-footer {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 18px 24px;
+        border-top: 1px solid var(--kz-border);
+        background: #fafafa;
+    }
+
+    .kz-detail-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--kz-primary-dark);
+        font-size: 14px;
+        font-weight: 750;
+        text-decoration: none;
+        transition: color .2s ease;
+    }
+
+    .kz-detail-link:hover {
+        color: var(--kz-primary);
+        text-decoration: underline;
+    }
+
+    /* Tablet */
+    @media (max-width: 900px) {
+        .kz-history {
+            max-width: 100%;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+
+    /* Mobile */
+    @media (max-width: 650px) {
+        .kz-history-header {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 19px 17px;
+        }
+
+        .kz-history-heading h1 {
+            font-size: 23px;
+        }
+
+        .kz-history-heading p {
+            font-size: 14px;
+        }
+
+        .kz-back-btn {
+            width: 100%;
+        }
+
+        .kz-history-summary {
+            padding: 15px;
+            gap: 12px;
+        }
+
+        .kz-history-summary-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 18px;
+        }
+
+        .kz-history-summary-content strong {
+            font-size: 15px;
+        }
+
+        .kz-history-body {
+            padding: 8px 16px 16px;
+        }
+
+        .kz-event {
+            gap: 12px;
+            padding: 18px 0;
+        }
+
+        .kz-event-top {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .kz-event-title {
+            font-size: 15px;
+        }
+
+        .kz-event-date {
+            white-space: normal;
+        }
+
+        .kz-card-header {
+            padding: 16px;
+        }
+
+        .kz-card-header h3 {
+            font-size: 16px;
+        }
+
+        .kz-history-footer {
+            padding: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kz-history">
+
+    <!-- Page Header -->
+    <div class="kz-history-header">
+        <div class="kz-history-heading">
+            <h1>
+                <i class="fas fa-history"></i>
+                Workflow History
+            </h1>
+            <p>Track all status changes, activities, and updates recorded for this Kaizen initiative.</p>
+        </div>
+
+        <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}" class="kz-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Kaizen
+        </a>
+    </div>
+
+    <!-- Kaizen Summary -->
+    <section class="kz-history-summary">
+        <div class="kz-history-summary-icon">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+
+        <div class="kz-history-summary-content">
+            <span>Kaizen Reference</span>
+            <strong>{{ kaizen.kaizen_id|default:kaizen.title }}</strong>
+            <p>{{ kaizen.title }}</p>
+        </div>
+    </section>
+
+    <!-- Workflow Timeline -->
+    <section class="kz-card">
+
+        <header class="kz-card-header">
+            <div class="kz-card-header-icon">
+                <i class="fas fa-stream"></i>
+            </div>
+
+            <div>
+                <h3>Activity Timeline</h3>
+                <p>Complete record of Kaizen workflow activities</p>
+            </div>
+        </header>
+
+        <div class="kz-history-body">
+
+            {% for event in history %}
+
+            <div class="kz-event">
+
+                <!-- Timeline Marker -->
+                <div class="kz-event-marker">
+                    <div class="kz-event-dot">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+
+                <!-- Event Details -->
+                <div class="kz-event-content">
+
+                    <div class="kz-event-top">
+                        <div class="kz-event-title">
+                            {{ event.action|default:'Status updated' }}
+                        </div>
+
+                        <div class="kz-event-date">
+                            <i class="far fa-clock"></i>
+                            {{ event.changed_at|date:'d M Y, H:i' }}
+                        </div>
+                    </div>
+
+                    <div class="kz-event-user">
+                        <i class="fas fa-user-circle"></i>
+                        {{ event.changed_by|default:'System' }}
+                    </div>
+
+                    <div class="kz-status-transition">
+                        <span class="kz-status">
+                            {{ event.previous_status|default:'Start' }}
+                        </span>
+
+                        <i class="fas fa-arrow-right kz-transition-arrow"></i>
+
+                        <span class="kz-status kz-status-new">
+                            {{ event.new_status }}
+                        </span>
+                    </div>
+
+                    {% if event.comments %}
+                    <div class="kz-event-comments">
+                        <label>
+                            <i class="far fa-comment-dots"></i>
+                            Comments / Remarks
+                        </label>
+                        <p>{{ event.comments }}</p>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% empty %}
+
+            <div class="kz-empty-state">
+                <div class="kz-empty-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+
+                <h4>No Workflow History Available</h4>
+                <p>No workflow events have been recorded for this Kaizen initiative yet.</p>
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="kz-history-footer">
+            <a href="{% url 'kaizen:kaizen_detail' kaizen.pk %}" class="kz-detail-link">
+                <i class="fas fa-arrow-left"></i>
+                Return to Kaizen Details
+            </a>
+        </footer>
+
+    </section>
+
+</div>
+{% endblock %}

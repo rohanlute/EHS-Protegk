@@ -1,0 +1,586 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}Complete Implementation | {{ kaizen.kaizen_id }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:dashboard' %}">Kaizen</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'kaizen:my_actions' %}">My Action Items</a>
+</li>
+<li class="breadcrumb-item active">Complete Implementation</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ================================
+   IMPLEMENTATION COMPLETION
+================================ */
+
+.implementation-completion {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding-bottom: 25px;
+}
+
+.kz-page-header {
+    margin: 10px 0 22px;
+}
+
+.kz-page-header h2 {
+    color: #0f172a;
+    font-size: 23px;
+    font-weight: 750;
+    margin: 0 0 6px;
+}
+
+.kz-page-header p {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* ================================
+   KAIZEN SUMMARY
+================================ */
+
+.kz-summary {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+}
+
+.kz-summary-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    padding-bottom: 17px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.kz-summary-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #0f766e;
+    background: #f0fdfa;
+    border: 1px solid #ccfbf1;
+    border-radius: 20px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.kz-summary-top h3 {
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 750;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.kz-summary-subtitle {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.kz-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
+    padding-top: 20px;
+}
+
+.kz-summary-item {
+    min-width: 0;
+}
+
+.kz-summary-item label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    margin-bottom: 6px;
+}
+
+.kz-summary-item label i {
+    color: #0d9488;
+    font-size: 12px;
+}
+
+.kz-summary-item div {
+    color: #1e293b;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+/* ================================
+   COMPLETION FORM CARD
+================================ */
+
+.kz-form-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, .05);
+}
+
+.kz-form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: #fff;
+}
+
+.kz-form-header-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .16);
+    border-radius: 10px;
+    font-size: 17px;
+}
+
+.kz-form-header h4 {
+    font-size: 16px;
+    font-weight: 750;
+    margin: 0 0 3px;
+}
+
+.kz-form-header p {
+    color: rgba(255, 255, 255, .85);
+    font-size: 12px;
+    margin: 0;
+}
+
+.kz-form-body {
+    padding: 24px;
+}
+
+/* Notice */
+
+.kz-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-radius: 9px;
+    padding: 13px 15px;
+    margin-bottom: 23px;
+}
+
+.kz-notice i {
+    color: #0d9488;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.kz-notice strong {
+    display: block;
+    color: #115e59;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.kz-notice p {
+    color: #0f766e;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ================================
+   FORM FIELDS
+================================ */
+
+.kz-form-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 22px;
+}
+
+.kz-field {
+    min-width: 0;
+    margin: 0;
+}
+
+.kz-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.kz-field label {
+    display: block;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.kz-required {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+.kz-field input:not([type="checkbox"]):not([type="radio"]),
+.kz-field select,
+.kz-field textarea {
+    display: block;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #1e293b;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.kz-field textarea {
+    min-height: 125px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.kz-field input:focus,
+.kz-field select:focus,
+.kz-field textarea:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+}
+
+.kz-field input[type="file"] {
+    padding: 9px;
+    background: #f8fafc;
+}
+
+.kz-field input[type="checkbox"],
+.kz-field input[type="radio"] {
+    accent-color: #0d9488;
+}
+
+.kz-field select:disabled,
+.kz-field input:disabled,
+.kz-field textarea:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+.kz-help {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: 6px;
+}
+
+.kz-error {
+    display: block;
+    color: #b91c1c;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.kz-non-field-errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.kz-non-field-errors ul {
+    padding-left: 18px;
+    margin: 5px 0 0;
+}
+
+/* ================================
+   FORM ACTIONS
+================================ */
+
+.kz-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+    margin-top: 25px;
+}
+
+.kz-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 41px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.kz-btn-primary {
+    color: #fff;
+    background: #0d9488;
+    border-color: #0d9488;
+}
+
+.kz-btn-primary:hover {
+    color: #fff;
+    background: #0f766e;
+    border-color: #0f766e;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.kz-btn-light {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.kz-btn-light:hover {
+    color: #1e293b;
+    background: #e2e8f0;
+    text-decoration: none;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 650px) {
+    .kz-summary {
+        padding: 17px;
+    }
+
+    .kz-summary-grid,
+    .kz-form-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .kz-field.full-width {
+        grid-column: auto;
+    }
+
+    .kz-form-body {
+        padding: 17px;
+    }
+
+    .kz-form-header {
+        padding: 15px 17px;
+    }
+
+    .kz-summary-top h3 {
+        font-size: 18px;
+    }
+
+    .kz-form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .kz-form-actions .kz-btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="implementation-completion">
+
+    <!-- Page Header -->
+    <div class="kz-page-header">
+        <h2><i class="fas fa-clipboard-check text-teal"></i> Complete Implementation</h2>
+        <p>Submit the implementation completion details and supporting evidence for this Kaizen initiative.</p>
+    </div>
+
+    <!-- Kaizen Summary -->
+    <section class="kz-summary">
+
+        <div class="kz-summary-top">
+            <div>
+                <span class="kz-summary-id">
+                    <i class="fas fa-lightbulb"></i>
+                    {{ kaizen.kaizen_id }} · {{ kaizen.category }}
+                </span>
+                <h3>{{ kaizen.title }}</h3>
+                <div class="kz-summary-subtitle">
+                    Review the Kaizen details before submitting completion information.
+                </div>
+            </div>
+        </div>
+
+        <div class="kz-summary-grid">
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-map-marker-alt"></i> Reported Plant / Location</label>
+                <div>{{ kaizen.plant|default:'—' }} · {{ kaizen.location_record|default:kaizen.location|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-user-check"></i> Implementation Owner</label>
+                <div>{{ implementation.implementation_owner }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-calendar-alt"></i> Planned Dates</label>
+                <div>{{ implementation.planned_start_date|date:'d M Y'|default:'—' }} – {{ implementation.planned_end_date|date:'d M Y'|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-coins"></i> Estimated / Actual Cost</label>
+                <div>{{ kaizen.estimated_cost|default:'—' }} / {{ implementation.actual_cost|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-exclamation-circle"></i> Problem Statement</label>
+                <div>{{ kaizen.problem_statement|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-tools"></i> Proposed Solution</label>
+                <div>{{ kaizen.proposed_solution|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-tasks"></i> Implementation Plan</label>
+                <div>{{ implementation.implementation_actions|default:'—' }}</div>
+            </div>
+
+            <div class="kz-summary-item">
+                <label><i class="fas fa-boxes"></i> Resources</label>
+                <div>{{ implementation.resources_used|default:'—' }}</div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Completion Form -->
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <section class="kz-form-card">
+
+            <header class="kz-form-header">
+                <div class="kz-form-header-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h4>Mark Implementation as Completed</h4>
+                    <p>Provide the actual completion details and upload supporting evidence.</p>
+                </div>
+            </header>
+
+            <div class="kz-form-body">
+
+                <div class="kz-notice">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Before submitting</strong>
+                        <p>Ensure that the planned activities have been completed and provide accurate completion remarks and evidence wherever applicable.</p>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="kz-non-field-errors">
+                    <strong>Please correct the following errors:</strong>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="kz-form-fields">
+
+                    {% for field in form %}
+                    <div class="kz-field {% if field.name == 'completion_remarks' or field.name == 'evidence' %}full-width{% endif %}">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="kz-required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <small class="kz-help">{{ field.help_text }}</small>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <span class="kz-error">
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            </span>
+                        {% endfor %}
+
+                        {% if field.name == 'completion_date' %}
+                            <small class="kz-help">
+                                <i class="fas fa-calendar-check"></i>
+                                Date when the implementation work was completed.
+                            </small>
+                        {% elif field.name == 'completion_remarks' %}
+                            <small class="kz-help">
+                                <i class="fas fa-comment-alt"></i>
+                                Describe the work completed, activities performed, and results achieved.
+                            </small>
+                        {% elif field.name == 'evidence' %}
+                            <small class="kz-help">
+                                <i class="fas fa-paperclip"></i>
+                                Attach photographs, documents, or other supporting proof of completion.
+                            </small>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+                <!-- Actions -->
+                <div class="kz-form-actions">
+
+                    <a href="{% url 'kaizen:my_actions' %}" class="kz-btn kz-btn-light">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+
+                    <button type="submit" class="kz-btn kz-btn-primary">
+                        <i class="fas fa-check-circle"></i>
+                        Mark as Completed
+                    </button>
+
+                </div>
+
+            </div>
+        </section>
+    </form>
+
+</main>
+{% endblock %}
