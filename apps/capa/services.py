@@ -28,7 +28,6 @@ class CAPAService:
                 extra_recipients=extra_recipients,
             )
         except Exception:
-            # Notification failures must not roll back a valid CAPA transition.
             return
 
     @staticmethod
@@ -70,6 +69,44 @@ class CAPAService:
         return payload, ctype, getattr(source_obj, "pk", None)
 
     @staticmethod
+    def _sync_five_s_audit_closure(capa):
+        """
+        When a CAPA originated from a 5S finding, re-evaluate the parent audit.
+        Best-effort — failures must not break the CAPA workflow.
+        """
+        if capa.source_type != 'FIVE_S':
+            return
+        try:
+            from apps.five_s.models import AuditAnswer, FiveSSchedule
+            from apps.five_s.views import sync_audit_closure
+
+            finding = None
+            try:
+                answer_id = int(capa.source_reference)
+            except (TypeError, ValueError):
+                answer_id = None
+
+            if answer_id:
+                # Try the reference as an AuditAnswer PK
+                finding = AuditAnswer.objects.filter(pk=answer_id).select_related('audit').first()
+                # Fallback: try as a schedule PK and pick the most recent open finding
+                if finding is None:
+                    schedule = FiveSSchedule.objects.filter(pk=answer_id).first()
+                    if schedule:
+                        finding = (
+                            AuditAnswer.objects
+                            .filter(audit__schedule=schedule, answer__in=['1', '2'])
+                            .select_related('audit')
+                            .order_by('-pk')
+                            .first()
+                        )
+
+            if finding:
+                sync_audit_closure(finding.audit)
+        except Exception:
+            return
+
+    @staticmethod
     @transaction.atomic
     def create_capa(*, user, title, description, plant, source_type=CAPA.SourceType.MANUAL, source_reference="", zone=None, location=None, sublocation=None, department=None, category="", severity=CAPA.Severity.MEDIUM, priority=CAPA.Priority.MEDIUM, owner=None, target_date=None, reason_required="", capa_recommended=False, capa_reason="", source_obj=None, status=CAPA.Status.OPEN):
         CAPAService._ensure_can(user, "CAPA_CREATE")
@@ -103,6 +140,10 @@ class CAPAService:
         capa.save()
         CAPAService._audit(capa, user, "CAPA_CREATED", "", capa.capa_number)
         CAPAService._notify(capa, "CAPA_CREATED", [owner] if owner else None)
+
+        # ✅ Sync the linked 5S audit on creation
+        CAPAService._sync_five_s_audit_closure(capa)
+
         return capa
 
     @staticmethod
@@ -318,6 +359,10 @@ class CAPAService:
         capa.closed_by = user
         capa.save(update_fields=["closure_remarks", "lessons_learned", "final_recommendations", "closed_by", "updated_at", "status", "closed_date"])
         CAPAService._notify(capa, "CAPA_CLOSED", [capa.owner] if capa.owner else None)
+
+        # ✅ Sync the linked 5S audit on closure
+        CAPAService._sync_five_s_audit_closure(capa)
+
         return capa
 
     @staticmethod
@@ -330,4 +375,8 @@ class CAPAService:
         capa.save(update_fields=["reopened_by", "reopened_date", "updated_at"])
         CAPAService._set_status(capa, CAPA.Status.REOPENED, user, "CAPA_REOPENED", reason)
         CAPAService._notify(capa, "CAPA_REOPENED", [capa.owner] if capa.owner else None)
+
+        # ✅ Sync the linked 5S audit on reopen
+        CAPAService._sync_five_s_audit_closure(capa)
+
         return capa

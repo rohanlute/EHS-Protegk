@@ -1,0 +1,335 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}5S Schedules | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --fs-primary: #0d9488;
+    --fs-primary-dark: #0f766e;
+    --fs-primary-soft: #f0fdfa;
+    --fs-text: #172033;
+    --fs-muted: #64748b;
+    --fs-border: #e2e8f0;
+    --fs-surface: #ffffff;
+    --fs-background: #f5f7fb;
+    --fs-danger: #dc2626;
+    --fs-radius: 14px;
+    --fs-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--fs-background) !important; }
+
+.fives-page { max-width: 1440px; margin: 0 auto; padding: 10px 4px 32px; color: var(--fs-text); font-family: 'Inter', sans-serif; }
+.fives-page *, .fives-page *::before, .fives-page *::after { box-sizing: border-box; }
+
+/* Header */
+.fives-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding: 24px 26px; background: var(--fs-surface); border: 1px solid var(--fs-border); border-radius: var(--fs-radius); box-shadow: var(--fs-shadow); margin-bottom: 22px; }
+.fives-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.fives-header-icon { width: 54px; height: 54px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--fs-primary-soft); border: 1px solid #ccfbf1; border-radius: 15px; color: var(--fs-primary-dark); font-size: 22px; }
+.fives-eyebrow { color: var(--fs-primary-dark); text-transform: uppercase; font-size: 10px; letter-spacing: 1.2px; font-weight: 800; margin-bottom: 5px; }
+.fives-header h1 { margin: 0; color: var(--fs-text); font-size: 22px; line-height: 1.4; font-weight: 800; letter-spacing: -.5px; }
+.fives-header p { margin: 6px 0 0; color: var(--fs-muted); font-size: 13px; line-height: 1.6; }
+
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-header { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 9px; font-size: 13px; font-weight: 700; text-decoration: none !important; transition: all 0.2s ease; cursor: pointer; }
+.btn-header.outline { background: #fff; color: var(--fs-text); border: 1px solid var(--fs-border); }
+.btn-header.outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-header.primary { background: var(--fs-primary); color: #fff; border: 1px solid var(--fs-primary); box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2); }
+.btn-header.primary:hover { background: var(--fs-primary-dark); transform: translateY(-1px); }
+
+/* Filters */
+.fives-filter-card { background: var(--fs-surface); border: 1px solid var(--fs-border); border-radius: var(--fs-radius); box-shadow: var(--fs-shadow); padding: 20px; margin-bottom: 22px; }
+.fives-filter-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.fives-filter-group { display: flex; flex-direction: column; gap: 6px; }
+.fives-filter-group.search-group { flex: 2; min-width: 250px; }
+.fives-filter-group.status-group { flex: 1; min-width: 150px; }
+.fives-filter-actions { display: flex; gap: 8px; align-items: center; height: 42px; }
+.fives-filter-card .form-label { font-size: 11px; font-weight: 700; color: var(--fs-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+.fives-filter-card .form-control, .fives-filter-card .form-select { border: 1px solid #cbd5e1; border-radius: 9px; padding: 0 13px; height: 42px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--fs-text); transition: all 0.2s ease; width: 100%; }
+.fives-filter-card .form-control:focus, .fives-filter-card .form-select:focus { outline: none; border-color: var(--fs-primary); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.11); }
+.btn-filter { height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--fs-primary); color: white; border: none; border-radius: 9px; padding: 0 24px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.btn-filter:hover { background: var(--fs-primary-dark); }
+.btn-clear { height: 42px; width: 42px; display: inline-flex; align-items: center; justify-content: center; background: white; color: var(--fs-muted); border: 1px solid var(--fs-border); border-radius: 9px; text-decoration: none; transition: all 0.2s; }
+.btn-clear:hover { background: #f8fafc; color: var(--fs-text); border-color: #cbd5e1; }
+
+/* Table */
+.fives-table-card { background: var(--fs-surface); border: 1px solid var(--fs-border); border-radius: var(--fs-radius); box-shadow: var(--fs-shadow); overflow: hidden; }
+.fives-table { width: 100%; margin: 0; border-collapse: collapse; }
+.fives-table thead th { background: #fafcff; color: var(--fs-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; border-bottom: 1px solid var(--fs-border); white-space: nowrap; }
+.fives-table tbody td { padding: 14px 16px; vertical-align: middle; border-bottom: 1px solid var(--fs-border); font-size: 13px; color: var(--fs-text); }
+.fives-table tbody tr:last-child td { border-bottom: none; }
+.fives-table tbody tr:hover { background: #fafcff; }
+
+/* Pills & Badges */
+.code-pill { display: inline-block; padding: 4px 10px; border-radius: 6px; background: var(--fs-primary-soft); color: var(--fs-primary-dark); font-size: 11px; font-weight: 700; font-family: monospace; white-space: nowrap; }
+.badge-status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+.badge-status.active { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.badge-status.paused { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.badge-status.ended { background: rgba(100, 116, 139, 0.12); color: var(--fs-muted); }
+
+/* NEW: Closed Status Badge */
+.badge-status.closed { background: rgba(34, 197, 94, 0.15); color: #15803d; border: 1px solid #bbf7d0; }
+
+/* NEW: Audit Status Badges */
+.badge-audit { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+.badge-audit.scheduled { background: #f1f5f9; color: #475569; }
+.badge-audit.inprogress { background: #eff6ff; color: #1d4ed8; }
+.badge-audit.submitted { background: #fffbeb; color: #b45309; }
+.badge-audit.closed { background: #f0fdf4; color: #15803d; }
+
+/* Action Buttons */
+.action-btn-group { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+.action-btn-group .btn-action { width: 36px; height: 36px; border-radius: 8px; font-size: 13px; flex-shrink: 0; }
+.btn-action { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #f8fafc; color: var(--fs-muted); border: 1px solid var(--fs-border); text-decoration: none; transition: all 0.2s; font-size: 12px; }
+.btn-action:hover { background: var(--fs-primary-soft); color: var(--fs-primary-dark); border-color: #ccfbf1; }
+.btn-action.danger:hover { background: #fef2f2; color: var(--fs-danger); border-color: #fecaca; }
+.btn-action.audit-pdf { color: var(--fs-danger); }
+.btn-action.audit-pdf:hover { background: #fef2f2; color: var(--fs-danger); border-color: #fecaca; }
+.btn-action.disabled-slot { visibility: hidden; }
+
+/* Empty State */
+.empty-state { text-align: center; padding: 60px 20px; background: var(--fs-surface); }
+.empty-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--fs-primary-soft); color: var(--fs-primary); display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+.empty-state h4 { font-size: 16px; font-weight: 800; color: var(--fs-text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; color: var(--fs-muted); margin-bottom: 20px; }
+
+/* Pagination */
+.fives-pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #fafcff; border-top: 1px solid var(--fs-border); flex-wrap: wrap; gap: 12px; }
+.pagination-info { font-size: 12px; color: var(--fs-muted); }
+.pagination { margin: 0; display: flex; gap: 4px; padding: 0; list-style: none; }
+.page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--fs-border); background: #fff; color: var(--fs-text); font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+.page-link:hover { border-color: var(--fs-primary); color: var(--fs-primary); background: var(--fs-primary-soft); }
+.page-item.active .page-link { background: var(--fs-primary); color: white; border-color: var(--fs-primary); }
+
+/* Responsive */
+@media (max-width: 992px) {
+    .fives-header { flex-direction: column; align-items: flex-start; }
+    .header-actions { width: 100%; margin-top: 10px; }
+    .header-actions .btn-header { flex: 1; justify-content: center; }
+    .fives-filter-form { flex-direction: column; align-items: stretch; }
+    .fives-filter-actions { width: 100%; }
+    .fives-filter-actions .btn-filter { flex: 1; }
+}
+
+@media (max-width: 768px) {
+    .fives-table thead { display: none; }
+    .fives-table tbody tr { display: flex; flex-direction: column; padding: 16px; border-bottom: 1px solid var(--fs-border); }
+    .fives-table tbody td { display: flex; justify-content: space-between; padding: 6px 0; border: none; text-align: left !important; }
+    .fives-table tbody td::before { content: attr(data-label); font-weight: 700; font-size: 11px; color: var(--fs-muted); text-transform: uppercase; margin-right: 10px; }
+    .action-btn-group { justify-content: flex-start; margin-top: 8px; }
+    .btn-action.disabled-slot { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="fives-page">
+
+    <!-- Page header -->
+    <header class="fives-header">
+        <div class="fives-header-main">
+            <div class="fives-header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+                <div class="fives-eyebrow">5S Management</div>
+                <h1>5S Schedules</h1>
+                <p>Recurring schedules for 5S audits.</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <a href="{% url 'five_s:template_list' %}" class="btn-header outline">
+                <i class="fas fa-layer-group"></i> Templates
+            </a>
+            <a href="{% url 'five_s:schedule_create' %}" class="btn-header primary">
+                <i class="fas fa-plus"></i> New Schedule
+            </a>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="fives-filter-card">
+        <form method="get" class="fives-filter-form">
+            <div class="fives-filter-group search-group">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" value="{{ filters.search }}" class="form-control" placeholder="Search by schedule name, template or assignee...">
+            </div>
+
+            <div class="fives-filter-group status-group">
+                <label class="form-label">Schedule Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Any</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                    <!-- ✅ NEW: Add Closed as a filter option -->
+                    <option value="CLOSED" {% if filters.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+
+            <div class="fives-filter-actions">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'five_s:schedule_list' %}" class="btn-clear" title="Clear filters">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="fives-table-card">
+        <div class="table-responsive">
+            <table class="fives-table">
+                <thead>
+                    <tr>
+                        <th>Schedule Name</th>
+                        <th>Template</th>
+                        <th>Assignee</th>
+                        <th style="text-align: center;">Schedule Status</th>
+                        <th style="text-align: center;">Latest Audit</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in page_obj %}
+                    <tr>
+                        <td data-label="Name">
+                            <div style="font-weight: 700; color: var(--fs-text);">{{ s.schedule_name }}</div>
+                            <div style="font-size: 11px; color: var(--fs-muted); margin-top: 2px;">
+                                {% for plant in s.plant.all %}{{ plant.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            </div>
+                        </td>
+                        <td data-label="Template">
+                            <span class="code-pill">{{ s.template.template_code }}</span>
+                            <div style="font-size: 11px; color: var(--fs-muted); margin-top: 2px;">{{ s.template.template_name|truncatechars:30 }}</div>
+                        </td>
+                        <td data-label="Assignee">
+                            {% for user in s.assignee.all %}
+                                <div style="font-size: 12px; font-weight: 600;">
+                                    {{ user.get_full_name|default:user.username }}
+                                </div>
+                            {% empty %}
+                                <span class="text-muted">—</span>
+                            {% endfor %}
+                        </td>
+                        
+                        <!-- ✅ UPDATED: Priority on "Closed" when latest audit is CLOSED -->
+                        <td data-label="Schedule Status" style="text-align: center;">
+                            {% if s.status == 'PAUSED' %}
+                                <span class="badge-status paused"><i class="fas fa-pause-circle"></i> Paused</span>
+                            {% elif s.latest_audit_status == 'CLOSED' %}
+                                <span class="badge-status closed"><i class="fas fa-check-circle"></i> Closed</span>
+                            {% elif s.status == 'ENDED' %}
+                                <span class="badge-status ended"><i class="fas fa-stop-circle"></i> Ended</span>
+                            {% else %}
+                                <span class="badge-status active"><i class="fas fa-circle" style="font-size: 5px;"></i> Active</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Latest Audit Status -->
+                        <td data-label="Latest Audit" style="text-align: center;">
+                            {% if s.latest_audit_status %}
+                                {% if s.latest_audit_status == 'SCHEDULED' %}
+                                    <span class="badge-audit scheduled">Scheduled</span>
+                                {% elif s.latest_audit_status == 'IN_PROGRESS' %}
+                                    <span class="badge-audit inprogress">In Progress</span>
+                                {% elif s.latest_audit_status == 'SUBMITTED' %}
+                                    <span class="badge-audit submitted">Submitted</span>
+                                {% elif s.latest_audit_status == 'REVIEWED' %}
+                                    <span class="badge-audit submitted">Reviewed</span>
+                                {% elif s.latest_audit_status == 'CLOSED' %}
+                                    <span class="badge-audit closed"><i class="fas fa-check-circle"></i> Closed</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted" style="font-weight: 500;">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Action Buttons -->
+                        <td data-label="Actions" style="text-align: center;">
+                            <div class="action-btn-group">
+                                {% if s.has_audits and not s.has_open_audits %}
+                                    <a href="{% url 'five_s:schedule_report' s.pk %}"
+                                    class="btn-action audit-pdf"
+                                    title="Download Schedule Report (PDF)">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'five_s:schedule_detail' s.pk %}" class="btn-action" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'five_s:schedule_edit' s.pk %}" class="btn-action" title="Edit">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 0; border: none;">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                                <h4>No schedules found</h4>
+                                <p>Create your first 5S schedule to start generating audits.</p>
+                                <a href="{% url 'five_s:schedule_create' %}" class="btn-header primary" style="display:inline-flex;">
+                                    <i class="fas fa-plus"></i> Create Schedule
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="fives-pagination">
+            <div class="pagination-info">
+                Showing <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+                of <strong>{{ page_obj.paginator.count }}</strong> schedule{{ page_obj.paginator.count|pluralize }}
+            </div>
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filters.search %}&search={{ filters.search|urlencode }}{% endif %}{% if filters.status %}&status={{ filters.status|urlencode }}{% endif %}">
+                            <i class="fas fa-chevron-left" style="font-size: 10px;"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if filters.search %}&search={{ filters.search|urlencode }}{% endif %}{% if filters.status %}&status={{ filters.status|urlencode }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filters.search %}&search={{ filters.search|urlencode }}{% endif %}{% if filters.status %}&status={{ filters.status|urlencode }}{% endif %}">
+                            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}

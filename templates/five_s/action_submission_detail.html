@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Submission Details | 5S Audit{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-warning: #d97706;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.audit-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.audit-page *, .audit-page *::before, .audit-page *::after { box-sizing: border-box; }
+
+/* Header */
+.audit-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.audit-header-main { display: flex; align-items: center; gap: 15px; }
+.audit-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1;
+    border-radius: 15px; color: var(--s5-primary-dark); font-size: 22px;
+}
+.audit-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.audit-header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.audit-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; }
+
+/* Buttons */
+.btn-header {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 9px; font-size: 13px;
+    font-weight: 700; text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.btn-header.outline {
+    background: #fff; color: var(--s5-text); border: 1px solid var(--s5-border);
+}
+.btn-header.outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* Section cards */
+.section-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    margin-bottom: 24px; overflow: hidden;
+}
+.section-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc; display: flex; justify-content: space-between; align-items: center;
+}
+.section-card-header-left { display: flex; align-items: center; gap: 10px; }
+.section-card-header i { color: var(--s5-primary); font-size: 16px; }
+.section-card-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text); }
+.section-card-body { padding: 24px; }
+
+/* Details */
+.detail-row { margin-bottom: 24px; }
+.detail-row:last-child { margin-bottom: 0; }
+.detail-label {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    color: var(--s5-muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.detail-box {
+    padding: 16px; background: #f8fafc; border: 1px solid var(--s5-border);
+    border-radius: 8px; font-size: 14px; color: var(--s5-text); line-height: 1.6;
+}
+.detail-box.success {
+    background: #f0fdf4; border-color: #bbf7d0; color: #15803d;
+}
+.detail-box.danger {
+    background: #fef2f2; border-color: #fecaca; color: #b91c1c;
+}
+
+/* Status Badge */
+.badge-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-status.submitted { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.badge-status.closed { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.badge-status.rejected { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+
+/* Evidence Image */
+.evidence-img {
+    max-width: 100%; max-height: 300px; border-radius: 8px;
+    border: 1px solid var(--s5-border); margin-top: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="audit-page">
+
+    <!-- Header -->
+    <header class="audit-header">
+        <div class="audit-header-main">
+            <div class="audit-header-icon"><i class="fas fa-file-signature"></i></div>
+            <div>
+                <div class="audit-eyebrow">Submission Review</div>
+                <h1>What You Sent for Approval</h1>
+                <p>Action for: {{ action.audit.schedule.schedule_name }}</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'five_s:my_actions' %}" class="btn-header outline">
+                <i class="fas fa-arrow-left"></i> Back to My Actions
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Card -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <div class="section-card-header-left">
+                <i class="fas fa-info-circle"></i>
+                <h3>Submission Details</h3>
+            </div>
+            
+            <span class="badge-status {{ action.status|lower }}">
+                {{ action.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="section-card-body">
+
+            <!-- Question -->
+            <div class="detail-row">
+                <div class="detail-label">Original Question ({{ action.question.question_code }})</div>
+                <div class="detail-box fw-bold">
+                    {{ action.question.question_text }}
+                </div>
+            </div>
+
+            <hr style="border-color: var(--s5-border); margin: 30px 0;">
+
+            <!-- Submission Content -->
+            <div class="row">
+                <div class="col-md-6 detail-row">
+                    <div class="detail-label">Completion Date</div>
+                    <div class="detail-box success" style="font-weight: 700;">
+                        <i class="fas fa-calendar-check me-2"></i> {{ action.completion_date|date:"d M Y" }}
+                    </div>
+                </div>
+                <div class="col-md-6 detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-box" style="font-weight: 700;">
+                        {{ action.get_status_display }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Your Remarks</div>
+                <div class="detail-box">
+                    {{ action.completion_remarks }}
+                </div>
+            </div>
+
+            <!-- Evidence -->
+            {% if action.completion_evidence %}
+            <div class="detail-row">
+                <div class="detail-label">Evidence (Photo)</div>
+                <div class="detail-box" style="text-align: center;">
+                    <a href="{{ action.completion_evidence.url }}" target="_blank">
+                        <img src="{{ action.completion_evidence.url }}" alt="Evidence" class="evidence-img">
+                    </a>
+                    <div class="mt-2">
+                        <a href="{{ action.completion_evidence.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> Open Full Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Manager Feedback -->
+            {% if action.approval_remarks %}
+            <hr style="border-color: var(--s5-border); margin: 30px 0;">
+            <div class="detail-row">
+                <div class="detail-label">Manager Feedback</div>
+                <div class="detail-box {% if action.status == 'CLOSED' %}success{% else %}danger{% endif %}">
+                    <strong>
+                        {% if action.status == 'CLOSED' %}
+                            <i class="fas fa-check-circle"></i> Approved:
+                        {% else %}
+                            <i class="fas fa-times-circle"></i> Rejected:
+                        {% endif %}
+                    </strong> 
+                    {{ action.approval_remarks }}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

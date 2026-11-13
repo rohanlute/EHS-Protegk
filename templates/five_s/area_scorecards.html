@@ -1,0 +1,376 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Area Scorecards | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-warning: #d97706;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+
+    /* Pillar palette (matches inspection form) */
+    --pillar-seiri: #b91c1c;
+    --pillar-seiton: #1d4ed8;
+    --pillar-seiso: #15803d;
+    --pillar-seiketsu: #b45309;
+    --pillar-shitsuke: #6d28d9;
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.sc-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.sc-page *, .sc-page *::before, .sc-page *::after { box-sizing: border-box; }
+
+/* Header */
+.audit-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.audit-header-main { display: flex; align-items: center; gap: 15px; }
+.audit-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1;
+    border-radius: 15px; color: var(--s5-primary-dark); font-size: 22px;
+}
+.audit-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.audit-header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.audit-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; }
+
+/* Buttons */
+.btn-header {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 9px; font-size: 13px;
+    font-weight: 700; text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.btn-header.outline {
+    background: #fff; color: var(--s5-text); border: 1px solid var(--s5-border);
+}
+.btn-header.outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* Filters row */
+.sc-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+.sc-filter-btn {
+    padding: 7px 16px; border-radius: 999px;
+    border: 1px solid var(--s5-border); background: #ffffff;
+    color: var(--s5-muted); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.sc-filter-btn:hover { background: #f8fafc; color: var(--s5-text); }
+.sc-filter-btn.active { background: var(--s5-text); color: #ffffff; border-color: var(--s5-text); }
+
+.sc-search { margin-left: auto; position: relative; }
+.sc-search input {
+    width: 260px; height: 36px; padding: 0 14px 0 36px;
+    border-radius: 9px; border: 1px solid var(--s5-border);
+    background: #ffffff; color: var(--s5-text);
+    font-family: inherit; font-size: 13px; outline: none; transition: all 0.15s;
+}
+.sc-search input::placeholder { color: #94a3b8; }
+.sc-search input:focus { border-color: var(--s5-primary); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.10); }
+.sc-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--s5-muted); font-size: 12px; }
+
+/* Summary tiles */
+.summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+}
+.summary-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: 12px; padding: 16px 20px; box-shadow: var(--s5-shadow);
+}
+.summary-label {
+    font-size: 10.5px; font-weight: 700; color: var(--s5-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.summary-value { font-size: 22px; font-weight: 800; color: var(--s5-text); letter-spacing: -0.5px; }
+
+/* Section card */
+.section-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    margin-bottom: 24px; overflow: hidden;
+}
+.section-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc; display: flex; align-items: center; gap: 10px;
+}
+.section-card-header i { color: var(--s5-primary); font-size: 16px; }
+.section-card-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text); }
+.section-card-body { padding: 0; }
+
+/* Scorecard table */
+.sc-table-wrap { overflow-x: auto; }
+.sc-table { width: 100%; border-collapse: collapse; }
+.sc-table thead { background: #fafcff; }
+.sc-table thead th {
+    text-align: left; padding: 14px;
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--s5-muted);
+    border-bottom: 1px solid var(--s5-border); white-space: nowrap; position: relative;
+}
+
+/* Pillar header: color bar on top + colored label */
+.sc-table thead th[data-pillar]::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--pillar-color, #64748b);
+}
+.sc-table thead th[data-pillar] .pillar-head {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--pillar-color, var(--s5-muted));
+}
+.sc-table thead th[data-pillar] .pillar-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--pillar-color, #64748b);
+    flex-shrink: 0;
+}
+
+.sc-table tbody tr { border-bottom: 1px solid var(--s5-border); transition: background 0.15s; }
+.sc-table tbody tr:last-child { border-bottom: none; }
+.sc-table tbody tr:hover { background: #f8fafc; }
+.sc-table tbody td { padding: 14px; font-size: 13px; color: var(--s5-text); vertical-align: middle; }
+
+/* Area Info */
+.sc-area-cell { display: flex; flex-direction: column; min-width: 220px; }
+.sc-area-name { font-weight: 800; font-size: 14px; color: var(--s5-text); margin-bottom: 2px; line-height: 1.3; }
+.sc-area-type { font-size: 11.5px; color: var(--s5-muted); text-transform: capitalize; }
+
+.sc-plant-cell { color: #475569; font-size: 13px; font-weight: 500; }
+
+/* Score Cells */
+.sc-score-cell { text-align: center; padding: 14px 6px !important; width: 90px; }
+.sc-score { display: inline-block; font-size: 16px; font-weight: 800; color: var(--s5-text); letter-spacing: -0.3px; }
+.sc-score-muted { color: #cbd5e1; font-weight: 500; font-size: 14px; }
+.sc-score-overall { font-size: 18px; font-weight: 900; }
+
+/* Per-pillar score coloring */
+.sc-score.pillar-seiri    { color: var(--pillar-seiri); }
+.sc-score.pillar-seiton   { color: var(--pillar-seiton); }
+.sc-score.pillar-seiso    { color: var(--pillar-seiso); }
+.sc-score.pillar-seiketsu { color: var(--pillar-seiketsu); }
+.sc-score.pillar-shitsuke { color: var(--pillar-shitsuke); }
+
+/* Subtle tinted background per pillar column */
+.sc-table td[data-pillar="SEIRI"]    { background: rgba(185, 28, 28, 0.025); }
+.sc-table td[data-pillar="SEITON"]   { background: rgba(29, 78, 216, 0.025); }
+.sc-table td[data-pillar="SEISO"]    { background: rgba(21, 128, 61, 0.025); }
+.sc-table td[data-pillar="SEIKETSU"] { background: rgba(180, 83, 9, 0.025); }
+.sc-table td[data-pillar="SHITSUKE"] { background: rgba(109, 40, 217, 0.025); }
+
+/* Empty State */
+.empty-state {
+    padding: 60px 20px; text-align: center;
+    color: var(--s5-muted); font-size: 13px;
+}
+.empty-state i { font-size: 32px; opacity: 0.4; display: block; margin-bottom: 12px; }
+.empty-state h3 { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--s5-text); }
+.empty-state p { margin: 0; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .sc-page { padding: 16px 12px 40px; }
+    .sc-search input { width: 100%; }
+    .sc-search { width: 100%; margin-left: 0; margin-top: 8px; }
+}
+@media (max-width: 700px) {
+    .sc-table { min-width: 900px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="sc-page">
+
+    <!-- Header -->
+    <header class="audit-header">
+        <div class="audit-header-main">
+            <div class="audit-header-icon"><i class="fas fa-table-cells-large"></i></div>
+            <div>
+                <div class="audit-eyebrow">5S Scorecards</div>
+                <h1>Area scorecards</h1>
+                <p>Compare physical locations across all five pillars.</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'five_s:dashboard' %}" class="btn-header outline">
+                <i class="fas fa-arrow-left"></i> Back to dashboard
+            </a>
+        </div>
+    </header>
+
+    <!-- Filter pills & Search -->
+    <div class="sc-filters" id="scFilters">
+        <button type="button" class="sc-filter-btn active" data-filter="all">All areas</button>
+
+        {% for area in unique_areas %}
+            <button type="button" class="sc-filter-btn" data-filter="{{ area|lower }}">{{ area }}</button>
+        {% endfor %}
+
+        <div class="sc-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="scSearchInput" placeholder="Search areas…" autocomplete="off">
+        </div>
+    </div>
+
+    <!-- Summary tiles -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Total areas</div>
+            <div class="summary-value">{{ total_areas }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Total audits</div>
+            <div class="summary-value">{{ total_audits }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Plant average</div>
+            <div class="summary-value">{{ avg_overall }}%</div>
+        </div>
+    </div>
+
+    <!-- Scorecard Table -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="fas fa-table-list"></i>
+            <h3>Scorecards by Area</h3>
+        </div>
+        <div class="section-card-body">
+            {% if scorecards %}
+            <div class="sc-table-wrap">
+                <table class="sc-table" id="scTable">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 20px;">Area</th>
+                            <th>Plant</th>
+                            {% for code, meta in pillar_meta.items %}
+                                <th data-pillar="{{ code }}" style="text-align: center; --pillar-color: {{ meta.color }}; width: 90px;">
+                                    <span class="pillar-head">
+                                        <span class="pillar-dot"></span>
+                                        {{ meta.label }}
+                                    </span>
+                                </th>
+                            {% endfor %}
+                            <th style="text-align: center; width: 100px;">Overall</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in scorecards %}
+                        <tr data-area-name="{{ card.name|lower }}"
+                            data-area-type="{{ card.type|lower }}">
+                            <td style="padding-left: 20px;">
+                                <div class="sc-area-cell">
+                                    <div class="sc-area-name">{{ card.name }}</div>
+                                    <div class="sc-area-type">{{ card.type }}</div>
+                                </div>
+                            </td>
+                            <td class="sc-plant-cell">{{ card.plant }}</td>
+
+                            <!-- Iterate directly over the dictionary to avoid needing a custom get_item filter -->
+                            {% for code, data in card.pillar_scores.items %}
+                                <td class="sc-score-cell" data-pillar="{{ code }}">
+                                    <span class="sc-score {% if code == 'SEIRI' %}pillar-seiri{% elif code == 'SEITON' %}pillar-seiton{% elif code == 'SEISO' %}pillar-seiso{% elif code == 'SEIKETSU' %}pillar-seiketsu{% elif code == 'SHITSUKE' %}pillar-shitsuke{% endif %} {% if not data.value %}sc-score-muted{% endif %}">
+                                        {% if data.value %}{{ data.value }}{% else %}—{% endif %}
+                                    </span>
+                                </td>
+                            {% endfor %}
+
+                            <td class="sc-score-cell">
+                                <span class="sc-score sc-score-overall {% if not card.overall.value %}sc-score-muted{% endif %}">
+                                    {% if card.overall.value %}{{ card.overall.value }}{% else %}—{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-bar"></i>
+                <h3>No audits in this period</h3>
+                <p>Complete at least one audit to see area scorecards.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    const table = document.getElementById('scTable');
+    if (!table) return;
+
+    const filterBtns = document.querySelectorAll('.sc-filter-btn');
+    const searchInput = document.getElementById('scSearchInput');
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    function applyFilters() {
+        rows.forEach(function (row) {
+            const name = (row.dataset.areaName || '').toLowerCase();
+            const type = (row.dataset.areaType || '').toLowerCase();
+
+            const matchesSearch = !searchQuery || name.includes(searchQuery) || type.includes(searchQuery);
+
+            let matchesFilter = true;
+            if (activeFilter !== 'all') {
+                matchesFilter = (type === activeFilter);
+            }
+
+            row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+        });
+    }
+
+    filterBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            filterBtns.forEach(function (b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            activeFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            searchQuery = this.value.trim().toLowerCase();
+            applyFilters();
+        });
+    }
+
+})();
+</script>
+{% endblock %}

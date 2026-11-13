@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.db.models import Q
 
 from apps.accounts.models import *
 from apps.capa.models import (
@@ -67,7 +68,7 @@ class FlexibleJSONField(forms.CharField):
 class CAPAForm(BaseEHSForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        # Limit owner choices to active, non-superuser users
         self.fields["owner"].queryset = User.objects.filter(is_active=True, is_superuser=False)
 
     def clean(self):
@@ -75,17 +76,26 @@ class CAPAForm(BaseEHSForm):
         source_type = cleaned_data.get("source_type")
         source_reference = (cleaned_data.get("source_reference") or "").strip()
 
+        # A selected source is required for every source type except Manual.
         if source_type != CAPA.SourceType.MANUAL and not source_reference:
             self.add_error("source_reference", "Select a source record.")
 
+        # Validate Incident
         if source_type == CAPA.SourceType.INCIDENT and source_reference:
             from apps.accidents.models import Incident
             if not Incident.objects.filter(report_number=source_reference).exists():
                 self.add_error("source_reference", "Select a valid incident from the list.")
+        
+        # Validate Hazard
         elif source_type == CAPA.SourceType.HAZARD and source_reference:
             from apps.hazards.models import Hazard
             if not Hazard.objects.filter(report_number=source_reference).exists():
                 self.add_error("source_reference", "Select a valid hazard from the list.")
+
+        # ✅ Five S validation removed — the view (CAPACreateView) handles
+        # the lookup of the audit/finding via `question_id` in the URL
+        # and the Schedule ID in `source_reference`. No form-level validation
+        # is needed for Five S since we trust the URL parameters.
 
         cleaned_data["source_reference"] = source_reference
         return cleaned_data

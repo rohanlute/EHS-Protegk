@@ -1,0 +1,433 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}5S Analytical Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.dash-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.dash-page *, .dash-page *::before, .dash-page *::after { box-sizing: border-box; }
+
+/* Header & Filters */
+.dash-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 24px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.dash-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1;
+    border-radius: 15px; color: var(--s5-primary-dark); font-size: 22px;
+}
+.dash-eyebrow { color: var(--s5-primary-dark); font-size: 10px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
+.dash-header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+
+.filter-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
+    background: var(--s5-white); padding: 16px 20px; border-radius: var(--s5-radius);
+    border: 1px solid var(--s5-border); box-shadow: var(--s5-shadow);
+}
+.filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+.filter-label { font-size: 11px; font-weight: 700; color: var(--s5-muted); text-transform: uppercase; }
+.filter-select {
+    padding: 8px 12px; border: 1px solid var(--s5-border); border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: var(--s5-text); outline: none;
+}
+
+/* KPI Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px; margin-bottom: 24px;
+}
+.kpi-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); padding: 20px; box-shadow: var(--s5-shadow);
+    display: flex; align-items: center; gap: 16px;
+}
+.kpi-icon {
+    width: 48px; height: 48px; border-radius: 12px; display: flex;
+    justify-content: center; align-items: center; font-size: 20px;
+}
+.kpi-icon.teal { background: #f0fdfa; color: #0d9488; }
+.kpi-icon.blue { background: #eff6ff; color: #1d4ed8; }
+.kpi-icon.amber { background: #fffbeb; color: #b45309; }
+.kpi-icon.red { background: #fef2f2; color: #b91c1c; }
+.kpi-content { flex: 1; }
+.kpi-label { font-size: 11px; font-weight: 700; color: var(--s5-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.kpi-value { font-size: 24px; font-weight: 800; color: var(--s5-text); }
+
+/* Cards */
+.dash-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    overflow: hidden; display: flex; flex-direction: column; height: 100%;
+}
+.dash-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc; display: flex; justify-content: space-between; align-items: center;
+}
+.dash-card-header h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--s5-text); display: flex; align-items: center; gap: 8px; }
+.dash-card-header h3 i { color: var(--s5-primary); }
+.dash-card-body { padding: 24px; flex: 1; }
+
+/* Heatmap Grid */
+.heatmap-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;
+}
+.heatmap-item {
+    padding: 16px; border-radius: 10px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.heatmap-title { font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.heatmap-count { font-size: 20px; font-weight: 800; }
+.heatmap-sub { font-size: 10px; font-weight: 600; opacity: 0.8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid">
+<div class="dash-page">
+
+    <!-- Header -->
+    <header class="dash-header">
+        <div class="d-flex align-items-center gap-3">
+            <div class="dash-header-icon"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <div class="dash-eyebrow">Management View</div>
+                <h1>5S Analytical Dashboard</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <form method="get" class="filter-bar" id="filterForm">
+        <div class="filter-group">
+            <span class="filter-label">Plant Filter</span>
+            <select name="plant" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">All Plants</option>
+                {% for p in plants %}
+                    <option value="{{ p.id }}" {% if selected_plant == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Zone Filter</span>
+            <select name="zone" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">All Zones</option>
+                {% for z in zones %}
+                    <option value="{{ z.id }}" {% if selected_zone == z.id|stringformat:"s" %}selected{% endif %}>{{ z.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Time Period</span>
+            <select name="days" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="30" {% if selected_days == 30 %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if selected_days == 90 %}selected{% endif %}>Last 90 Days</option>
+                <option value="180" {% if selected_days == 180 %}selected{% endif %}>Last 6 Months</option>
+                <option value="365" {% if selected_days == 365 %}selected{% endif %}>Last 1 Year</option>
+            </select>
+        </div>
+    </form>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon teal"><i class="fas fa-clipboard-check"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-label">Total Audits</div>
+                <div class="kpi-value">{{ total_audits }}</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon blue"><i class="fas fa-percent"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-label">Average Score</div>
+                <div class="kpi-value">{{ avg_score }}%</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon amber"><i class="fas fa-tools"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-label">Pending Actions</div>
+                <div class="kpi-value">{{ pending_actions }}</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-label">Total Findings</div>
+                <div class="kpi-value">{{ total_actions }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-chart-line"></i> Average Score Over Time</h3>
+                </div>
+                <div class="dash-card-body" style="min-height: 300px;">
+                    <canvas id="trendChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-fire"></i> Problem Areas Heatmap (Locations with Most Findings)</h3>
+                </div>
+                <div class="dash-card-body">
+                    {% if heatmap_data %}
+                        <div class="heatmap-grid">
+                            {% for item in heatmap_data %}
+                                <div class="heatmap-item" style="background-color: {% if item.count > 5 %}#fef2f2{% elif item.count > 2 %}#fffbeb{% else %}#f0fdf4{% endif %}; border: 1px solid {% if item.count > 5 %}#fecaca{% elif item.count > 2 %}#fde68a{% else %}#bbf7d0{% endif %}; color: {% if item.count > 5 %}#b91c1c{% elif item.count > 2 %}#b45309{% else %}#15803d{% endif %};">
+                                    <div class="heatmap-title">{{ item.name }}</div>
+                                    <div class="heatmap-count">{{ item.count }}</div>
+                                    <div class="heatmap-sub">Findings</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No location findings recorded in this period.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Charts Row (3 columns) -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Scheduled vs Completed Audits -->
+        <div class="col-lg-4">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-calendar-check"></i> Audit Status Distribution</h3>
+                </div>
+                <div class="dash-card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <canvas id="auditStatusChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Zones -->
+        <div class="col-lg-4">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Audit Volume by Zone</h3>
+                </div>
+                <div class="dash-card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <canvas id="zoneChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Completion Rate -->
+        <div class="col-lg-4">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-check-double"></i> Action Completion Rate</h3>
+                </div>
+                <div class="dash-card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <div style="position: relative; width: 100%; max-width: 250px; text-align: center;">
+                        <canvas id="completionChart" style="max-height: 250px;"></canvas>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <h2 style="margin: 0; font-weight: 800; font-size: 28px; color: var(--s5-text);">{{ completion_rate }}%</h2>
+                            <span style="font-size: 11px; font-weight: 700; color: var(--s5-muted); text-transform: uppercase;">Closed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pillar Radar & Action Status Doughnut -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Pillar Performance Radar</h3>
+                </div>
+                <div class="dash-card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <canvas id="pillarChart" style="max-height: 280px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-tasks"></i> Action Status Breakdown</h3>
+                </div>
+                <div class="dash-card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <canvas id="actionChart" style="max-height: 280px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- Pass Django data to JavaScript -->
+{{ trend_labels|json_script:"trend-labels" }}
+{{ trend_data|json_script:"trend-data" }}
+{{ audit_status_data|json_script:"audit-status-data" }}
+{{ zone_labels|json_script:"zone-labels" }}
+{{ zone_data|json_script:"zone-data" }}
+{{ pillar_data|json_script:"pillar-data" }}
+{{ action_counts|json_script:"action-data" }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Trend Chart
+        const labels = JSON.parse(document.getElementById('trend-labels').textContent);
+        const data = JSON.parse(document.getElementById('trend-data').textContent);
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(13, 148, 136, 0.2)');
+        gradient.addColorStop(1, 'rgba(13, 148, 136, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Average Score (%)',
+                    data: data,
+                    borderColor: '#0d9488',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#0d9488',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: '#e2e8f0', drawBorder: false }, ticks: { callback: function(value) { return value + "%" } } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Audit Status Chart
+        const auditStatusData = JSON.parse(document.getElementById('audit-status-data').textContent);
+        new Chart(document.getElementById('auditStatusChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Scheduled', 'In Progress', 'Submitted', 'Closed'],
+                datasets: [{ data: auditStatusData, backgroundColor: ['#94a3b8', '#f59e0b', '#3b82f6', '#22c55e'], borderWidth: 0 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Inter', size: 11, weight: '600' } } } }
+            }
+        });
+
+        // 3. Zone Chart
+        const zoneLabels = JSON.parse(document.getElementById('zone-labels').textContent);
+        const zoneData = JSON.parse(document.getElementById('zone-data').textContent);
+        new Chart(document.getElementById('zoneChart'), {
+            type: 'bar',
+            data: {
+                labels: zoneLabels.length ? zoneLabels : ['No Data'],
+                datasets: [{ label: 'Audits', data: zoneData.length ? zoneData : [0], backgroundColor: '#0d9488', borderRadius: 4 }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, grid: { display: false }, ticks: { precision: 0 } }, y: { grid: { display: false } } }
+            }
+        });
+
+        // 4. Completion Rate Chart
+        const completionRate = {{ completion_rate }};
+        new Chart(document.getElementById('completionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Closed', 'Pending'],
+                datasets: [{ data: [completionRate, 100 - completionRate], backgroundColor: ['#22c55e', '#e2e8f0'], borderWidth: 0, cutout: '80%' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // 5. Pillar Chart
+        const pillarData = JSON.parse(document.getElementById('pillar-data').textContent);
+        new Chart(document.getElementById('pillarChart'), {
+            type: 'radar',
+            data: {
+                labels: pillarData.map(item => item.name),
+                datasets: [{
+                    label: 'Compliance Score (%)',
+                    data: pillarData.map(item => item.score),
+                    backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                    borderColor: '#0d9488',
+                    pointBackgroundColor: '#0f766e',
+                    pointBorderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { r: { angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' }, pointLabels: { font: { family: 'Inter', size: 11, weight: 'bold' }, color: '#172033' }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 6. Action Doughnut
+        const actionData = JSON.parse(document.getElementById('action-data').textContent);
+        new Chart(document.getElementById('actionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Assigned', 'Submitted', 'Closed', 'Rejected'],
+                datasets: [{ data: [actionData.assigned, actionData.submitted, actionData.closed, actionData.rejected], backgroundColor: ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444'], borderWidth: 0, hoverOffset: 4 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12, weight: '600' }, padding: 20, usePointStyle: true } } }
+            }
+        });
+    });
+</script>
+{% endblock %}

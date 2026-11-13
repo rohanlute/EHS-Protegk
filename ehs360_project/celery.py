@@ -35,9 +35,15 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=11, minute=0),  # Daily at 11 AM IST
     },
     'auto-create-inspection-schedules': {
-    'task': 'apps.inspections.tasks.auto_create_inspection_schedules', 
-    'schedule': crontab(hour=0, minute=0),  
+        'task': 'apps.inspections.tasks.auto_create_inspection_schedules', 
+        'schedule': crontab(hour=0, minute=0),  
     },
+    
+    'auto-generate-5s-audits': {
+        'task': 'apps.five_s.tasks.auto_generate_5s_audits',
+        'schedule': crontab(hour=0, minute=1),  # Runs daily at 12:01 AM
+    },
+
     'refresh-live-benchmark-results': {
         'task': 'apps.benchmarking.tasks.refresh_live_benchmark_results',
         'schedule': crontab(minute=0),

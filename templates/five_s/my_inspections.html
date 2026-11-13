@@ -1,0 +1,340 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My 5S Inspections | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-soft: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-surface: #ffffff;
+    --s5-background: #f5f7fb;
+    --s5-danger: #dc2626;
+    --s5-radius: 14px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.fives-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 4px 32px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+
+.fives-page *, .fives-page *::before, .fives-page *::after { box-sizing: border-box; }
+
+/* ===== PAGE HEADER ===== */
+.fives-header {
+    display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    flex-wrap: wrap; padding: 24px 26px; background: var(--s5-surface);
+    border: 1px solid var(--s5-border); border-radius: var(--s5-radius);
+    box-shadow: var(--s5-shadow); margin-bottom: 22px;
+}
+
+.fives-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+
+.fives-header-icon {
+    width: 54px; height: 54px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--s5-primary-soft); border: 1px solid #ccfbf1; border-radius: 15px;
+    color: var(--s5-primary-dark); font-size: 22px;
+}
+
+.fives-eyebrow {
+    color: var(--s5-primary-dark); text-transform: uppercase; font-size: 10px;
+    letter-spacing: 1.2px; font-weight: 800; margin-bottom: 5px;
+}
+
+.fives-header h1 {
+    margin: 0; color: var(--s5-text); font-size: 22px; line-height: 1.4;
+    font-weight: 800; letter-spacing: -.5px;
+}
+
+.fives-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 13px; line-height: 1.6; }
+
+/* ===== STATS GRID ===== */
+.fives-stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+}
+
+.stat-box {
+    background: var(--s5-surface); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow); padding: 20px;
+    display: flex; flex-direction: column;
+}
+
+.stat-box .stat-label {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    color: var(--s5-muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+
+.stat-box .stat-value {
+    font-size: 24px; font-weight: 800; color: var(--s5-text); line-height: 1.2;
+}
+
+.stat-box.pending .stat-value { color: #b45309; }
+.stat-box.overdue .stat-value { color: var(--s5-danger); }
+.stat-box.submitted .stat-value { color: #15803d; }
+
+/* ===== FILTERS ===== */
+.fives-filter-card {
+    background: var(--s5-surface); border: 1px solid var(--s5-border); border-radius: var(--s5-radius);
+    box-shadow: var(--s5-shadow); padding: 20px; margin-bottom: 22px;
+}
+
+.fives-filter-form {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;
+}
+
+.fives-filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
+
+.fives-filter-card .form-label {
+    font-size: 11px; font-weight: 700; color: var(--s5-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 0;
+}
+
+.fives-filter-card .form-control, .fives-filter-card .form-select {
+    border: 1px solid #cbd5e1; border-radius: 9px; padding: 0 13px; height: 42px;
+    font-size: 13px; font-family: 'Inter', sans-serif; color: var(--s5-text); transition: all 0.2s ease; width: 100%;
+}
+
+.fives-filter-card .form-control:focus, .fives-filter-card .form-select:focus {
+    outline: none; border-color: var(--s5-primary); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.11);
+}
+
+.btn-filter {
+    height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--s5-primary); color: white; border: none; border-radius: 9px;
+    padding: 0 24px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;
+}
+.btn-filter:hover { background: var(--s5-primary-dark); }
+
+.btn-clear {
+    height: 42px; width: 42px; display: inline-flex; align-items: center; justify-content: center;
+    background: white; color: var(--s5-muted); border: 1px solid var(--s5-border);
+    border-radius: 9px; text-decoration: none; transition: all 0.2s;
+}
+.btn-clear:hover { background: #f8fafc; color: var(--s5-text); border-color: #cbd5e1; }
+
+/* ===== DATA TABLE ===== */
+.fives-table-card {
+    background: var(--s5-surface); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow); overflow: hidden;
+}
+
+.fives-table { width: 100%; margin: 0; border-collapse: collapse; }
+
+.fives-table thead th {
+    background: #fafcff; color: var(--s5-muted); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px;
+    border-bottom: 1px solid var(--s5-border); white-space: nowrap;
+}
+
+.fives-table tbody td {
+    padding: 14px 16px; vertical-align: middle; border-bottom: 1px solid var(--s5-border);
+    font-size: 13px; color: var(--s5-text);
+}
+
+.fives-table tbody tr:last-child td { border-bottom: none; }
+.fives-table tbody tr:hover { background: #fafcff; }
+
+/* ===== BADGES ===== */
+.badge-status {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+    border-radius: 999px; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px;
+}
+.badge-status.scheduled { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.badge-status.in-progress { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.badge-status.submitted { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+
+.code-pill {
+    display: inline-block; padding: 4px 10px; border-radius: 6px;
+    background: var(--s5-primary-soft); color: var(--s5-primary-dark);
+    font-size: 11px; font-weight: 700; font-family: monospace; white-space: nowrap;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.btn-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    text-decoration: none; transition: all 0.2s; border: 1px solid transparent;
+}
+.btn-action.primary { background: var(--s5-primary); color: white; }
+.btn-action.primary:hover { background: var(--s5-primary-dark); }
+.btn-action.outline { background: #fff; color: var(--s5-text); border-color: var(--s5-border); }
+.btn-action.outline:hover { background: #f8fafc; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--s5-primary-soft);
+    color: var(--s5-primary); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 16px;
+}
+.empty-state h4 { font-size: 16px; font-weight: 800; color: var(--s5-text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; color: var(--s5-muted); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .fives-header { flex-direction: column; align-items: flex-start; }
+    .fives-filter-form { flex-direction: column; align-items: stretch; }
+    .fives-table thead { display: none; }
+    .fives-table tbody tr { display: flex; flex-direction: column; padding: 16px; border-bottom: 1px solid var(--s5-border); }
+    .fives-table tbody td { display: flex; justify-content: space-between; padding: 6px 0; border: none; }
+    .fives-table tbody td::before {
+        content: attr(data-label); font-weight: 700; font-size: 11px;
+        color: var(--s5-muted); text-transform: uppercase; margin-right: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="fives-page">
+
+    <!-- Page header -->
+    <header class="fives-header">
+        <div class="fives-header-main">
+            <div class="fives-header-icon"><i class="fas fa-clipboard-check"></i></div>
+            <div>
+                <div class="fives-eyebrow">My Workspace</div>
+                <h1>My 5S Inspections</h1>
+                <p>View and complete the 5S audits assigned to you.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="fives-stats-row">
+        <div class="stat-box pending">
+            <div class="stat-label">Pending Audits</div>
+            <div class="stat-value">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-box overdue">
+            <div class="stat-label">Overdue Audits</div>
+            <div class="stat-value">{{ stats.overdue }}</div>
+        </div>
+        <div class="stat-box submitted">
+            <div class="stat-label">Submitted</div>
+            <div class="stat-value">{{ stats.submitted }}</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="fives-filter-card">
+        <div class="fives-filter-form">
+            <div class="fives-filter-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="fives-filter-actions" style="display: flex; gap: 8px; height: 42px;">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'five_s:my_inspections' %}" class="btn-clear" title="Clear filters">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="fives-table-card">
+        <div class="table-responsive">
+            <table class="fives-table">
+                <thead>
+                    <tr>
+                        <th>Schedule / Template</th>
+                        <th>Location</th>
+                        <th style="text-align: center;">Due Date</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in page_obj %}
+                    <tr>
+                        <td data-label="Schedule">
+                            <div style="font-weight: 700; color: var(--s5-text); margin-bottom: 4px;">{{ audit.schedule.schedule_name }}</div>
+                            <div style="font-size: 11px; color: var(--s5-muted);">{{ audit.schedule.template.template_name }}</div>
+                        </td>
+                        <td data-label="Location">
+                            {% for plant in audit.schedule.plant.all %}
+                                <span class="code-pill">{{ plant.code }}</span>
+                            {% empty %}
+                                <span class="code-pill">N/A</span>
+                            {% endfor %}
+                        </td>
+                        <td data-label="Due Date" style="text-align: center;">
+                            <span style="font-weight: 600; {% if audit.due_date < today %}color: var(--s5-danger);{% endif %}">
+                                {{ audit.due_date|date:"d M Y" }}
+                            </span>
+                        </td>
+                        <td data-label="Status" style="text-align: center;">
+                            {% if audit.status == 'SCHEDULED' %}
+                                <span class="badge-status scheduled">Scheduled</span>
+                            {% elif audit.status == 'IN_PROGRESS' %}
+                                <span class="badge-status in-progress">In Progress</span>
+                            {% elif audit.status == 'SUBMITTED' %}
+                                <span class="badge-status submitted">Submitted</span>
+                            {% else %}
+                                <span class="badge-status">{{ audit.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                       <td data-label="Action" class="text-end">
+                        {% if audit.status == 'SCHEDULED' or audit.status == 'IN_PROGRESS' %}
+                            {% if audit.is_locked %}
+                                {# ── LOCK: schedule paused/ended — do not allow starting ── #}
+                                <span class="btn-action" style="background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1; cursor:not-allowed;"
+                                    title="Schedule is {{ audit.schedule_status_display }} — resume it to start this inspection.">
+                                    <i class="fas fa-pause-circle"></i> Paused
+                                </span>
+                            {% else %}
+                                <a href="{% url 'five_s:inspection_form' audit.pk %}" class="btn-action primary">
+                                    <i class="fas fa-play"></i>
+                                    {% if audit.status == 'IN_PROGRESS' %}Continue Audit{% else %}Start Audit{% endif %}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'five_s:audit_page' audit.pk %}" class="btn-action outline">
+                                <i class="fas fa-eye"></i> View Result
+                            </a>
+                        {% endif %}
+                    </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 0; border: none;">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="fas fa-check-circle"></i></div>
+                                <h4>You're all caught up!</h4>
+                                <p>No pending 5S audits assigned to you right now.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

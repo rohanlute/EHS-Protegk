@@ -91,6 +91,97 @@ class CAPASourceReferenceView(LoginRequiredMixin, View):
                 {"value": record.report_number, "label": f"{record.report_number} - {record.hazard_title[:90]}"}
                 for record in records[:100]
             ]
+        elif source_type == CAPA.SourceType.INSPECTION:
+            from apps.inspections.models import InspectionSchedule
+            records = InspectionSchedule.objects.filter(plants__in=plants).select_related("template").distinct().order_by("-pk")
+            if query:
+                records = records.filter(Q(schedule_code__icontains=query) | Q(template__template_name__icontains=query))
+            for record in records[:100]:
+                results.append({
+                    "value": record.schedule_code,
+                    "label": f"{record.schedule_code} - {record.template.template_name}",
+                })
+        elif source_type == CAPA.SourceType.AUDIT:
+            from apps.audits.models import AuditSchedule
+            records = AuditSchedule.objects.filter(plants__in=plants).select_related("template").distinct().order_by("-pk")
+            if query:
+                records = records.filter(Q(schedule_code__icontains=query) | Q(template__title__icontains=query))
+            for record in records[:100]:
+                results.append({
+                    "value": record.schedule_code,
+                    "label": f"{record.schedule_code} - {record.template.title}",
+                })
+        elif source_type == CAPA.SourceType.OBSERVATION:
+            from apps.ergonomics.models import ErgonomicObservation
+            records = ErgonomicObservation.objects.filter(plant__in=plants).order_by("-pk")
+            if query:
+                records = records.filter(Q(task__icontains=query) | Q(observation__icontains=query) | Q(risk_factor__icontains=query))
+            results = [
+                {"value": str(record.pk), "label": f"Observation #{record.pk} - {record.task[:90]}"}
+                for record in records[:100]
+            ]
+        elif source_type == CAPA.SourceType.RISK_ASSESSMENT:
+            from apps.hira.models import HIRA
+            records = HIRA.objects.filter(plant__in=plants).order_by("-pk")
+            if query:
+                records = records.filter(Q(hira_number__icontains=query) | Q(process__icontains=query))
+            results = [
+                {"value": record.hira_number, "label": f"{record.hira_number} - {record.process[:90]}"}
+                for record in records[:100]
+            ]
+        elif source_type == CAPA.SourceType.LEGAL_COMPLIANCE:
+            from apps.legal_compliance.models import ComplianceFinding
+            records = ComplianceFinding.objects.filter(requirement__applicable_plants__in=plants).distinct().order_by("-pk")
+            if query:
+                records = records.filter(Q(finding_reference__icontains=query) | Q(finding_description__icontains=query))
+            for record in records[:100]:
+                if not record.finding_reference:
+                    continue
+                results.append({
+                    "value": record.finding_reference,
+                    "label": f"{record.finding_reference} - {record.finding_description[:90]}",
+                })
+        elif source_type == CAPA.SourceType.MANAGEMENT_REVIEW:
+            # There is no management review record model in this project yet.
+            results = []
+        elif source_type == CAPA.SourceType.Five_S:
+            from apps.five_s.models import AuditAnswer, FiveSAudit, CorrectiveAction
+            from django.db.models import Exists, OuterRef
+
+            audits = FiveSAudit.objects.filter(
+                Q(schedule__plant__in=plants)
+                | Q(schedule__assignee=request.user)
+                | Q(user=request.user)
+            ).select_related("schedule").distinct()
+
+            finding_actions = CorrectiveAction.objects.filter(
+                audit_id=OuterRef("audit_id"),
+                question_id=OuterRef("question_id"),
+            )
+            records = AuditAnswer.objects.filter(
+                audit__in=audits,
+                answer__in=["1", "2"],
+            ).annotate(
+                has_any_action=Exists(finding_actions),
+                has_unclosed_action=Exists(finding_actions.exclude(status="CLOSED")),
+            ).filter(
+                Q(has_any_action=False) | Q(has_unclosed_action=True),
+            ).select_related("audit__schedule", "question").order_by("-audit__pk", "question__question_code")
+
+            if query:
+                records = records.filter(
+                    Q(audit__cycle_key__icontains=query)
+                    | Q(audit__schedule__schedule_name__icontains=query)
+                    | Q(question__question_code__icontains=query)
+                    | Q(question__question_text__icontains=query)
+                )
+
+            for record in records[:100]:
+                results.append({
+                    "value": str(record.pk),
+                    # ✅ Label shows Question Code + Question Text
+                    "label": f"{record.question.question_code}: {record.question.question_text[:60]}",
+                })
 
         return JsonResponse({"results": results})
 
@@ -380,35 +471,45 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
         initial = super().get_initial()
         source_type = self.request.GET.get("source_type")
         source_id = self.request.GET.get("source_id")
-        if source_type == "INCIDENT" and source_id:
-            incident = Incident.objects.filter(pk=source_id).select_related("plant", "zone", "location", "sublocation", "affected_person_department").first()
-            if incident:
+        question_id = self.request.GET.get("question_id")
+
+        if source_type == CAPA.SourceType.Five_S:
+            from apps.five_s.models import AuditAnswer, FiveSAudit
+
+            finding = None
+
+            if question_id:
+                finding = AuditAnswer.objects.filter(
+                    pk=question_id, answer__in=["1", "2"]
+                ).select_related("audit__schedule", "question").first()
+
+            if finding is None and source_id:
+                audit = FiveSAudit.objects.filter(pk=source_id).first()
+                if audit:
+                    finding = AuditAnswer.objects.filter(
+                        audit=audit, answer__in=["1", "2"]
+                    ).order_by("question__question_code").first()
+
+            if finding:
+                schedule = finding.audit.schedule
+                
                 initial.update({
-                    "title": f"CAPA for {incident.report_number}",
-                    "description": incident.description,
-                    "source_type": CAPA.SourceType.INCIDENT,
-                    "source_reference": incident.report_number,
-                    "plant": incident.plant,
-                    "zone": incident.zone,
-                    "location": incident.location,
-                    "sublocation": incident.sublocation,
-                    "department": incident.affected_person_department,
+                    "source_type": CAPA.SourceType.Five_S,
+                    # ✅ CHANGED: Use the Schedule's ID (a number) as source_reference
+                    "source_reference": str(schedule.pk),
+                    "title": f"CAPA: {finding.question.question_code} - {finding.question.question_text[:60]}",
+                    "description": finding.remarks or "No remarks provided by inspector.",
                 })
-        elif source_type == "HAZARD" and source_id:
-            hazard = Hazard.objects.filter(pk=source_id).select_related("plant", "zone", "location", "sublocation", "behalf_person_dept").first()
-            if hazard:
-                initial.update({
-                    "title": f"CAPA for {hazard.report_number}",
-                    "description": hazard.hazard_description,
-                    "source_type": CAPA.SourceType.HAZARD,
-                    "source_reference": hazard.report_number,
-                    "plant": hazard.plant,
-                    "zone": hazard.zone,
-                    "location": hazard.location,
-                    "sublocation": hazard.sublocation,
-                    "department": hazard.behalf_person_dept,
-                })
-        return initial
+
+                plant = schedule.plant.first()
+                zone = schedule.zone.first()
+                loc = schedule.location.first()
+                sub = schedule.sublocation.first()
+                if plant: initial["plant"] = plant.pk
+                if zone: initial["zone"] = zone.pk
+                if loc: initial["location"] = loc.pk
+                if sub: initial["sublocation"] = sub.pk
+                return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -422,10 +523,58 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
         source_type = form.cleaned_data.get("source_type")
         source_reference = form.cleaned_data.get("source_reference")
         source_obj = None
+        
         if source_type == CAPA.SourceType.INCIDENT:
             source_obj = Incident.objects.filter(report_number=source_reference).first()
         elif source_type == CAPA.SourceType.HAZARD:
             source_obj = Hazard.objects.filter(report_number=source_reference).first()
+        
+        elif source_type == CAPA.SourceType.Five_S:
+            from apps.five_s.models import AuditAnswer, FiveSSchedule, CorrectiveAction
+            from django.db.models import Exists, OuterRef
+
+            # 1. First, try the question_id passed in the URL
+            question_id = self.request.GET.get("question_id")
+            source_obj = None
+            if question_id and question_id.isdigit():
+                source_obj = AuditAnswer.objects.filter(
+                    pk=int(question_id), answer__in=["1", "2"]
+                ).first()
+
+            # 2. Fallback: source_reference is the schedule ID
+            if source_obj is None and source_reference:
+                # ✅ Schedule ID as the source_reference
+                schedule = FiveSSchedule.objects.filter(pk=source_reference).first()
+                if schedule:
+                    finding_actions = CorrectiveAction.objects.filter(
+                        audit_id=OuterRef("audit_id"),
+                        question_id=OuterRef("question_id"),
+                    )
+                    source_obj = AuditAnswer.objects.filter(
+                        audit__schedule=schedule, answer__in=["1", "2"]
+                    ).annotate(
+                        has_any_action=Exists(finding_actions),
+                        has_unclosed_action=Exists(finding_actions.exclude(status="CLOSED")),
+                    ).filter(
+                        Q(has_any_action=False) | Q(has_unclosed_action=True),
+                    ).order_by("-pk").first()
+
+            if source_obj is None:
+                messages.error(
+                    self.request,
+                    f"Could not find the 5S finding. Please try again."
+                )
+                return redirect("capa:list")
+
+        elif source_type == CAPA.SourceType.INSPECTION:
+            from apps.inspections.models import InspectionSchedule
+            source_obj = InspectionSchedule.objects.filter(schedule_code=source_reference).first()
+        elif source_type == CAPA.SourceType.AUDIT:
+            from apps.audits.models import AuditSchedule
+            source_obj = AuditSchedule.objects.filter(schedule_code=source_reference).first()
+        elif source_type == CAPA.SourceType.LEGAL_COMPLIANCE:
+            from apps.legal_compliance.models import ComplianceFinding
+            source_obj = ComplianceFinding.objects.filter(finding_reference=source_reference).first()
 
         capa = CAPAService.create_capa(
             user=self.request.user,
@@ -445,7 +594,7 @@ class CAPACreateView(LoginRequiredMixin, PermissionRequiredMixin, FormView):
             capa_recommended=form.cleaned_data.get("capa_recommended", False),
             capa_reason=form.cleaned_data.get("capa_reason", ""),
             source_type=source_type,
-            source_reference=source_reference,
+            source_reference=source_reference,   
             source_obj=source_obj,
         )
         messages.success(self.request, f"CAPA {capa.capa_number} created successfully.")
@@ -470,6 +619,20 @@ class CAPAUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
             source_obj = Incident.objects.filter(report_number=source_reference).first()
         elif source_type == CAPA.SourceType.HAZARD:
             source_obj = Hazard.objects.filter(report_number=source_reference).first()
+        elif source_type == CAPA.SourceType.Five_S:
+            from apps.five_s.models import AuditAnswer, FiveSAudit
+            source_obj = AuditAnswer.objects.filter(pk=source_reference, answer__in=["1", "2"]).first()
+            if source_obj is None:
+                source_obj = FiveSAudit.objects.filter(cycle_key=source_reference).first()
+        elif source_type == CAPA.SourceType.INSPECTION:
+            from apps.inspections.models import InspectionSchedule
+            source_obj = InspectionSchedule.objects.filter(schedule_code=source_reference).first()
+        elif source_type == CAPA.SourceType.AUDIT:
+            from apps.audits.models import AuditSchedule
+            source_obj = AuditSchedule.objects.filter(schedule_code=source_reference).first()
+        elif source_type == CAPA.SourceType.LEGAL_COMPLIANCE:
+            from apps.legal_compliance.models import ComplianceFinding
+            source_obj = ComplianceFinding.objects.filter(finding_reference=source_reference).first()
         if source_obj:
             form.instance.source_content_type = ContentType.objects.get_for_model(source_obj)
             form.instance.source_object_id = source_obj.pk

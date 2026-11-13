@@ -1,0 +1,683 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Audit: {{ audit.schedule.schedule_name }} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.fives-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px 4px 35px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+
+.fives-page *, .fives-page *::before, .fives-page *::after { box-sizing: border-box; }
+
+/* Header */
+.fives-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.fives-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.fives-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex; justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1; border-radius: 15px;
+    color: var(--s5-primary-dark); font-size: 22px;
+}
+.fives-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.fives-header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+.fives-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; line-height: 1.6; }
+
+/* Form Card */
+.fives-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow); margin-bottom: 24px;
+    overflow: hidden;
+}
+.fives-form-body { padding: 32px; }
+
+/* Accordion */
+.pillar-accordion {
+    border: 1px solid var(--s5-border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.pillar-accordion:last-child { margin-bottom: 0; }
+
+.pillar-accordion-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; background: #fafbfc; cursor: pointer;
+    transition: all 0.2s ease;
+}
+.pillar-accordion-header:hover { background: #f1f5f9; }
+.pillar-accordion-header.active {
+    background: var(--s5-primary-light);
+    border-bottom: 1px solid #ccfbf1;
+}
+
+.pillar-accordion-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 800; color: var(--s5-text);
+}
+.pillar-accordion-header.active .pillar-accordion-title { color: var(--s5-primary-dark); }
+
+.pillar-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px;
+}
+
+/* Pillar Colors */
+.pillar-SEIRI .pillar-icon    { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+.pillar-SEITON .pillar-icon   { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.pillar-SEISO .pillar-icon    { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.pillar-SEIKETSU .pillar-icon { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.pillar-SHITSUKE .pillar-icon { background: rgba(124, 58, 237, 0.12); color: #6d28d9; }
+
+.accordion-chevron { transition: transform 0.3s ease; color: var(--s5-muted); font-size: 14px; }
+.pillar-accordion-header.active .accordion-chevron { transform: rotate(180deg); color: var(--s5-primary); }
+
+.pillar-accordion-body { display: none; padding: 0; background: #fff; }
+.pillar-accordion-body.active { display: block; }
+
+/* Question Item */
+.q-item {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--s5-border);
+    transition: background 0.2s, padding 0.2s;
+}
+.q-item:hover { background: #fafbfc; }
+.q-item:last-child { border-bottom: none; }
+
+.q-label-row { margin-bottom: 16px; }
+.q-code {
+    display: inline-block;
+    font-family: monospace; font-size: 11px; font-weight: 800;
+    color: var(--s5-primary-dark); background: var(--s5-primary-light);
+    padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+}
+.q-label { font-size: 15px; font-weight: 700; color: var(--s5-text); margin: 0 0 4px 0; line-height: 1.5; }
+.q-helper { font-size: 12px; color: var(--s5-muted); display: block; }
+
+/* ===== 1-5 Rating Scale ===== */
+.rating-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.rating-option {
+    position: relative;
+}
+.rating-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.rating-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    background: #fff;
+    border: 2px solid var(--s5-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    text-align: center;
+}
+.rating-option label .rating-num {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--s5-muted);
+    line-height: 1;
+    margin-bottom: 2px;
+}
+.rating-option label .rating-text {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--s5-muted);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+.rating-option label:hover {
+    border-color: var(--s5-primary);
+    background: var(--s5-primary-light);
+}
+
+/* Filled States */
+.rating-option input[value="1"]:checked + label { background: #ef4444; border-color: #ef4444; }
+.rating-option input[value="1"]:checked + label .rating-num,
+.rating-option input[value="1"]:checked + label .rating-text { color: #fff; }
+
+.rating-option input[value="2"]:checked + label { background: #f59e0b; border-color: #f59e0b; }
+.rating-option input[value="2"]:checked + label .rating-num,
+.rating-option input[value="2"]:checked + label .rating-text { color: #fff; }
+
+.rating-option input[value="3"]:checked + label { background: #3b82f6; border-color: #3b82f6; }
+.rating-option input[value="3"]:checked + label .rating-num,
+.rating-option input[value="3"]:checked + label .rating-text { color: #fff; }
+
+.rating-option input[value="4"]:checked + label { background: #22c55e; border-color: #22c55e; }
+.rating-option input[value="4"]:checked + label .rating-num,
+.rating-option input[value="4"]:checked + label .rating-text { color: #fff; }
+
+.rating-option input[value="5"]:checked + label { background: #0d9488; border-color: #0d9488; }
+.rating-option input[value="5"]:checked + label .rating-num,
+.rating-option input[value="5"]:checked + label .rating-text { color: #fff; }
+
+/* ===== Remarks & Evidence Inputs ===== */
+.input-group {
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-top: 16px;
+}
+.input-group label {
+    font-size: 12px; 
+    font-weight: 700; 
+    color: var(--s5-text);
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+}
+.req-star { 
+    color: var(--s5-danger); 
+    font-weight: 800; 
+    display: none; 
+}
+.req-star.visible { 
+    display: inline-block; 
+}
+.optional-text {
+    color: var(--s5-muted);
+    font-weight: 500;
+    font-size: 11px;
+}
+
+/* Fix for Textarea */
+.q-textarea {
+    width: 100%; 
+    min-height: 80px; 
+    padding: 12px 14px;
+    color: #1e293b; 
+    background: #fff; 
+    border: 1px solid #cbd5e1; 
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    line-height: 1.5;
+    transition: all 0.2s;
+    resize: vertical;
+}
+.q-textarea:focus { 
+    outline: none; 
+    border-color: var(--s5-primary); 
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, .10); 
+}
+
+/* Fix for File Input */
+.q-file-wrapper {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: all 0.2s;
+}
+.q-file-wrapper:hover {
+    border-color: var(--s5-primary);
+    background: var(--s5-primary-light);
+}
+.q-file-input {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--s5-muted);
+    cursor: pointer;
+}
+.q-file-input::file-selector-button {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-right: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--s5-text);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.q-file-input::file-selector-button:hover {
+    background: var(--s5-primary);
+    color: #fff;
+    border-color: var(--s5-primary);
+}
+
+/* ===== QUICK PASS MODE STYLES ===== */
+.quick-pass-bar {
+    background: #fff; 
+    border: 1px solid var(--s5-border); 
+    border-radius: 12px; 
+    padding: 16px 20px; 
+    margin-bottom: 20px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    box-shadow: var(--s5-shadow);
+}
+.switch { position: relative; display: inline-block; width: 46px; height: 24px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--s5-primary); }
+input:checked + .slider:before { transform: translateX(22px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* Hides the extra fields when Quick Pass is active */
+.quick-pass-active .q-extra-fields {
+    display: none;
+}
+.quick-pass-active .q-item {
+    padding: 16px 20px;
+}
+
+/* Footer */
+.fives-form-footer {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 14px; padding: 20px 26px; background: #fafbfc; border-top: 1px solid var(--s5-border);
+}
+.fives-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 10px 20px; border: 1px solid transparent;
+    border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+    line-height: 1.4; text-decoration: none !important; cursor: pointer;
+    transition: all .18s ease;
+}
+.fives-btn:hover { transform: translateY(-1px); }
+.fives-btn-cancel { color: #475569; background: #fff; border-color: #cbd5e1; }
+.fives-btn-cancel:hover { color: #0f172a; background: #f8fafc; }
+.fives-btn-primary { color: #fff; background: var(--s5-primary); border-color: var(--s5-primary); box-shadow: 0 4px 12px rgba(13,148,136,0.2); }
+.fives-btn-primary:hover { background: var(--s5-primary-dark); box-shadow: 0 6px 16px rgba(13,148,136,0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="fives-page">
+
+    <!-- Header -->
+    <header class="fives-header">
+        <div class="fives-header-main">
+            <div class="fives-header-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div>
+                <div class="fives-eyebrow">Inspection Form</div>
+                <h1>{{ audit.schedule.schedule_name }}</h1>
+                <p>
+                    {{ audit.schedule.template.template_name }} &middot; Due: {{ audit.due_date|date:"d M Y" }}
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- QUICK PASS TOGGLE -->
+    <div class="quick-pass-bar">
+        <div>
+            <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text);"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Quick Pass Mode</h3>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--s5-muted);">Auto-sets all to "5 (Excellent)". Only open fields if you need to fail it.</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="quickPassToggle" onchange="toggleQuickPass(this)">
+            <span class="slider round"></span>
+        </label>
+    </div>
+
+    <!-- ⚠️ IMPORTANT: enctype="multipart/form-data" is required for file uploads and signature to save -->
+    <form method="post" id="inspectionForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="fives-card">
+            <div class="fives-form-body">
+                {% for pillar, questions in by_pillar.items %}
+                    <div class="pillar-accordion pillar-{{ pillar }}">
+                        
+                        <!-- Accordion Header -->
+                        <div class="pillar-accordion-header active" onclick="toggleAccordion(this)">
+                            <div class="pillar-accordion-title">
+                                <span class="pillar-icon">
+                                    {% if pillar == 'SEIRI' %}<i class="fas fa-trash-alt"></i>
+                                    {% elif pillar == 'SEITON' %}<i class="fas fa-sort-amount-down"></i>
+                                    {% elif pillar == 'SEISO' %}<i class="fas fa-broom"></i>
+                                    {% elif pillar == 'SEIKETSU' %}<i class="fas fa-clipboard-list"></i>
+                                    {% else %}<i class="fas fa-infinity"></i>{% endif %}
+                                </span>
+                                {% if pillar == 'SEIRI' %}Seiri — Sort
+                                {% elif pillar == 'SEITON' %}Seiton — Set in Order
+                                {% elif pillar == 'SEISO' %}Seiso — Shine
+                                {% elif pillar == 'SEIKETSU' %}Seiketsu — Standardize
+                                {% elif pillar == 'SHITSUKE' %}Shitsuke — Sustain
+                                {% else %}{{ pillar }}{% endif %}
+                            </div>
+                            <i class="fas fa-chevron-down accordion-chevron"></i>
+                        </div>
+
+                        <!-- Accordion Body -->
+                        <div class="pillar-accordion-body active">
+                            {% for tq in questions %}
+                            <div class="q-item" id="q-item-{{ tq.question.id }}">
+                                
+                                <div class="q-label-row">
+                                    <span class="q-code">{{ tq.question.question_code }}</span>
+                                    <div class="q-label">{{ tq.question.question_text }}</div>
+                                    {% if tq.question.guidance_notes %}
+                                        <span class="q-helper"><i class="fas fa-info-circle"></i> {{ tq.question.guidance_notes }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- 1 to 5 Rating Scale -->
+                                <div class="rating-container">
+                                    <div class="rating-option">
+                                        <input type="radio" name="question_{{ tq.question.id }}" value="1" id="q{{ tq.question.id }}_1" required>
+                                        <label for="q{{ tq.question.id }}_1">
+                                            <span class="rating-num">1</span>
+                                            <span class="rating-text">Poor</span>
+                                        </label>
+                                    </div>
+                                    <div class="rating-option">
+                                        <input type="radio" name="question_{{ tq.question.id }}" value="2" id="q{{ tq.question.id }}_2">
+                                        <label for="q{{ tq.question.id }}_2">
+                                            <span class="rating-num">2</span>
+                                            <span class="rating-text">Fair</span>
+                                        </label>
+                                    </div>
+                                    <div class="rating-option">
+                                        <input type="radio" name="question_{{ tq.question.id }}" value="3" id="q{{ tq.question.id }}_3">
+                                        <label for="q{{ tq.question.id }}_3">
+                                            <span class="rating-num">3</span>
+                                            <span class="rating-text">Good</span>
+                                        </label>
+                                    </div>
+                                    <div class="rating-option">
+                                        <input type="radio" name="question_{{ tq.question.id }}" value="4" id="q{{ tq.question.id }}_4">
+                                        <label for="q{{ tq.question.id }}_4">
+                                            <span class="rating-num">4</span>
+                                            <span class="rating-text">V. Good</span>
+                                        </label>
+                                    </div>
+                                    <div class="rating-option">
+                                        <input type="radio" name="question_{{ tq.question.id }}" value="5" id="q{{ tq.question.id }}_5">
+                                        <label for="q{{ tq.question.id }}_5">
+                                            <span class="rating-num">5</span>
+                                            <span class="rating-text">Excellent</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- EXTRA FIELDS (Hidden in Quick Pass Mode) -->
+                                <div class="q-extra-fields">
+                                    
+                                    <!-- Remarks -->
+                                    <div class="input-group">
+                                        <label for="remarks_{{ tq.question.id }}">
+                                            Observations / Remarks 
+                                            <span class="req-star" id="remarks-req-{{ tq.question.id }}">*</span>
+                                            <span class="optional-text" id="remarks-opt-{{ tq.question.id }}">(Optional)</span>
+                                        </label>
+                                        <textarea name="remarks_{{ tq.question.id }}" id="remarks_{{ tq.question.id }}" class="q-textarea" placeholder="Add your observations here..."></textarea>
+                                    </div>
+
+                                    <!-- Evidence Photo -->
+                                    <div class="input-group">
+                                        <label for="evidence_{{ tq.question.id }}">
+                                            <i class="fas fa-camera" style="color: var(--s5-primary);"></i> Evidence Photo (Before)
+                                            <span class="req-star" id="evidence-req-{{ tq.question.id }}">*</span>
+                                            <span class="optional-text" id="evidence-opt-{{ tq.question.id }}">(Optional)</span>
+                                        </label>
+                                        <div class="q-file-wrapper">
+                                            <input type="file" name="evidence_{{ tq.question.id }}" id="evidence_{{ tq.question.id }}" accept="image/*" class="q-file-input">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- =============================== -->
+                <!-- SIGNATURE PAD SECTION           -->
+                <!-- =============================== -->
+                <div style="margin-top: 32px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #fff; overflow: hidden;">
+                    
+                    <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-signature" style="color: var(--s5-primary); font-size: 20px;"></i>
+                        <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #172033;">Inspector Signature <span style="color: #dc2626;">*</span></h3>
+                    </div>
+                    
+                    <div style="padding: 24px;">
+                        <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.5;">
+                            By signing below, you certify that this inspection was conducted accurately and honestly.
+                        </p>
+                        
+                        <div style="border: 2px solid #e2e8f0; border-radius: 8px; background: #ffffff; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                            <!-- The Drawing Canvas -->
+                            <canvas id="signature-pad" style="width: 100%; height: 180px; cursor: crosshair; touch-action: none; display: block;"></canvas>
+                            <!-- Hidden input to store the image -->
+                            <input type="hidden" name="signature_data" id="signature_data">
+                        </div>
+                        
+                        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                            <button type="button" onclick="clearSignature()" style="background: #fff; border: 1px solid #fecaca; color: #b91c1c; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-eraser"></i> Clear Signature
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- =============================== -->
+
+            </div>
+
+            <!-- Footer -->
+            <div class="fives-form-footer">
+                <a href="{% url 'five_s:my_inspections' %}" class="fives-btn fives-btn-cancel">
+                    <i class="fas fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="fives-btn fives-btn-primary">
+                    <i class="fas fa-check-circle"></i> Submit Inspection
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Signature Pad Library -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+
+<script>
+    let signaturePad;
+
+    // ==========================================
+    // QUICK PASS MODE
+    // ==========================================
+    window.toggleQuickPass = function(checkbox) {
+        const formBody = document.querySelector('.fives-form-body');
+        
+        if (checkbox.checked) {
+            formBody.classList.add('quick-pass-active');
+            
+            // Auto-select "5" for every question that doesn't have an answer yet
+            document.querySelectorAll('input[type="radio"][name^="question_"]').forEach(function(radio) {
+                if (radio.value === '5') {
+                    const qId = radio.name.split('_')[1];
+                    const isChecked = document.querySelector(`input[name="question_${qId}"]:checked`);
+                    
+                    if (!isChecked) {
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        } else {
+            formBody.classList.remove('quick-pass-active');
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById('signature-pad');
+        if (canvas) {
+            // Fix canvas resolution for high-DPI screens
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+
+            // Initialize the signature pad
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 100)' // Dark Blue Ink
+            });
+        }
+
+        // ==========================================
+        // 1,2 RATING LOGIC (REQUIRED REMARKS & EVIDENCE)
+        // ==========================================
+        document.querySelectorAll('input[type="radio"][name^="question_"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const qId = this.name.split('_')[1];
+                const value = this.value;
+                
+                const remarksInput = document.getElementById('remarks_' + qId);
+                const evidenceInput = document.getElementById('evidence_' + qId);
+                
+                const remarksReq = document.getElementById('remarks-req-' + qId);
+                const evidenceReq = document.getElementById('evidence-req-' + qId);
+                const remarksOpt = document.getElementById('remarks-opt-' + qId);
+                const evidenceOpt = document.getElementById('evidence-opt-' + qId);
+                const extraFields = document.getElementById('q-item-' + qId).querySelector('.q-extra-fields');
+
+                if (value === '1' || value === '2') {
+                    // Make Mandatory
+                    remarksInput.required = true;
+                    evidenceInput.required = true;
+                    
+                    remarksReq.classList.add('visible');
+                    evidenceReq.classList.add('visible');
+                    
+                    remarksOpt.style.display = 'none';
+                    evidenceOpt.style.display = 'none';
+                    
+                    // If in quick pass mode, force the fields to open on fail
+                    if (document.getElementById('quickPassToggle').checked) {
+                        extraFields.style.display = 'block';
+                    }
+                } else {
+                    // Make Optional
+                    remarksInput.required = false;
+                    evidenceInput.required = false;
+                    
+                    remarksReq.classList.remove('visible');
+                    evidenceReq.classList.remove('visible');
+                    
+                    remarksOpt.style.display = 'inline-block';
+                    evidenceOpt.style.display = 'inline-block';
+
+                    // If in quick pass mode and they pass it, hide the fields again
+                    if (document.getElementById('quickPassToggle').checked) {
+                        extraFields.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // ==========================================
+        // FORM SUBMISSION & VALIDATION
+        // ==========================================
+        document.getElementById('inspectionForm').addEventListener('submit', function (e) {
+            // 1. Check Signature
+            if (signaturePad && signaturePad.isEmpty()) {
+                e.preventDefault();
+                alert("Please provide your signature before submitting.");
+                return false;
+            }
+            
+            // 2. Save signature to hidden input
+            if (signaturePad) {
+                document.getElementById('signature_data').value = signaturePad.toDataURL('image/png');
+            }
+
+            // 3. Manual check for 1/2 ratings (in case browser ignores required)
+            let validationError = false;
+            document.querySelectorAll('input[type="radio"][name^="question_"]:checked').forEach(function(radio) {
+                if (radio.value === '1' || radio.value === '2') {
+                    const qId = radio.name.split('_')[1];
+                    const remarks = document.getElementById('remarks_' + qId).value.trim();
+                    const evidence = document.getElementById('evidence_' + qId).files.length;
+                    
+                    if (!remarks || !evidence) {
+                        validationError = true;
+                    }
+                }
+            });
+
+            if (validationError) {
+                e.preventDefault();
+                alert("You rated one or more questions as Poor (1) or Fair (2).\n\nYou must provide both a Remark AND a Photo for these ratings.");
+                return false;
+            }
+        });
+    });
+
+    function clearSignature() {
+        if (signaturePad) {
+            signaturePad.clear();
+        }
+    }
+
+    function toggleAccordion(header) {
+        header.classList.toggle('active');
+        const body = header.nextElementSibling;
+        if (body) {
+            body.classList.toggle('active');
+        }
+    }
+</script>
+{% endblock %}

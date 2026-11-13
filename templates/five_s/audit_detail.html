@@ -1,0 +1,851 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Audit {{ audit.cycle_key }} | 5S Audit{% endblock %}
+
+{% block extra_css %}
+{% include "five_s/_before_after_assets.html" %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-warning: #d97706;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.audit-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.audit-page *, .audit-page *::before, .audit-page *::after { box-sizing: border-box; }
+
+/* Header */
+.audit-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.audit-header-main { display: flex; align-items: center; gap: 15px; }
+.audit-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1;
+    border-radius: 15px; color: var(--s5-primary-dark); font-size: 22px;
+}
+.audit-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.audit-header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.audit-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; }
+
+/* Buttons */
+.btn-header {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 9px; font-size: 13px;
+    font-weight: 700; text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.btn-header.outline {
+    background: #fff; color: var(--s5-text); border: 1px solid var(--s5-border);
+}
+.btn-header.outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-header.capa {
+    background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+}
+.btn-header.capa:hover { background: #fee2e2; border-color: #fca5a5; }
+
+/* Summary cards */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+}
+.summary-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: 12px; padding: 16px 20px; box-shadow: var(--s5-shadow);
+}
+.summary-label {
+    font-size: 10.5px; font-weight: 700; color: var(--s5-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.summary-value { font-size: 18px; font-weight: 800; color: var(--s5-text); }
+.summary-value.muted { color: var(--s5-muted); font-weight: 500; font-size: 13px; }
+
+/* Pillar Scores Card */
+.pillar-scores-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    margin-bottom: 24px; padding: 24px;
+}
+.pillar-scores-title {
+    font-size: 15px; font-weight: 800; color: var(--s5-text);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+}
+.pillar-scores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+.pillar-score-item {
+    background: #f8fafc;
+    border: 1px solid var(--s5-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.pillar-score-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+.pillar-score-header {
+    display: flex; justify-content: space-between; align-items: center;
+}
+.pillar-name {
+    font-size: 13px; font-weight: 700; color: var(--s5-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pillar-percentage {
+    font-size: 15px; font-weight: 800;
+}
+.pillar-score-bar {
+    height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden;
+}
+.pillar-score-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.8s ease-in-out;
+}
+.pillar-score-stats {
+    font-size: 11.5px; color: var(--s5-muted); font-weight: 600;
+    display: flex; justify-content: space-between;
+}
+
+/* Section cards */
+.section-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    margin-bottom: 24px; overflow: hidden;
+}
+.section-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc; display: flex; align-items: center; gap: 10px;
+}
+.section-card-header i { color: var(--s5-primary); font-size: 16px; }
+.section-card-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text); }
+.section-card-body { padding: 24px; }
+
+/* Q&A rows */
+.audit-q-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 18px; border: 1px solid var(--s5-border);
+    border-radius: 10px; margin-bottom: 12px; background: #fff;
+}
+.audit-q-row.has-finding { border-left: 4px solid var(--s5-warning); background: #fffbeb; }
+.audit-q-row.has-finding.has-critical { border-left-color: var(--s5-danger); background: #fef2f2; }
+.audit-q-row:last-child { margin-bottom: 0; }
+.audit-q-main { flex: 1; min-width: 0; }
+.audit-q-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px; flex-wrap: wrap;
+}
+.audit-q-text {
+    font-size: 13px; color: #334155; line-height: 1.55; margin-bottom: 12px;
+}
+.audit-q-meta {
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px; color: var(--s5-text); margin-top: 16px;
+}
+.audit-q-meta strong { color: var(--s5-text); font-weight: 700; }
+.audit-evidence-img {
+    max-width: 100%; max-height: 180px; border-radius: 8px;
+    border: 1px solid var(--s5-border); margin-top: 8px;
+}
+
+/* 1-5 Rating Scale */
+.rating-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    width: 100%;
+    max-width: 500px;
+}
+.rating-option { position: relative; }
+.rating-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.rating-option label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px; background: #fff; border: 2px solid var(--s5-border);
+    border-radius: 8px; cursor: default; height: 100%; text-align: center;
+}
+.rating-option label .rating-num { font-size: 16px; font-weight: 800; color: var(--s5-muted); line-height: 1; margin-bottom: 2px; }
+.rating-option label .rating-text { font-size: 9px; text-transform: uppercase; color: var(--s5-muted); font-weight: 700; letter-spacing: 0.2px; }
+
+.rating-option input[value="1"]:checked + label { background: #ef4444; border-color: #ef4444; }
+.rating-option input[value="1"]:checked + label .rating-num,
+.rating-option input[value="1"]:checked + label .rating-text { color: #fff; }
+.rating-option input[value="2"]:checked + label { background: #f59e0b; border-color: #f59e0b; }
+.rating-option input[value="2"]:checked + label .rating-num,
+.rating-option input[value="2"]:checked + label .rating-text { color: #fff; }
+.rating-option input[value="3"]:checked + label { background: #3b82f6; border-color: #3b82f6; }
+.rating-option input[value="3"]:checked + label .rating-num,
+.rating-option input[value="3"]:checked + label .rating-text { color: #fff; }
+.rating-option input[value="4"]:checked + label { background: #22c55e; border-color: #22c55e; }
+.rating-option input[value="4"]:checked + label .rating-num,
+.rating-option input[value="4"]:checked + label .rating-text { color: #fff; }
+.rating-option input[value="5"]:checked + label { background: #0d9488; border-color: #0d9488; }
+.rating-option input[value="5"]:checked + label .rating-num,
+.rating-option input[value="5"]:checked + label .rating-text { color: #fff; }
+
+/* Code pill & Pillar Label */
+.code-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: var(--s5-primary-light); color: var(--s5-primary-dark);
+    font-size: 10.5px; font-weight: 800; font-family: monospace;
+}
+.pillar-label {
+    font-size: 10.5px; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Findings table */
+.findings-table { width: 100%; border-collapse: collapse; }
+.findings-table th {
+    background: #fafcff; color: var(--s5-muted); font-size: 10.5px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 12px 14px; border-bottom: 1px solid var(--s5-border);
+    text-align: left;
+}
+.findings-table td {
+    padding: 12px 14px; border-bottom: 1px solid var(--s5-border);
+    font-size: 12.5px; vertical-align: middle; color: var(--s5-text);
+}
+.findings-table tbody tr:last-child td { border-bottom: none; }
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Action Button */
+.btn-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px 14px; border-radius: 6px;
+    background: var(--s5-primary); color: #fff;
+    border: 1px solid var(--s5-primary-dark); font-size: 11.5px; font-weight: 700;
+    text-decoration: none; transition: all 0.15s ease; cursor: pointer;
+}
+.btn-action:hover { background: var(--s5-primary-dark); color: #fff; }
+
+/* ── LOCK: disabled button look ── */
+.btn-action.is-locked {
+    background: #f1f5f9; color: #64748b;
+    border: 1px dashed #cbd5e1; cursor: not-allowed;
+}
+.btn-action.is-locked:hover { background: #f1f5f9; color: #64748b; }
+
+/* Modal Fixes */
+.modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc;
+}
+.modal-header .btn-close {
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23172033'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat !important;
+    border: 0;
+    padding: 12px;
+    margin: -12px -12px -12px auto;
+    opacity: 0.5;
+    cursor: pointer;
+}
+.modal-header .btn-close:hover { opacity: 1; }
+.modal-body { padding: 24px; }
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--s5-border);
+    background: #fafbfc;
+}
+
+/* Forms */
+.form-select {
+    display: block; width: 100%;
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    font-size: 13px; font-weight: 500; line-height: 1.5;
+    color: var(--s5-text); background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 0.75rem center;
+    background-size: 16px 12px; border: 1px solid var(--s5-border);
+    border-radius: 8px; appearance: none; outline: none;
+}
+.form-select:focus { border-color: var(--s5-primary); box-shadow: 0 0 0 3px var(--s5-primary-light); }
+.form-control {
+    padding: 0.5rem 0.75rem; font-size: 13px;
+    border: 1px solid var(--s5-border); border-radius: 8px;
+}
+.form-control:focus { border-color: var(--s5-primary); box-shadow: 0 0 0 3px var(--s5-primary-light); }
+
+/* Empty state */
+.empty-state {
+    padding: 40px 16px; text-align: center;
+    color: var(--s5-muted); font-size: 13px;
+}
+.empty-state i { font-size: 24px; opacity: 0.4; display: block; margin-bottom: 10px; }
+.empty-state p { margin: 0; }
+
+/* Photos column in the findings table — keep slider compact */
+.findings-table .ba-slider,
+.findings-table .ba-slider__frame,
+.findings-table .ba-fallback,
+.findings-table .ba-empty {
+    max-width: 240px;
+    margin: 0 auto;
+}
+
+/* Slider in Q&A section — a bit larger */
+.audit-q-meta .ba-slider {
+    max-width: 480px;
+}
+
+/* Repeat Finding Alert Box */
+.repeat-alert {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+}
+.repeat-alert i {
+    margin-top: 3px;
+    font-size: 16px;
+}
+.repeat-alert .repeat-message {
+    flex: 1;
+}
+.repeat-alert .repeat-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    background: #b91c1c;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    width: fit-content;
+}
+.repeat-alert .repeat-cta:hover {
+    background: #991b1b;
+    color: #fff;
+}
+
+/* ── LOCK: paused/ended banner ── */
+.lock-banner {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 20px; margin-bottom: 22px;
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--s5-radius);
+    color: #92400e; font-size: 13px; line-height: 1.6;
+}
+.lock-banner.ended { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+.lock-banner i { font-size: 18px; margin-top: 1px; }
+.lock-banner strong { font-weight: 800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="audit-page">
+
+    <!-- Header -->
+    <header class="audit-header">
+        <div class="audit-header-main">
+            <div class="audit-header-icon"><i class="fas fa-clipboard-check"></i></div>
+            <div>
+                <div class="audit-eyebrow">5S Audit Detail</div>
+                <h1>{{ audit.schedule.schedule_name }}</h1>
+                <p>
+                    Cycle {{ audit.cycle_key }} &middot;
+                    Scheduled {{ audit.scheduled_date|date:"d M Y" }} &middot;
+                    Due {{ audit.due_date|date:"d M Y" }}
+                </p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {# ── LOCK: hide Create CAPA when schedule is paused/ended ── #}
+            {% if not audit.is_locked %}
+                <a href="{% url 'capa:create' %}?source_type=FIVE_S&source_id={{ audit.id }}" class="btn-header capa">
+                    <i class="fas fa-plus-circle"></i> Create CAPA
+                </a>
+            {% endif %}
+            <a href="{{ back_url }}" class="btn-header outline">
+                <i class="fas fa-arrow-left"></i> Back to Schedule
+            </a>
+        </div>
+    </header>
+
+    {# ── LOCK: banner explaining disabled actions ── #}
+    {% if audit.is_locked %}
+        <div class="lock-banner {% if audit.schedule.status == 'ENDED' %}ended{% endif %}">
+            {% if audit.schedule.status == 'PAUSED' %}
+                <i class="fas fa-pause-circle"></i>
+                <div>
+                    <strong>Schedule is paused.</strong>
+                    Creating corrective actions and creating CAPAs are disabled.
+                    All existing findings, actions, and CAPAs are preserved.
+                    Resume the schedule to continue.
+                </div>
+            {% else %}
+                <i class="fas fa-ban"></i>
+                <div>
+                    <strong>Schedule has ended.</strong>
+                    All actions are disabled.
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Summary cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Status</div>
+            <div class="summary-value">{{ audit.get_status_display }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Overall Score</div>
+            <div class="summary-value">
+                {% if audit.overall_score %}{{ audit.overall_score }}%{% else %}—{% endif %}
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Total Questions</div>
+            <div class="summary-value">{{ total_questions }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Findings (Fair / Poor)</div>
+            <div class="summary-value" style="color: #b45309;">{{ findings_count }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Submitted By</div>
+            <div class="summary-value muted">
+                {% if audit.submitted_by %}{{ audit.submitted_by.get_full_name|default:audit.submitted_by.username }}{% else %}—{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pillar-wise Scores -->
+    <div class="pillar-scores-card">
+        <div class="pillar-scores-title">
+            <i class="fas fa-chart-pie" style="color: var(--s5-primary);"></i> Pillar-wise Scores
+        </div>
+        <div class="pillar-scores-grid">
+            {% for code, data in pillar_scores.items %}
+            <div class="pillar-score-item">
+                <div class="pillar-score-header">
+                    <span class="pillar-name">{{ data.name }}</span>
+                    {% if data.has_questions %}
+                        <span class="pillar-percentage" style="color: {% if data.percentage >= 80 %}#15803d{% elif data.percentage >= 50 %}#b45309{% else %}#b91c1c{% endif %};">
+                            {{ data.percentage }}%
+                        </span>
+                    {% else %}
+                        <span class="pillar-percentage" style="color: #94a3b8; font-weight: 500; font-size: 13px;">N/A</span>
+                    {% endif %}
+                </div>
+
+                <div class="pillar-score-bar">
+                    {% if data.has_questions %}
+                        <div class="pillar-score-fill" style="width: {{ data.percentage }}%; background-color: {% if data.percentage >= 80 %}#22c55e{% elif data.percentage >= 50 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+                    {% endif %}
+                </div>
+
+                <div class="pillar-score-stats">
+                    {% if data.has_questions %}
+                        <span>Score:</span>
+                        <span style="color: var(--s5-text);">{{ data.earned }} / {{ data.max }} pts</span>
+                    {% else %}
+                        <span style="color: #94a3b8; font-weight: 500;">No questions assigned</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- All Questions & Answers -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="fas fa-list-check"></i>
+            <h3>Questions &amp; Answers ({{ total_questions }})</h3>
+        </div>
+        <div class="section-card-body">
+            {% if answers %}
+                {% for ans in answers %}
+                    <div class="audit-q-row {% if ans.selected_num == 1 or ans.selected_num == 2 %}has-finding{% endif %}{% if ans.selected_num == 1 %} has-critical{% endif %}">
+                        <div class="audit-q-main">
+                            <div class="audit-q-header">
+                                <span class="code-pill">{{ ans.question.question_code }}</span>
+                                <span class="pillar-label">{{ ans.question.get_pillar_display }}</span>
+                            </div>
+                            <div class="audit-q-text">{{ ans.question.question_text }}</div>
+
+                            {% if ans.is_repeat %}
+                                <div class="repeat-alert">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <div class="repeat-message">
+                                        <strong>Repeat Finding!</strong> This issue was also reported previously in schedule
+                                        <strong>{{ ans.repeat_info.prev_schedule_name }}</strong> (Audit: {{ ans.repeat_info.prev_audit_cycle }}) on
+                                        {{ ans.repeat_info.prev_audit_date|date:"d M Y" }}.
+                                        Please create a CAPA to solve this.
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="rating-container">
+                                <div class="rating-option">
+                                    <input type="radio" value="1" id="q{{ ans.id }}_1" {% if ans.selected_num == 1 %}checked{% endif %} disabled>
+                                    <label for="q{{ ans.id }}_1"><span class="rating-num">1</span><span class="rating-text">Poor</span></label>
+                                </div>
+                                <div class="rating-option">
+                                    <input type="radio" value="2" id="q{{ ans.id }}_2" {% if ans.selected_num == 2 %}checked{% endif %} disabled>
+                                    <label for="q{{ ans.id }}_2"><span class="rating-num">2</span><span class="rating-text">Fair</span></label>
+                                </div>
+                                <div class="rating-option">
+                                    <input type="radio" value="3" id="q{{ ans.id }}_3" {% if ans.selected_num == 3 %}checked{% endif %} disabled>
+                                    <label for="q{{ ans.id }}_3"><span class="rating-num">3</span><span class="rating-text">Good</span></label>
+                                </div>
+                                <div class="rating-option">
+                                    <input type="radio" value="4" id="q{{ ans.id }}_4" {% if ans.selected_num == 4 %}checked{% endif %} disabled>
+                                    <label for="q{{ ans.id }}_4"><span class="rating-num">4</span><span class="rating-text">V. Good</span></label>
+                                </div>
+                                <div class="rating-option">
+                                    <input type="radio" value="5" id="q{{ ans.id }}_5" {% if ans.selected_num == 5 %}checked{% endif %} disabled>
+                                    <label for="q{{ ans.id }}_5"><span class="rating-num">5</span><span class="rating-text">Excellent</span></label>
+                                </div>
+                            </div>
+
+                            <div class="audit-q-meta">
+                                <div><strong>Remarks:</strong> {% if ans.remarks %}{{ ans.remarks }}{% else %}<span style="color:#94a3b8;">No remarks</span>{% endif %}</div>
+
+                                {% if ans.before_image or ans.after_image %}
+                                    <div>
+                                        <strong>Before / After:</strong>
+                                        <div class="mt-2" style="max-width: 480px;">
+                                            {% include "five_s/_before_after_slider.html" with before=ans.before_image after=ans.after_image label=ans.question.question_code height="200" %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No answers recorded for this audit.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Auto-Generated Findings -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="fas fa-exclamation-triangle" style="color: var(--s5-warning);"></i>
+            <h3>Auto-Generated Findings ({{ findings_count }})</h3>
+        </div>
+        <div class="section-card-body" style="padding: 0;">
+            {% if findings %}
+                <div class="table-responsive">
+                    <table class="findings-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Code</th>
+                                <th>Question</th>
+                                <th>Remarks</th>
+                                <th style="width: 120px; text-align: center;">Answer</th>
+                                {% if has_any_photos %}
+                                    <th style="width: 260px; text-align: center;">Photos</th>
+                                {% endif %}
+                                <th style="width: 250px; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ans in findings %}
+                                <tr>
+                                    <td><span class="code-pill">{{ ans.question.question_code }}</span></td>
+                                    <td>{{ ans.question.question_text }}</td>
+                                    <td>{% if ans.remarks %}{{ ans.remarks }}{% else %}<span style="color:#94a3b8;">—</span>{% endif %}</td>
+                                    <td style="text-align: center;">
+                                        {% if ans.answer == '1' %}
+                                            <span class="status-badge" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">Poor</span>
+                                        {% elif ans.answer == '2' %}
+                                            <span class="status-badge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">Fair</span>
+                                        {% elif ans.answer == '3' %}
+                                            <span class="status-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Good</span>
+                                        {% elif ans.answer == '4' %}
+                                            <span class="status-badge" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;">V. Good</span>
+                                        {% elif ans.answer == '5' %}
+                                            <span class="status-badge" style="background: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1;">Excellent</span>
+                                        {% endif %}
+                                    </td>
+
+                                    {% if has_any_photos %}
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            {% if ans.before_image or ans.after_image %}
+                                                <div style="min-width: 220px;">
+                                                    {% include "five_s/_before_after_slider.html" with before=ans.before_image after=ans.after_image label=ans.question.question_code height="140" %}
+                                                </div>
+                                            {% else %}
+                                                <span style="color:#94a3b8; font-size: 16px;">—</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
+
+                                    <td style="text-align: center;">
+                                        <div class="d-flex gap-1 justify-content-center flex-wrap">
+
+                                            <!-- ✅ CAPA EXISTS: View CAPA (read-only — always allowed) -->
+                                            {% if ans.capa %}
+                                                <a href="{% url 'capa:detail' ans.capa.pk %}" class="btn-action" style="background: #dcfce7; color: #15803d; border-color: #bbf7d0;">
+                                                    <i class="fas fa-eye"></i> View CAPA
+                                                </a>
+
+                                            <!-- ✅ NO CAPA yet -->
+                                            {% else %}
+
+                                                {# ── REPEAT FINDING: always CAPA, never Create Action ── #}
+                                                {% if ans.is_repeat %}
+
+                                                    {# View Action is read-only — show if it exists #}
+                                                    {% if ans.action %}
+                                                        <a href="{% url 'five_s:action_detail' ans.action.id %}" class="btn-action" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;">
+                                                            <i class="fas fa-eye"></i> View Action
+                                                        </a>
+                                                    {% endif %}
+
+                                                    {# Create CAPA — repeat finding forces this path #}
+                                                    {% if not audit.is_locked %}
+                                                        <a href="{% url 'capa:create' %}?source_type=FIVE_S&source_id={{ audit.id }}&question_id={{ ans.id }}"
+                                                           class="btn-action"
+                                                           style="background: #b91c1c; color: #fff; border-color: #991b1b;">
+                                                            <i class="fas fa-plus-circle"></i> Create CAPA
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="btn-action is-locked"
+                                                              title="Schedule is {{ audit.schedule_status_display }} — resume it to create a CAPA.">
+                                                            <i class="fas fa-pause-circle"></i> CAPA (Paused)
+                                                        </span>
+                                                    {% endif %}
+
+                                                {# ── NON-REPEAT FINDING: original flow ── #}
+                                                {% else %}
+
+                                                    {% if ans.action %}
+                                                        <a href="{% url 'five_s:action_detail' ans.action.id %}" class="btn-action" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;">
+                                                            <i class="fas fa-eye"></i> View Action
+                                                        </a>
+                                                    {% else %}
+                                                        {% if not audit.is_locked %}
+                                                            <button type="button" class="btn-action"
+                                                                    onclick="openActionModal('{{ ans.question.id }}', '{{ ans.question.question_text|escapejs }}')">
+                                                                <i class="fas fa-plus"></i> Create Action
+                                                            </button>
+                                                        {% else %}
+                                                            <span class="btn-action is-locked"
+                                                                  title="Schedule is {{ audit.schedule_status_display }} — resume it to raise a corrective action.">
+                                                                <i class="fas fa-pause-circle"></i> Paused
+                                                            </span>
+                                                        {% endif %}
+                                                    {% endif %}
+
+                                                    {# Secondary Create CAPA only for non-repeat rows that already have an action #}
+                                                    {% if not audit.is_locked %}
+                                                        {% if ans.action %}
+                                                            <a href="{% url 'capa:create' %}?source_type=FIVE_S&source_id={{ audit.id }}&question_id={{ ans.id }}"
+                                                               class="btn-action"
+                                                               style="background: #fef2f2; color: #b91c1c; border-color: #fecaca;">
+                                                                <i class="fas fa-plus-circle"></i> Create CAPA
+                                                            </a>
+                                                        {% endif %}
+                                                    {% endif %}
+
+                                                {% endif %}
+
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- ✅ Landscape Repeat Finding Alert Row -->
+                                {% if ans.is_repeat %}
+                                <tr>
+                                    <td colspan="{% if has_any_photos %}6{% else %}5{% endif %}" style="padding: 0; border-bottom: 1px solid var(--s5-border);">
+                                        <div class="repeat-alert" style="margin: 0; border-radius: 0; border-left: none; border-right: none; background: #fef2f2; padding: 16px 24px; display: flex; align-items: center; gap: 12px;">
+                                            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #dc2626;"></i>
+                                            <div class="repeat-message" style="font-size: 14px;">
+                                                <strong style="color: #b91c1c;">Repeat Finding Detected!</strong>
+                                                This exact issue was also reported in schedule <strong>{{ ans.repeat_info.prev_schedule_name }}</strong>
+                                                (Audit: {{ ans.repeat_info.prev_audit_cycle }}) on {{ ans.repeat_info.prev_audit_date|date:"d M Y" }}.
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <p>No findings generated (no "Poor" or "Fair" answers).</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</div>
+
+{# ── LOCK: don't render Create Action modal at all when paused/ended ── #}
+{% if not audit.is_locked %}
+<!-- Create Action Modal -->
+<div class="modal fade" id="createActionModal" tabindex="-1" aria-labelledby="createActionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 13px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="audit_id" value="{{ audit.pk }}">
+        <input type="hidden" name="question_id" id="modalQuestionId">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="createActionModalLabel" style="font-weight: 800; font-size: 16px; color: var(--s5-text);">
+              <i class="fas fa-tools" style="color: var(--s5-primary); margin-right: 8px;"></i>
+              Create Corrective Action
+          </h5>
+          <button type="button" class="btn-close" onclick="closeActionModal()" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class="mb-4">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--s5-text);">Question</label>
+              <div id="modalQuestionText" style="font-size: 13px; color: #334155; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--s5-border); line-height: 1.5;"></div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--s5-text);">Assign To <span style="color: var(--s5-danger);">*</span></label>
+              <select name="assigned_to" class="form-select" required>
+                <option value="">-- Select User --</option>
+                {% for user in plant_users %}
+                  <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--s5-text);">Remarks <span style="color: var(--s5-danger);">*</span></label>
+              <textarea name="remarks" class="form-control" rows="3" required placeholder="Describe the corrective action required..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--s5-text);">Due Date</label>
+              <input type="date" name="due_date" class="form-control">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeActionModal()" style="font-size: 13px; font-weight: 600; border-radius: 8px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="background: var(--s5-primary); border-color: var(--s5-primary); font-size: 13px; font-weight: 600; border-radius: 8px; padding: 8px 20px;">
+              <i class="fas fa-check"></i> Create Action
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openActionModal(questionId, questionText) {
+    var modalElement = document.getElementById('createActionModal');
+    if (!modalElement) return;
+
+    document.getElementById('modalQuestionId').value = questionId;
+    document.getElementById('modalQuestionText').textContent = questionText;
+
+    modalElement.style.display = 'block';
+    setTimeout(function() {
+        modalElement.classList.add('show');
+    }, 10);
+
+    modalElement.setAttribute('aria-modal', 'true');
+    modalElement.setAttribute('role', 'dialog');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.id = 'custom-modal-backdrop';
+    document.body.appendChild(backdrop);
+
+    document.body.style.overflow = 'hidden';
+
+    backdrop.onclick = function() {
+        closeActionModal();
+    };
+}
+
+function closeActionModal() {
+    var modalElement = document.getElementById('createActionModal');
+    if (!modalElement) return;
+
+    modalElement.classList.remove('show');
+
+    setTimeout(function() {
+        modalElement.style.display = 'none';
+    }, 150);
+
+    modalElement.removeAttribute('aria-modal');
+    modalElement.removeAttribute('role');
+
+    var backdrop = document.getElementById('custom-modal-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+
+    document.body.style.overflow = '';
+}
+</script>
+{% endblock %}

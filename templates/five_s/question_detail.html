@@ -1,0 +1,306 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ question.question_code }} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.fives-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 4px 35px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+
+.fives-page *, .fives-page *::before, .fives-page *::after { box-sizing: border-box; }
+
+/* Header */
+.fives-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.fives-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.fives-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex; justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1; border-radius: 15px;
+    color: var(--s5-primary-dark); font-size: 22px;
+}
+.fives-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.fives-header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+.fives-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; line-height: 1.6; }
+
+.fives-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.fives-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 41px; padding: 10px 18px; border: 1px solid transparent;
+    border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+    line-height: 1.4; text-decoration: none !important; cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.fives-btn:hover { transform: translateY(-1px); }
+.fives-btn-cancel { color: #475569; background: #fff; border-color: #cbd5e1; }
+.fives-btn-cancel:hover { color: #0f172a; background: #f8fafc; }
+.fives-btn-primary { color: #fff; background: var(--s5-primary); border-color: var(--s5-primary); }
+.fives-btn-primary:hover { color: #fff; background: var(--s5-primary-dark); border-color: var(--s5-primary-dark); box-shadow: 0 4px 12px rgba(13, 148, 136, .17); }
+
+/* Layout Grid */
+.fives-grid {
+    display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;
+}
+@media (max-width: 900px) {
+    .fives-grid { grid-template-columns: 1fr; }
+}
+
+/* Cards */
+.fives-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow); margin-bottom: 24px;
+    overflow: hidden;
+}
+.fives-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    display: flex; align-items: center; gap: 10px; background: #fafbfc;
+}
+.fives-card-header i { color: var(--s5-primary); font-size: 16px; }
+.fives-card-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text); }
+.fives-card-body { padding: 24px; }
+
+/* Detail Rows */
+.fives-detail-row { margin-bottom: 24px; }
+.fives-detail-row:last-child { margin-bottom: 0; }
+.fives-detail-label {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    color: var(--s5-muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.fives-detail-value { font-size: 14px; color: #334155; line-height: 1.6; }
+
+/* Pills & Badges */
+.fives-code-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--s5-primary-light); color: var(--s5-primary-dark);
+    font-size: 13px; font-weight: 800; font-family: monospace;
+    border: 1px dashed var(--s5-primary);
+}
+.fives-pillar-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.pillar-SEIRI    { background: rgba(220, 38, 38, 0.10); color: #b91c1c; }
+.pillar-SEITON   { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
+.pillar-SEISO    { background: rgba(34, 197, 94, 0.10); color: #15803d; }
+.pillar-SEIKETSU { background: rgba(217, 119, 6, 0.10); color: #b45309; }
+.pillar-SHITSUKE { background: rgba(124, 58, 237, 0.10); color: #6d28d9; }
+
+.fives-flag-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.fives-flag-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 700;
+    border: 1px solid var(--s5-border); background: #f8fafc;
+    color: var(--s5-muted);
+}
+.fives-flag-item.active {
+    background: var(--s5-primary-light); color: var(--s5-primary-dark); border-color: #ccfbf1;
+}
+.fives-flag-item.critical {
+    background: #fef2f2; color: #b91c1c; border-color: #fecaca;
+}
+
+/* Templates List */
+.fives-template-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-radius: 10px; border: 1px solid var(--s5-border);
+    margin-bottom: 10px; background: #fff; transition: all 0.2s ease;
+    text-decoration: none !important; color: inherit;
+}
+.fives-template-item:hover { border-color: var(--s5-primary); background: var(--s5-primary-light); }
+.fives-template-item:last-child { margin-bottom: 0; }
+.fives-template-item .t-name { font-weight: 700; font-size: 13px; color: var(--s5-text); margin-bottom: 4px; }
+.fives-template-item .t-meta { font-size: 11px; color: var(--s5-muted); }
+
+.fives-empty-state {
+    text-align: center; padding: 30px 20px; color: var(--s5-muted); font-size: 12px;
+}
+.fives-empty-state i { font-size: 32px; color: #cbd5e1; margin-bottom: 12px; display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="fives-page">
+
+    <!-- Header -->
+    <header class="fives-header">
+        <div class="fives-header-main">
+            <div class="fives-header-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div>
+                <div class="fives-eyebrow">5S Question Detail</div>
+                <h1>{{ question.question_code }}</h1>
+                <p>Review the question configuration and usage across templates.</p>
+            </div>
+        </div>
+        <div class="fives-header-actions">
+            <a href="{% url 'five_s:question_list' %}" class="fives-btn fives-btn-cancel">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'five_s:question_edit' question.pk %}" class="fives-btn fives-btn-primary">
+                <i class="fas fa-pen"></i> Edit Question
+            </a>
+        </div>
+    </header>
+
+    <div class="fives-grid">
+        
+        <!-- Left Column: Main Details -->
+        <div>
+            <div class="fives-card">
+                <div class="fives-card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Question Details</h3>
+                </div>
+                <div class="fives-card-body">
+                    
+                    <div class="fives-detail-row" style="display:flex; gap: 12px; align-items:center;">
+                        <span class="fives-code-chip"><i class="fas fa-hashtag"></i>{{ question.question_code }}</span>
+                        <span class="fives-pillar-pill pillar-{{ question.pillar }}">{{ question.get_pillar_display }}</span>
+                    </div>
+
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Question Text</div>
+                        <div class="fives-detail-value" style="font-size: 16px; font-weight: 500; color: var(--s5-text);">
+                            {{ question.question_text|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    {% if question.reference_standard %}
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Reference Standard</div>
+                        <div class="fives-detail-value">
+                            <i class="fas fa-book-open text-muted mr-2"></i> {{ question.reference_standard }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if question.guidance_notes %}
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Guidance Notes</div>
+                        <div class="fives-detail-value" style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--s5-border);">
+                            {{ question.guidance_notes|linebreaksbr }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Configuration Flags</div>
+                        <div class="fives-flag-list">
+                            <span class="fives-flag-item {% if question.is_remarks_mandatory %}active{% endif %}">
+                                <i class="fas fa-{% if question.is_remarks_mandatory %}check-circle{% else %}times-circle{% endif %}"></i> Remarks Mandatory
+                            </span>
+                            <span class="fives-flag-item {% if question.is_photo_required %}active{% endif %}">
+                                <i class="fas fa-{% if question.is_photo_required %}check-circle{% else %}times-circle{% endif %}"></i> Photo Required
+                            </span>
+                            <span class="fives-flag-item {% if question.is_critical %}critical{% endif %}">
+                                <i class="fas fa-exclamation-triangle"></i> Critical
+                            </span>
+                            <span class="fives-flag-item {% if question.auto_generate_finding %}active{% endif %}">
+                                <i class="fas fa-{% if question.auto_generate_finding %}check-circle{% else %}times-circle{% endif %}"></i> Auto-Generate Finding
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Meta & Templates -->
+        <div>
+            <!-- Status Card -->
+            <div class="fives-card">
+                <div class="fives-card-header">
+                    <i class="fas fa-clock"></i>
+                    <h3>Status & Meta</h3>
+                </div>
+                <div class="fives-card-body">
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Current Status</div>
+                        <div>
+                            {% if question.is_active %}
+                                <span class="fives-flag-item active" style="padding: 6px 12px;"><i class="fas fa-check-circle"></i> Active</span>
+                            {% else %}
+                                <span class="fives-flag-item" style="background:#f1f5f9; color:#64748b; border-color:#e2e8f0; padding: 6px 12px;">
+                                    <i class="fas fa-ban"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Created At</div>
+                        <div class="fives-detail-value">{{ question.created_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                    <div class="fives-detail-row">
+                        <div class="fives-detail-label">Last Updated</div>
+                        <div class="fives-detail-value">{{ question.updated_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Used in Templates Card -->
+            <div class="fives-card">
+                <div class="fives-card-header">
+                    <i class="fas fa-layer-group"></i>
+                    <h3>Used in Templates</h3>
+                </div>
+                <div class="fives-card-body">
+                    {% if templates %}
+                        {% for t in templates %}
+                            <a href="{% url 'five_s:template_detail' t.pk %}" class="fives-template-item">
+                                <div>
+                                    <div class="t-name">{{ t.template_name }}</div>
+                                    <div class="t-meta">{{ t.template_code }}</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="fives-empty-state">
+                            <i class="fas fa-inbox"></i>
+                            Not used in any active template yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+{% endblock %}

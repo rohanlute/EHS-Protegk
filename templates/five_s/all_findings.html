@@ -1,0 +1,232 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}All Findings | 5S Audit{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-warning: #d97706;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.findings-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.findings-page *, .findings-page *::before, .findings-page *::after { box-sizing: border-box; }
+
+/* Header */
+.findings-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 24px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.findings-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 15px; color: #b91c1c; font-size: 22px;
+}
+.findings-eyebrow { color: #b91c1c; font-size: 10px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
+.findings-header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.findings-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; }
+
+/* Filters */
+.filter-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    padding: 20px; margin-bottom: 24px;
+}
+.filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: end; }
+@media (max-width: 768px) { .filter-grid { grid-template-columns: 1fr; } }
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-label { font-size: 11px; font-weight: 800; color: var(--s5-muted); text-transform: uppercase; }
+.filter-input {
+    height: 42px; padding: 0 14px; border: 1px solid var(--s5-border);
+    border-radius: 8px; font-size: 13px; color: var(--s5-text); outline: none; transition: all 0.2s;
+}
+.filter-input:focus { border-color: var(--s5-primary); box-shadow: 0 0 0 3px var(--s5-primary-light); }
+.btn-filter {
+    height: 42px; padding: 0 24px; background: var(--s5-primary); color: white;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s;
+}
+.btn-filter:hover { background: var(--s5-primary-dark); }
+
+/* Finding Card */
+.finding-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    padding: 20px; margin-bottom: 16px; border-left: 4px solid var(--s5-warning);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.finding-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06); }
+.finding-card.poor { border-left-color: var(--s5-danger); background: #fef2f2; }
+.finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+.finding-code {
+    background: var(--s5-primary-light); color: var(--s5-primary-dark);
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace;
+}
+.finding-badge {
+    padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.finding-badge.fair { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.finding-badge.poor { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+.finding-text { font-size: 15px; font-weight: 700; color: var(--s5-text); margin-bottom: 12px; line-height: 1.4; }
+.finding-remarks { font-size: 13px; color: #334155; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--s5-border); }
+
+.finding-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.finding-meta { font-size: 12px; color: var(--s5-muted); display: flex; gap: 16px; flex-wrap: wrap; }
+.finding-meta strong { color: var(--s5-text); }
+.btn-view-audit {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+    background: var(--s5-primary-light); color: var(--s5-primary-dark);
+    border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none;
+    transition: background 0.2s;
+}
+.btn-view-audit:hover { background: #ccfbf1; color: var(--s5-primary-dark); }
+
+/* Empty State */
+.empty-findings {
+    padding: 60px 20px; text-align: center; background: var(--s5-white);
+    border-radius: var(--s5-radius); border: 1px solid var(--s5-border);
+    box-shadow: var(--s5-shadow);
+}
+.empty-findings i { font-size: 48px; color: #cbd5e1; margin-bottom: 16px; }
+.empty-findings h3 { font-size: 18px; font-weight: 800; color: var(--s5-text); margin-bottom: 8px; }
+.empty-findings p { color: var(--s5-muted); font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="findings-page">
+
+    <!-- Header -->
+    <header class="findings-header">
+        <div class="d-flex align-items-center gap-3">
+            <div class="findings-header-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <div class="findings-eyebrow">Action Required</div>
+                <h1>All Auto-Generated Findings</h1>
+                <p>Review all "Fair" and "Poor" answers across your plant audits.</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge" style="background: var(--s5-primary-light); color: var(--s5-primary-dark); font-size: 14px; padding: 8px 16px; border-radius: 8px;">
+                {{ total_findings }} Findings
+            </span>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">Search</label>
+                <input type="text" name="search" value="{{ filters.search }}" class="filter-input" placeholder="Search question or audit...">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Plant</label>
+                <select name="plant" class="filter-input">
+                    <option value="">All Plants</option>
+                    {% for p in plants %}
+                        <option value="{{ p.id }}" {% if filters.plant == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Zone</label>
+                <select name="zone" class="filter-input">
+                    <option value="">All Zones</option>
+                    {% for z in zones %}
+                        <option value="{{ z.id }}" {% if filters.zone == z.id|stringformat:"s" %}selected{% endif %}>{{ z.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Findings List -->
+    {% for finding in findings %}
+        <div class="finding-card {% if finding.answer == 'POOR' %}poor{% endif %}">
+            <div class="finding-header">
+                <span class="finding-code">{{ finding.question.question_code }}</span>
+                <span class="finding-badge {% if finding.answer == 'POOR' %}poor{% else %}fair{% endif %}">
+                    {{ finding.get_answer_display }}
+                </span>
+            </div>
+            
+            <div class="finding-text">{{ finding.question.question_text }}</div>
+            
+            {% if finding.remarks %}
+                <div class="finding-remarks">
+                    <strong>Inspector Remarks:</strong> {{ finding.remarks }}
+                </div>
+            {% endif %}
+
+            <div class="finding-footer">
+                <div class="finding-meta">
+                    <span><i class="fas fa-clipboard-list"></i> <strong>{{ finding.audit.schedule.schedule_name }}</strong></span>
+                    <span><i class="fas fa-calendar"></i> {{ finding.audit.created_at|date:"d M Y" }}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> 
+                        {% for p in finding.audit.schedule.plant.all %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </span>
+                </div>
+                <!-- Redirects to the Audit Detail page where they can create CAPA or Action -->
+                <a href="{% url 'five_s:audit_page' finding.audit.pk %}#finding-{{ finding.question.id }}" class="btn-view-audit">
+                    <i class="fas fa-arrow-right"></i> View Audit & Act
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="empty-findings">
+            <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+            <h3>No Findings Found</h3>
+            <p>There are no "Fair" or "Poor" answers matching your filters. Great job!</p>
+        </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="d-flex justify-content-center mt-4">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.plant %}&plant={{ filters.plant }}{% endif %}{% if filters.zone %}&zone={{ filters.zone }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link" style="background: var(--s5-primary); border-color: var(--s5-primary);">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.plant %}&plant={{ filters.plant }}{% endif %}{% if filters.zone %}&zone={{ filters.zone }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

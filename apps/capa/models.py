@@ -21,6 +21,7 @@ class CAPA(models.Model):
         RISK_ASSESSMENT = "RISK_ASSESSMENT", "Risk Assessment"
         LEGAL_COMPLIANCE = "LEGAL_COMPLIANCE", "Legal Compliance"
         MANAGEMENT_REVIEW = "MANAGEMENT_REVIEW", "Management Review"
+        Five_S = "FIVE_S", "Five S"
         MANUAL = "MANUAL", "Manual"
 
     class Status(models.TextChoices):
@@ -144,8 +145,6 @@ class CAPA(models.Model):
     @property
     def action_summary(self):
         return self.actions.count(), self.actions.filter(status=CAPAAction.Status.VERIFIED).count()
-
-
 class CAPAInvestigation(models.Model):
     class Method(models.TextChoices):
         FIVE_WHY = "FIVE_WHY", "5 Why"

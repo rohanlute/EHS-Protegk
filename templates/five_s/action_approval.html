@@ -1,0 +1,420 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Approve Action | 5S Audit{% endblock %}
+
+{% block extra_css %}
+{% include "five_s/_before_after_assets.html" %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-warning: #d97706;
+    --s5-danger: #dc2626;
+    --s5-success: #15803d;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.audit-page {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 10px 4px 40px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.audit-page *, .audit-page *::before, .audit-page *::after { box-sizing: border-box; }
+
+/* Header */
+.audit-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.audit-header-main { display: flex; align-items: center; gap: 15px; }
+.audit-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex;
+    justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1;
+    border-radius: 15px; color: var(--s5-primary-dark); font-size: 22px;
+}
+.audit-eyebrow {
+    margin-bottom: 5px; color: var(--s5-primary-dark); font-size: 10px;
+    font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+}
+.audit-header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.audit-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; }
+
+/* Buttons */
+.btn-header {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 9px; font-size: 13px;
+    font-weight: 700; text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.btn-header.outline {
+    background: #fff; color: var(--s5-text); border: 1px solid var(--s5-border);
+}
+.btn-header.outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* Main Grid Layout */
+.review-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+@media (min-width: 992px) {
+    .review-grid { grid-template-columns: 1.2fr 0.8fr; }
+}
+
+/* Section cards */
+.section-card {
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+    overflow: hidden;
+}
+.section-card-header {
+    padding: 16px 24px; border-bottom: 1px solid var(--s5-border);
+    background: #fafbfc; display: flex; justify-content: space-between; align-items: center;
+}
+.section-card-header-left { display: flex; align-items: center; gap: 10px; }
+.section-card-header i { color: var(--s5-primary); font-size: 16px; }
+.section-card-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: var(--s5-text); }
+.section-card-body { padding: 24px; }
+
+/* Details */
+.detail-row { margin-bottom: 24px; }
+.detail-row:last-child { margin-bottom: 0; }
+.detail-label {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    color: var(--s5-muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.detail-value {
+    font-size: 14px; color: var(--s5-text); font-weight: 600; line-height: 1.6;
+}
+.detail-box {
+    padding: 16px; background: #f8fafc; border: 1px solid var(--s5-border);
+    border-radius: 8px; font-size: 14px; color: var(--s5-text); line-height: 1.6;
+}
+.detail-box.warning {
+    background: #fffbeb; border-color: #fde68a; color: #b45309;
+}
+.detail-box.success {
+    background: #f0fdf4; border-color: #bbf7d0; color: var(--s5-success);
+}
+
+/* Status Badge */
+.badge-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-status.assigned { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.badge-status.submitted { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.badge-status.closed { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.badge-status.rejected { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+
+/* Photo Container */
+.evidence-container {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px dashed #cbd5e1;
+    margin-top: 8px;
+}
+
+/* Forms */
+.form-label {
+    font-size: 12px; font-weight: 700; color: var(--s5-text); margin-bottom: 8px;
+}
+.form-control {
+    padding: 0.8rem 0.75rem; font-size: 14px;
+    border: 1px solid var(--s5-border); border-radius: 8px;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: inherit;
+    resize: vertical;
+}
+.form-control:focus {
+    border-color: var(--s5-primary);
+    box-shadow: 0 0 0 3px var(--s5-primary-light);
+    outline: none;
+}
+
+/* 🌟 Premium Action Buttons 🌟 */
+.btn-decision {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+    border: none;
+}
+.btn-decision.approve {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+.btn-decision.approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+}
+.btn-decision.reject {
+    background: #fff; 
+    color: var(--s5-danger); 
+    border: 1.5px solid #fecaca;
+}
+.btn-decision.reject:hover {
+    background: #fef2f2; 
+    border-color: #fca5a5; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+}
+.btn-decision.reject.active {
+    background: #fef2f2;
+    border-color: var(--s5-danger);
+}
+
+/* Rejection Box Animation */
+#rejectBox {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 16px;
+    animation: slideDown 0.3s ease-out forwards;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="audit-page">
+
+    <!-- Header -->
+    <header class="audit-header">
+        <div class="audit-header-main">
+            <div class="audit-header-icon"><i class="fas fa-check-double"></i></div>
+            <div>
+                <div class="audit-eyebrow">Manager Approval</div>
+                <h1>Review Action</h1>
+                <p>Review the evidence below and make your final decision.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'five_s:audit_page' action.audit.pk %}" class="btn-header outline">
+                <i class="fas fa-arrow-left"></i> Back to Audit
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="review-grid">
+
+        <!-- LEFT COLUMN: Evidence & Details -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div class="section-card-header-left">
+                    <i class="fas fa-clipboard-check"></i>
+                    <h3>Action Details</h3>
+                </div>
+                <span class="badge-status {{ action.status|lower }}">
+                    {{ action.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="section-card-body">
+
+                <!-- Question -->
+                <div class="detail-row">
+                    <div class="detail-label">Question ({{ action.question.question_code }})</div>
+                    <div class="detail-box fw-bold">
+                        {{ action.question.question_text }}
+                    </div>
+                </div>
+
+                <!-- Original Problem -->
+                <div class="detail-row">
+                    <div class="detail-label">Original Problem / Remarks</div>
+                    <div class="detail-box warning">
+                        {{ action.remarks }}
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--s5-border); margin: 30px 0;">
+
+                <!-- Completion Details -->
+                <h5 class="mb-4 fw-bold" style="font-size: 15px; color: var(--s5-text);">Assignee Completion</h5>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="detail-label">Completed By</div>
+                        <div class="detail-value">
+                            <i class="fas fa-user-circle text-muted me-1"></i> 
+                            {{ action.assigned_to.get_full_name|default:action.assigned_to.username }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Completion Date</div>
+                        <div class="detail-value">
+                            {% if action.completion_date %}
+                                <i class="fas fa-calendar-check text-muted me-1"></i> {{ action.completion_date|date:"d M Y" }}
+                            {% else %}
+                                <span class="text-muted" style="font-weight: 500;">—</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Assignee Remarks</div>
+                    <div class="detail-box success">
+                        {% if action.completion_remarks %}
+                            {{ action.completion_remarks }}
+                        {% else %}
+                            <span class="text-muted fst-italic">No remarks provided.</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ✅ Before/After Images -->
+                {% if audit_answer.evidence or action.completion_evidence %}
+                    <div class="detail-row">
+                        <div class="detail-label">Before / After Evidence</div>
+                        <div class="evidence-container">
+                            {% include "five_s/_before_after_slider.html" with before=audit_answer.evidence after=action.completion_evidence label=action.question.question_code height="320" %}
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Decision Form -->
+        <div>
+            <div class="section-card">
+                <div class="section-card-header">
+                    <div class="section-card-header-left">
+                        <i class="fas fa-gavel"></i>
+                        <h3>Your Decision</h3>
+                    </div>
+                </div>
+                <div class="section-card-body">
+                    
+                    <form method="post" id="approvalForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="decision" id="decisionInput" value="">
+                        
+                        <!-- Approve Flow (Remarks Optional) -->
+                        <div id="approveBox">
+                            <div class="mb-4">
+                                <label class="form-label">Approval Remarks <span class="text-muted" style="font-weight: 500;">(Optional)</span></label>
+                                <textarea name="approval_remarks" class="form-control" rows="3" placeholder="Add any final notes..."></textarea>
+                            </div>
+                            <button type="button" class="btn-decision approve" onclick="submitApprove()">
+                                <i class="fas fa-check-circle"></i> Approve 
+                            </button>
+                            <button type="button" class="btn-decision reject mt-3" onclick="toggleReject(true)">
+                                <i class="fas fa-times-circle"></i> Reject 
+                            </button>
+                        </div>
+
+                        <!-- Reject Flow (Remarks Mandatory) -->
+                        <div id="rejectBox">
+                            <div class="mb-3">
+                                <label class="form-label" style="color: var(--s5-danger);">Rejection Reason <span style="color: var(--s5-danger);">*</span></label>
+                                <textarea name="rejection_remarks" id="rejectionRemarks" class="form-control" rows="4" placeholder="Explain why this action is being rejected. The assignee will see this." required></textarea>
+                                <small class="text-muted d-block mt-2" style="font-size: 11px;">This will be sent back to the assignee for rework.</small>
+                            </div>
+                            <button type="button" class="btn-decision reject" style="background: var(--s5-danger); color: #fff; border-color: var(--s5-danger);" onclick="submitReject()">
+                                <i class="fas fa-paper-plane"></i> Confirm Rejection
+                            </button>
+                            <button type="button" class="btn btn-light w-100 mt-3" style="border-radius: 10px; font-weight: 600; padding: 12px;" onclick="toggleReject(false)">
+                                Cancel & Go Back
+                            </button>
+                        </div>
+                        
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleReject(showReject) {
+    const approveBox = document.getElementById('approveBox');
+    const rejectBox = document.getElementById('rejectBox');
+    const decisionInput = document.getElementById('decisionInput');
+    
+    if (showReject) {
+        approveBox.style.display = 'none';
+        rejectBox.style.display = 'block';
+        decisionInput.value = 'reject';
+        document.getElementById('rejectionRemarks').focus();
+    } else {
+        rejectBox.style.display = 'none';
+        approveBox.style.display = 'block';
+        decisionInput.value = '';
+    }
+}
+
+function submitApprove() {
+    const form = document.getElementById('approvalForm');
+    document.getElementById('decisionInput').value = 'approve';
+    
+    // Copy the optional remarks to the correct name attribute for Django
+    const approvalRemarks = document.querySelector('#approveBox textarea[name="approval_remarks"]').value;
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'approval_remarks';
+    hiddenInput.value = approvalRemarks;
+    form.appendChild(hiddenInput);
+    
+    form.submit();
+}
+
+function submitReject() {
+    const form = document.getElementById('approvalForm');
+    const rejectionText = document.getElementById('rejectionRemarks').value.trim();
+    
+    if (!rejectionText) {
+        alert("Please provide a reason for rejection.");
+        document.getElementById('rejectionRemarks').focus();
+        return;
+    }
+    
+    document.getElementById('decisionInput').value = 'reject';
+    
+    // Copy the rejection remarks to the correct name attribute for Django
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'approval_remarks';  // map to model field
+    hiddenInput.value = rejectionText;
+    form.appendChild(hiddenInput);
+    
+    form.submit();
+}
+</script>
+{% endblock %}

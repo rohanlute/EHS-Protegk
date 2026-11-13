@@ -1,0 +1,1458 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} | EHS-360{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --s5-primary: #0d9488;
+    --s5-primary-dark: #0f766e;
+    --s5-primary-light: #f0fdfa;
+    --s5-text: #172033;
+    --s5-muted: #64748b;
+    --s5-border: #e2e8f0;
+    --s5-background: #f5f7fb;
+    --s5-white: #ffffff;
+    --s5-danger: #dc2626;
+    --s5-radius: 13px;
+    --s5-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.content-wrapper { background: var(--s5-background) !important; }
+
+.fives-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px 4px 35px;
+    color: var(--s5-text);
+    font-family: 'Inter', sans-serif;
+}
+.fives-page *, .fives-page *::before, .fives-page *::after { box-sizing: border-box; }
+
+/* ============ Page / Form styles ============ */
+.fives-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 18px; padding: 24px 26px; margin-bottom: 22px;
+    background: var(--s5-white); border: 1px solid var(--s5-border);
+    border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.fives-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.fives-header-icon {
+    flex-shrink: 0; width: 54px; height: 54px; display: flex; justify-content: center; align-items: center;
+    background: var(--s5-primary-light); border: 1px solid #ccfbf1; border-radius: 15px;
+    color: var(--s5-primary-dark); font-size: 22px;
+}
+.fives-header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+.fives-header p { margin: 6px 0 0; color: var(--s5-muted); font-size: 12px; line-height: 1.6; }
+.fives-code {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+    color: #475569; background: #f8fafc; border: 1px solid var(--s5-border);
+    border-radius: 9px; font-size: 12px; font-weight: 700;
+}
+.fives-card {
+    overflow: hidden; background: var(--s5-white);
+    border: 1px solid var(--s5-border); border-radius: var(--s5-radius); box-shadow: var(--s5-shadow);
+}
+.fives-card-heading {
+    display: flex; align-items: center; gap: 12px; padding: 19px 26px;
+    border-bottom: 1px solid var(--s5-border);
+}
+.fives-heading-icon {
+    width: 39px; height: 39px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--s5-primary-dark); background: var(--s5-primary-light); border-radius: 10px; font-size: 16px;
+}
+.fives-card-heading h2 { margin: 0; font-size: 15px; font-weight: 800; }
+.fives-card-heading p { margin: 4px 0 0; font-size: 11px; line-height: 1.6; color: var(--s5-muted); }
+.fives-form-body { padding: 26px; }
+
+.fives-section { margin-bottom: 0; }
+.fives-section-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 19px; }
+.fives-section-number {
+    display: flex; align-items: center; justify-content: center; width: 33px; height: 33px;
+    flex-shrink: 0; color: var(--s5-primary-dark); background: var(--s5-primary-light);
+    border-radius: 9px; font-size: 11px; font-weight: 800;
+}
+.fives-section-heading h3 { margin: 1px 0 5px; font-size: 14px; font-weight: 800; }
+.fives-section-heading p { margin: 0; color: var(--s5-muted); font-size: 11px; line-height: 1.6; }
+.fives-divider { height: 1px; margin: 28px 0; background: var(--s5-border); }
+
+.fives-form-group { min-width: 0; margin-bottom: 19px; }
+.fives-form-group:last-child { margin-bottom: 0; }
+.fives-form-group > label { display: block; margin-bottom: 7px; color: #334155; font-size: 12px; font-weight: 700; }
+.fives-required { color: var(--s5-danger); margin-left: 3px; }
+
+.fives-page input[type="text"], .fives-page input[type="number"], .fives-page input[type="email"], .fives-page select, .fives-page textarea {
+    width: 100%; min-width: 0; min-height: 43px; padding: 10px 13px;
+    color: #1e293b; background: #fff; border: 1px solid #cbd5e1; border-radius: 9px;
+    font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.6;
+    box-shadow: none; transition: border-color .18s ease, box-shadow .18s ease;
+}
+.fives-page textarea { min-height: 95px; resize: vertical; }
+.fives-page input:focus, .fives-page select:focus, .fives-page textarea:focus {
+    outline: none; border-color: var(--s5-primary); box-shadow: 0 0 0 3px rgba(13, 148, 136, .10);
+}
+.fives-error { display: block; margin-top: 5px; color: var(--s5-danger); font-size: 11px; line-height: 1.5; }
+
+.fives-q-empty-state {
+    border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px;
+    text-align: center; background: #f8fafc; margin-bottom: 20px;
+}
+.fives-q-empty-state i { font-size: 32px; color: #94a3b8; margin-bottom: 12px; }
+.fives-q-empty-state h4 { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; color: var(--s5-text); }
+.fives-q-empty-state p { margin: 0 0 16px 0; font-size: 12px; color: var(--s5-muted); }
+
+.fives-included-section { margin-top: 10px; }
+.fives-included-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.fives-included-header h4 { margin: 0; font-size: 13px; font-weight: 800; }
+.fives-count-badge {
+    background: var(--s5-primary-light); color: var(--s5-primary-dark);
+    padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;
+}
+.fives-accordion { border: 1px solid var(--s5-border); border-radius: 8px; margin-bottom: 8px; background: #fff; overflow: hidden; }
+.fives-accordion-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 700; transition: background 0.2s;
+}
+.fives-accordion-header:hover { background: #f8fafc; }
+.fives-accordion-header.active { background: var(--s5-primary-light); color: var(--s5-primary-dark); border-bottom: 1px solid var(--s5-border); }
+.fives-accordion-title { display: flex; align-items: center; gap: 10px; }
+.fives-accordion-title i { color: var(--s5-primary); }
+.fives-accordion-icon { transition: transform 0.2s; }
+.fives-accordion-header.active .fives-accordion-icon { transform: rotate(180deg); }
+.fives-accordion-body { display: none; padding: 16px 20px; background: #fafbfc; }
+.fives-accordion-body.active { display: block; }
+
+.fives-bulk-list { border: 1px solid var(--s5-border); border-radius: 8px; background: #fff; overflow: hidden; }
+.fives-bulk-item {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--s5-border);
+}
+.fives-bulk-item:last-child { border-bottom: 0; }
+.fives-bulk-item-content { flex: 1; min-width: 0; }
+.fives-question-code { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; color: var(--s5-primary-dark); margin-right: 7px; }
+.fives-question-text { display: block; margin-top: 4px; color: #334155; font-size: 11px; line-height: 1.6; }
+
+.btn-remove-q {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; background: #fee2e2; color: #b91c1c;
+    border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.btn-remove-q:hover { background: #fca5a5; }
+
+.fives-active-option {
+    display: flex; align-items: flex-start; gap: 11px; padding: 16px; margin-top: 10px;
+    background: var(--s5-primary-light); border: 1px solid #bceee4; border-radius: 10px;
+}
+.fives-active-option input { width: 18px; height: 18px; flex-shrink: 0; margin: 1px 0 0; accent-color: var(--s5-primary); cursor: pointer; }
+.fives-active-option .active-title { display: block; color: #115e59; font-size: 13px; font-weight: 800; }
+.fives-active-option .active-description { display: block; margin-top: 4px; color: #527b78; font-size: 11px; line-height: 1.6; }
+
+.fives-form-footer {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 14px; padding: 18px 26px; background: #fafbfc; border-top: 1px solid var(--s5-border);
+}
+.fives-footer-note { color: var(--s5-muted); font-size: 10px; line-height: 1.7; }
+.fives-footer-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+.fives-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 41px; padding: 10px 15px; border: 1px solid transparent;
+    border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+    line-height: 1.4; text-decoration: none !important; cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.fives-btn:hover { transform: translateY(-1px); }
+.fives-btn:disabled { opacity: .65; cursor: wait; transform: none; }
+.fives-btn-cancel { color: #475569; background: #fff; border-color: #cbd5e1; }
+.fives-btn-cancel:hover { color: #0f172a; background: #f8fafc; }
+.fives-btn-primary { color: #fff; background: var(--s5-primary); border-color: var(--s5-primary); }
+.fives-btn-primary:hover { color: #fff; background: var(--s5-primary-dark); border-color: var(--s5-primary-dark); box-shadow: 0 4px 12px rgba(13, 148, 136, .17); }
+
+/* ====================================================================
+   WIZARD-STYLE STEP-BY-STEP MODAL
+   ==================================================================== */
+
+dialog#question-modal {
+    border: none;
+    padding: 0;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    width: 92%;
+    max-width: 640px;
+    max-height: 92vh;
+    background: #ffffff;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+dialog#question-modal[open] { display: flex; }
+dialog#question-modal::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+}
+
+.wz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px 14px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--s5-border);
+}
+.wz-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--s5-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.2px;
+}
+.wz-header h3 i { color: var(--s5-primary); }
+.wz-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: var(--s5-muted);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+.wz-close:hover { background: #e2e8f0; color: var(--s5-text); }
+
+.wz-progress {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 24px 18px;
+    background: #fafcff;
+    border-bottom: 1px solid var(--s5-border);
+    flex-shrink: 0;
+    gap: 8px;
+    position: relative;
+}
+.wz-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+    min-width: 0;
+    transition: opacity 0.15s;
+}
+.wz-step:hover { opacity: 0.85; }
+.wz-step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--s5-muted);
+    font-size: 11px;
+    font-weight: 800;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 2;
+}
+.wz-step.active .wz-step-dot {
+    background: var(--s5-primary);
+    border-color: var(--s5-primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
+    transform: scale(1.08);
+}
+.wz-step.completed .wz-step-dot {
+    background: var(--s5-primary-light);
+    border-color: var(--s5-primary);
+    color: var(--s5-primary);
+}
+.wz-step-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--s5-muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.wz-step.active .wz-step-label {
+    color: var(--s5-primary-dark);
+    font-weight: 800;
+}
+.wz-step-count {
+    display: inline-block;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--s5-muted);
+    font-size: 8px;
+    font-weight: 800;
+    margin-left: 2px;
+}
+.wz-step.active .wz-step-count {
+    background: var(--s5-primary);
+    color: #ffffff;
+}
+
+.wz-body {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    min-height: 320px;
+}
+.wz-body::-webkit-scrollbar { width: 8px; }
+.wz-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+.wz-step-content {
+    display: none;
+    padding: 22px 24px;
+    animation: wzFadeIn 0.22s ease;
+}
+.wz-step-content.active { display: block; }
+
+@keyframes wzFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wz-pillar-intro {
+    padding: 18px 20px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+.wz-pillar-intro::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background: currentColor;
+}
+.wz-pillar-intro-icon {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+}
+.wz-pillar-intro-body {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+.wz-pillar-intro-body h4 {
+    margin: 0 0 3px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--s5-text);
+    letter-spacing: -0.2px;
+}
+.wz-pillar-intro-body p {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--s5-muted);
+}
+.wz-pillar-intro-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--s5-text);
+    backdrop-filter: blur(4px);
+    position: relative;
+    z-index: 1;
+}
+
+.wz-step-search {
+    position: relative;
+    margin-bottom: 14px;
+}
+.wz-step-search i {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--s5-muted);
+    font-size: 12px;
+    pointer-events: none;
+}
+.wz-step-search input {
+    width: 100%;
+    height: 38px;
+    padding: 0 36px 0 36px;
+    border: 1px solid var(--s5-border);
+    border-radius: 9px;
+    background: #ffffff;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    color: var(--s5-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.wz-step-search input:focus {
+    outline: none;
+    border-color: var(--s5-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.10);
+}
+.wz-step-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    border: none;
+    background: #e2e8f0;
+    color: var(--s5-muted);
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wz-q-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.wz-q {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1.5px solid var(--s5-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.wz-q:hover {
+    border-color: #99f6e4;
+    background: #fbfffe;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.06);
+}
+.wz-q.selected {
+    background: var(--s5-primary-light);
+    border-color: var(--s5-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+}
+.wz-q.added {
+    opacity: 0.55;
+    pointer-events: none;
+    border-style: dashed;
+}
+.wz-q.hidden { display: none; }
+
+.wz-q-checkbox {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 10px;
+    transition: all 0.15s;
+    margin-top: 1px;
+}
+.wz-q.selected .wz-q-checkbox {
+    background: var(--s5-primary);
+    border-color: var(--s5-primary);
+    color: #ffffff;
+}
+.wz-q.added .wz-q-checkbox {
+    background: var(--s5-primary-light);
+    border-color: var(--s5-primary);
+    color: var(--s5-primary);
+}
+.wz-q-body { flex: 1; min-width: 0; }
+.wz-q-code {
+    font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--s5-primary-dark);
+    background: #f0fdfa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+.wz-q.selected .wz-q-code { background: #ffffff; }
+.wz-q-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #334155;
+}
+.wz-q-text mark {
+    background: #fef08a;
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 700;
+}
+.wz-q-added-label {
+    display: none;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--s5-primary-dark);
+    background: #ffffff;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.wz-q.added .wz-q-added-label { display: inline-block; }
+
+.wz-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--s5-muted);
+}
+.wz-empty i { font-size: 28px; color: #cbd5e1; margin-bottom: 10px; display: block; }
+.wz-empty p { margin: 0; font-size: 12px; }
+
+.wz-nav {
+    padding: 14px 24px;
+    border-top: 1px solid var(--s5-border);
+    background: #fafbfc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 12px;
+}
+.wz-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--s5-border);
+    background: #ffffff;
+    color: var(--s5-text);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+}
+.wz-nav-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+.wz-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.wz-nav-btn-primary {
+    background: var(--s5-primary);
+    border-color: var(--s5-primary);
+    color: #ffffff;
+}
+.wz-nav-btn-primary:hover:not(:disabled) {
+    background: var(--s5-primary-dark);
+    border-color: var(--s5-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2);
+}
+.wz-step-indicator {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--s5-muted);
+    text-align: center;
+    flex: 1;
+}
+.wz-step-indicator strong {
+    color: var(--s5-primary-dark);
+    font-size: 13px;
+}
+
+.wz-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--s5-border);
+    background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.wz-footer-info {
+    font-size: 12px;
+    color: var(--s5-muted);
+    font-weight: 600;
+}
+.wz-footer-info strong {
+    color: var(--s5-primary-dark);
+    font-weight: 800;
+    font-size: 14px;
+}
+.wz-footer-actions { display: flex; gap: 8px; }
+
+.wz-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.wz-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+.wz-btn-ghost {
+    background: #ffffff;
+    color: #475569;
+    border-color: var(--s5-border);
+}
+.wz-btn-ghost:hover:not(:disabled) { background: #f8fafc; color: var(--s5-text); }
+.wz-btn-primary {
+    background: var(--s5-primary);
+    color: #ffffff;
+    border-color: var(--s5-primary);
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+.wz-btn-primary:hover:not(:disabled) {
+    background: var(--s5-primary-dark);
+    border-color: var(--s5-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+}
+
+@media (max-width: 760px) {
+    .fives-page { padding: 6px 0 24px; }
+    .fives-header { padding: 18px; }
+    .fives-form-body { padding: 19px; }
+    .fives-form-footer { padding: 17px 19px; flex-direction: column; align-items: stretch; }
+    .fives-footer-actions { width: 100%; }
+    .fives-footer-actions .fives-btn { flex: 1; }
+
+    dialog#question-modal {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        top: 0; left: 0;
+        transform: none;
+    }
+    .wz-header, .wz-progress, .wz-nav, .wz-footer { padding-left: 16px; padding-right: 16px; }
+    .wz-step-content { padding: 16px; }
+    .wz-step-label { display: none; }
+    .wz-step-count { display: inline-block; margin: 0; }
+    .wz-step-dot { width: 26px; height: 26px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+<div class="fives-page">
+
+    <!-- Page header -->
+    <header class="fives-header">
+        <div class="fives-header-main">
+            <div class="fives-header-icon">
+                <i class="fas fa-{% if action == 'Create' %}file-circle-plus{% else %}pen-to-square{% endif %}"></i>
+            </div>
+            <div>
+                <h1>{{ title }}</h1>
+                <p>
+                    {% if action == 'Create' %}
+                        Configure a reusable 5S audit checklist and add its questions.
+                    {% else %}
+                        Manage template details and review its included questions.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% if action == 'Edit' and template %}
+        <div class="fives-code"><i class="fas fa-hashtag"></i> {{ template.template_code }}</div>
+        {% endif %}
+    </header>
+
+    <!-- Main card -->
+    <section class="fives-card">
+        <div class="fives-card-heading">
+            <div class="fives-heading-icon"><i class="fas fa-clipboard-list"></i></div>
+            <div>
+                <h2>Template Configuration</h2>
+                <p>Define template details, scoring threshold and checklist questions.</p>
+            </div>
+        </div>
+
+        <form method="post" novalidate id="templateForm">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 16px; margin: 20px 26px 0 26px; border-radius: 8px;">
+                <strong>Please fix the following errors:</strong>
+                <ul style="margin: 8px 0 0 20px; padding: 0;">
+                    {% for field in form %}{% if field.errors %}<li>{{ field.label }}: {{ field.errors|join:", " }}</li>{% endif %}{% endfor %}
+                    {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="fives-form-body">
+                <!-- Section 1 -->
+                <section class="fives-section">
+                    <div class="fives-section-heading">
+                        <div class="fives-section-number">01</div>
+                        <div><h3>Template Identity</h3><p>Set the name, unique code and purpose of this checklist.</p></div>
+                    </div>
+                    <div class="fives-form-group">
+                        <label for="{{ form.template_name.id_for_label }}">Template Name <span class="fives-required">*</span></label>
+                        {{ form.template_name }}
+                        {% if form.template_name.errors %}<span class="fives-error">{{ form.template_name.errors|join:", " }}</span>{% endif %}
+                    </div>
+                    <div class="fives-form-group">
+                        <label for="{{ form.template_code.id_for_label }}">Template Code <span class="fives-required">*</span></label>
+                        {{ form.template_code }}
+                        {% if form.template_code.errors %}<span class="fives-error">{{ form.template_code.errors|join:", " }}</span>{% endif %}
+                    </div>
+                    <div class="fives-form-group">
+                        <label for="{{ form.description.id_for_label }}">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<span class="fives-error">{{ form.description.errors|join:", " }}</span>{% endif %}
+                    </div>
+                </section>
+
+                <div class="fives-divider"></div>
+
+                <!-- Section 2 -->
+                <section class="fives-section">
+                    <div class="fives-section-heading">
+                        <div class="fives-section-number">02</div>
+                        <div><h3>Scoring</h3><p>Set the minimum acceptable score to flag audits.</p></div>
+                    </div>
+                    <div class="fives-form-group mb-0">
+                        <label for="{{ form.min_compliance_score.id_for_label }}">Minimum Compliance Score (%) <span class="fives-required">*</span></label>
+                        {{ form.min_compliance_score }}
+                        {% if form.min_compliance_score.errors %}<span class="fives-error">{{ form.min_compliance_score.errors|join:", " }}</span>{% endif %}
+                    </div>
+                </section>
+
+                <div class="fives-divider"></div>
+
+                <!-- Section 3 -->
+                <section class="fives-section">
+                    <div class="fives-section-heading">
+                        <div class="fives-section-number">03</div>
+                        <div><h3>Checklist Questions</h3><p>Build your template by adding questions.</p></div>
+                    </div>
+
+                    <div class="fives-q-empty-state" id="empty-state-msg" style="{% if current_questions %}display: none;{% endif %}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h4>No questions added yet</h4>
+                        <p>Click the button below to browse and select questions from the 5S library.</p>
+                        <button type="button" class="fives-btn fives-btn-primary" onclick="openQuestionModal()">
+                            <i class="fas fa-plus"></i> Add Questions
+                        </button>
+                    </div>
+
+                    <div class="fives-included-section" id="included-section" style="{% if not current_questions %}display: none;{% endif %}">
+                        <div class="fives-included-header">
+                            <h4><i class="fas fa-check-circle" style="color:var(--s5-primary);margin-right:6px;"></i> Included Questions</h4>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fives-count-badge">
+                                    <span id="included-count">{% if current_questions %}{{ current_questions|length }}{% else %}0{% endif %}</span> included
+                                </span>
+                                <button type="button" class="fives-btn fives-btn-primary" style="padding: 6px 12px; min-height: 30px;" onclick="openQuestionModal()">
+                                    <i class="fas fa-plus"></i> Add More
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="fives-accordions" id="included-accordions-container">
+                            {% if current_questions %}
+                                {% regroup current_questions by question.pillar as current_by_pillar %}
+                                {% for group in current_by_pillar %}
+                                <div class="fives-accordion included-pillar-group" data-pillar="{{ group.grouper }}">
+                                    <div class="fives-accordion-header {% if forloop.first %}active{% endif %}" onclick="toggleAccordion(this)">
+                                        <div class="fives-accordion-title">
+                                            <i class="fas fa-folder-open"></i>
+                                            {% if group.grouper == 'SEIRI' %}Seiri — Sort
+                                            {% elif group.grouper == 'SEITON' %}Seiton — Set in Order
+                                            {% elif group.grouper == 'SEISO' %}Seiso — Shine
+                                            {% elif group.grouper == 'SEIKETSU' %}Seiketsu — Standardize
+                                            {% elif group.grouper == 'SHITSUKE' %}Shitsuke — Sustain
+                                            {% else %}{{ group.grouper }}{% endif %}
+                                            <span class="badge bg-success pillar-count-badge" style="padding: 2px 8px; border-radius: 12px; font-size: 10px; margin-left: 8px;">{{ group.list|length }}</span>
+                                        </div>
+                                        <i class="fas fa-chevron-down fives-accordion-icon"></i>
+                                    </div>
+                                    <div class="fives-accordion-body {% if forloop.first %}active{% endif %}">
+                                        <div class="fives-bulk-list">
+                                            {% for tq in group.list %}
+                                            <div class="fives-bulk-item included-item" id="included-q-{{ tq.question.pk }}">
+                                                <div class="fives-bulk-item-content">
+                                                    <span class="fives-question-code">{{ tq.question.question_code }}</span>
+                                                    <span class="fives-question-text">{{ tq.question.question_text }}</span>
+                                                </div>
+                                                <button type="button" class="btn-remove-q" onclick="removeQuestion(this, '{{ tq.question.pk }}')" title="Remove">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <input type="hidden" name="bulk_questions" value="{{ tq.question.pk }}">
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <div class="fives-divider"></div>
+
+                <!-- Section 4 -->
+                <section class="fives-section">
+                    <div class="fives-active-option">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}">
+                            <span class="active-title"><i class="fas fa-circle-check"></i> Active Template</span>
+                            <span class="active-description">Only active templates can be selected when configuring new 5S schedules.</span>
+                        </label>
+                    </div>
+                </section>
+            </div>
+
+            <footer class="fives-form-footer">
+                <div class="fives-footer-note">
+                    <i class="fas fa-shield-halved"></i> Check the template details and selected questions before saving.
+                </div>
+                <div class="fives-footer-actions">
+                    <a href="{% url 'five_s:template_list' %}" class="fives-btn fives-btn-cancel">
+                        <i class="fas fa-xmark"></i> Cancel
+                    </a>
+                    <button type="submit" class="fives-btn fives-btn-primary" id="save-template-button">
+                        <i class="fas fa-floppy-disk"></i> {{ action }} Template
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </section>
+</div>
+</div>
+
+<!-- ====================================================================
+     WIZARD-STYLE STEP-BY-STEP MODAL
+     ==================================================================== -->
+<dialog id="question-modal" aria-labelledby="wz-modal-title">
+    <div class="wz-header">
+        <h3 id="wz-modal-title"><i class="fas fa-wand-magic-sparkles"></i> Add Questions</h3>
+        <button type="button" class="wz-close" onclick="closeQuestionModal()" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="wz-progress" id="wz-progress">
+        {% for code, name in pillar_choices %}
+            <div class="wz-step" data-pillar="{{ code }}" onclick="goToStep('{{ code }}')" id="wz-step-{{ code }}">
+                <div class="wz-step-dot">
+                    <span class="wz-step-num">{{ forloop.counter }}</span>
+                </div>
+                <div class="wz-step-label">
+                    {% if code == 'SEIRI' %}Seiri
+                    {% elif code == 'SEITON' %}Seiton
+                    {% elif code == 'SEISO' %}Seiso
+                    {% elif code == 'SEIKETSU' %}Seiketsu
+                    {% elif code == 'SHITSUKE' %}Shitsuke
+                    {% else %}{{ code }}{% endif %}
+                    <span class="wz-step-count" id="wz-step-count-{{ code }}">0</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="wz-body" id="wz-body">
+        {% for code, data in available_by_pillar.items %}
+            {% with pillar_name=code|upper %}
+            <div class="wz-step-content {% if forloop.first %}active{% endif %}"
+                 data-pillar="{{ code }}"
+                 id="wz-content-{{ code }}">
+
+                <div class="wz-pillar-intro" style="color: {% if code == 'SEIRI' %}#ef4444
+                                                            {% elif code == 'SEITON' %}#3b82f6
+                                                            {% elif code == 'SEISO' %}#22c55e
+                                                            {% elif code == 'SEIKETSU' %}#f59e0b
+                                                            {% elif code == 'SHITSUKE' %}#8b5cf6
+                                                            {% else %}#64748b{% endif %};">
+                    <div class="wz-pillar-intro-icon" style="background: currentColor;">
+                        <i class="fas fa-
+                            {% if code == 'SEIRI' %}broom
+                            {% elif code == 'SEITON' %}boxes-stacked
+                            {% elif code == 'SEISO' %}sparkles
+                            {% elif code == 'SEIKETSU' %}clipboard-check
+                            {% elif code == 'SHITSUKE' %}arrows-rotate
+                            {% else %}layer-group{% endif %}"></i>
+                    </div>
+                    <div class="wz-pillar-intro-body">
+                        <h4>
+                            {% if code == 'SEIRI' %}Seiri — Sort
+                            {% elif code == 'SEITON' %}Seiton — Set in Order
+                            {% elif code == 'SEISO' %}Seiso — Shine
+                            {% elif code == 'SEIKETSU' %}Seiketsu — Standardize
+                            {% elif code == 'SHITSUKE' %}Shitsuke — Sustain
+                            {% else %}{{ code }}{% endif %}
+                        </h4>
+                        <p>
+                            {% if code == 'SEIRI' %}Sort through items and remove what's not needed.
+                            {% elif code == 'SEITON' %}Organize items so everything has a place.
+                            {% elif code == 'SEISO' %}Keep the workspace clean and shine.
+                            {% elif code == 'SEIKETSU' %}Create standards and visual controls.
+                            {% elif code == 'SHITSUKE' %}Maintain discipline and sustain the system.
+                            {% else %}Choose questions for this pillar.{% endif %}
+                        </p>
+                        <span class="wz-pillar-intro-stat">
+                            <i class="fas fa-list"></i>
+                            {{ data.questions|length }} question{{ data.questions|length|pluralize }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="wz-step-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           class="wz-pillar-search"
+                           data-pillar="{{ code }}"
+                           placeholder="Search {{ code|lower }} questions…"
+                           autocomplete="off">
+                    <button type="button"
+                            class="wz-step-search-clear"
+                            data-pillar="{{ code }}"
+                            onclick="clearStepSearch('{{ code }}')"
+                            style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="wz-q-list" id="wz-q-list-{{ code }}">
+                    {% for q in data.questions %}
+                        <div class="wz-q"
+                             id="wz-q-{{ q.pk }}"
+                             data-pillar="{{ code }}"
+                             data-search-text="{{ q.question_code|lower }} {{ q.question_text|lower }}"
+                             onclick="toggleWzQuestion(this, '{{ q.pk }}')">
+                            <div class="wz-q-checkbox"><i class="fas fa-check"></i></div>
+                            <div class="wz-q-body">
+                                <div>
+                                    <span class="wz-q-code">{{ q.question_code }}</span>
+                                    <span class="wz-q-added-label">✓ Added</span>
+                                </div>
+                                <div class="wz-q-text" data-original="{{ q.question_text }}">{{ q.question_text }}</div>
+                            </div>
+                            <input type="hidden" class="wz-q-id" value="{{ q.pk }}">
+                            <input type="hidden" class="wz-q-pillar-hidden" value="{{ q.get_pillar_display|escapejs }}">
+                            <input type="hidden" class="wz-q-code-hidden" value="{{ q.question_code }}">
+                        </div>
+                    {% empty %}
+                        <div style="padding: 20px; text-align: center; color: var(--s5-muted); font-size: 12px;">
+                            No questions in this pillar yet.
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="wz-empty" id="wz-empty-{{ code }}" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <p>No matching questions in this pillar.</p>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+
+    <div class="wz-nav">
+        <button type="button" class="wz-nav-btn" id="wz-prev-btn" onclick="prevStep()">
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <div class="wz-step-indicator" id="wz-step-indicator">
+            Step <strong>1</strong> of 5
+        </div>
+        <button type="button" class="wz-nav-btn wz-nav-btn-primary" id="wz-next-btn" onclick="nextStep()">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <div class="wz-footer">
+        <div class="wz-footer-info">
+            <strong id="wz-total-count">0</strong> question<span id="wz-total-plural">s</span> selected
+        </div>
+        <div class="wz-footer-actions">
+            <button type="button" class="wz-btn wz-btn-ghost" onclick="closeQuestionModal()">Cancel</button>
+            <button type="button" class="wz-btn wz-btn-primary" id="wz-add-btn" onclick="addSelectedFromModal()" disabled>
+                <i class="fas fa-plus"></i>
+                <span id="wz-add-label">Add Selected</span>
+            </button>
+        </div>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ==========================================================================
+// WIZARD STATE
+// ==========================================================================
+let wzPillars = [];
+let wzCurrentStepIndex = 0;
+
+// ==========================================================================
+// OPEN / CLOSE
+// ==========================================================================
+function openQuestionModal() {
+    const modal = document.getElementById('question-modal');
+    if (!modal) return;
+
+    // Collect pillars in order
+    wzPillars = Array.from(document.querySelectorAll('.wz-step-content')).map(function (el) {
+        return el.dataset.pillar;
+    });
+    wzCurrentStepIndex = 0;
+
+    // Reset searches
+    document.querySelectorAll('.wz-pillar-search').forEach(function (inp) {
+        inp.value = '';
+        const clear = inp.parentElement.querySelector('.wz-step-search-clear');
+        if (clear) clear.style.display = 'none';
+    });
+
+    // Clear all selections
+    document.querySelectorAll('.wz-q.selected').forEach(function (q) { q.classList.remove('selected'); });
+
+    // Un-hide non-added questions
+    document.querySelectorAll('.wz-q').forEach(function (q) {
+        q.classList.remove('hidden');
+        if (q.dataset.permanentlyAdded === '1') {
+            q.classList.add('added');
+        }
+    });
+
+    // Restore text (in case of previous highlights)
+    document.querySelectorAll('.wz-q-text').forEach(function (t) {
+        if (t.dataset.original) t.innerHTML = escapeHTML(t.dataset.original);
+    });
+
+    // Restore empty states
+    document.querySelectorAll('.wz-empty').forEach(function (e) { e.style.display = 'none'; });
+
+    updateAllStepCounts();
+    updateFooterCounts();
+    showStep(wzCurrentStepIndex);
+
+    modal.showModal();
+}
+
+function closeQuestionModal() {
+    const modal = document.getElementById('question-modal');
+    if (modal && modal.open) modal.close();
+}
+
+// ==========================================================================
+// STEP NAVIGATION
+// ==========================================================================
+function showStep(index) {
+    if (index < 0) index = 0;
+    if (index >= wzPillars.length) index = wzPillars.length - 1;
+    wzCurrentStepIndex = index;
+
+    const activePillar = wzPillars[index];
+
+    document.querySelectorAll('.wz-step-content').forEach(function (el) {
+        el.classList.toggle('active', el.dataset.pillar === activePillar);
+    });
+
+    document.querySelectorAll('.wz-step').forEach(function (step) {
+        const pillar = step.dataset.pillar;
+        const stepIdx = wzPillars.indexOf(pillar);
+        step.classList.toggle('active', stepIdx === index);
+        step.classList.toggle('completed', stepIdx < index);
+    });
+
+    const prevBtn = document.getElementById('wz-prev-btn');
+    const nextBtn = document.getElementById('wz-next-btn');
+    prevBtn.disabled = index === 0;
+
+    if (index === wzPillars.length - 1) {
+        nextBtn.innerHTML = 'Finish <i class="fas fa-check"></i>';
+    } else {
+        nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+    }
+
+    const indicator = document.getElementById('wz-step-indicator');
+    indicator.innerHTML = `Step <strong>${index + 1}</strong> of ${wzPillars.length}`;
+
+    const body = document.getElementById('wz-body');
+    if (body) body.scrollTop = 0;
+
+    const searchInput = document.querySelector(`.wz-step-content[data-pillar="${activePillar}"] .wz-pillar-search`);
+    if (searchInput) {
+        setTimeout(function () { searchInput.focus(); }, 100);
+    }
+}
+
+function goToStep(pillar) {
+    const idx = wzPillars.indexOf(pillar);
+    if (idx !== -1) showStep(idx);
+}
+
+function prevStep() {
+    if (wzCurrentStepIndex > 0) showStep(wzCurrentStepIndex - 1);
+}
+
+function nextStep() {
+    if (wzCurrentStepIndex < wzPillars.length - 1) {
+        showStep(wzCurrentStepIndex + 1);
+    } else {
+        addSelectedFromModal();
+    }
+}
+
+// ==========================================================================
+// SELECTION
+// ==========================================================================
+function toggleWzQuestion(el, qId) {
+    if (el.dataset.permanentlyAdded === '1') return;
+    el.classList.toggle('selected');
+
+    const pillar = el.dataset.pillar;
+    updateStepCount(pillar);
+    updateFooterCounts();
+}
+
+function updateStepCount(pillar) {
+    const count = document.querySelectorAll(`.wz-q[data-pillar="${pillar}"].selected`).length;
+    const countEl = document.getElementById('wz-step-count-' + pillar);
+    if (countEl) {
+        countEl.textContent = count;
+        countEl.style.background = count > 0 ? 'var(--s5-primary)' : '';
+        countEl.style.color = count > 0 ? '#ffffff' : '';
+    }
+}
+
+function updateAllStepCounts() {
+    wzPillars.forEach(function (pillar) {
+        updateStepCount(pillar);
+    });
+}
+
+function updateFooterCounts() {
+    const total = document.querySelectorAll('.wz-q.selected').length;
+    document.getElementById('wz-total-count').textContent = total;
+    document.getElementById('wz-total-plural').textContent = total === 1 ? '' : 's';
+
+    const btn = document.getElementById('wz-add-btn');
+    const label = document.getElementById('wz-add-label');
+    if (total > 0) {
+        btn.disabled = false;
+        label.textContent = `Add ${total} question${total === 1 ? '' : 's'}`;
+    } else {
+        btn.disabled = true;
+        label.textContent = 'Add Selected';
+    }
+}
+
+// ==========================================================================
+// SEARCH (per pillar)
+// ==========================================================================
+function initStepSearch() {
+    document.querySelectorAll('.wz-pillar-search').forEach(function (input) {
+        const pillar = input.dataset.pillar;
+        const clear = input.parentElement.querySelector('.wz-step-search-clear');
+
+        input.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            if (clear) clear.style.display = q ? 'flex' : 'none';
+            applyStepSearch(pillar, q);
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && this.value) {
+                e.stopPropagation();
+                this.value = '';
+                if (clear) clear.style.display = 'none';
+                applyStepSearch(pillar, '');
+            }
+        });
+    });
+}
+
+function clearStepSearch(pillar) {
+    const input = document.querySelector(`.wz-pillar-search[data-pillar="${pillar}"]`);
+    if (!input) return;
+    input.value = '';
+    const clear = input.parentElement.querySelector('.wz-step-search-clear');
+    if (clear) clear.style.display = 'none';
+    applyStepSearch(pillar, '');
+    input.focus();
+}
+
+function applyStepSearch(pillar, query) {
+    const container = document.getElementById('wz-q-list-' + pillar);
+    if (!container) return;
+
+    let visibleCount = 0;
+
+    container.querySelectorAll('.wz-q').forEach(function (q) {
+        const text = (q.dataset.searchText || '').toLowerCase();
+
+        if (!query || text.includes(query)) {
+            q.classList.remove('hidden');
+            visibleCount++;
+            highlightQText(q, query);
+        } else {
+            q.classList.add('hidden');
+        }
+    });
+
+    const emptyEl = document.getElementById('wz-empty-' + pillar);
+    if (emptyEl) {
+        emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+}
+
+function highlightQText(q, query) {
+    const textEl = q.querySelector('.wz-q-text');
+    if (!textEl) return;
+    const original = textEl.dataset.original || textEl.textContent;
+
+    if (!query) {
+        textEl.innerHTML = escapeHTML(original);
+        return;
+    }
+
+    const lower = original.toLowerCase();
+    const idx = lower.indexOf(query);
+    if (idx === -1) {
+        textEl.innerHTML = escapeHTML(original);
+        return;
+    }
+
+    const before = original.substring(0, idx);
+    const match = original.substring(idx, idx + query.length);
+    const after = original.substring(idx + query.length);
+    textEl.innerHTML = `${escapeHTML(before)}<mark>${escapeHTML(match)}</mark>${escapeHTML(after)}`;
+}
+
+// ==========================================================================
+// ADD SELECTED
+// ==========================================================================
+function addSelectedFromModal() {
+    const selected = document.querySelectorAll('.wz-q.selected');
+    if (selected.length === 0) return;
+
+    const container = document.getElementById('included-accordions-container');
+    const emptyMsg = document.getElementById('empty-state-msg');
+    const includedSection = document.getElementById('included-section');
+
+    selected.forEach(function (q) {
+        const qId = q.querySelector('.wz-q-id').value;
+        const qCode = q.querySelector('.wz-q-code').textContent.trim();
+        const qPillar = q.querySelector('.wz-q-pillar-hidden').value;
+        const qText = q.querySelector('.wz-q-text').dataset.original;
+
+        // Find or create pillar accordion
+        let pillarGroup = container.querySelector(`.included-pillar-group[data-pillar="${qPillar}"]`);
+        if (!pillarGroup) {
+            pillarGroup = document.createElement('div');
+            pillarGroup.className = 'fives-accordion included-pillar-group';
+            pillarGroup.dataset.pillar = qPillar;
+            pillarGroup.innerHTML = `
+                <div class="fives-accordion-header" onclick="toggleAccordion(this)">
+                    <div class="fives-accordion-title">
+                        <i class="fas fa-folder-open"></i>
+                        ${escapeHTML(qPillar)}
+                        <span class="badge bg-success pillar-count-badge" style="padding: 2px 8px; border-radius: 12px; font-size: 10px; margin-left: 8px;">0</span>
+                    </div>
+                    <i class="fas fa-chevron-down fives-accordion-icon"></i>
+                </div>
+                <div class="fives-accordion-body">
+                    <div class="fives-bulk-list"></div>
+                </div>
+            `;
+            container.appendChild(pillarGroup);
+
+            // Open the freshly created accordion exclusively
+            const newHeader = pillarGroup.querySelector('.fives-accordion-header');
+            if (newHeader) toggleAccordion(newHeader);
+        }
+
+        const list = pillarGroup.querySelector('.fives-bulk-list');
+        const itemHTML = `
+            <div class="fives-bulk-item included-item" id="included-q-${qId}">
+                <div class="fives-bulk-item-content">
+                    <span class="fives-question-code">${escapeHTML(qCode)}</span>
+                    <span class="fives-question-text">${escapeHTML(qText)}</span>
+                </div>
+                <button type="button" class="btn-remove-q" onclick="removeQuestion(this, '${qId}')" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+                <input type="hidden" name="bulk_questions" value="${qId}">
+            </div>
+        `;
+        list.insertAdjacentHTML('beforeend', itemHTML);
+
+        // Mark in wizard as added
+        q.dataset.permanentlyAdded = '1';
+        q.classList.remove('selected');
+        q.classList.add('added');
+    });
+
+    document.querySelectorAll('.included-pillar-group').forEach(updatePillarCount);
+    updateGlobalCount();
+
+    emptyMsg.style.display = 'none';
+    includedSection.style.display = 'block';
+
+    closeQuestionModal();
+}
+
+// ==========================================================================
+// REMOVE FROM TEMPLATE
+// ==========================================================================
+function removeQuestion(button, qId) {
+    const item = button.closest('.fives-bulk-item');
+    const pillarGroup = button.closest('.included-pillar-group');
+    item.remove();
+
+    const q = document.getElementById('wz-q-' + qId);
+    if (q) {
+        delete q.dataset.permanentlyAdded;
+        q.classList.remove('added');
+    }
+
+    updatePillarCount(pillarGroup);
+    updateGlobalCount();
+
+    const list = pillarGroup.querySelector('.fives-bulk-list');
+    if (list.children.length === 0) {
+        pillarGroup.remove();
+        if (document.querySelectorAll('.included-pillar-group').length === 0) {
+            document.getElementById('empty-state-msg').style.display = 'block';
+            document.getElementById('included-section').style.display = 'none';
+        }
+    }
+}
+
+function updatePillarCount(pillarGroup) {
+    const count = pillarGroup.querySelectorAll('.included-item').length;
+    const badge = pillarGroup.querySelector('.pillar-count-badge');
+    if (badge) badge.textContent = count;
+}
+
+function updateGlobalCount() {
+    const total = document.querySelectorAll('.included-item').length;
+    document.getElementById('included-count').textContent = total;
+}
+
+// ==========================================================================
+// ACCORDION — exclusive (one open at a time)
+// ==========================================================================
+function toggleAccordion(header) {
+    const body = header.nextElementSibling;
+    if (!body) return;
+
+    const isCurrentlyOpen = header.classList.contains('active');
+
+    // Close every accordion in the "Included Questions" area
+    document.querySelectorAll('.included-pillar-group').forEach(function (group) {
+        const h = group.querySelector('.fives-accordion-header');
+        const b = group.querySelector('.fives-accordion-body');
+        if (h) h.classList.remove('active');
+        if (b) b.classList.remove('active');
+    });
+
+    // If the clicked accordion was closed, open it now (exclusive open).
+    if (!isCurrentlyOpen) {
+        header.classList.add('active');
+        body.classList.add('active');
+    }
+}
+
+// ==========================================================================
+// UTILS
+// ==========================================================================
+function escapeHTML(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// ==========================================================================
+// FORM SUBMIT
+// ==========================================================================
+document.getElementById('templateForm').addEventListener('submit', function () {
+    const btn = document.getElementById('save-template-button');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+});
+
+// ==========================================================================
+// INIT
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', function () {
+    initStepSearch();
+    updateFooterCounts();
+});
+</script>
+{% endblock %}
