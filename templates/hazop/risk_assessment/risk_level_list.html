@@ -1,0 +1,1245 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}Risk Level Configuration{% endblock %}
+
+{% block page_title %}Risk Level Configuration{% endblock %}
+
+{% block content %}
+
+<style>
+    .risk-level-page {
+        --rl-primary: #2563eb;
+        --rl-border: #e5e7eb;
+        --rl-text: #1f2937;
+        --rl-muted: #6b7280;
+        color: var(--rl-text);
+    }
+
+    /* Header */
+
+    .rl-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 26px;
+    }
+
+    .rl-page-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .rl-page-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 21px;
+        flex-shrink: 0;
+    }
+
+    .rl-page-title h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .rl-page-title p {
+        font-size: 13px;
+        color: var(--rl-muted);
+        margin-bottom: 0;
+    }
+
+    .rl-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1px solid var(--rl-border);
+        border-radius: 8px;
+        background: #fff;
+        color: #4b5563 !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .rl-back-btn:hover {
+        background: #f9fafb;
+        border-color: #bfdbfe;
+        color: #2563eb !important;
+    }
+
+    /* Summary cards */
+
+    .rl-summary-card {
+        height: 100%;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid var(--rl-border);
+        border-radius: 13px;
+        transition: all 0.2s ease;
+    }
+
+    .rl-summary-card:hover {
+        box-shadow: 0 7px 20px rgba(15, 23, 42, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .rl-summary-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        font-size: 17px;
+        margin-bottom: 15px;
+    }
+
+    .rl-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .rl-icon-green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .rl-icon-orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .rl-icon-purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .rl-summary-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--rl-muted);
+        margin-bottom: 7px;
+    }
+
+    .rl-summary-value {
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .rl-summary-note {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    /* Panels */
+
+    .rl-panel {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--rl-border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.025);
+    }
+
+    .rl-panel-header {
+        padding: 21px 23px;
+        border-bottom: 1px solid var(--rl-border);
+        background: #fcfcfd;
+    }
+
+    .rl-panel-header h5 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .rl-panel-header p {
+        font-size: 12px;
+        color: var(--rl-muted);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .rl-panel-body {
+        padding: 23px;
+    }
+
+    /* Form */
+
+    .rl-field {
+        margin-bottom: 21px;
+    }
+
+    .rl-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .rl-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .rl-required {
+        color: #dc2626;
+        margin-left: 3px;
+    }
+
+    .rl-field-help {
+        display: block;
+        font-size: 11px;
+        color: #9ca3af;
+        margin-top: 7px;
+        line-height: 1.5;
+    }
+
+    .risk-level-page input:not([type="checkbox"]):not([type="radio"]),
+    .risk-level-page select,
+    .risk-level-page textarea {
+        display: block;
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .risk-level-page textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .risk-level-page input:focus,
+    .risk-level-page select:focus,
+    .risk-level-page textarea:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .risk-level-page input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        accent-color: #2563eb;
+        cursor: pointer;
+    }
+
+    .rl-checkbox-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 15px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 9px;
+    }
+
+    .rl-checkbox-box input {
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+
+    .rl-checkbox-box label {
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+
+    .rl-checkbox-box label strong {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 5px;
+    }
+
+    .rl-checkbox-box label small {
+        display: block;
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.6;
+        font-weight: 400;
+    }
+
+    .rl-field-errors {
+        margin-top: 7px;
+    }
+
+    .rl-field-errors div {
+        font-size: 12px;
+        color: #dc2626;
+        margin-top: 4px;
+    }
+
+    .rl-form-errors {
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        border: 1px solid #fecaca;
+        border-radius: 9px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 13px;
+    }
+
+    .rl-form-errors ul {
+        padding-left: 20px;
+        margin: 8px 0 0;
+    }
+
+    .rl-form-footer {
+        padding: 18px 23px;
+        border-top: 1px solid var(--rl-border);
+        background: #fcfcfd;
+    }
+
+    .rl-save-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff !important;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .rl-save-btn:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.16);
+    }
+
+    /* Table */
+
+    .rl-table-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 17px 22px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #fcfcfd;
+    }
+
+    .rl-search-box {
+        position: relative;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .rl-search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 12px;
+    }
+
+    .rl-search-input {
+        width: 100%;
+        height: 39px;
+        padding: 9px 12px 9px 34px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .rl-search-input:focus {
+        border-color: #93c5fd;
+    }
+
+    .rl-status-filter {
+        height: 39px;
+        min-width: 125px;
+        padding: 8px 11px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 12px;
+    }
+
+    .rl-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .rl-table {
+        width: 100%;
+        min-width: 650px;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+    }
+
+    .rl-table thead th {
+        padding: 14px 17px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--rl-border);
+        color: #6b7280;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+    }
+
+    .rl-table tbody td {
+        padding: 16px 17px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 12px;
+        color: #374151;
+        vertical-align: middle;
+    }
+
+    .rl-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .rl-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    .rl-level-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .rl-color-indicator {
+        width: 11px;
+        height: 31px;
+        border-radius: 5px;
+        flex-shrink: 0;
+    }
+
+    .rl-score-range {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        background: #f3f4f6;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #374151;
+        white-space: nowrap;
+    }
+
+    .rl-action-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 9px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .rl-action-required {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .rl-action-not-required {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .rl-status-active {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 9px;
+        border-radius: 30px;
+        background: #ecfdf5;
+        color: #047857;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .rl-status-inactive {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 9px;
+        border-radius: 30px;
+        background: #f3f4f6;
+        color: #6b7280;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .rl-empty-state {
+        padding: 45px 20px !important;
+        text-align: center;
+    }
+
+    .rl-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 15px;
+        border-radius: 16px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 22px;
+    }
+
+    .rl-empty-state h6 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 7px;
+    }
+
+    .rl-empty-state p {
+        max-width: 350px;
+        margin: 0 auto;
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    .rl-no-results {
+        display: none;
+        padding: 25px 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .rl-table-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 15px 22px;
+        border-top: 1px solid var(--rl-border);
+        background: #fcfcfd;
+        color: #6b7280;
+        font-size: 11px;
+    }
+
+    .rl-table-footer strong {
+        color: #374151;
+    }
+
+    /* Sidebar information */
+
+    .rl-info-card {
+        margin-top: 20px;
+        padding: 17px;
+        border: 1px solid #dbeafe;
+        border-radius: 10px;
+        background: #eff6ff;
+    }
+
+    .rl-info-card strong {
+        display: block;
+        font-size: 12px;
+        color: #1d4ed8;
+        margin-bottom: 6px;
+    }
+
+    .rl-info-card p {
+        font-size: 11px;
+        color: #1e40af;
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 991px) {
+        .rl-page-title h3 {
+            font-size: 21px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .rl-page-header {
+            align-items: flex-start;
+        }
+
+        .rl-back-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .rl-panel-body {
+            padding: 18px;
+        }
+
+        .rl-table-toolbar {
+            padding: 15px;
+        }
+
+        .rl-search-box {
+            flex-basis: 100%;
+        }
+
+        .rl-status-filter {
+            flex: 1;
+        }
+    }
+</style>
+
+
+<div class="risk-level-page">
+
+    <!-- PAGE HEADER -->
+    <div class="rl-page-header">
+
+        <div class="rl-page-title">
+
+            <div class="rl-page-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+
+            <div>
+                <h3>Risk Level Configuration</h3>
+
+                <p>
+                    Define risk score ranges, risk categories and required actions.
+                </p>
+            </div>
+
+        </div>
+
+        <a href="{% url 'hazop:risk_matrix_list' %}"
+           class="rl-back-btn">
+
+            <i class="fas fa-arrow-left"></i>
+            Back to Risk Matrix
+
+        </a>
+
+    </div>
+
+
+    <!-- SUMMARY CARDS -->
+    <div class="row mb-4">
+
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rl-summary-card">
+
+                <div class="rl-summary-icon rl-icon-blue">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+
+                <div class="rl-summary-label">
+                    Total Risk Levels
+                </div>
+
+                <div class="rl-summary-value"
+                     id="rlTotalCount">
+                    {{ risk_levels|length }}
+                </div>
+
+                <div class="rl-summary-note">
+                    Configured categories
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rl-summary-card">
+
+                <div class="rl-summary-icon rl-icon-green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
+                <div class="rl-summary-label">
+                    Active Risk Levels
+                </div>
+
+                <div class="rl-summary-value"
+                     id="rlActiveCount">
+                    0
+                </div>
+
+                <div class="rl-summary-note">
+                    Available for assessment
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rl-summary-card">
+
+                <div class="rl-summary-icon rl-icon-orange">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+
+                <div class="rl-summary-label">
+                    Action Required
+                </div>
+
+                <div class="rl-summary-value"
+                     id="rlActionCount">
+                    0
+                </div>
+
+                <div class="rl-summary-note">
+                    Risk levels requiring action
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rl-summary-card">
+
+                <div class="rl-summary-icon rl-icon-purple">
+                    <i class="fas fa-palette"></i>
+                </div>
+
+                <div class="rl-summary-label">
+                    Risk Categories
+                </div>
+
+                <div class="rl-summary-value"
+                     id="rlCategoryCount">
+                    0
+                </div>
+
+                <div class="rl-summary-note">
+                    Unique configured levels
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+    <div class="row g-4">
+
+        <!-- ADD RISK LEVEL FORM -->
+        <div class="col-xl-4 col-lg-5">
+
+            <div class="rl-panel">
+
+                <div class="rl-panel-header">
+
+                    <h5>
+                        <i class="fas fa-plus-circle text-primary me-2"></i>
+                        Add Risk Level
+                    </h5>
+
+                    <p>
+                        Define a risk category, score range and action requirements.
+                    </p>
+
+                </div>
+
+
+                <form method="post"
+                      novalidate>
+
+                    {% csrf_token %}
+
+                    <div class="rl-panel-body">
+
+                        <!-- NON FIELD ERRORS -->
+                        {% if form.non_field_errors %}
+
+                            <div class="rl-form-errors">
+
+                                <strong>
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    Please correct the following errors
+                                </strong>
+
+                                <ul>
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- FORM FIELDS -->
+                        {% for field in form %}
+
+                            <div class="rl-field">
+
+                                {% if field.field.widget.input_type == "checkbox" %}
+
+                                    <div class="rl-checkbox-box">
+
+                                        {{ field }}
+
+                                        <label for="{{ field.id_for_label }}">
+
+                                            <strong>
+                                                {{ field.label }}
+                                            </strong>
+
+                                            {% if field.help_text %}
+                                                <small>
+                                                    {{ field.help_text }}
+                                                </small>
+                                            {% endif %}
+
+                                        </label>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <label for="{{ field.id_for_label }}">
+
+                                        {{ field.label }}
+
+                                        {% if field.field.required %}
+                                            <span class="rl-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ field }}
+
+                                    {% if field.help_text %}
+                                        <small class="rl-field-help">
+                                            {{ field.help_text }}
+                                        </small>
+                                    {% endif %}
+
+                                {% endif %}
+
+
+                                <!-- FIELD ERRORS -->
+                                {% if field.errors %}
+
+                                    <div class="rl-field-errors">
+
+                                        {% for error in field.errors %}
+                                            <div>
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!-- FORM FOOTER -->
+                    <div class="rl-form-footer">
+
+                        <button type="submit"
+                                class="rl-save-btn">
+
+                            <i class="fas fa-save"></i>
+                            Save Risk Level
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- INFORMATION -->
+            <div class="rl-info-card">
+
+                <strong>
+                    <i class="fas fa-info-circle me-1"></i>
+                    Risk Score Configuration
+                </strong>
+
+                <p>
+                    Define score ranges that do not overlap.
+                    Each risk score should map to the appropriate
+                    risk level according to your approved risk matrix.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- RISK LEVEL TABLE -->
+        <div class="col-xl-8 col-lg-7">
+
+            <div class="rl-panel">
+
+                <div class="rl-panel-header">
+
+                    <h5>
+                        Configured Risk Levels
+                    </h5>
+
+                    <p>
+                        Review configured score ranges and action requirements.
+                    </p>
+
+                </div>
+
+
+                <!-- SEARCH AND FILTER -->
+                <div class="rl-table-toolbar">
+
+                    <div class="rl-search-box">
+
+                        <i class="fas fa-search"></i>
+
+                        <input type="text"
+                               id="rlSearchInput"
+                               class="rl-search-input"
+                               placeholder="Search risk level...">
+
+                    </div>
+
+                    <select id="rlStatusFilter"
+                            class="rl-status-filter">
+
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- TABLE -->
+                <div class="rl-table-wrapper">
+
+                    <table class="rl-table">
+
+                        <thead>
+                            <tr>
+                                <th>Risk Level</th>
+                                <th>Score Range</th>
+                                <th>Action Required</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="rlTableBody">
+
+                            {% for level in risk_levels %}
+
+                                <tr class="rl-risk-row"
+                                    data-name="{{ level.name|lower }}"
+                                    data-status="{% if level.is_active %}active{% else %}inactive{% endif %}"
+                                    data-action="{% if level.requires_action %}yes{% else %}no{% endif %}">
+
+                                    <td>
+
+                                        <div class="rl-level-name">
+
+                                            <span class="rl-color-indicator"
+                                                  style="background-color: {{ level.color|default:'#64748b' }};">
+                                            </span>
+
+                                            <span>
+                                                {{ level.name }}
+                                            </span>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="rl-score-range">
+
+                                            {{ level.minimum_score }}
+
+                                            <i class="fas fa-arrow-right"
+                                               style="font-size: 10px; color: #9ca3af;"></i>
+
+                                            {{ level.maximum_score }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if level.requires_action %}
+
+                                            <span class="rl-action-badge rl-action-required">
+
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                Required
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="rl-action-badge rl-action-not-required">
+
+                                                <i class="fas fa-minus-circle"></i>
+                                                Not Required
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if level.is_active %}
+
+                                            <span class="rl-status-active">
+
+                                                <i class="fas fa-circle"
+                                                   style="font-size: 6px;"></i>
+                                                Active
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="rl-status-inactive">
+
+                                                <i class="fas fa-circle"
+                                                   style="font-size: 6px;"></i>
+                                                Inactive
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+                                    <td colspan="4">
+
+                                        <div class="rl-empty-state">
+
+                                            <div class="rl-empty-icon">
+                                                <i class="fas fa-layer-group"></i>
+                                            </div>
+
+                                            <h6>No Risk Levels Configured</h6>
+
+                                            <p>
+                                                Add your first risk level using
+                                                the form. You can define its
+                                                score range, color and required
+                                                actions.
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+
+                    <div class="rl-no-results"
+                         id="rlNoResults">
+
+                        <i class="fas fa-search me-2"></i>
+                        No risk levels match your search or filter.
+
+                    </div>
+
+                </div>
+
+
+                <!-- TABLE FOOTER -->
+                <div class="rl-table-footer">
+
+                    <div>
+                        Showing <strong id="rlVisibleCount">0</strong>
+                        of <strong id="rlTotalFooterCount">0</strong>
+                        risk levels
+                    </div>
+
+                    <div>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Score ranges should not overlap
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("rlSearchInput");
+    const statusFilter = document.getElementById("rlStatusFilter");
+
+    const rows = Array.from(
+        document.querySelectorAll(".rl-risk-row")
+    );
+
+    const noResults = document.getElementById("rlNoResults");
+
+    const visibleCount = document.getElementById("rlVisibleCount");
+    const totalFooterCount = document.getElementById("rlTotalFooterCount");
+
+    const activeCount = document.getElementById("rlActiveCount");
+    const actionCount = document.getElementById("rlActionCount");
+    const categoryCount = document.getElementById("rlCategoryCount");
+
+    const totalCount = rows.length;
+
+    let activeTotal = 0;
+    let actionTotal = 0;
+
+    const uniqueNames = new Set();
+
+    rows.forEach(function (row) {
+
+        const status = row.dataset.status;
+        const action = row.dataset.action;
+        const name = row.dataset.name;
+
+        if (status === "active") {
+            activeTotal++;
+        }
+
+        if (action === "yes") {
+            actionTotal++;
+        }
+
+        if (name) {
+            uniqueNames.add(name);
+        }
+
+    });
+
+    activeCount.textContent = activeTotal;
+    actionCount.textContent = actionTotal;
+    categoryCount.textContent = uniqueNames.size;
+
+    totalFooterCount.textContent = totalCount;
+
+
+    function filterRiskLevels() {
+
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const selectedStatus = statusFilter.value;
+
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const name = row.dataset.name || "";
+            const status = row.dataset.status;
+
+            const matchesSearch = name.includes(searchTerm);
+
+            const matchesStatus =
+                selectedStatus === "all" ||
+                status === selectedStatus;
+
+            const shouldShow =
+                matchesSearch &&
+                matchesStatus;
+
+            row.style.display = shouldShow ? "" : "none";
+
+            if (shouldShow) {
+                visible++;
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResults.style.display =
+            visible === 0 && totalCount > 0 ? "block" : "none";
+
+    }
+
+
+    searchInput.addEventListener("input", filterRiskLevels);
+    statusFilter.addEventListener("change", filterRiskLevels);
+
+    filterRiskLevels();
+
+});
+</script>
+
+{% endblock %}

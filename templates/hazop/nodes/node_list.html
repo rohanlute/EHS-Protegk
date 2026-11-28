@@ -1,0 +1,348 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}HAZOP Node Register{% endblock %}
+
+{% block page_title %}HAZOP Node Register{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-page-header {
+        padding: 14px 0 8px;
+    }
+
+    .hazop-page-header h1 {
+        font-size: 1.45rem;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 4px;
+    }
+
+    .hazop-page-header .page-description {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .hazop-node-card {
+        border: 0;
+        border-radius: 9px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .hazop-node-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        padding: 13px 18px;
+    }
+
+    .hazop-node-card .card-body {
+        padding: 0;
+    }
+
+    .hazop-node-card .card-footer {
+        background: #fafbfc;
+        border-top: 1px solid #edf0f2;
+        padding: 12px 18px;
+    }
+
+    .hazop-node-table {
+        margin-bottom: 0;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .hazop-node-table thead th {
+        background: #f8f9fa;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 600;
+        border-top: 0;
+        border-bottom: 1px solid #e9ecef;
+        padding: 11px 14px;
+        vertical-align: middle;
+    }
+
+    .hazop-node-table tbody td {
+        padding: 10px 14px;
+        vertical-align: middle;
+        border-color: #edf0f2;
+        color: #495057;
+    }
+
+    .hazop-node-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .hazop-node-number {
+        display: inline-block;
+        background: #eef5ff;
+        color: #2563eb;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+
+    .hazop-node-name {
+        color: #343a40;
+        font-weight: 600;
+    }
+
+    .hazop-status {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .hazop-status-active {
+        background: #e8f7ee;
+        color: #218838;
+    }
+
+    .hazop-status-inactive {
+        background: #f1f3f5;
+        color: #6c757d;
+    }
+
+    .hazop-action-btn {
+        width: 31px;
+        height: 31px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        padding: 0;
+    }
+
+    .hazop-node-count {
+        background: #eef5ff;
+        color: #2563eb;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .hazop-empty-state {
+        padding: 45px 20px;
+        text-align: center;
+    }
+
+    .hazop-empty-state i {
+        font-size: 32px;
+        color: #c5cdd5;
+        margin-bottom: 12px;
+    }
+
+    .hazop-empty-state h6 {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+
+    .hazop-empty-state p {
+        font-size: 13px;
+        color: #83909c;
+        margin-bottom: 15px;
+    }
+
+    .hazop-node-card .btn {
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-page-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .hazop-page-header .btn {
+            margin-top: 12px;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<section class="content-header hazop-page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-md-8">
+                <h1>
+                    <i class="fas fa-project-diagram text-primary mr-2"></i>
+                    HAZOP Node Register
+                </h1>
+
+                <p class="page-description">
+                    Study:
+                    <strong>{{ study.study_number }}</strong>
+                    - {{ study.study_title }}
+                </p>
+            </div>
+
+            <div class="col-md-4 text-md-right">
+                <a href="{% url 'hazop:node_create' study.pk %}"
+                   class="btn btn-primary">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add Node
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="content pb-3">
+    <div class="container-fluid">
+
+        <div class="card hazop-node-card">
+
+            <!-- Card Header -->
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <h3 class="card-title font-weight-bold mb-0">
+                        <i class="fas fa-list-ul text-primary mr-2"></i>
+                        Node Details
+                    </h3>
+
+                    <span class="hazop-node-count">
+                        {{ total_nodes }} Nodes
+                    </span>
+
+                </div>
+            </div>
+
+            <!-- Node Table -->
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover hazop-node-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 55px;">#</th>
+                                <th>Node Number</th>
+                                <th>Node Name</th>
+                                <th>Node Type</th>
+                                <th>Equipment Type</th>
+                                <th>Equipment Tag</th>
+                                <th>Status</th>
+                                <th class="text-center" style="width: 100px;">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for node in nodes %}
+                            <tr>
+                                <td class="text-muted">
+                                    {{ forloop.counter }}
+                                </td>
+
+                                <td>
+                                    <span class="hazop-node-number">
+                                        {{ node.node_number }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="hazop-node-name">
+                                        {{ node.node_name }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ node.node_type|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ node.equipment_type|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ node.equipment_tag|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {% if node.is_active %}
+                                        <span class="hazop-status hazop-status-active">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="hazop-status hazop-status-inactive">
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center" style="gap: 6px;">
+
+                                        <!-- Open Worksheet -->
+                                        <a href="{% url 'hazop:worksheet_list' node_pk=node.pk %}"
+                                        class="btn btn-sm btn-outline-success hazop-action-btn"
+                                        title="Open Worksheet">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </a>
+
+                                        <!-- Edit Node -->
+                                        <a href="{% url 'hazop:node_edit' study.pk node.pk %}"
+                                        class="btn btn-sm btn-outline-primary hazop-action-btn"
+                                        title="Edit Node">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">
+                                    <div class="hazop-empty-state">
+                                        <i class="fas fa-project-diagram d-block"></i>
+
+                                        <h6>No Nodes Added Yet</h6>
+
+                                        <p>
+                                            Start by adding the first node
+                                            to this HAZOP study.
+                                        </p>
+
+                                        <a href="{% url 'hazop:node_create' study.pk %}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-plus mr-1"></i>
+                                            Add First Node
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="card-footer">
+                <a href="{% url 'hazop:study_list' %}"
+                   class="btn btn-default btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Studies
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

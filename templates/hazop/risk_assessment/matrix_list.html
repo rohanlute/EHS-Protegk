@@ -1,0 +1,966 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}Risk Matrix Configuration{% endblock %}
+
+{% block page_title %}Risk Matrix Configuration{% endblock %}
+
+{% block content %}
+
+<style>
+    .risk-matrix-page {
+        --rm-primary: #2563eb;
+        --rm-primary-light: #eff6ff;
+        --rm-border: #e5e7eb;
+        --rm-text: #1f2937;
+        --rm-muted: #6b7280;
+        color: var(--rm-text);
+    }
+
+    .risk-matrix-page .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+    .risk-matrix-page .page-title {
+        font-size: 25px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 7px;
+    }
+
+    .risk-matrix-page .page-description {
+        font-size: 14px;
+        color: var(--rm-muted);
+        margin-bottom: 0;
+    }
+
+    .rm-primary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border-radius: 9px;
+        background: #2563eb;
+        border: 1px solid #2563eb;
+        color: #fff !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .rm-primary-btn:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.18);
+    }
+
+    /* Summary cards */
+
+    .rm-summary-card {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--rm-border);
+        border-radius: 13px;
+        padding: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .rm-summary-card:hover {
+        box-shadow: 0 7px 20px rgba(15, 23, 42, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .rm-summary-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .rm-summary-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        font-size: 17px;
+    }
+
+    .rm-summary-icon.blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .rm-summary-icon.green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .rm-summary-icon.orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .rm-summary-icon.purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .rm-summary-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--rm-muted);
+        margin-bottom: 7px;
+    }
+
+    .rm-summary-value {
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .rm-summary-note {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 6px;
+    }
+
+    /* Main panel */
+
+    .rm-main-card {
+        background: #fff;
+        border: 1px solid var(--rm-border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.025);
+    }
+
+    .rm-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 22px 24px;
+        border-bottom: 1px solid var(--rm-border);
+    }
+
+    .rm-card-header h5 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .rm-card-header p {
+        font-size: 12px;
+        color: var(--rm-muted);
+        margin-bottom: 0;
+    }
+
+    .rm-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 18px 24px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #fcfcfd;
+    }
+
+    .rm-search-box {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+        max-width: 360px;
+    }
+
+    .rm-search-box i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 13px;
+    }
+
+    .rm-search-input {
+        width: 100%;
+        height: 40px;
+        padding: 9px 13px 9px 36px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .rm-search-input:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .rm-filter-select {
+        height: 40px;
+        min-width: 145px;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .rm-filter-select:focus {
+        border-color: #93c5fd;
+    }
+
+    /* Table */
+
+    .rm-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .rm-table {
+        width: 100%;
+        min-width: 850px;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+    }
+
+    .rm-table thead th {
+        background: #f8fafc;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--rm-border);
+        white-space: nowrap;
+    }
+
+    .rm-table tbody td {
+        padding: 18px 20px;
+        font-size: 13px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .rm-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .rm-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    .rm-matrix-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .rm-matrix-description {
+        max-width: 280px;
+        font-size: 12px;
+        color: #9ca3af;
+        line-height: 1.5;
+    }
+
+    .rm-scale-value {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 35px;
+        height: 29px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .rm-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 30px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .rm-badge-default {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .rm-badge-active {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .rm-badge-inactive {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .rm-configure-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #2563eb !important;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none !important;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+    }
+
+    .rm-configure-btn:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff !important;
+    }
+
+    .rm-empty-state {
+        text-align: center;
+        padding: 55px 20px !important;
+    }
+
+    .rm-empty-icon {
+        width: 65px;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 17px;
+        border-radius: 18px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 25px;
+    }
+
+    .rm-empty-state h5 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .rm-empty-state p {
+        max-width: 400px;
+        margin: 0 auto 20px;
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    .rm-table-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid var(--rm-border);
+        background: #fcfcfd;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .rm-footer-count strong {
+        color: #374151;
+    }
+
+    .rm-no-results {
+        display: none;
+        text-align: center;
+        padding: 30px 20px;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 767px) {
+        .risk-matrix-page .page-title {
+            font-size: 21px;
+        }
+
+        .rm-card-header,
+        .rm-toolbar,
+        .rm-table-footer {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .rm-search-box {
+            max-width: 100%;
+            flex-basis: 100%;
+        }
+
+        .rm-filter-select {
+            flex: 1;
+        }
+    }
+</style>
+
+
+<div class="risk-matrix-page">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+
+        <div>
+            <h3 class="page-title">
+                <i class="fas fa-th text-primary me-2"></i>
+                Risk Matrix Configuration
+            </h3>
+
+            <p class="page-description">
+                Manage common risk matrices used across HAZOP risk assessments.
+            </p>
+        </div>
+
+        <a href="{% url 'hazop:risk_matrix_create' %}"
+           class="rm-primary-btn">
+
+            <i class="fas fa-plus"></i>
+            Create Risk Matrix
+
+        </a>
+
+    </div>
+
+
+    <!-- SUMMARY CARDS -->
+    <div class="row mb-4">
+
+        <!-- Total -->
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rm-summary-card">
+
+                <div class="rm-summary-top">
+                    <div class="rm-summary-icon blue">
+                        <i class="fas fa-th"></i>
+                    </div>
+                </div>
+
+                <div class="rm-summary-label">
+                    Total Risk Matrices
+                </div>
+
+                <div class="rm-summary-value"
+                     id="rmTotalCount">
+                    {{ matrices|length }}
+                </div>
+
+                <div class="rm-summary-note">
+                    Configured matrices
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Active -->
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rm-summary-card">
+
+                <div class="rm-summary-top">
+                    <div class="rm-summary-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+
+                <div class="rm-summary-label">
+                    Active Matrices
+                </div>
+
+                <div class="rm-summary-value">
+                    {% with active_count=matrices|dictsort:"is_active" %}
+                        {% for matrix in matrices %}
+                            {% if matrix.is_active %}
+                                {% if forloop.first %}
+                                    <span class="rm-active-counter">1</span>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    <span id="rmActiveCount">0</span>
+                </div>
+
+                <div class="rm-summary-note">
+                    Available for use
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Inactive -->
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rm-summary-card">
+
+                <div class="rm-summary-top">
+                    <div class="rm-summary-icon orange">
+                        <i class="fas fa-pause-circle"></i>
+                    </div>
+                </div>
+
+                <div class="rm-summary-label">
+                    Inactive Matrices
+                </div>
+
+                <div class="rm-summary-value"
+                     id="rmInactiveCount">
+                    0
+                </div>
+
+                <div class="rm-summary-note">
+                    Currently disabled
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Default -->
+        <div class="col-xl-3 col-md-6 mb-3">
+
+            <div class="rm-summary-card">
+
+                <div class="rm-summary-top">
+                    <div class="rm-summary-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+
+                <div class="rm-summary-label">
+                    Default Matrix
+                </div>
+
+                <div class="rm-summary-value"
+                     id="rmDefaultCount">
+                    0
+                </div>
+
+                <div class="rm-summary-note">
+                    Primary risk matrix
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MATRIX TABLE -->
+    <div class="rm-main-card">
+
+        <div class="rm-card-header">
+
+            <div>
+                <h5>
+                    Configured Risk Matrices
+                </h5>
+
+                <p>
+                    View matrices and configure their risk rating values.
+                </p>
+            </div>
+
+            <span class="rm-badge rm-badge-default">
+                <i class="fas fa-info-circle"></i>
+                Common Configuration
+            </span>
+
+        </div>
+
+
+        <!-- SEARCH AND FILTER -->
+        <div class="rm-toolbar">
+
+            <div class="rm-search-box">
+                <i class="fas fa-search"></i>
+
+                <input type="text"
+                       id="rmSearchInput"
+                       class="rm-search-input"
+                       placeholder="Search matrix name or description...">
+            </div>
+
+            <select id="rmStatusFilter"
+                    class="rm-filter-select">
+
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+
+            </select>
+
+            <select id="rmDefaultFilter"
+                    class="rm-filter-select">
+
+                <option value="all">All Matrices</option>
+                <option value="default">Default Only</option>
+                <option value="non-default">Non-default</option>
+
+            </select>
+
+        </div>
+
+
+        <!-- TABLE -->
+        <div class="rm-table-wrapper">
+
+            <table class="rm-table">
+
+                <thead>
+                    <tr>
+                        <th style="width: 55px;">#</th>
+                        <th>Matrix Name</th>
+                        <th>Likelihood Scale</th>
+                        <th>Severity Scale</th>
+                        <th>Default</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="rmMatrixTableBody">
+
+                    {% for matrix in matrices %}
+
+                    <tr class="rm-matrix-row"
+                        data-name="{{ matrix.name|lower }}"
+                        data-description="{{ matrix.description|default:''|lower }}"
+                        data-status="{% if matrix.is_active %}active{% else %}inactive{% endif %}"
+                        data-default="{% if matrix.is_default %}default{% else %}non-default{% endif %}">
+
+                        <td class="rm-row-number">
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+
+                            <div class="rm-matrix-name">
+                                {{ matrix.name }}
+                            </div>
+
+                            {% if matrix.description %}
+                                <div class="rm-matrix-description">
+                                    {{ matrix.description|truncatechars:90 }}
+                                </div>
+                            {% else %}
+                                <div class="rm-matrix-description">
+                                    No description provided
+                                </div>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            <span class="rm-scale-value">
+                                {{ matrix.likelihood_scale }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="rm-scale-value">
+                                {{ matrix.severity_scale }}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            {% if matrix.is_default %}
+
+                                <span class="rm-badge rm-badge-default">
+                                    <i class="fas fa-star"></i>
+                                    Default
+                                </span>
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Not Default
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if matrix.is_active %}
+
+                                <span class="rm-badge rm-badge-active">
+                                    <i class="fas fa-circle"
+                                       style="font-size: 6px;"></i>
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span class="rm-badge rm-badge-inactive">
+                                    <i class="fas fa-circle"
+                                       style="font-size: 6px;"></i>
+                                    Inactive
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a href="{% url 'hazop:risk_matrix_rating_create' matrix.pk %}"
+                               class="rm-configure-btn">
+
+                                <i class="fas fa-sliders-h"></i>
+                                Configure Ratings
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7">
+
+                            <div class="rm-empty-state">
+
+                                <div class="rm-empty-icon">
+                                    <i class="fas fa-th"></i>
+                                </div>
+
+                                <h5>No Risk Matrix Configured</h5>
+
+                                <p>
+                                    Create your first risk matrix to define
+                                    likelihood, severity and risk rating
+                                    values for HAZOP assessments.
+                                </p>
+
+                                <a href="{% url 'hazop:risk_matrix_create' %}"
+                                   class="rm-primary-btn">
+
+                                    <i class="fas fa-plus"></i>
+                                    Create Risk Matrix
+
+                                </a>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            <div class="rm-no-results"
+                 id="rmNoResults">
+
+                <i class="fas fa-search me-2"></i>
+                No risk matrices match your search or filters.
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE FOOTER -->
+        <div class="rm-table-footer">
+
+            <div class="rm-footer-count">
+                Showing <strong id="rmVisibleCount">0</strong>
+                of <strong id="rmTotalFooterCount">0</strong> matrices
+            </div>
+
+            <div>
+                <i class="fas fa-info-circle me-1"></i>
+                Configure ratings for each matrix
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- INFORMATION -->
+    <div class="alert alert-light border mt-4 mb-0"
+         style="border-radius: 10px;">
+
+        <div class="d-flex align-items-start gap-3">
+
+            <i class="fas fa-lightbulb text-primary mt-1"></i>
+
+            <div>
+                <strong class="d-block mb-1"
+                        style="font-size: 13px;">
+                    Risk Matrix Information
+                </strong>
+
+                <p class="text-muted mb-0"
+                   style="font-size: 12px; line-height: 1.7;">
+
+                    Risk matrices define how likelihood and severity
+                    are combined to determine risk ratings.
+                    Individual HAZOP worksheets use the configured
+                    matrix when assessing initial and residual risks.
+
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("rmSearchInput");
+    const statusFilter = document.getElementById("rmStatusFilter");
+    const defaultFilter = document.getElementById("rmDefaultFilter");
+
+    const rows = Array.from(
+        document.querySelectorAll(".rm-matrix-row")
+    );
+
+    const noResults = document.getElementById("rmNoResults");
+
+    const visibleCount = document.getElementById("rmVisibleCount");
+    const totalFooterCount = document.getElementById("rmTotalFooterCount");
+
+    const activeCount = document.getElementById("rmActiveCount");
+    const inactiveCount = document.getElementById("rmInactiveCount");
+    const defaultCount = document.getElementById("rmDefaultCount");
+
+    const totalCount = rows.length;
+
+    let activeTotal = 0;
+    let inactiveTotal = 0;
+    let defaultTotal = 0;
+
+    rows.forEach(function (row) {
+
+        if (row.dataset.status === "active") {
+            activeTotal++;
+        }
+
+        if (row.dataset.status === "inactive") {
+            inactiveTotal++;
+        }
+
+        if (row.dataset.default === "default") {
+            defaultTotal++;
+        }
+
+    });
+
+    activeCount.textContent = activeTotal;
+    inactiveCount.textContent = inactiveTotal;
+    defaultCount.textContent = defaultTotal;
+
+    totalFooterCount.textContent = totalCount;
+
+
+    function filterMatrices() {
+
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const selectedStatus = statusFilter.value;
+        const selectedDefault = defaultFilter.value;
+
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const name = row.dataset.name || "";
+            const description = row.dataset.description || "";
+            const status = row.dataset.status;
+            const isDefault = row.dataset.default;
+
+            const matchesSearch =
+                name.includes(searchTerm) ||
+                description.includes(searchTerm);
+
+            const matchesStatus =
+                selectedStatus === "all" ||
+                status === selectedStatus;
+
+            const matchesDefault =
+                selectedDefault === "all" ||
+                isDefault === selectedDefault;
+
+            const shouldShow =
+                matchesSearch &&
+                matchesStatus &&
+                matchesDefault;
+
+            row.style.display = shouldShow ? "" : "none";
+
+            if (shouldShow) {
+                visible++;
+            }
+
+        });
+
+        visibleCount.textContent = visible;
+
+        noResults.style.display =
+            visible === 0 && totalCount > 0 ? "block" : "none";
+
+    }
+
+
+    searchInput.addEventListener("input", filterMatrices);
+    statusFilter.addEventListener("change", filterMatrices);
+    defaultFilter.addEventListener("change", filterMatrices);
+
+    filterMatrices();
+
+});
+</script>
+
+{% endblock %}

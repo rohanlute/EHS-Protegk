@@ -1,0 +1,879 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}HAZOP Configuration{% endblock %}
+{% block page_title %}HAZOP Configuration{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:dashboard' %}">HAZOP</a>
+</li>
+<li class="breadcrumb-item active">Configuration</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-config-page {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-size: 13px;
+        color: #344054;
+        overflow-x: hidden;
+    }
+
+    .hazop-config-page *,
+    .hazop-config-page *::before,
+    .hazop-config-page *::after {
+        box-sizing: border-box;
+    }
+
+    /* Page heading */
+
+    .hazop-config-page .config-intro {
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    .hazop-config-page .config-heading {
+        font-size: 20px;
+        font-weight: 600;
+        color: #263445;
+        margin-bottom: 6px;
+    }
+
+    .hazop-config-page .config-subheading {
+        font-size: 13px;
+        color: #7b8794;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Section heading */
+
+    .hazop-config-page .config-section {
+        width: 100%;
+        margin-bottom: 28px;
+    }
+
+    .hazop-config-page .config-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e8edf2;
+    }
+
+    .hazop-config-page .config-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #29384a;
+        margin: 0;
+    }
+
+    .hazop-config-page .config-section-title i {
+        color: #2878c7;
+        font-size: 15px;
+    }
+
+    .hazop-config-page .config-section-description {
+        font-size: 11px;
+        color: #98a2b3;
+        margin: 0;
+        text-align: right;
+    }
+
+    /* Full-width responsive card grid */
+
+    .hazop-config-page .config-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        width: 100%;
+        margin: 0;
+    }
+
+    .hazop-config-page .config-column {
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Configuration card */
+
+    .hazop-config-page .config-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        min-height: 190px;
+        height: 100%;
+        background: #ffffff;
+        border: 1px solid #e8edf2;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(20, 40, 70, 0.04);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        overflow: hidden;
+    }
+
+    .hazop-config-page .config-card:hover {
+        box-shadow: 0 6px 18px rgba(20, 40, 70, 0.09);
+        transform: translateY(-2px);
+    }
+
+    .hazop-config-page .config-card-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+        padding: 18px;
+    }
+
+    /* Icon and title */
+
+    .hazop-config-page .config-card-top {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        margin-bottom: 12px;
+    }
+
+    .hazop-config-page .config-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 9px;
+        margin-right: 12px;
+        font-size: 16px;
+    }
+
+    .hazop-config-page .config-icon-blue {
+        color: #2878c7;
+        background: #eaf3ff;
+    }
+
+    .hazop-config-page .config-icon-green {
+        color: #21966b;
+        background: #e8f8f1;
+    }
+
+    .hazop-config-page .config-icon-orange {
+        color: #c9821a;
+        background: #fff4e2;
+    }
+
+    .hazop-config-page .config-icon-purple {
+        color: #7856c7;
+        background: #f1ebff;
+    }
+
+    .hazop-config-page .config-icon-red {
+        color: #d65353;
+        background: #fff0f0;
+    }
+
+    .hazop-config-page .config-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #29384a;
+        line-height: 1.4;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    /* Description */
+
+    .hazop-config-page .config-card-description {
+        font-size: 12px;
+        line-height: 1.6;
+        color: #7b8794;
+        margin-bottom: 15px;
+        min-height: 38px;
+    }
+
+    /* Card footer */
+
+    .hazop-config-page .config-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid #f0f2f5;
+    }
+
+    .hazop-config-page .config-count {
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: #263445;
+        margin: 0;
+    }
+
+    .hazop-config-page .config-count-label {
+        font-size: 10px;
+        color: #98a2b3;
+        margin-top: 3px;
+    }
+
+    .hazop-config-page .config-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 10px;
+        border-radius: 5px;
+        white-space: nowrap;
+        line-height: 1.4;
+    }
+
+    .hazop-config-page .config-btn i {
+        margin-left: 5px;
+        font-size: 10px;
+    }
+
+    /* Laptop */
+
+    @media (max-width: 1200px) {
+        .hazop-config-page .config-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    /* Tablet */
+
+    @media (max-width: 992px) {
+        .hazop-config-page .config-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+    }
+
+    /* Mobile */
+
+    @media (max-width: 575.98px) {
+        .hazop-config-page .config-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .hazop-config-page .config-heading {
+            font-size: 18px;
+        }
+
+        .hazop-config-page .config-section-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .hazop-config-page .config-section-description {
+            text-align: left;
+        }
+
+        .hazop-config-page .config-card {
+            min-height: 165px;
+        }
+
+        .hazop-config-page .config-card-body {
+            padding: 15px;
+        }
+    }
+</style>
+
+<div class="hazop-config-page">
+
+    <!-- Page Intro -->
+    <div class="config-intro">
+        <h4 class="config-heading">Configuration Masters</h4>
+        <p class="config-subheading">
+            Manage the master data used across HAZOP studies, process analysis,
+            deviation identification and risk assessment.
+        </p>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- STUDY SETUP -->
+    <!-- ===================================================== -->
+
+    <div class="config-section">
+
+        <div class="config-section-header">
+            <h5 class="config-section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Study Setup
+            </h5>
+            <p class="config-section-description">
+                Study-related configuration
+            </p>
+        </div>
+
+        <div class="config-row">
+
+            <!-- Study Types -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-blue">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h5 class="config-card-title">Study Types</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Configure initial studies, revalidation and MOC reviews.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <div>
+                                <div class="config-count">{{ study_type_count }}</div>
+                                <div class="config-count-label">Study types</div>
+                            </div>
+
+                            <a href="{% url 'hazop:study_type_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Statuses -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-green">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <h5 class="config-card-title">Study Statuses</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define workflow statuses used to track study progress.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <div>
+                                <div class="config-count">{{ study_status_count }}</div>
+                                <div class="config-count-label">Statuses</div>
+                            </div>
+
+                            <a href="{% url 'hazop:study_status_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Methodologies -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-purple">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h5 class="config-card-title">Study Methodologies</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Configure methodologies used to conduct HAZOP studies.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Study methods</span>
+
+                            <a href="{% url 'hazop:study_methodology_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Priorities -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-orange">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                            <h5 class="config-card-title">Study Priorities</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define priority levels for planning and scheduling studies.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Priority levels</span>
+
+                            <a href="{% url 'hazop:study_priority_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Types -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-blue">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <h5 class="config-card-title">Process Types</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Categorize processes covered by HAZOP studies.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Process categories</span>
+
+                            <a href="{% url 'hazop:process_type_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- HAZOP ANALYSIS -->
+    <!-- ===================================================== -->
+
+    <div class="config-section">
+
+        <div class="config-section-header">
+            <h5 class="config-section-title">
+                <i class="fas fa-project-diagram"></i>
+                HAZOP Analysis
+            </h5>
+            <p class="config-section-description">
+                Node, parameter and deviation masters
+            </p>
+        </div>
+
+        <div class="config-row">
+
+            <!-- Node Types -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-green">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
+                            <h5 class="config-card-title">Node Types</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define the types of process nodes used in a study.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Node categories</span>
+
+                            <a href="{% url 'hazop:node_type_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment Types -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-orange">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <h5 class="config-card-title">Equipment Types</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Maintain equipment categories for process nodes.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Equipment categories</span>
+
+                            <a href="{% url 'hazop:equipment_type_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Parameters -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-orange">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <h5 class="config-card-title">Process Parameters</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Maintain flow, pressure, temperature, level and other parameters.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <div>
+                                <div class="config-count">{{ parameter_count }}</div>
+                                <div class="config-count-label">Parameters</div>
+                            </div>
+
+                            <a href="{% url 'hazop:parameter_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guide Words -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-purple">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <h5 class="config-card-title">Guide Words</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Maintain guide words used to identify process deviations.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <div>
+                                <div class="config-count">{{ guide_word_count }}</div>
+                                <div class="config-count-label">Guide words</div>
+                            </div>
+
+                            <a href="{% url 'hazop:guide_word_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameter Guide Word Mapping -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-blue">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <h5 class="config-card-title">Parameter Guide Word Mapping</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define which guide words are applicable to each parameter.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Parameter mappings</span>
+
+                            <a href="{% url 'hazop:parameter_guideword_mapping_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deviation Templates -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-red">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <h5 class="config-card-title">Deviation Templates</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Configure parameter and guide word combinations for common deviations.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <div>
+                                <div class="config-count">{{ deviation_template_count }}</div>
+                                <div class="config-count-label">Templates</div>
+                            </div>
+
+                            <a href="{% url 'hazop:deviation_template_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- RISK AND ACTION CONFIGURATION -->
+    <!-- ===================================================== -->
+
+    <div class="config-section">
+
+        <div class="config-section-header">
+            <h5 class="config-section-title">
+                <i class="fas fa-shield-alt"></i>
+                Risk and Action Configuration
+            </h5>
+            <p class="config-section-description">
+                Causes, consequences, safeguards and risk masters
+            </p>
+        </div>
+
+        <div class="config-row">
+
+            <!-- Cause Categories -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-orange">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h5 class="config-card-title">Cause Categories</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Categorize potential causes of process deviations.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Cause categories</span>
+
+                            <a href="{% url 'hazop:cause_category_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consequence Categories -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-red">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h5 class="config-card-title">Consequence Categories</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Categorize potential impacts on people, assets and environment.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Consequence categories</span>
+
+                            <a href="{% url 'hazop:consequence_category_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safeguard Categories -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-green">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h5 class="config-card-title">Safeguard Categories</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define existing safeguards and protection measures.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Safeguard categories</span>
+
+                            <a href="{% url 'hazop:safeguard_category_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendation Categories -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-purple">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h5 class="config-card-title">Recommendation Categories</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Categorize recommendations and actions raised during analysis.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Recommendation categories</span>
+
+                            <a href="{% url 'hazop:recommendation_category_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Severity -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-red">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h5 class="config-card-title">Severity Levels</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Configure severity levels used in risk assessment.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Severity levels</span>
+
+                            <a href="{% url 'hazop:severity_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Likelihood -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-orange">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h5 class="config-card-title">Likelihood Levels</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Configure likelihood levels for risk evaluation.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Likelihood levels</span>
+
+                            <a href="{% url 'hazop:likelihood_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Frequency -->
+            <div class="config-column">
+                <div class="config-card">
+                    <div class="config-card-body">
+                        <div class="config-card-top">
+                            <div class="config-icon config-icon-blue">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h5 class="config-card-title">Review Frequencies</h5>
+                        </div>
+
+                        <p class="config-card-description">
+                            Define periodic review intervals for HAZOP studies.
+                        </p>
+
+                        <div class="config-card-footer">
+                            <span class="config-count-label">Review intervals</span>
+
+                            <a href="{% url 'hazop:review_frequency_list' %}"
+                               class="btn btn-outline-primary config-btn">
+                                Manage <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

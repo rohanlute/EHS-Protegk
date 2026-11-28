@@ -1,0 +1,760 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .risk-matrix-form-page {
+        --rm-primary: #2563eb;
+        --rm-border: #e5e7eb;
+        --rm-text: #1f2937;
+        --rm-muted: #6b7280;
+        color: var(--rm-text);
+    }
+
+    /* Header */
+
+    .rm-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .rm-form-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .rm-form-title-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eff6ff;
+        color: #2563eb;
+        border-radius: 13px;
+        font-size: 21px;
+        flex-shrink: 0;
+    }
+
+    .rm-form-title h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .rm-form-title p {
+        font-size: 13px;
+        color: var(--rm-muted);
+        margin-bottom: 0;
+    }
+
+    .rm-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #4b5563;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        padding: 10px 14px;
+        border: 1px solid var(--rm-border);
+        border-radius: 8px;
+        background: #fff;
+        transition: all 0.2s ease;
+    }
+
+    .rm-back-link:hover {
+        background: #f9fafb;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+
+    /* Main layout */
+
+    .rm-form-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 310px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .rm-form-card {
+        background: #fff;
+        border: 1px solid var(--rm-border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.025);
+    }
+
+    .rm-form-card-header {
+        padding: 22px 25px;
+        border-bottom: 1px solid var(--rm-border);
+        background: #fcfcfd;
+    }
+
+    .rm-form-card-header h5 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .rm-form-card-header p {
+        font-size: 12px;
+        color: var(--rm-muted);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .rm-form-card-body {
+        padding: 25px;
+    }
+
+    /* Form fields */
+
+    .rm-field {
+        margin-bottom: 22px;
+    }
+
+    .rm-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .rm-field-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .rm-required {
+        color: #dc2626;
+        margin-left: 3px;
+    }
+
+    .rm-field-help {
+        display: block;
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 7px;
+        line-height: 1.5;
+    }
+
+    .risk-matrix-form-page input:not([type="checkbox"]):not([type="radio"]),
+    .risk-matrix-form-page select,
+    .risk-matrix-form-page textarea {
+        display: block;
+        width: 100%;
+        min-height: 43px;
+        padding: 10px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .risk-matrix-form-page textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .risk-matrix-form-page input:focus,
+    .risk-matrix-form-page select:focus,
+    .risk-matrix-form-page textarea:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .risk-matrix-form-page input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        accent-color: #2563eb;
+        cursor: pointer;
+    }
+
+    .rm-checkbox-field {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+    .rm-checkbox-field input {
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+
+    .rm-checkbox-content label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+
+    .rm-checkbox-content small {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    /* Validation */
+
+    .rm-field-errors {
+        margin-top: 7px;
+    }
+
+    .rm-field-errors div {
+        font-size: 12px;
+        color: #dc2626;
+        margin-top: 4px;
+    }
+
+    .rm-form-error {
+        padding: 14px 16px;
+        margin-bottom: 22px;
+        border: 1px solid #fecaca;
+        border-radius: 9px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 13px;
+    }
+
+    .rm-form-error ul {
+        padding-left: 20px;
+        margin: 8px 0 0;
+    }
+
+    /* Footer */
+
+    .rm-form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 20px 25px;
+        border-top: 1px solid var(--rm-border);
+        background: #fcfcfd;
+    }
+
+    .rm-form-footer-note {
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    .rm-form-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .rm-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .rm-btn-primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.16);
+    }
+
+    .rm-btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #4b5563 !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .rm-btn-secondary:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    /* Sidebar */
+
+    .rm-form-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .rm-sidebar-card {
+        background: #fff;
+        border: 1px solid var(--rm-border);
+        border-radius: 13px;
+        padding: 21px;
+    }
+
+    .rm-sidebar-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+
+    .rm-sidebar-title i {
+        color: #2563eb;
+    }
+
+    .rm-sidebar-card p {
+        font-size: 12px;
+        line-height: 1.7;
+        color: #6b7280;
+        margin-bottom: 0;
+    }
+
+    .rm-step-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .rm-step-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        margin-bottom: 15px;
+    }
+
+    .rm-step-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .rm-step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 25px;
+        height: 25px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .rm-step-content strong {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+
+    .rm-step-content span {
+        display: block;
+        font-size: 11px;
+        color: #9ca3af;
+        line-height: 1.5;
+    }
+
+    .rm-sidebar-note {
+        padding: 15px;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+    }
+
+    .rm-sidebar-note strong {
+        display: block;
+        font-size: 12px;
+        color: #1d4ed8;
+        margin-bottom: 6px;
+    }
+
+    .rm-sidebar-note p {
+        color: #1e40af;
+        font-size: 11px;
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 991px) {
+        .rm-form-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .rm-form-sidebar {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .rm-form-title h3 {
+            font-size: 21px;
+        }
+
+        .rm-form-card-body {
+            padding: 20px;
+        }
+
+        .rm-form-footer {
+            padding: 18px 20px;
+            align-items: flex-start;
+        }
+
+        .rm-form-actions {
+            width: 100%;
+        }
+
+        .rm-form-actions .rm-btn-primary,
+        .rm-form-actions .rm-btn-secondary {
+            flex: 1;
+        }
+
+        .rm-form-sidebar {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<div class="risk-matrix-form-page">
+
+    <!-- PAGE HEADER -->
+    <div class="rm-form-header">
+
+        <div class="rm-form-title">
+
+            <div class="rm-form-title-icon">
+                <i class="fas fa-th"></i>
+            </div>
+
+            <div>
+                <h3>{{ page_title }}</h3>
+
+                <p>
+                    Configure the scoring scale for your HAZOP Risk Matrix.
+                </p>
+            </div>
+
+        </div>
+
+        <a href="{% url 'hazop:risk_matrix_list' %}"
+           class="rm-back-link">
+
+            <i class="fas fa-arrow-left"></i>
+            Back to Risk Matrices
+
+        </a>
+
+    </div>
+
+
+    <!-- FORM LAYOUT -->
+    <div class="rm-form-layout">
+
+        <!-- MAIN FORM -->
+        <div class="rm-form-card">
+
+            <div class="rm-form-card-header">
+
+                <h5>
+                    Risk Matrix Details
+                </h5>
+
+                <p>
+                    Enter the matrix name, scoring scales and configuration options.
+                </p>
+
+            </div>
+
+
+            <form method="post"
+                  novalidate>
+
+                {% csrf_token %}
+
+
+                <div class="rm-form-card-body">
+
+                    <!-- NON FIELD ERRORS -->
+                    {% if form.non_field_errors %}
+
+                        <div class="rm-form-error">
+
+                            <strong>
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                Please correct the following errors
+                            </strong>
+
+                            <ul>
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- FORM FIELDS -->
+                    {% for field in form %}
+
+                        <div class="rm-field">
+
+                            {% if field.field.widget.input_type == "checkbox" %}
+
+                                <div class="rm-checkbox-field">
+
+                                    {{ field }}
+
+                                    <div class="rm-checkbox-content">
+
+                                        <label for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                        </label>
+
+                                        {% if field.help_text %}
+                                            <small>
+                                                {{ field.help_text }}
+                                            </small>
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            {% else %}
+
+                                <label class="rm-field-label"
+                                       for="{{ field.id_for_label }}">
+
+                                    {{ field.label }}
+
+                                    {% if field.field.required %}
+                                        <span class="rm-required">*</span>
+                                    {% endif %}
+
+                                </label>
+
+                                {{ field }}
+
+                                {% if field.help_text %}
+                                    <small class="rm-field-help">
+                                        {{ field.help_text }}
+                                    </small>
+                                {% endif %}
+
+                            {% endif %}
+
+
+                            <!-- FIELD ERRORS -->
+                            {% if field.errors %}
+
+                                <div class="rm-field-errors">
+
+                                    {% for error in field.errors %}
+                                        <div>
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <!-- FORM FOOTER -->
+                <div class="rm-form-footer">
+
+                    <div class="rm-form-footer-note">
+                        <i class="fas fa-lock me-1"></i>
+                        Your configuration will be saved securely.
+                    </div>
+
+                    <div class="rm-form-actions">
+
+                        <a href="{% url 'hazop:risk_matrix_list' %}"
+                           class="rm-btn-secondary">
+
+                            Cancel
+
+                        </a>
+
+                        <button type="submit"
+                                class="rm-btn-primary">
+
+                            <i class="fas fa-save"></i>
+                            Save and Configure Ratings
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- SIDEBAR -->
+        <div class="rm-form-sidebar">
+
+            <!-- Steps -->
+            <div class="rm-sidebar-card">
+
+                <div class="rm-sidebar-title">
+                    <i class="fas fa-list-ol"></i>
+                    Configuration Steps
+                </div>
+
+                <ul class="rm-step-list">
+
+                    <li>
+
+                        <div class="rm-step-number">
+                            1
+                        </div>
+
+                        <div class="rm-step-content">
+
+                            <strong>Create Risk Matrix</strong>
+
+                            <span>
+                                Enter matrix details and scoring scale.
+                            </span>
+
+                        </div>
+
+                    </li>
+
+                    <li>
+
+                        <div class="rm-step-number">
+                            2
+                        </div>
+
+                        <div class="rm-step-content">
+
+                            <strong>Configure Ratings</strong>
+
+                            <span>
+                                Define risk scores for likelihood and severity.
+                            </span>
+
+                        </div>
+
+                    </li>
+
+                    <li>
+
+                        <div class="rm-step-number">
+                            3
+                        </div>
+
+                        <div class="rm-step-content">
+
+                            <strong>Use in Assessment</strong>
+
+                            <span>
+                                Apply the matrix to HAZOP worksheet risk assessments.
+                            </span>
+
+                        </div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <!-- Information -->
+            <div class="rm-sidebar-card">
+
+                <div class="rm-sidebar-title">
+                    <i class="fas fa-info-circle"></i>
+                    About Risk Matrix
+                </div>
+
+                <p>
+                    A risk matrix combines likelihood and severity
+                    to determine the risk rating of a hazard or
+                    process deviation.
+                </p>
+
+            </div>
+
+
+            <!-- Note -->
+            <div class="rm-sidebar-note">
+
+                <strong>
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Configuration Tip
+                </strong>
+
+                <p>
+                    Use a consistent scoring scale across your
+                    HAZOP studies. The matrix can be shared by
+                    multiple worksheets.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

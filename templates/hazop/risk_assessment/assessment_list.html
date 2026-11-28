@@ -1,0 +1,998 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}Risk Assessments | HAZOP{% endblock %}
+{% block page_title %}Risk Assessments{% endblock %}
+
+{% block content %}
+
+<style>
+    .risk-page {
+        padding: 20px 0 30px;
+        color: #263449;
+    }
+
+    .risk-page-header {
+        margin-bottom: 24px;
+    }
+
+    .risk-page-header h3 {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #243247;
+        margin-bottom: 6px;
+    }
+
+    .risk-page-subtitle {
+        font-size: 13px;
+        color: #7b8798;
+        margin-bottom: 0;
+    }
+
+    .risk-context {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 9px 13px;
+        background: #f5f8fc;
+        border: 1px solid #e8edf5;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .risk-context strong {
+        color: #334155;
+        font-weight: 600;
+    }
+
+    .risk-header-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .risk-header-actions .btn {
+        border-radius: 8px;
+        font-size: 12px;
+        padding: 8px 13px;
+    }
+
+    /* Summary cards */
+
+    .risk-summary-card {
+        background: #fff;
+        border: 1px solid #e8edf3;
+        border-radius: 12px;
+        padding: 18px;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .025);
+    }
+
+    .risk-summary-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .risk-summary-label {
+        font-size: 12px;
+        color: #718096;
+        font-weight: 500;
+    }
+
+    .risk-summary-icon {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 15px;
+    }
+
+    .risk-icon-blue {
+        background: #eef4ff;
+        color: #4169e1;
+    }
+
+    .risk-icon-red {
+        background: #fff0f0;
+        color: #dc3545;
+    }
+
+    .risk-icon-green {
+        background: #eafaf1;
+        color: #159957;
+    }
+
+    .risk-icon-orange {
+        background: #fff5e8;
+        color: #e67e22;
+    }
+
+    .risk-summary-value {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: #1e293b;
+    }
+
+    .risk-summary-description {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 7px;
+    }
+
+    /* Register container */
+
+    .risk-register-card {
+        background: #fff;
+        border: 1px solid #e8edf3;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, .035);
+        overflow: hidden;
+    }
+
+    .risk-register-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #edf1f5;
+        background: #fff;
+    }
+
+    .risk-register-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #263449;
+        margin-bottom: 4px;
+    }
+
+    .risk-register-subtitle {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-bottom: 0;
+    }
+
+    .risk-register-count {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 11px;
+        border-radius: 20px;
+        background: #eef4ff;
+        color: #3566d6;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Toolbar */
+
+    .risk-toolbar {
+        padding: 15px 20px;
+        border-bottom: 1px solid #edf1f5;
+        background: #fcfdff;
+    }
+
+    .risk-search {
+        position: relative;
+    }
+
+    .risk-search i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    .risk-search input {
+        padding-left: 36px;
+    }
+
+    .risk-toolbar .form-control {
+        height: 38px;
+        border: 1px solid #dfe6ee;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #475569;
+        box-shadow: none;
+    }
+
+    .risk-toolbar .form-control:focus {
+        border-color: #8db5ff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .08);
+    }
+
+    /* Table */
+
+    .risk-table {
+        margin-bottom: 0;
+        font-size: 12px;
+        min-width: 1100px;
+    }
+
+    .risk-table thead th {
+        background: #f8fafc;
+        color: #718096;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .45px;
+        padding: 14px 16px;
+        border-top: 0;
+        border-bottom: 1px solid #e8edf3;
+        white-space: nowrap;
+    }
+
+    .risk-table tbody td {
+        padding: 15px 16px;
+        vertical-align: middle;
+        border-color: #edf1f5;
+        color: #64748b;
+    }
+
+    .risk-table tbody tr:hover {
+        background: #f9fbfe;
+    }
+
+    .risk-assessment-number {
+        color: #3566d6;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .risk-hazard-title {
+        min-width: 190px;
+        max-width: 300px;
+        color: #334155;
+        font-weight: 600;
+        white-space: normal;
+        line-height: 1.5;
+    }
+
+    .risk-secondary-text {
+        display: block;
+        margin-top: 4px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 400;
+    }
+
+    .risk-score-wrapper {
+        min-width: 85px;
+    }
+
+    .risk-score {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .risk-score-low {
+        background: #e8f7ee;
+        color: #198754;
+    }
+
+    .risk-score-medium {
+        background: #fff4d6;
+        color: #946200;
+    }
+
+    .risk-score-high {
+        background: #ffeadb;
+        color: #c45a12;
+    }
+
+    .risk-score-critical {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .risk-score-neutral {
+        background: #f1f5f9;
+        color: #94a3b8;
+    }
+
+    .risk-level-name {
+        display: block;
+        margin-top: 5px;
+        font-size: 10px;
+        color: #94a3b8;
+    }
+
+    /* Status */
+
+    .risk-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .risk-status-draft {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .risk-status-submitted {
+        background: #eaf2ff;
+        color: #2563eb;
+    }
+
+    .risk-status-under-review {
+        background: #fff4d6;
+        color: #946200;
+    }
+
+    .risk-status-rejected {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .risk-status-approved {
+        background: #e8f7ee;
+        color: #198754;
+    }
+
+    .risk-status-closed {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    /* Assignment and due date */
+
+    .risk-assigned-user {
+        min-width: 130px;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .risk-assigned-user i {
+        color: #94a3b8;
+        margin-right: 5px;
+    }
+
+    .risk-due-date {
+        white-space: nowrap;
+        color: #475569;
+    }
+
+    .risk-due-date.overdue {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .risk-due-date.overdue i {
+        margin-right: 4px;
+    }
+
+    /* Actions */
+
+    .risk-action-group {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .risk-action-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 7px;
+        font-size: 12px;
+    }
+
+    /* Empty state */
+
+    .risk-empty-state {
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+    .risk-empty-icon {
+        width: 60px;
+        height: 60px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #94a3b8;
+        border-radius: 16px;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .risk-empty-state h6 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+    .risk-empty-state p {
+        font-size: 12px;
+        color: #94a3b8;
+        line-height: 1.7;
+        margin-bottom: 18px;
+    }
+
+    .risk-empty-state .btn {
+        border-radius: 8px;
+        font-size: 12px;
+        padding: 8px 14px;
+    }
+
+    .risk-register-footer {
+        padding: 13px 20px;
+        background: #fcfdff;
+        border-top: 1px solid #edf1f5;
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    .risk-no-results {
+        display: none;
+    }
+
+    @media (max-width: 767px) {
+        .risk-page-header h3 {
+            font-size: 1.25rem;
+        }
+
+        .risk-header-actions {
+            justify-content: flex-start;
+            margin-top: 15px;
+        }
+
+        .risk-summary-card {
+            margin-bottom: 12px;
+        }
+
+        .risk-register-header {
+            padding: 15px;
+        }
+
+        .risk-toolbar {
+            padding: 12px 15px;
+        }
+    }
+</style>
+
+<div class="container-fluid risk-page">
+
+    <!-- Page Header -->
+    <div class="risk-page-header">
+        <div class="row align-items-center">
+
+            <div class="col-lg-8">
+                <h3>
+                    <i class="fas fa-shield-alt text-primary mr-2"></i>
+                    Risk Assessments
+                </h3>
+
+                <p class="risk-page-subtitle">
+                    Manage HAZOP risk evaluations, safeguards and residual risks.
+                </p>
+
+                <div class="risk-context">
+                    <span>
+                        <strong>Study:</strong>
+                        {{ study }}
+                    </span>
+
+                    <span class="risk-context-divider">|</span>
+
+                    <span>
+                        <strong>Node:</strong>
+                        {{ node }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="risk-header-actions">
+                    <a href="{% url 'hazop:node_list' study_pk=study.pk %}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        Back to Nodes
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="risk-summary-card">
+                <div class="risk-summary-top">
+                    <span class="risk-summary-label">Total Assessments</span>
+                    <span class="risk-summary-icon risk-icon-blue">
+                        <i class="far fa-clipboard"></i>
+                    </span>
+                </div>
+
+                <div class="risk-summary-value">
+                    {{ assessments|length }}
+                </div>
+
+                <div class="risk-summary-description">
+                    Assessments created for this node
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="risk-summary-card">
+                <div class="risk-summary-top">
+                    <span class="risk-summary-label">High Initial Risks</span>
+                    <span class="risk-summary-icon risk-icon-red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </span>
+                </div>
+
+                <div class="risk-summary-value">
+                    {{ high_initial_count|default:"0" }}
+                </div>
+
+                <div class="risk-summary-description">
+                    High and critical initial risk levels
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="risk-summary-card">
+                <div class="risk-summary-top">
+                    <span class="risk-summary-label">Residual Evaluated</span>
+                    <span class="risk-summary-icon risk-icon-green">
+                        <i class="fas fa-shield-alt"></i>
+                    </span>
+                </div>
+
+                <div class="risk-summary-value">
+                    {{ residual_evaluated_count|default:"0" }}
+                </div>
+
+                <div class="risk-summary-description">
+                    Assessments with residual risk evaluated
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="risk-summary-card">
+                <div class="risk-summary-top">
+                    <span class="risk-summary-label">Pending Evaluation</span>
+                    <span class="risk-summary-icon risk-icon-orange">
+                        <i class="fas fa-hourglass-half"></i>
+                    </span>
+                </div>
+
+                <div class="risk-summary-value">
+                    {{ pending_evaluation_count|default:"0" }}
+                </div>
+
+                <div class="risk-summary-description">
+                    Assessments awaiting completion or review
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                 role="alert">
+
+                {{ message }}
+
+                <button type="button"
+                        class="close"
+                        data-dismiss="alert"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Assessment Register -->
+    <div class="risk-register-card">
+
+        <div class="risk-register-header">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+
+                <div>
+                    <h5 class="risk-register-title">
+                        Assessment Register
+                    </h5>
+
+                    <p class="risk-register-subtitle">
+                        Track risk ratings, assigned responsibilities and workflow status.
+                    </p>
+                </div>
+
+                <span class="risk-register-count mt-2 mt-md-0">
+                    {{ assessments|length }}
+                    Assessment{{ assessments|length|pluralize }}
+                </span>
+
+            </div>
+        </div>
+
+        {% if assessments %}
+
+            <!-- Search and Filters -->
+            <div class="risk-toolbar">
+                <div class="row">
+
+                    <div class="col-lg-6 col-md-6 mb-2 mb-md-0">
+                        <div class="risk-search">
+                            <i class="fas fa-search"></i>
+
+                            <input type="text"
+                                   id="riskSearchInput"
+                                   class="form-control"
+                                   placeholder="Search assessment, hazard, reviewer or approver..."
+                                   autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 mb-2 mb-md-0">
+                        <select id="riskStatusFilter" class="form-control">
+                            <option value="">All Statuses</option>
+                            {% for status_value, status_label in status_choices %}
+                                <option value="{{ status_value|lower }}">
+                                    {{ status_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3">
+                        <select id="riskLevelFilter" class="form-control">
+                            <option value="">All Initial Risk Levels</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table risk-table">
+
+                    <thead>
+                        <tr>
+                            <th>Assessment No.</th>
+                            <th>Hazard</th>
+                            <th>Initial Risk</th>
+                            <th>Residual Risk</th>
+                            <th>Reviewer</th>
+                            <th>Approver</th>
+                            <th>Action Due Date</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="riskAssessmentTableBody">
+
+                        {% for assessment in assessments %}
+
+                            {% with initial_level=assessment.initial_risk_level.name|default:""|lower %}
+                            {% with residual_level=assessment.residual_risk_level.name|default:""|lower %}
+                            {% with status_value=assessment.status|lower|slugify %}
+
+                            <tr class="risk-assessment-row"
+                                data-search="{{ assessment.assessment_number|default:''|lower }} {{ assessment.hazard_title|default:''|lower }} {{ assessment.reviewer.get_full_name|default:assessment.reviewer.username|default:''|lower }} {{ assessment.approver.get_full_name|default:assessment.approver.username|default:''|lower }}"
+                                data-status="{{ status_value }}"
+                                data-risk="{{ initial_level|slugify }}">
+
+                                <!-- Assessment Number -->
+                                <td>
+                                    <span class="risk-assessment-number">
+                                        {{ assessment.assessment_number }}
+                                    </span>
+
+                                    <span class="risk-secondary-text">
+                                        {% if assessment.worksheet_entry %}
+                                            Worksheet #{{ assessment.worksheet_entry.pk }}
+                                        {% else %}
+                                            No worksheet linked
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                                <!-- Hazard -->
+                                <td>
+                                    <div class="risk-hazard-title">
+                                        {{ assessment.hazard_title|default:"Untitled Hazard" }}
+                                    </div>
+
+                                    {% if assessment.potential_consequence %}
+                                        <span class="risk-secondary-text">
+                                            {{ assessment.potential_consequence|truncatechars:75 }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Initial Risk -->
+                                <td>
+                                    <div class="risk-score-wrapper">
+
+                                        {% if assessment.initial_risk_score != None %}
+                                            <span class="risk-score
+                                                {% if initial_level == 'low' %}
+                                                    risk-score-low
+                                                {% elif initial_level == 'medium' %}
+                                                    risk-score-medium
+                                                {% elif initial_level == 'high' %}
+                                                    risk-score-high
+                                                {% elif initial_level == 'critical' %}
+                                                    risk-score-critical
+                                                {% else %}
+                                                    risk-score-neutral
+                                                {% endif %}">
+                                                {{ assessment.initial_risk_score }}
+                                            </span>
+
+                                            <span class="risk-level-name">
+                                                {{ assessment.initial_risk_level.name|default:"Not classified" }}
+                                            </span>
+                                        {% else %}
+                                            <span class="risk-score risk-score-neutral">-</span>
+                                            <span class="risk-level-name">Not evaluated</span>
+                                        {% endif %}
+
+                                    </div>
+                                </td>
+
+                                <!-- Residual Risk -->
+                                <td>
+                                    <div class="risk-score-wrapper">
+
+                                        {% if assessment.residual_risk_score != None %}
+                                            <span class="risk-score
+                                                {% if residual_level == 'low' %}
+                                                    risk-score-low
+                                                {% elif residual_level == 'medium' %}
+                                                    risk-score-medium
+                                                {% elif residual_level == 'high' %}
+                                                    risk-score-high
+                                                {% elif residual_level == 'critical' %}
+                                                    risk-score-critical
+                                                {% else %}
+                                                    risk-score-neutral
+                                                {% endif %}">
+                                                {{ assessment.residual_risk_score }}
+                                            </span>
+
+                                            <span class="risk-level-name">
+                                                {{ assessment.residual_risk_level.name|default:"Not classified" }}
+                                            </span>
+                                        {% else %}
+                                            <span class="risk-score risk-score-neutral">-</span>
+                                            <span class="risk-level-name">Not evaluated</span>
+                                        {% endif %}
+
+                                    </div>
+                                </td>
+
+                                <!-- Reviewer -->
+                                <td>
+                                    <div class="risk-assigned-user">
+                                        {% if assessment.reviewer %}
+                                            <i class="fas fa-user-check"></i>
+                                            {{ assessment.reviewer.get_full_name|default:assessment.reviewer.username }}
+                                        {% else %}
+                                            <span class="text-muted">Not assigned</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <!-- Approver -->
+                                <td>
+                                    <div class="risk-assigned-user">
+                                        {% if assessment.approver %}
+                                            <i class="fas fa-user-shield"></i>
+                                            {{ assessment.approver.get_full_name|default:assessment.approver.username }}
+                                        {% else %}
+                                            <span class="text-muted">Not assigned</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <!-- Due Date -->
+                                <td>
+                                    {% if assessment.action_due_date %}
+                                        <span class="risk-due-date">
+                                            {{ assessment.action_due_date|date:"d M Y" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="risk-status
+                                        {% if assessment.status == 'DRAFT' %}
+                                            risk-status-draft
+                                        {% elif assessment.status == 'SUBMITTED' %}
+                                            risk-status-submitted
+                                        {% elif assessment.status == 'UNDER_REVIEW' %}
+                                            risk-status-under-review
+                                        {% elif assessment.status == 'REJECTED' %}
+                                            risk-status-rejected
+                                        {% elif assessment.status == 'APPROVED' %}
+                                            risk-status-approved
+                                        {% elif assessment.status == 'CLOSED' %}
+                                            risk-status-closed
+                                        {% endif %}">
+                                        {{ assessment.get_status_display }}
+                                    </span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td>
+                                    <div class="risk-action-group">
+
+                                        <a href="{% url 'hazop:risk_assessment_detail' assessment_pk=assessment.pk %}"
+                                           class="btn btn-sm btn-outline-primary risk-action-btn"
+                                           title="View Assessment"
+                                           aria-label="View Assessment">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        {% if assessment.status == "DRAFT" or assessment.status == "REJECTED" %}
+                                            <a href="{% url 'hazop:risk_assessment_edit' assessment_pk=assessment.pk %}"
+                                               class="btn btn-sm btn-outline-secondary risk-action-btn"
+                                               title="Edit Assessment"
+                                               aria-label="Edit Assessment">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        {% endif %}
+
+                                    </div>
+                                </td>
+
+                            </tr>
+
+                            {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+
+                        {% endfor %}
+
+                        <!-- No matching results -->
+                        <tr id="riskNoResultsRow" class="risk-no-results">
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                No assessments match your search or selected filters.
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <!-- Empty State -->
+            <div class="risk-empty-state">
+
+                <div class="risk-empty-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+
+                <h6>No Risk Assessments Found</h6>
+
+                <p>
+                    There are no risk assessments created for this node yet.
+                    <br>
+                    Open the HAZOP worksheet and create an assessment against a deviation.
+                </p>
+
+                <a href="{% url 'hazop:worksheet_list' node_pk=node.pk %}"
+                   class="btn btn-primary btn-sm">
+                    <i class="fas fa-clipboard-list mr-1"></i>
+                    Go to Worksheet
+                </a>
+
+            </div>
+
+        {% endif %}
+
+        <!-- Register Footer -->
+        <div class="risk-register-footer">
+            Showing
+            <span id="riskVisibleCount">{{ assessments|length }}</span>
+            of {{ assessments|length }}
+            assessment{{ assessments|length|pluralize }}
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("riskSearchInput");
+    const statusFilter = document.getElementById("riskStatusFilter");
+    const riskLevelFilter = document.getElementById("riskLevelFilter");
+
+    const rows = document.querySelectorAll(".risk-assessment-row");
+    const noResultsRow = document.getElementById("riskNoResultsRow");
+    const visibleCountElement = document.getElementById("riskVisibleCount");
+
+    if (!searchInput || !statusFilter || !riskLevelFilter) {
+        return;
+    }
+
+    function filterAssessments() {
+        const searchValue = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter.value.toLowerCase().replace(/-/g, "_");
+        const selectedRisk = riskLevelFilter.value.toLowerCase();
+
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const searchText = row.dataset.search || "";
+            const rowStatus = row.dataset.status || "";
+            const rowRisk = row.dataset.risk || "";
+
+            const matchesSearch = searchText.includes(searchValue);
+            const matchesStatus = !selectedStatus || rowStatus === selectedStatus;
+            const matchesRisk = !selectedRisk || rowRisk === selectedRisk;
+
+            const isVisible = matchesSearch && matchesStatus && matchesRisk;
+
+            row.style.display = isVisible ? "" : "none";
+
+            if (isVisible) {
+                visibleCount++;
+            }
+        });
+
+        if (noResultsRow) {
+            noResultsRow.style.display =
+                visibleCount === 0 ? "table-row" : "none";
+        }
+
+        if (visibleCountElement) {
+            visibleCountElement.textContent = visibleCount;
+        }
+    }
+
+    searchInput.addEventListener("input", filterAssessments);
+    statusFilter.addEventListener("change", filterAssessments);
+    riskLevelFilter.addEventListener("change", filterAssessments);
+});
+</script>
+
+{% endblock %}

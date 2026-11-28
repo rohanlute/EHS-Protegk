@@ -1,0 +1,332 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:dashboard' %}">HAZOP</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ config_dashboard_url }}">Configuration</a>
+</li>
+<li class="breadcrumb-item active">{{ page_title }}</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-mapping-list {
+        font-size: 12px;
+        color: #344054;
+    }
+
+    .hazop-mapping-list .mapping-card {
+        background: #fff;
+        border: 1px solid #e8edf2;
+        border-radius: 9px;
+        box-shadow: 0 2px 8px rgba(20, 40, 70, 0.04);
+        overflow: hidden;
+    }
+
+    .hazop-mapping-list .mapping-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .hazop-mapping-list .mapping-title {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #29384a;
+    }
+
+    .hazop-mapping-list .mapping-title i {
+        color: #64748b;
+        margin-right: 9px;
+    }
+
+    .hazop-mapping-list .mapping-add-btn {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 11px;
+        border-radius: 5px;
+        white-space: nowrap;
+    }
+
+    .hazop-mapping-list .mapping-table {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+
+    .hazop-mapping-list .mapping-table thead th {
+        background: #f8fafc;
+        color: #667085;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        padding: 12px 14px;
+        border-top: 0;
+        border-bottom: 1px solid #e9edf2;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .hazop-mapping-list .mapping-table tbody td {
+        padding: 13px 14px;
+        vertical-align: middle;
+        border-top: 1px solid #f0f2f5;
+        color: #475467;
+    }
+
+    .hazop-mapping-list .mapping-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    .hazop-mapping-list .mapping-label {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #344054;
+        background: #f2f4f7;
+        border: 1px solid #e4e7ec;
+        border-radius: 5px;
+        padding: 5px 8px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .hazop-mapping-list .mapping-arrow {
+        color: #98a2b3;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .hazop-mapping-list .mapping-badge {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .hazop-mapping-list .badge-active {
+        color: #027a48;
+        background: #ecfdf3;
+    }
+
+    .hazop-mapping-list .badge-inactive {
+        color: #b42318;
+        background: #fef3f2;
+    }
+
+    .hazop-mapping-list .mapping-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 145px;
+    }
+
+    .hazop-mapping-list .mapping-action-btn {
+        font-size: 10px;
+        line-height: 1.4;
+        padding: 5px 9px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .hazop-mapping-list .mapping-empty {
+        padding: 35px 15px !important;
+        text-align: center;
+        color: #98a2b3 !important;
+    }
+
+    .hazop-mapping-list .mapping-empty i {
+        display: block;
+        font-size: 24px;
+        color: #cbd5e1;
+        margin-bottom: 10px;
+    }
+
+    .hazop-mapping-list .mapping-empty-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #667085;
+        margin-bottom: 4px;
+    }
+
+    .hazop-mapping-list .mapping-empty-text {
+        font-size: 11px;
+        margin: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        .hazop-mapping-list .mapping-header {
+            padding: 12px 14px;
+        }
+
+        .hazop-mapping-list .mapping-table thead th,
+        .hazop-mapping-list .mapping-table tbody td {
+            padding: 10px;
+        }
+
+        .hazop-mapping-list .mapping-actions {
+            justify-content: flex-start;
+            min-width: 0;
+        }
+    }
+</style>
+
+<div class="hazop-mapping-list">
+
+    <div class="mapping-card">
+
+        <!-- Header -->
+        <div class="mapping-header">
+
+            <h5 class="mapping-title">
+                <i class="fas fa-project-diagram"></i>
+                {{ page_title }}
+            </h5>
+
+            <a href="{% url create_url_name %}"
+               class="btn btn-primary mapping-add-btn">
+                <i class="fas fa-plus mr-1"></i>
+                Add Mapping
+            </a>
+
+        </div>
+
+        <!-- Mapping Table -->
+        <div class="table-responsive">
+
+            <table class="table table-hover mapping-table">
+
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Parameter</th>
+                        <th class="text-center" style="width: 50px;"></th>
+                        <th style="width: 35%;">Guide Word</th>
+                        <th style="width: 100px;">Status</th>
+                        <th class="text-right" style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for record in config_records %}
+                    <tr>
+
+                        <!-- Parameter -->
+                        <td>
+                            <span class="mapping-label">
+                                {{ record.parameter }}
+                            </span>
+                        </td>
+
+                        <!-- Relationship -->
+                        <td class="mapping-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </td>
+
+                        <!-- Guide Word -->
+                        <td>
+                            <span class="mapping-label">
+                                {{ record.guide_word }}
+                            </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                            {% if record.is_active %}
+                                <span class="mapping-badge badge-active">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="mapping-badge badge-inactive">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td>
+                            <div class="mapping-actions">
+
+                                <a href="{% url edit_url_name record.pk %}"
+                                   class="btn btn-outline-primary mapping-action-btn">
+                                    <i class="fas fa-pen mr-1"></i>
+                                    Edit
+                                </a>
+
+                                <form method="post"
+                                      action="{% url toggle_url_name record.pk %}"
+                                      class="m-0">
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="btn btn-outline-secondary mapping-action-btn">
+
+                                        {% if record.is_active %}
+                                            <i class="fas fa-ban mr-1"></i>
+                                            Deactivate
+                                        {% else %}
+                                            <i class="fas fa-check mr-1"></i>
+                                            Activate
+                                        {% endif %}
+
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="mapping-empty">
+
+                            <i class="fas fa-project-diagram"></i>
+
+                            <div class="mapping-empty-title">
+                                No Parameter-Guideword Mappings Found
+                            </div>
+
+                            <p class="mapping-empty-text">
+                                Click Add Mapping to create your first
+                                Parameter-Guideword relationship.
+                            </p>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

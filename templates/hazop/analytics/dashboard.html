@@ -1,0 +1,1200 @@
+
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}HAZOP Analytics{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --ha-primary: #12304a;
+    --ha-teal: #0f8b8d;
+    --ha-bg: #f5f7fb;
+    --ha-card: #ffffff;
+    --ha-text: #172b4d;
+    --ha-muted: #8190a5;
+    --ha-border: #e8edf4;
+    --ha-shadow: 0 8px 30px rgba(20, 42, 70, .045);
+}
+
+.ha-dashboard,
+.ha-dashboard * {
+    box-sizing: border-box;
+}
+
+.ha-dashboard {
+    font-family: 'Inter', sans-serif;
+    background: var(--ha-bg);
+    color: var(--ha-text);
+    min-height: 100vh;
+    padding: 26px;
+}
+
+.ha-dashboard h1,
+.ha-dashboard h2,
+.ha-dashboard h3,
+.ha-dashboard h4,
+.ha-dashboard h5,
+.ha-dashboard p {
+    font-family: 'Inter', sans-serif;
+}
+
+.ha-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.ha-page-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.ha-title-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(135deg, #12304a, #0f8b8d);
+    box-shadow: 0 8px 18px rgba(15, 139, 141, .22);
+    font-size: 21px;
+}
+
+.ha-page-title h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -.7px;
+}
+
+.ha-page-title p {
+    color: var(--ha-muted);
+    font-size: 13px;
+    margin: 5px 0 0;
+}
+
+.ha-top-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ha-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none !important;
+    border: 1px solid transparent;
+    transition: .2s ease;
+    cursor: pointer;
+}
+
+.ha-action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.ha-btn-primary {
+    color: #fff !important;
+    background: linear-gradient(135deg, #12304a, #176b76);
+    box-shadow: 0 6px 16px rgba(18, 48, 74, .14);
+}
+
+.ha-btn-white {
+    background: #fff;
+    color: #334155 !important;
+    border-color: var(--ha-border);
+}
+
+/* Hero */
+.ha-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    padding: 28px 30px;
+    margin-bottom: 22px;
+    color: #fff;
+    background: linear-gradient(115deg, #102a43 0%, #164b61 55%, #087f83 100%);
+    box-shadow: 0 12px 28px rgba(18, 48, 74, .13);
+}
+
+.ha-hero::before {
+    content: "";
+    position: absolute;
+    width: 310px;
+    height: 310px;
+    border-radius: 50%;
+    right: -90px;
+    top: -170px;
+    background: rgba(255,255,255,.07);
+}
+
+.ha-hero::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    right: 150px;
+    bottom: -180px;
+    background: rgba(255,255,255,.06);
+}
+
+.ha-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.ha-hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #b9e9e8;
+    margin-bottom: 12px;
+}
+
+.ha-hero h2 {
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -.6px;
+    margin: 0 0 9px;
+}
+
+.ha-hero p {
+    color: #d4e6ef;
+    font-size: 13px;
+    margin: 0;
+    max-width: 650px;
+    line-height: 1.7;
+}
+
+/* KPI cards */
+.ha-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.ha-kpi-card {
+    position: relative;
+    overflow: hidden;
+    background: var(--ha-card);
+    border: 1px solid var(--ha-border);
+    border-radius: 17px;
+    padding: 20px;
+    box-shadow: var(--ha-shadow);
+    transition: .2s ease;
+}
+
+.ha-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(20, 42, 70, .08);
+}
+
+.ha-kpi-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--kpi-color, #0f8b8d);
+}
+
+.ha-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ha-kpi-name {
+    color: #718096;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ha-kpi-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: var(--kpi-bg, #e8f5f5);
+    color: var(--kpi-color, #0f8b8d);
+    font-size: 17px;
+}
+
+.ha-kpi-number {
+    font-size: 31px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #172b4d;
+    margin: 17px 0 5px;
+    line-height: 1.1;
+}
+
+.ha-kpi-footer {
+    color: #98a5b5;
+    font-size: 11px;
+    margin-top: 9px;
+}
+
+/* Filters */
+.ha-filter-card {
+    background: #fff;
+    border: 1px solid var(--ha-border);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: var(--ha-shadow);
+}
+
+.ha-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.ha-section-heading h3 {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0;
+    color: #18334f;
+}
+
+.ha-section-heading p {
+    color: #91a0b2;
+    font-size: 11px;
+    margin: 5px 0 0;
+}
+
+.ha-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.ha-field label {
+    display: block;
+    font-size: 11px;
+    color: #718096;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.ha-field select,
+.ha-field input {
+    width: 100%;
+    height: 43px;
+    border: 1px solid #e1e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    background: #fbfcfe;
+    color: #334155;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: .2s ease;
+}
+
+.ha-field select:focus,
+.ha-field input:focus {
+    border-color: #0f8b8d;
+    box-shadow: 0 0 0 3px rgba(15, 139, 141, .09);
+    background: #fff;
+}
+
+.ha-filter-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 17px;
+    border-top: 1px solid #edf1f5;
+    flex-wrap: wrap;
+}
+
+.ha-filter-actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+/* Charts */
+.ha-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.ha-chart-card {
+    background: #fff;
+    border: 1px solid var(--ha-border);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: var(--ha-shadow);
+    min-width: 0;
+}
+
+.ha-chart-card.ha-chart-wide {
+    grid-column: span 2;
+}
+
+.ha-chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.ha-chart-head h3 {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+    color: #18334f;
+}
+
+.ha-chart-head p {
+    font-size: 11px;
+    color: #91a0b2;
+    margin: 5px 0 0;
+}
+
+.ha-chart-tag {
+    border-radius: 8px;
+    background: #f0f7f8;
+    color: #0f8184;
+    padding: 6px 9px;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ha-chart-canvas {
+    position: relative;
+    height: 290px;
+}
+
+.ha-chart-wide .ha-chart-canvas {
+    height: 320px;
+}
+
+/* Tables */
+.ha-data-card {
+    background: #fff;
+    border: 1px solid var(--ha-border);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: var(--ha-shadow);
+}
+
+.ha-table-wrap {
+    overflow-x: auto;
+}
+
+.ha-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+}
+
+.ha-table th {
+    background: #f7f9fc;
+    color: #77869a;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 13px 14px;
+    white-space: nowrap;
+    border-bottom: 1px solid #e9eef4;
+}
+
+.ha-table th:first-child {
+    border-radius: 10px 0 0 10px;
+}
+
+.ha-table th:last-child {
+    border-radius: 0 10px 10px 0;
+}
+
+.ha-table td {
+    padding: 14px;
+    border-bottom: 1px solid #f0f3f7;
+    color: #475569;
+    vertical-align: middle;
+}
+
+.ha-table tbody tr:hover td {
+    background: #fafcfe;
+}
+
+.ha-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.ha-table strong {
+    color: #1e344d;
+    font-weight: 700;
+}
+
+.ha-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 20px;
+    padding: 6px 10px;
+    background: #eef2f7;
+    color: #526174;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ha-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ha-status-danger {
+    background: #fff0ef;
+    color: #d34d45;
+}
+
+.ha-status-success {
+    background: #eaf8f0;
+    color: #21945b;
+}
+
+.ha-status-warning {
+    background: #fff6e5;
+    color: #bd821b;
+}
+
+.ha-empty {
+    text-align: center;
+    padding: 35px !important;
+    color: #98a5b5 !important;
+}
+
+@media (max-width: 1200px) {
+    .ha-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ha-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .ha-dashboard {
+        padding: 14px;
+    }
+
+    .ha-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ha-chart-card.ha-chart-wide {
+        grid-column: span 1;
+    }
+
+    .ha-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ha-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .ha-kpi-card {
+        padding: 15px;
+    }
+
+    .ha-kpi-number {
+        font-size: 25px;
+    }
+
+    .ha-hero {
+        padding: 22px;
+    }
+
+    .ha-hero h2 {
+        font-size: 21px;
+    }
+}
+
+@media (max-width: 420px) {
+    .ha-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="ha-dashboard">
+
+    <!-- PAGE HEADER -->
+    <div class="ha-topbar">
+        <div class="ha-page-title">
+            <div class="ha-title-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <h1>HAZOP Analytics</h1>
+                <p>Risk intelligence and operational safety insights</p>
+            </div>
+        </div>
+
+        <div class="ha-top-actions">
+            <a href="{% url 'hazop:analytics_export_excel' %}?{{ request.GET.urlencode }}"
+               class="ha-action-btn ha-btn-primary">
+                <i class="fas fa-file-excel"></i>
+                Export Report
+            </a>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="ha-hero">
+        <div class="ha-hero-content">
+            <div class="ha-hero-label">
+                <i class="fas fa-shield-alt"></i>
+                Process Safety Intelligence
+            </div>
+            <h2>Hazard Analysis Overview</h2>
+            <p>
+                Monitor risk assessments, evaluate residual risk,
+                track action completion and identify safety priorities
+                across your HAZOP studies.
+            </p>
+        </div>
+    </section>
+
+    <!-- KPI CARDS -->
+    <section class="ha-kpi-grid">
+
+        <div class="ha-kpi-card"
+             style="--kpi-color:#3979d6;--kpi-bg:#edf4ff;">
+            <div class="ha-kpi-top">
+                <div class="ha-kpi-name">Risk Assessments</div>
+                <div class="ha-kpi-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+            </div>
+            <div class="ha-kpi-number">{{ total_assessments }}</div>
+            <div class="ha-kpi-footer">Assessments in current selection</div>
+        </div>
+
+        <div class="ha-kpi-card"
+             style="--kpi-color:#e45c52;--kpi-bg:#fff0ef;">
+            <div class="ha-kpi-top">
+                <div class="ha-kpi-name">High / Critical Risk</div>
+                <div class="ha-kpi-icon">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="ha-kpi-number">{{ high_risk_assessments }}</div>
+            <div class="ha-kpi-footer">Initial risk requiring attention</div>
+        </div>
+
+        <div class="ha-kpi-card"
+             style="--kpi-color:#0f8b8d;--kpi-bg:#e8f7f6;">
+            <div class="ha-kpi-top">
+                <div class="ha-kpi-name">Open Actions</div>
+                <div class="ha-kpi-icon">
+                    <i class="fas fa-list-check"></i>
+                </div>
+            </div>
+            <div class="ha-kpi-number">{{ open_actions }}</div>
+            <div class="ha-kpi-footer">Actions pending completion</div>
+        </div>
+
+        <div class="ha-kpi-card"
+             style="--kpi-color:#d99327;--kpi-bg:#fff6e7;">
+            <div class="ha-kpi-top">
+                <div class="ha-kpi-name">Overdue Actions</div>
+                <div class="ha-kpi-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="ha-kpi-number">{{ overdue_actions }}</div>
+            <div class="ha-kpi-footer">Open actions past due date</div>
+        </div>
+
+    </section>
+
+    <!-- FILTER PANEL -->
+    <section class="ha-filter-card">
+        <div class="ha-section-heading">
+            <div>
+                <h3><i class="fas fa-sliders me-2"></i>Analytics Filters</h3>
+                <p>Customize the dashboard and export using selected filters</p>
+            </div>
+        </div>
+
+        <form method="get">
+            <div class="ha-filter-grid">
+
+                <div class="ha-field">
+                    <label>Plant</label>
+                    <select name="plant">
+                        <option value="">All Plants</option>
+                        {% for plant in plants %}
+                        <option value="{{ plant.plant_id }}"
+                            {% if selected_plant == plant.plant_id|stringformat:"s" %}selected{% endif %}>
+                            {{ plant.plant__name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>HAZOP Study</label>
+                    <select name="study">
+                        <option value="">All Studies</option>
+                        {% for study in studies %}
+                        <option value="{{ study.id }}"
+                            {% if selected_study == study.id|stringformat:"s" %}selected{% endif %}>
+                            {{ study.study_number }} - {{ study.study_title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>Node</label>
+                    <select name="node">
+                        <option value="">All Nodes</option>
+                        {% for node in nodes %}
+                        <option value="{{ node.id }}"
+                            {% if selected_node == node.id|stringformat:"s" %}selected{% endif %}>
+                            {{ node.node_number }} - {{ node.node_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>Assessment Status</label>
+                    <select name="status">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}"
+                            {% if selected_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>Initial Risk Level</label>
+                    <select name="risk_level">
+                        <option value="">All Risk Levels</option>
+                        {% for level in risk_levels %}
+                        <option value="{{ level.name }}"
+                            {% if selected_risk_level == level.name %}selected{% endif %}>
+                            {{ level.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>Action Status</label>
+                    <select name="action_status">
+                        <option value="">All Action Statuses</option>
+                        {% for value, label in action_status_choices %}
+                        <option value="{{ value }}"
+                            {% if selected_action_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ha-field">
+                    <label>From Date</label>
+                    <input type="date" name="date_from" value="{{ date_from }}">
+                </div>
+
+                <div class="ha-field">
+                    <label>To Date</label>
+                    <input type="date" name="date_to" value="{{ date_to }}">
+                </div>
+
+            </div>
+
+            <div class="ha-filter-footer">
+                <div class="ha-filter-actions">
+                    <button type="submit" class="ha-action-btn ha-btn-primary">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+
+                    <a href="{% url 'hazop:analytics_dashboard' %}"
+                       class="ha-action-btn ha-btn-white">
+                        <i class="fas fa-rotate-left"></i>
+                        Reset
+                    </a>
+                </div>
+
+                <a href="{% url 'hazop:analytics_export_excel' %}?{{ request.GET.urlencode }}"
+                   class="ha-action-btn ha-btn-white">
+                    <i class="fas fa-download"></i>
+                    Download Filtered Excel
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <!-- CHARTS -->
+    <section class="ha-chart-grid">
+
+        <div class="ha-chart-card">
+            <div class="ha-chart-head">
+                <div>
+                    <h3>Risk Level Distribution</h3>
+                    <p>Breakdown of initial risk classification</p>
+                </div>
+                <span class="ha-chart-tag">RISK PROFILE</span>
+            </div>
+            <div class="ha-chart-canvas">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="ha-chart-card">
+            <div class="ha-chart-head">
+                <div>
+                    <h3>Initial vs Residual Risk</h3>
+                    <p>Risk score comparison across assessments</p>
+                </div>
+                <span class="ha-chart-tag">RISK REDUCTION</span>
+            </div>
+            <div class="ha-chart-canvas">
+                <canvas id="riskComparisonChart"></canvas>
+            </div>
+        </div>
+
+        <div class="ha-chart-card">
+            <div class="ha-chart-head">
+                <div>
+                    <h3>Action Status</h3>
+                    <p>Distribution of HAZOP action items</p>
+                </div>
+                <span class="ha-chart-tag">FOLLOW-UP</span>
+            </div>
+            <div class="ha-chart-canvas">
+                <canvas id="actionStatusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="ha-chart-card">
+            <div class="ha-chart-head">
+                <div>
+                    <h3>Plant-wise Risk Profile</h3>
+                    <p>Average initial risk score by plant</p>
+                </div>
+                <span class="ha-chart-tag">PLANT COMPARISON</span>
+            </div>
+            <div class="ha-chart-canvas">
+                <canvas id="plantRiskChart"></canvas>
+            </div>
+        </div>
+
+        <div class="ha-chart-card ha-chart-wide">
+            <div class="ha-chart-head">
+                <div>
+                    <h3>Assessment Activity Trend</h3>
+                    <p>Monthly assessment volume for the selected period</p>
+                </div>
+                <span class="ha-chart-tag">TREND ANALYSIS</span>
+            </div>
+            <div class="ha-chart-canvas">
+                <canvas id="monthlyTrendChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ASSESSMENTS TABLE -->
+    <section class="ha-data-card">
+        <div class="ha-section-heading">
+            <div>
+                <h3><i class="fas fa-clipboard-check me-2"></i>Recent Risk Assessments</h3>
+                <p>Latest HAZOP risk assessment records</p>
+            </div>
+        </div>
+
+        <div class="ha-table-wrap">
+            <table class="ha-table">
+                <thead>
+                    <tr>
+                        <th>Assessment</th>
+                        <th>Hazard</th>
+                        <th>Study</th>
+                        <th>Node</th>
+                        <th>Initial Score</th>
+                        <th>Residual Score</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in assessments %}
+                    <tr>
+                        <td><strong>{{ item.assessment_number }}</strong></td>
+                        <td>{{ item.hazard_title }}</td>
+                        <td>{{ item.worksheet_entry.node.study.study_number }}</td>
+                        <td>{{ item.worksheet_entry.node.node_name }}</td>
+                        <td><strong>{{ item.initial_risk_score }}</strong></td>
+                        <td>
+                            {% if item.residual_risk_score != None %}
+                                {{ item.residual_risk_score }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="ha-status">{{ item.get_status_display }}</span>
+                        </td>
+                        <td>{{ item.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="ha-empty">
+                            No risk assessments found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ACTION TRACKER -->
+    <section class="ha-data-card">
+        <div class="ha-section-heading">
+            <div>
+                <h3><i class="fas fa-list-check me-2"></i>Action Tracker</h3>
+                <p>Monitor recommendations and action completion</p>
+            </div>
+        </div>
+
+        <div class="ha-table-wrap">
+            <table class="ha-table">
+                <thead>
+                    <tr>
+                        <th>Action No.</th>
+                        <th>Study</th>
+                        <th>Node</th>
+                        <th>Action Description</th>
+                        <th>Assigned To</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in actions %}
+                    <tr>
+                        <td><strong>{{ action.action_number }}</strong></td>
+                        <td>{{ action.recommendation.worksheet_entry.node.study.study_number }}</td>
+                        <td>{{ action.recommendation.worksheet_entry.node.node_name }}</td>
+                        <td>{{ action.action_description|truncatechars:70 }}</td>
+                        <td>{{ action.assigned_to|default:"-" }}</td>
+                        <td>{{ action.get_priority_display }}</td>
+                        <td>{{ action.due_date|date:"d M Y"|default:"-" }}</td>
+                        <td>
+                            <span class="ha-status">{{ action.get_status_display }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="ha-empty">
+                            No actions found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+{{ charts_json|json_script:"ha-chart-data" }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chartElement = document.getElementById("ha-chart-data");
+    if (!chartElement) return;
+
+    let chartData = JSON.parse(chartElement.textContent);
+
+    // Django json_script may contain a JSON string if charts_json
+    // was already serialized in the view.
+    if (typeof chartData === "string") {
+        chartData = JSON.parse(chartData);
+    }
+
+    Chart.defaults.font.family = "Inter, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = "#8795a8";
+
+    const gridColor = "rgba(148, 163, 184, 0.13)";
+
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "bottom",
+                labels: {
+                    usePointStyle: true,
+                    pointStyle: "circle",
+                    padding: 20,
+                    boxWidth: 8,
+                    font: {
+                        size: 11,
+                        weight: "600"
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: "#142e46",
+                titleColor: "#ffffff",
+                bodyColor: "#dce7ef",
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: true
+            }
+        }
+    };
+
+    const axisOptions = {
+        x: {
+            grid: {
+                display: false
+            },
+            border: {
+                display: false
+            },
+            ticks: {
+                color: "#8b99aa"
+            }
+        },
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: gridColor,
+                drawBorder: false
+            },
+            border: {
+                display: false
+            },
+            ticks: {
+                color: "#8b99aa",
+                padding: 10
+            }
+        }
+    };
+
+    // Risk distribution
+    new Chart(document.getElementById("riskDistributionChart"), {
+        type: "doughnut",
+        data: {
+            labels: chartData.riskLabels,
+            datasets: [{
+                data: chartData.riskValues,
+                backgroundColor: [
+                    "#22a06b",
+                    "#e7b33c",
+                    "#f28c38",
+                    "#e65c55",
+                    "#8f3444",
+                    "#64748b"
+                ],
+                borderWidth: 4,
+                borderColor: "#ffffff",
+                hoverOffset: 8,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            ...baseOptions,
+            cutout: "72%",
+            plugins: {
+                ...baseOptions.plugins,
+                legend: {
+                    ...baseOptions.plugins.legend,
+                    position: "bottom"
+                }
+            }
+        }
+    });
+
+    // Initial vs residual
+    new Chart(document.getElementById("riskComparisonChart"), {
+        type: "bar",
+        data: {
+            labels: chartData.initialScores.map((_, index) =>
+                "Assessment " + (index + 1)
+            ),
+            datasets: [
+                {
+                    label: "Initial Risk",
+                    data: chartData.initialScores,
+                    backgroundColor: "rgba(230, 92, 85, .85)",
+                    borderRadius: 6,
+                    maxBarThickness: 18
+                },
+                {
+                    label: "Residual Risk",
+                    data: chartData.residualScores,
+                    backgroundColor: "rgba(15, 139, 141, .85)",
+                    borderRadius: 6,
+                    maxBarThickness: 18
+                }
+            ]
+        },
+        options: {
+            ...baseOptions,
+            scales: axisOptions
+        }
+    });
+
+    // Action status
+    new Chart(document.getElementById("actionStatusChart"), {
+        type: "pie",
+        data: {
+            labels: chartData.actionLabels,
+            datasets: [{
+                data: chartData.actionValues,
+                backgroundColor: [
+                    "#0f8b8d",
+                    "#3979d6",
+                    "#e7b33c",
+                    "#22a06b",
+                    "#e65c55",
+                    "#8b5cf6",
+                    "#64748b"
+                ],
+                borderColor: "#ffffff",
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            ...baseOptions
+        }
+    });
+
+    // Plant-wise average risk
+    new Chart(document.getElementById("plantRiskChart"), {
+        type: "bar",
+        data: {
+            labels: chartData.plantLabels,
+            datasets: [{
+                label: "Average Initial Risk",
+                data: chartData.plantValues,
+                backgroundColor: "rgba(15, 139, 141, .82)",
+                hoverBackgroundColor: "#12304a",
+                borderRadius: 7,
+                maxBarThickness: 38
+            }]
+        },
+        options: {
+            ...baseOptions,
+            indexAxis: "y",
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: gridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Monthly trend
+    const trendCanvas = document.getElementById("monthlyTrendChart");
+    const trendContext = trendCanvas.getContext("2d");
+
+    const gradient = trendContext.createLinearGradient(0, 0, 0, 320);
+    gradient.addColorStop(0, "rgba(15, 139, 141, .25)");
+    gradient.addColorStop(1, "rgba(15, 139, 141, 0)");
+
+    new Chart(trendCanvas, {
+        type: "line",
+        data: {
+            labels: chartData.monthLabels,
+            datasets: [{
+                label: "Assessments",
+                data: chartData.monthValues,
+                borderColor: "#0f8b8d",
+                backgroundColor: gradient,
+                fill: true,
+                tension: .4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: "#ffffff",
+                pointBorderColor: "#0f8b8d",
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            ...baseOptions,
+            scales: axisOptions
+        }
+    });
+});
+</script>
+{% endblock %}

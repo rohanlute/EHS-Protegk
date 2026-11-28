@@ -1,0 +1,586 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}HAZOP Worksheet | HAZOP{% endblock %}
+
+{% block page_title %}HAZOP Worksheet{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-page-header {
+        padding: 14px 0 8px;
+    }
+
+    .hazop-page-header h1 {
+        font-size: 1.45rem;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 4px;
+    }
+
+    .hazop-page-header .page-description {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .hazop-worksheet-card {
+        border: 0;
+        border-radius: 9px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .hazop-worksheet-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        padding: 13px 18px;
+    }
+
+    .hazop-worksheet-card .card-body {
+        padding: 0;
+    }
+
+    .hazop-worksheet-card .card-footer {
+        background: #fafbfc;
+        border-top: 1px solid #edf0f2;
+        padding: 12px 18px;
+    }
+
+    .hazop-worksheet-table {
+        margin-bottom: 0;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .hazop-worksheet-table thead th {
+        background: #f8f9fa;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 600;
+        border-top: 0;
+        border-bottom: 1px solid #e9ecef;
+        padding: 11px 14px;
+        vertical-align: middle;
+    }
+
+    .hazop-worksheet-table tbody td {
+        padding: 10px 14px;
+        vertical-align: middle;
+        border-color: #edf0f2;
+        color: #495057;
+    }
+
+    .hazop-worksheet-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .hazop-entry-number {
+        display: inline-block;
+        background: #eef5ff;
+        color: #2563eb;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+
+    .hazop-deviation {
+        white-space: normal;
+        min-width: 220px;
+        max-width: 350px;
+        line-height: 1.5;
+    }
+
+    .hazop-status {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .hazop-status-active {
+        background: #e8f7ee;
+        color: #218838;
+    }
+
+    .hazop-status-inactive {
+        background: #f1f3f5;
+        color: #6c757d;
+    }
+
+    .hazop-risk-score {
+        display: inline-block;
+        background: #f1f3f5;
+        color: #495057;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 4px 9px;
+        border-radius: 5px;
+    }
+
+    .hazop-action-btn {
+        width: 31px;
+        height: 31px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        padding: 0;
+    }
+
+    .hazop-entry-count {
+        background: #eef5ff;
+        color: #2563eb;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .hazop-empty-state {
+        padding: 42px 20px;
+        text-align: center;
+    }
+
+    .hazop-empty-state i {
+        font-size: 32px;
+        color: #c5cdd5;
+        margin-bottom: 12px;
+    }
+
+    .hazop-empty-state h6 {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+
+    .hazop-empty-state p {
+        font-size: 13px;
+        color: #83909c;
+        margin-bottom: 15px;
+    }
+
+    .hazop-worksheet-card .btn {
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .hazop-context-info {
+        display: inline-block;
+        background: #f4f7fb;
+        border: 1px solid #e8edf3;
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #495057;
+    }
+
+    .hazop-detail-count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 27px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #eef5ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+
+    .hazop-detail-count-badge:hover {
+        background: #dceaff;
+        color: #1d4ed8;
+    }
+
+    .hazop-detail-count-badge.zero {
+        background: #f1f3f5;
+        color: #83909c;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-page-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .hazop-page-header .header-actions {
+            margin-top: 12px;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<section class="content-header hazop-page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-md-8">
+                <h1>
+                    <i class="fas fa-clipboard-list text-primary mr-2"></i>
+                    HAZOP Worksheet
+                </h1>
+
+                <p class="page-description">
+                    Manage worksheet entries and process deviations for this node.
+                </p>
+
+                <div class="hazop-context-info">
+                    <i class="fas fa-clipboard-check text-primary mr-1"></i>
+                    Study:
+                    <strong>{{ study.study_number }}</strong>
+                    <span class="mx-1">|</span>
+                    Node:
+                    <strong>{{ node.node_number }}</strong>
+                    - {{ node.node_name }}
+                </div>
+            </div>
+
+            <div class="col-md-4 text-md-right header-actions">
+                <a href="{% url 'hazop:node_list' study_pk=study.pk %}"
+                   class="btn btn-outline-secondary btn-sm mr-1">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Nodes
+                </a>
+                {% if not is_locked %}
+                <a href="{% url 'hazop:worksheet_create' node_pk=node.pk %}"
+                   class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add Entry
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="content pb-3">
+    <div class="container-fluid">
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    <button type="button"
+                            class="close"
+                            data-dismiss="alert"
+                            aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card hazop-worksheet-card">
+
+            <!-- Card Header -->
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <h3 class="card-title font-weight-bold mb-0">
+                        <i class="fas fa-list-ul text-primary mr-2"></i>
+                        Worksheet Entries
+                    </h3>
+
+                    <span class="hazop-entry-count">
+                        {{ worksheet_entries|length }} Entries
+                    </span>
+
+                </div>
+            </div>
+
+            <!-- Worksheet Table -->
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover hazop-worksheet-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 110px;">Entry No.</th>
+                                <th>Parameter</th>
+                                <th>Guide Word</th>
+                                <th>Deviation</th>
+                                <th>Initial Risk</th>
+                                <th>Residual Risk</th>
+                                <th>Status</th>
+                                <th class="text-center">Causes</th>
+                                <th class="text-center">Consequences</th>
+                                <th class="text-center">Safeguards</th>
+
+                                <th class="text-center" style="width: 190px;">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for entry in worksheet_entries %}
+                                <tr>
+                                    <td>
+                                        <span class="hazop-entry-number">
+                                            {{ entry.entry_number }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <strong>{{ entry.parameter.name }}</strong>
+                                    </td>
+
+                                    <td>
+                                        {{ entry.guide_word.name }}
+                                    </td>
+
+                                    <td class="hazop-deviation">
+                                        {{ entry.deviation_description|default:"-"|truncatechars:100 }}
+                                    </td>
+
+                                    <td>
+                                        {% if entry.initial_risk_score is not None %}
+                                            <span class="hazop-risk-score">
+                                                {{ entry.initial_risk_score }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if entry.residual_risk_score is not None %}
+                                            <span class="hazop-risk-score">
+                                                {{ entry.residual_risk_score }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if entry.is_active %}
+                                            <span class="hazop-status hazop-status-active">
+                                                <i class="fas fa-check-circle mr-1"></i>
+                                                Active
+                                            </span>
+                                        {% else %}
+                                            <span class="hazop-status hazop-status-inactive">
+                                                Inactive
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Cause Count -->
+                                    <td class="text-center">
+                                        <a href="{% url 'hazop:cause_list' entry.pk %}"
+                                        class="hazop-detail-count-badge {% if entry.cause_count == 0 %}zero{% endif %}"
+                                        title="View Causes">
+                                            {{ entry.cause_count }}
+                                        </a>
+                                    </td>
+
+                                    <!-- Consequence Count -->
+                                    <td class="text-center">
+                                        <a href="{% url 'hazop:consequence_list' entry.pk %}"
+                                        class="hazop-detail-count-badge {% if entry.consequence_count == 0 %}zero{% endif %}"
+                                        title="View Consequences">
+                                            {{ entry.consequence_count }}
+                                        </a>
+                                    </td>
+
+                                    <!-- Safeguard Count -->
+                                    <td class="text-center">
+                                        <a href="{% url 'hazop:safeguard_list' entry.pk %}"
+                                        class="hazop-detail-count-badge {% if entry.safeguard_count == 0 %}zero{% endif %}"
+                                        title="View Safeguards">
+                                            {{ entry.safeguard_count }}
+                                        </a>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center"
+                                            style="gap: 5px;">
+
+                                            <!-- Risk Assessment -->
+                                            {% with assessment=entry.risk_assessments.all|first %}
+
+                                                {% if assessment %}
+
+                                                    <!-- View / Review Existing Risk Assessment -->
+                                                    <a href="{% url 'hazop:risk_assessment_detail' assessment_pk=assessment.pk %}"
+                                                    class="btn btn-sm btn-outline-warning hazop-action-btn"
+                                                    title="{% if assessment.status == 'SUBMITTED' and assessment.reviewer_id == user.id %}Review Assessment{% else %}View Risk Assessment{% endif %}"
+                                                    aria-label="View Risk Assessment">
+
+                                                        {% if assessment.status == "SUBMITTED" and assessment.reviewer_id == user.id %}
+                                                            <i class="fas fa-clipboard-check"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-shield-alt"></i>
+                                                        {% endif %}
+
+                                                    </a>
+
+                                                {% else %}
+
+                                                    <!-- Create Risk Assessment Only When Worksheet Is Unlocked -->
+                                                    {% if not entry.is_locked %}
+                                                        <a href="{% url 'hazop:risk_assessment_create' node_pk=node.pk entry_pk=entry.pk %}"
+                                                        class="btn btn-sm btn-outline-warning hazop-action-btn"
+                                                        title="Create Risk Assessment"
+                                                        aria-label="Create Risk Assessment">
+
+                                                            <i class="fas fa-shield-alt"></i>
+
+                                                        </a>
+                                                    {% endif %}
+
+                                                {% endif %}
+
+                                            {% endwith %}
+
+
+                                            <!-- Worksheet Entry -->
+                                            {% if not entry.is_locked %}
+
+                                                <!-- Edit Worksheet Entry -->
+                                                <a href="{% url 'hazop:worksheet_edit' node_pk=node.pk pk=entry.pk %}"
+                                                class="btn btn-sm btn-outline-primary hazop-action-btn"
+                                                title="Edit Worksheet Entry"
+                                                aria-label="Edit Worksheet Entry">
+
+                                                    <i class="fas fa-edit"></i>
+
+                                                </a>
+
+                                            {% endif %}
+
+
+                                            <!-- Causes -->
+                                            {% if not entry.is_locked %}
+
+                                                <a href="{% url 'hazop:cause_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-primary hazop-action-btn"
+                                                title="Manage Causes"
+                                                aria-label="Manage Causes">
+
+                                                    <i class="fas fa-exclamation-circle"></i>
+
+                                                </a>
+
+                                            {% else %}
+
+                                                <a href="{% url 'hazop:cause_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-secondary hazop-action-btn"
+                                                title="View Causes"
+                                                aria-label="View Causes">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            {% endif %}
+
+
+                                            <!-- Consequences -->
+                                            {% if not entry.is_locked %}
+
+                                                <a href="{% url 'hazop:consequence_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-warning hazop-action-btn"
+                                                title="Manage Consequences"
+                                                aria-label="Manage Consequences">
+
+                                                    <i class="fas fa-bolt"></i>
+
+                                                </a>
+
+                                            {% else %}
+
+                                                <a href="{% url 'hazop:consequence_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-secondary hazop-action-btn"
+                                                title="View Consequences"
+                                                aria-label="View Consequences">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            {% endif %}
+
+
+                                            <!-- Safeguards -->
+                                            {% if not entry.is_locked %}
+
+                                                <a href="{% url 'hazop:safeguard_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-success hazop-action-btn"
+                                                title="Manage Safeguards"
+                                                aria-label="Manage Safeguards">
+
+                                                    <i class="fas fa-shield-alt"></i>
+
+                                                </a>
+
+                                            {% else %}
+
+                                                <a href="{% url 'hazop:safeguard_list' entry.pk %}"
+                                                class="btn btn-sm btn-outline-secondary hazop-action-btn"
+                                                title="View Safeguards"
+                                                aria-label="View Safeguards">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            {% endif %}
+
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            {% empty %}
+                                <tr>
+                                    <td colspan="11">
+                                        <div class="hazop-empty-state">
+                                            <i class="fas fa-clipboard-list d-block"></i>
+
+                                            <h6>No Worksheet Entries Yet</h6>
+
+                                            <p>
+                                                Add the first worksheet entry
+                                                to start documenting deviations.
+                                            </p>
+                                            {% if not is_locked %}
+                                            <a href="{% url 'hazop:worksheet_create' node_pk=node.pk %}"
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fas fa-plus mr-1"></i>
+                                                Add First Entry
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="card-footer">
+                <a href="{% url 'hazop:node_list' study_pk=study.pk %}"
+                   class="btn btn-default btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Nodes
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

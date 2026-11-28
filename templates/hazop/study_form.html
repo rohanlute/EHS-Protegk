@@ -1,0 +1,587 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}{{ page_title }} | HAZOP{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-page-header {
+        padding: 18px 0 10px;
+    }
+
+    .hazop-page-header h1 {
+        font-size: 1.55rem;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 5px;
+    }
+
+    .hazop-page-header .page-description {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .hazop-form-card {
+        border: 0;
+        border-radius: 10px;
+        box-shadow: 0 3px 18px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .hazop-form-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        padding: 18px 22px;
+    }
+
+    .hazop-form-card .card-body {
+        padding: 24px;
+    }
+
+    .hazop-section-title {
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 18px;
+    }
+
+    .hazop-section-title i {
+        color: #007bff;
+        margin-right: 9px;
+        font-size: 16px;
+    }
+
+    .hazop-section-description {
+        color: #6c757d;
+        font-size: 13px;
+        margin-top: -10px;
+        margin-bottom: 20px;
+    }
+
+    .hazop-field {
+        margin-bottom: 20px;
+    }
+
+    .hazop-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 7px;
+    }
+
+    .hazop-field .form-control {
+        min-height: 42px;
+        border-radius: 6px;
+        border: 1px solid #dce1e6;
+        font-size: 14px;
+        box-shadow: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .hazop-field textarea.form-control {
+        height: auto;
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .hazop-field .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.10);
+    }
+
+    .hazop-required {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+
+    .hazop-help-text {
+        display: block;
+        color: #83909c;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .hazop-field-error {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .hazop-section-divider {
+        border-top: 1px solid #edf0f2;
+        margin: 8px 0 24px;
+    }
+
+    .hazop-form-footer {
+        background: #fafbfc;
+        border-top: 1px solid #edf0f2;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .hazop-form-footer .btn {
+        border-radius: 6px;
+        padding: 9px 18px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .hazop-form-note {
+        font-size: 12px;
+        color: #83909c;
+    }
+
+    .hazop-dropdown-loading {
+        color: #007bff;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .hazop-alert {
+        border-radius: 7px;
+        font-size: 14px;
+    }
+
+    .hazop-form-card .form-check {
+        margin-bottom: 8px;
+    }
+
+    .hazop-form-card input[type="checkbox"],
+    .hazop-form-card input[type="radio"] {
+        margin-right: 7px;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-form-card .card-body {
+            padding: 18px;
+        }
+
+        .hazop-form-card .card-header {
+            padding: 16px 18px;
+        }
+
+        .hazop-form-footer {
+            padding: 16px 18px;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<section class="content-header hazop-page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-md-7">
+                <h1>
+                    <i class="fas fa-clipboard-list text-primary mr-2"></i>
+                    {{ page_title }}
+                </h1>
+
+                <p class="page-description">
+                    Create and manage HAZOP study details, ownership and planning.
+                </p>
+            </div>
+
+            <div class="col-md-5">
+                <ol class="breadcrumb float-md-right mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'hazop:dashboard' %}">HAZOP</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'hazop:study_list' %}">
+                            Study Register
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">
+                        {{ page_title }}
+                    </li>
+                </ol>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="content pb-4">
+    <div class="container-fluid">
+
+        <form method="post"
+              enctype="multipart/form-data"
+              id="hazopStudyForm"
+              novalidate>
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger hazop-alert">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="card hazop-form-card">
+
+                <!-- Form Header -->
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+
+                        <div class="mr-3">
+                            <span class="bg-light rounded p-3 d-inline-block">
+                                <i class="fas fa-file-alt text-primary fa-lg"></i>
+                            </span>
+                        </div>
+
+                        <div>
+                            <h3 class="card-title font-weight-bold mb-1">
+                                HAZOP Study Information
+                            </h3>
+
+                            <small class="text-muted">
+                                Enter the study details below. Fields marked
+                                <span class="text-danger">*</span> are required.
+                            </small>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- Study Details -->
+                    <div class="hazop-section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Study Details
+                    </div>
+
+                    <p class="hazop-section-description">
+                        Define the study name, type, methodology, ownership,
+                        schedule and other study information.
+                    </p>
+
+                    <div class="row">
+
+                        {% for field in form %}
+
+                            {% if field.is_hidden %}
+
+                                {{ field }}
+
+                            {% else %}
+
+                                <div class="{% if 'scope' in field.name or 'objective' in field.name or 'reference_documents' in field.name or 'remarks' in field.name %}col-12{% else %}col-lg-6 col-md-6 col-12{% endif %}">
+                                    <div class="hazop-field">
+
+                                        <label for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+
+                                            {% if field.field.required %}
+                                                <span class="hazop-required">*</span>
+                                            {% endif %}
+                                        </label>
+
+                                        {{ field }}
+
+                                        {% if field.help_text %}
+                                            <small class="hazop-help-text">
+                                                {{ field.help_text }}
+                                            </small>
+                                        {% endif %}
+
+                                        {% for error in field.errors %}
+                                            <div class="hazop-field-error">
+                                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+
+                                        {% if field.name == "zone" %}
+                                            <div class="hazop-dropdown-loading"
+                                                 id="zoneLoading">
+                                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                                Loading zones...
+                                            </div>
+                                        {% elif field.name == "location" %}
+                                            <div class="hazop-dropdown-loading"
+                                                 id="locationLoading">
+                                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                                Loading locations...
+                                            </div>
+                                        {% elif field.name == "sub_location" %}
+                                            <div class="hazop-dropdown-loading"
+                                                 id="sub_locationLoading">
+                                                <i class="fas fa-spinner fa-spin mr-1"></i>
+                                                Loading sub-locations...
+                                            </div>
+                                        {% endif %}
+
+                                    </div>
+                                </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                <!-- Form Footer -->
+                <div class="hazop-form-footer">
+
+                    <div class="hazop-form-note">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Please review the information before saving.
+                    </div>
+
+                    <div>
+                        <a href="{% url 'hazop:study_list' %}"
+                           class="btn btn-default mr-2">
+                            <i class="fas fa-times mr-1"></i>
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i>
+                            Save Study
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function () {
+
+    const $plant = $("#id_plant");
+    const $zone = $("#id_zone");
+    const $location = $("#id_location");
+    const $subLocation = $("#id_sub_location");
+
+    const zonesUrl = "{% url 'hazop:zones_by_plant' %}";
+    const locationsUrl = "{% url 'hazop:locations_by_zone' %}";
+    const subLocationsUrl = "{% url 'hazop:sub_locations_by_location' %}";
+
+    function resetSelect($select, placeholder) {
+        if (!$select.length) {
+            return;
+        }
+
+        $select.empty().append(
+            $("<option>", {
+                value: "",
+                text: placeholder
+            })
+        );
+    }
+
+    function loadOptions(
+        url,
+        parameterName,
+        parentId,
+        $select,
+        placeholder,
+        selectedValue,
+        loadingId
+    ) {
+        if (!$select.length) {
+            return $.Deferred().resolve().promise();
+        }
+
+        resetSelect($select, placeholder);
+
+        if (!parentId) {
+            return $.Deferred().resolve().promise();
+        }
+
+        if (loadingId) {
+            $("#" + loadingId).show();
+        }
+
+        $select.prop("disabled", true);
+
+        return $.getJSON(url, {
+            [parameterName]: parentId
+        })
+        .done(function (data) {
+
+            $.each(data, function (index, item) {
+                $select.append(
+                    $("<option>", {
+                        value: item.id,
+                        text: item.name
+                    })
+                );
+            });
+
+            if (selectedValue) {
+                $select.val(String(selectedValue));
+            }
+
+        })
+        .fail(function () {
+
+            if (typeof toastr !== "undefined") {
+                toastr.error("Unable to load dropdown options.");
+            } else {
+                console.error("Unable to load dropdown options.");
+            }
+
+        })
+        .always(function () {
+
+            $select.prop("disabled", false);
+
+            if (loadingId) {
+                $("#" + loadingId).hide();
+            }
+
+        });
+    }
+
+    // Plant change
+    $plant.on("change", function () {
+
+        resetSelect($zone, "Select Zone");
+        resetSelect($location, "Select Location");
+        resetSelect($subLocation, "Select Sub Location");
+
+        loadOptions(
+            zonesUrl,
+            "plant_id",
+            $(this).val(),
+            $zone,
+            "Select Zone",
+            null,
+            "zoneLoading"
+        );
+
+    });
+
+    // Zone change
+    $zone.on("change", function () {
+
+        resetSelect($location, "Select Location");
+        resetSelect($subLocation, "Select Sub Location");
+
+        loadOptions(
+            locationsUrl,
+            "zone_id",
+            $(this).val(),
+            $location,
+            "Select Location",
+            null,
+            "locationLoading"
+        );
+
+    });
+
+    // Location change
+    $location.on("change", function () {
+
+        resetSelect($subLocation, "Select Sub Location");
+
+        loadOptions(
+            subLocationsUrl,
+            "location_id",
+            $(this).val(),
+            $subLocation,
+            "Select Sub Location",
+            null,
+            "sub_locationLoading"
+        );
+
+    });
+
+    // Preserve selected hierarchy values while editing.
+    const selectedPlant = $plant.val();
+    const selectedZone = $zone.val();
+    const selectedLocation = $location.val();
+    const selectedSubLocation = $subLocation.val();
+
+    if (selectedPlant) {
+
+        loadOptions(
+            zonesUrl,
+            "plant_id",
+            selectedPlant,
+            $zone,
+            "Select Zone",
+            selectedZone,
+            "zoneLoading"
+        ).done(function () {
+
+            if (selectedZone) {
+
+                loadOptions(
+                    locationsUrl,
+                    "zone_id",
+                    selectedZone,
+                    $location,
+                    "Select Location",
+                    selectedLocation,
+                    "locationLoading"
+                ).done(function () {
+
+                    if (selectedLocation) {
+
+                        loadOptions(
+                            subLocationsUrl,
+                            "location_id",
+                            selectedLocation,
+                            $subLocation,
+                            "Select Sub Location",
+                            selectedSubLocation,
+                            "sub_locationLoading"
+                        );
+
+                    }
+
+                });
+
+            }
+
+        });
+
+    }
+
+    // Apply Bootstrap styling to Django-generated fields.
+    $("#hazopStudyForm")
+        .find("input, select, textarea")
+        .not("[type=checkbox]")
+        .not("[type=radio]")
+        .addClass("form-control");
+
+    // Add spacing to checkbox and radio controls.
+    $("#hazopStudyForm")
+        .find('input[type="checkbox"], input[type="radio"]')
+        .addClass("mr-2");
+
+    // Add validation styling to fields containing errors.
+    $("#hazopStudyForm .hazop-field-error")
+        .closest(".hazop-field")
+        .find(".form-control")
+        .addClass("is-invalid");
+
+});
+</script>
+{% endblock %}

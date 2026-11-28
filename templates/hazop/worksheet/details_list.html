@@ -1,0 +1,354 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}{{ detail_type }} Management | HAZOP{% endblock %}
+{% block page_title %}{{ detail_type }} Management{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-page-header {
+        padding: 14px 0 8px;
+    }
+
+    .hazop-page-header h1 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #343a40;
+    }
+
+    .hazop-page-header p {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .hazop-context-info {
+        display: inline-block;
+        background: #f4f7fb;
+        border: 1px solid #e8edf3;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: #495057;
+    }
+
+    .hazop-detail-card {
+        border: 0;
+        border-radius: 9px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .05);
+        overflow: hidden;
+    }
+
+    .hazop-detail-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        padding: 13px 18px;
+    }
+
+    .hazop-detail-card .card-body {
+        padding: 0;
+    }
+
+    .hazop-detail-card .card-footer {
+        background: #fafbfc;
+        border-top: 1px solid #edf0f2;
+        padding: 12px 18px;
+    }
+
+    .hazop-detail-table {
+        margin-bottom: 0;
+        font-size: 13px;
+    }
+
+    .hazop-detail-table thead th {
+        background: #f8f9fa;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 11px 14px;
+        border-top: 0;
+        white-space: nowrap;
+    }
+
+    .hazop-detail-table tbody td {
+        padding: 11px 14px;
+        vertical-align: middle;
+        border-color: #edf0f2;
+        color: #495057;
+    }
+
+    .hazop-detail-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .hazop-category-badge {
+        display: inline-block;
+        background: #eef5ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 9px;
+        border-radius: 5px;
+    }
+
+    .hazop-description {
+        min-width: 250px;
+        white-space: pre-line;
+        line-height: 1.55;
+    }
+
+    .hazop-detail-count {
+        background: #eef5ff;
+        color: #2563eb;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .hazop-action-btn {
+        width: 31px;
+        height: 31px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 6px;
+    }
+
+    .hazop-empty-state {
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .hazop-empty-state i {
+        font-size: 32px;
+        color: #c5cdd5;
+        margin-bottom: 12px;
+    }
+
+    .hazop-empty-state h6 {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .hazop-empty-state p {
+        font-size: 13px;
+        color: #83909c;
+    }
+
+    .hazop-detail-card .btn {
+        font-size: 13px;
+        border-radius: 6px;
+    }
+</style>
+
+<section class="content-header hazop-page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-md-8">
+                <h1>
+                    <i class="fas fa-list-ul text-primary mr-2"></i>
+                    {{ detail_type }} Management
+                </h1>
+
+                <p>
+                    Manage {{ detail_type|lower }} records for this worksheet entry.
+                </p>
+
+                <div class="hazop-context-info">
+                    <i class="fas fa-clipboard-check text-primary mr-1"></i>
+                    Study:
+                    <strong>{{ entry.node.study.study_number }}</strong>
+
+                    <span class="mx-1">|</span>
+
+                    Node:
+                    <strong>{{ entry.node.node_number }}</strong>
+
+                    <span class="mx-1">|</span>
+
+                    Entry:
+                    <strong>{{ entry.entry_number }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-4 text-md-right mt-2 mt-md-0">
+                <a href="{{ create_url }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add {{ detail_type }}
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="content pb-3">
+    <div class="container-fluid">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    <button type="button"
+                            class="close"
+                            data-dismiss="alert"
+                            aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card hazop-detail-card">
+
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <h3 class="card-title font-weight-bold mb-0">
+                        <i class="fas fa-table text-primary mr-2"></i>
+                        {{ detail_type }} List
+                    </h3>
+
+                    <span class="hazop-detail-count">
+                        {{ detail_rows|length }} Records
+                    </span>
+
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover hazop-detail-table">
+
+                        <thead>
+                            <tr>
+                                <th style="width: 55px;">#</th>
+                                <th style="width: 220px;">Category</th>
+                                <th>Description</th>
+                                <th class="text-center" style="width: 100px;">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in detail_rows %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+
+                                    <td>
+                                        {% if row.category %}
+                                            <span class="hazop-category-badge">
+                                                {{ row.category.name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                Not specified
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <div class="hazop-description">
+                                            {{ row.description|default:"-" }}
+                                        </div>
+                                    </td>
+
+                                    
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center" style="gap: 6px;">
+
+                                            {% if not is_locked %}
+
+                                                <!-- Edit -->
+                                                <a href="{% url edit_url_name entry.pk row.object.pk %}"
+                                                class="btn btn-sm btn-outline-primary hazop-action-btn"
+                                                title="Edit {{ detail_type }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+
+                                                <!-- Deactivate -->
+                                                <form method="post"
+                                                    action="{% url deactivate_url_name entry.pk row.object.pk %}"
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('Are you sure you want to deactivate this record?');">
+
+                                                    {% csrf_token %}
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger hazop-action-btn"
+                                                            title="Deactivate {{ detail_type }}">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+
+                                            {% else %}
+
+                                                <span class="text-muted"
+                                                    title="This worksheet has been submitted and is locked">
+                                                    <i class="fas fa-lock"></i>
+                                                </span>
+
+                                            {% endif %}
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="hazop-empty-state">
+                                            <i class="fas fa-list-ul d-block"></i>
+
+                                            <h6>
+                                                No {{ detail_type|lower }} Records Yet
+                                            </h6>
+
+                                            <p>
+                                                Add the first {{ detail_type|lower }}
+                                                record to this worksheet entry.
+                                            </p>
+
+                                            {% if not is_locked %}
+                                                <a href="{{ create_url }}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-plus mr-1"></i>
+                                                    Add First {{ detail_type }}
+                                                </a>
+                                            {% else %}
+                                                <p class="text-muted mb-0">
+                                                    <i class="fas fa-lock mr-1"></i>
+                                                    This worksheet is locked. No changes are allowed.
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'hazop:worksheet_list' node_pk=entry.node.pk %}"
+                   class="btn btn-default btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Worksheet
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

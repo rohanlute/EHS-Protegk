@@ -1,0 +1,340 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:dashboard' %}">HAZOP</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:configuration' %}">Configuration</a>
+</li>
+<li class="breadcrumb-item active">{{ page_title }}</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-config-form {
+        font-size: 12px;
+        color: #344054;
+    }
+
+    .hazop-config-form .config-form-card {
+        background: #ffffff;
+        border: 1px solid #e8edf2;
+        border-radius: 9px;
+        box-shadow: 0 2px 8px rgba(20, 40, 70, 0.04);
+        overflow: hidden;
+    }
+
+    .hazop-config-form .config-form-header {
+        display: flex;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid #edf0f4;
+        background: #ffffff;
+    }
+
+    .hazop-config-form .config-form-header-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eff6ff;
+        color: #2878c7;
+        border-radius: 7px;
+        margin-right: 10px;
+        font-size: 13px;
+    }
+
+    .hazop-config-form .config-form-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #29384a;
+        margin: 0;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .hazop-config-form .config-form-body {
+        padding: 20px;
+    }
+
+    .hazop-config-form .config-form-description {
+        font-size: 11px;
+        color: #98a2b3;
+        margin-bottom: 18px;
+        line-height: 1.5;
+    }
+
+    .hazop-config-form .config-form-row {
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+
+    .hazop-config-form .config-form-field {
+        padding-left: 10px;
+        padding-right: 10px;
+        margin-bottom: 17px;
+        min-width: 0;
+    }
+
+    .hazop-config-form .config-form-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #475467;
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    .hazop-config-form .config-form-field input:not([type="checkbox"]):not([type="radio"]),
+    .hazop-config-form .config-form-field select,
+    .hazop-config-form .config-form-field textarea {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        font-size: 12px;
+        color: #344054;
+        border: 1px solid #d0d5dd;
+        border-radius: 5px;
+        padding: 8px 10px;
+        background-color: #ffffff;
+        box-shadow: none;
+        line-height: 1.4;
+    }
+
+    .hazop-config-form .config-form-field input:not([type="checkbox"]):not([type="radio"]),
+    .hazop-config-form .config-form-field select {
+        min-height: 35px;
+    }
+
+    .hazop-config-form .config-form-field textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .hazop-config-form .config-form-field input:focus,
+    .hazop-config-form .config-form-field select:focus,
+    .hazop-config-form .config-form-field textarea:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.08);
+    }
+
+    .hazop-config-form .config-form-field input[type="checkbox"],
+    .hazop-config-form .config-form-field input[type="radio"] {
+        width: 14px;
+        height: 14px;
+        margin: 2px 7px 0 0;
+        vertical-align: top;
+    }
+
+    .hazop-config-form .config-form-field label:has(input[type="checkbox"]),
+    .hazop-config-form .config-form-field label:has(input[type="radio"]) {
+        display: inline-flex;
+        align-items: flex-start;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .hazop-config-form .config-form-field .form-check {
+        padding-left: 0;
+    }
+
+    .hazop-config-form .config-form-field .form-check-input {
+        position: static;
+        margin-left: 0;
+    }
+
+    .hazop-config-form .config-form-field .form-check-label {
+        display: inline;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .hazop-config-form .config-form-field .form-text,
+    .hazop-config-form .config-form-field small {
+        display: block;
+        font-size: 10px;
+        color: #98a2b3;
+        line-height: 1.5;
+        margin-top: 5px;
+    }
+
+    .hazop-config-form .config-form-field ul.errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0;
+        color: #b42318;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .hazop-config-form .config-form-field .is-invalid,
+    .hazop-config-form .config-form-field input.is-invalid,
+    .hazop-config-form .config-form-field select.is-invalid,
+    .hazop-config-form .config-form-field textarea.is-invalid {
+        border-color: #f04438;
+    }
+
+    .hazop-config-form .config-form-errors {
+        font-size: 11px;
+        border-radius: 6px;
+        padding: 10px 13px;
+        margin-bottom: 18px;
+    }
+
+    .hazop-config-form .config-form-footer {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px solid #edf0f4;
+        padding-top: 16px;
+        margin-top: 5px;
+    }
+
+    .hazop-config-form .config-form-btn {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 7px 13px;
+        border-radius: 5px;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 767.98px) {
+        .hazop-config-form .config-form-body {
+            padding: 15px;
+        }
+
+        .hazop-config-form .config-form-header {
+            padding: 12px 15px;
+        }
+
+        .hazop-config-form .config-form-footer {
+            align-items: stretch;
+        }
+
+        .hazop-config-form .config-form-btn {
+            flex: 1 1 auto;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="hazop-config-form">
+    <div class="config-form-card">
+
+        <!-- Form Header -->
+        <div class="config-form-header">
+            <div class="config-form-header-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+
+            <h5 class="config-form-title">
+                {{ page_title }}
+            </h5>
+        </div>
+
+        <!-- Form Body -->
+        <div class="config-form-body">
+
+            <p class="config-form-description">
+                Enter the configuration details below. Fields marked with
+                <span class="text-danger">*</span> are required.
+            </p>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger config-form-errors">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row config-form-row">
+
+                    {% for field in form %}
+                        <div class="col-12 col-md-6 config-form-field">
+
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <small id="{{ field.id_for_label }}_help">
+                                    {{ field.help_text|safe }}
+                                </small>
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <ul class="errorlist">
+                                    {% for error in field.errors %}
+                                        <li>
+                                            <i class="fas fa-exclamation-circle mr-1"></i>
+                                            {{ error }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <!-- Form Actions -->
+                <div class="config-form-footer">
+
+                    <button type="submit"
+                            class="btn btn-primary config-form-btn">
+                        <i class="fas fa-save mr-1"></i>
+                        Save
+                    </button>
+
+                    {% if list_url_name %}
+                        <a href="{% url list_url_name %}"
+                           class="btn btn-outline-secondary config-form-btn">
+                            <i class="fas fa-times mr-1"></i>
+                            Cancel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'hazop:configuration' %}"
+                           class="btn btn-outline-secondary config-form-btn">
+                            <i class="fas fa-times mr-1"></i>
+                            Cancel
+                        </a>
+                    {% endif %}
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

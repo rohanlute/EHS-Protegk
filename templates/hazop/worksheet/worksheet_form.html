@@ -1,0 +1,513 @@
+
+{% extends "base/base.html" %}
+
+{% block title %}{{ page_title }} | HAZOP{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-page-header {
+        padding: 14px 0 8px;
+    }
+
+    .hazop-page-header h1 {
+        font-size: 1.45rem;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 4px;
+    }
+
+    .hazop-page-header .page-description {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .hazop-form-card {
+        border: 0;
+        border-radius: 9px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+
+    .hazop-form-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        padding: 13px 18px;
+    }
+
+    .hazop-form-card .card-body {
+        padding: 18px 20px;
+    }
+
+    .hazop-form-card .card-footer {
+        background: #fafbfc;
+        border-top: 1px solid #edf0f2;
+        padding: 12px 18px;
+    }
+
+    .hazop-section-heading {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 0;
+    }
+
+    .hazop-section-heading i {
+        color: #007bff;
+        margin-right: 9px;
+        font-size: 15px;
+    }
+
+    .hazop-form-field {
+        margin-bottom: 15px;
+    }
+
+    .hazop-form-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+
+    .hazop-form-field .form-control {
+        min-height: 39px;
+        border: 1px solid #dce1e6;
+        border-radius: 6px;
+        font-size: 13px;
+        box-shadow: none;
+    }
+
+    .hazop-form-field textarea.form-control {
+        min-height: 95px;
+        resize: vertical;
+    }
+
+    .hazop-form-field .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.08);
+    }
+
+    .hazop-required {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+
+    .hazop-help-text {
+        display: block;
+        color: #83909c;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .hazop-field-error {
+        display: block;
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .hazop-context-info {
+        display: inline-block;
+        background: #f4f7fb;
+        border: 1px solid #e8edf3;
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #495057;
+    }
+
+    .hazop-risk-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 12px;
+    }
+
+    .hazop-risk-label.initial {
+        color: #c17d11;
+    }
+
+    .hazop-risk-label.residual {
+        color: #218838;
+    }
+
+    .hazop-form-actions .btn {
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 8px 15px;
+    }
+
+    .hazop-form-card .form-check {
+        margin-bottom: 5px;
+    }
+
+    .hazop-form-card input[type="checkbox"],
+    .hazop-form-card input[type="radio"] {
+        margin-right: 7px;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-page-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .hazop-form-card .card-body {
+            padding: 16px;
+        }
+
+        .hazop-page-header .header-actions {
+            margin-top: 12px;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<section class="content-header hazop-page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-md-8">
+                <h1>
+                    <i class="fas fa-clipboard-list text-primary mr-2"></i>
+                    {{ page_title }}
+                </h1>
+
+                <p class="page-description">
+                    Create and manage HAZOP worksheet deviations for the selected node.
+                </p>
+
+                <div class="hazop-context-info">
+                    <i class="fas fa-clipboard-check text-primary mr-1"></i>
+                    Study: <strong>{{ study.study_number }}</strong>
+                    <span class="mx-1">|</span>
+                    Node: <strong>{{ node.node_number }}</strong>
+                    - {{ node.node_name }}
+                </div>
+            </div>
+
+            <div class="col-md-4 text-md-right header-actions">
+                <a href="{% url 'hazop:worksheet_list' node_pk=node.pk %}"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Worksheet
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="content pb-3">
+    <div class="container-fluid">
+
+        <form method="post" id="hazopWorksheetForm" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Deviation Details -->
+            <div class="card hazop-form-card">
+
+                <div class="card-header">
+                    <h3 class="hazop-section-heading">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Deviation Details
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+
+                        {% for field in form %}
+                            {% if field.name != "initial_severity" and field.name != "initial_likelihood" and field.name != "residual_severity" and field.name != "residual_likelihood" and field.name != "remarks" and field.name != "is_active" %}
+
+                                {% if field.is_hidden %}
+                                    {{ field }}
+                                {% else %}
+
+                                    <div class="{% if 'description' in field.name or 'remarks' in field.name %}col-12{% else %}col-lg-6 col-md-6 col-12{% endif %}">
+                                        <div class="hazop-form-field">
+
+                                            <label for="{{ field.id_for_label }}">
+                                                {{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="hazop-required">*</span>
+                                                {% endif %}
+                                            </label>
+
+                                            {{ field }}
+
+                                            {% if field.help_text %}
+                                                <small class="hazop-help-text">
+                                                    {{ field.help_text }}
+                                                </small>
+                                            {% endif %}
+
+                                            {% for error in field.errors %}
+                                                <small class="hazop-field-error">
+                                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                                    {{ error }}
+                                                </small>
+                                            {% endfor %}
+
+                                        </div>
+                                    </div>
+
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Initial Risk Assessment -->
+            <div class="card hazop-form-card">
+
+                <div class="card-header">
+                    <h3 class="hazop-section-heading">
+                        <i class="fas fa-chart-line"></i>
+                        Initial Risk Assessment
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="hazop-risk-label initial">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Initial Risk
+                    </div>
+
+                    <div class="row">
+                        {% for field in form %}
+                            {% if field.name == "initial_severity" or field.name == "initial_likelihood" %}
+
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="hazop-form-field">
+
+                                        <label for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="hazop-required">*</span>
+                                            {% endif %}
+                                        </label>
+
+                                        {{ field }}
+
+                                        {% if field.help_text %}
+                                            <small class="hazop-help-text">
+                                                {{ field.help_text }}
+                                            </small>
+                                        {% endif %}
+
+                                        {% for error in field.errors %}
+                                            <small class="hazop-field-error">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Residual Risk Assessment -->
+            <div class="card hazop-form-card">
+
+                <div class="card-header">
+                    <h3 class="hazop-section-heading">
+                        <i class="fas fa-shield-alt"></i>
+                        Residual Risk Assessment
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="hazop-risk-label residual">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Residual Risk
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        Residual risk represents the remaining risk after safeguards
+                        and recommendations have been evaluated.
+                    </p>
+
+                    <div class="row">
+                        {% for field in form %}
+                            {% if field.name == "residual_severity" or field.name == "residual_likelihood" %}
+
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="hazop-form-field">
+
+                                        <label for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="hazop-required">*</span>
+                                            {% endif %}
+                                        </label>
+
+                                        {{ field }}
+
+                                        {% if field.help_text %}
+                                            <small class="hazop-help-text">
+                                                {{ field.help_text }}
+                                            </small>
+                                        {% endif %}
+
+                                        {% for error in field.errors %}
+                                            <small class="hazop-field-error">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="card hazop-form-card">
+
+                <div class="card-header">
+                    <h3 class="hazop-section-heading">
+                        <i class="fas fa-info-circle"></i>
+                        Additional Information
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    {% for field in form %}
+                        {% if field.name == "remarks" %}
+
+                            <div class="hazop-form-field">
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="hazop-required">*</span>
+                                    {% endif %}
+                                </label>
+
+                                {{ field }}
+
+                                {% if field.help_text %}
+                                    <small class="hazop-help-text">
+                                        {{ field.help_text }}
+                                    </small>
+                                {% endif %}
+
+                                {% for error in field.errors %}
+                                    <small class="hazop-field-error">
+                                        {{ error }}
+                                    </small>
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for field in form %}
+                        {% if field.name == "is_active" %}
+
+                            <div class="form-check">
+                                {{ field }}
+
+                                <label class="form-check-label"
+                                       for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+
+                            {% for error in field.errors %}
+                                <small class="hazop-field-error">
+                                    {{ error }}
+                                </small>
+                            {% endfor %}
+
+                        {% endif %}
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="card hazop-form-card">
+                <div class="card-footer d-flex justify-content-between align-items-center flex-wrap">
+
+                    <small class="text-muted mb-2 mb-md-0">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Review the worksheet details before saving.
+                    </small>
+
+                    <div class="hazop-form-actions">
+                        <a href="{% url 'hazop:worksheet_list' node_pk=node.pk %}"
+                           class="btn btn-default mr-2">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i>
+                            Save Worksheet Entry
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function () {
+
+    const $form = $("#hazopWorksheetForm");
+
+    // Apply Bootstrap styling to Django-generated fields.
+    $form.find("input, select, textarea")
+        .not("[type=checkbox]")
+        .not("[type=radio]")
+        .not("[type=hidden]")
+        .addClass("form-control");
+
+    // Style checkbox and radio controls.
+    $form.find('input[type="checkbox"], input[type="radio"]')
+        .addClass("mr-2");
+
+    // Highlight fields containing validation errors.
+    $form.find(".hazop-field-error")
+        .closest(".hazop-form-field")
+        .find(".form-control")
+        .addClass("is-invalid");
+
+});
+</script>
+{% endblock %}

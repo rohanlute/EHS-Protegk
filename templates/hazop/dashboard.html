@@ -1,0 +1,685 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}HAZOP Management{% endblock %}
+
+{% block page_title %}
+HAZOP Management
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item active">HAZOP Management</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-dashboard {
+        --hazop-primary: #2563eb;
+        --hazop-border: #e5e7eb;
+        --hazop-text: #1f2937;
+        --hazop-muted: #6b7280;
+        color: var(--hazop-text);
+    }
+
+    /* Hero */
+    .hazop-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb 65%, #3b82f6);
+        color: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.14);
+    }
+
+    .hazop-hero::after {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        right: -90px;
+        top: -110px;
+        border: 38px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hazop-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hazop-hero-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 13px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .hazop-hero h3 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .hazop-hero p {
+        max-width: 680px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 14px;
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    .hazop-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .hazop-hero-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 17px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .hazop-hero-btn-primary {
+        background: #fff;
+        color: #1d4ed8;
+    }
+
+    .hazop-hero-btn-primary:hover {
+        background: #eff6ff;
+        color: #1d4ed8;
+        transform: translateY(-2px);
+    }
+
+    .hazop-hero-btn-outline {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hazop-hero-btn-outline:hover {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* Section */
+    .hazop-section {
+        margin-bottom: 30px;
+    }
+
+    .hazop-section-header {
+        margin-bottom: 17px;
+    }
+
+    .hazop-section-title {
+        font-size: 19px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .hazop-section-subtitle {
+        font-size: 13px;
+        color: var(--hazop-muted);
+        margin-bottom: 0;
+    }
+
+    /* Module cards */
+    .hazop-module-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 215px;
+        padding: 22px;
+        background: #fff;
+        border: 1px solid var(--hazop-border);
+        border-radius: 13px;
+        color: var(--hazop-text) !important;
+        text-decoration: none !important;
+        transition: all 0.22s ease;
+    }
+
+    .hazop-module-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.07);
+        transform: translateY(-4px);
+    }
+
+    .hazop-module-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+
+    .hazop-module-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .hazop-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .hazop-icon-purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .hazop-icon-green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .hazop-icon-orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .hazop-icon-red {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .hazop-icon-teal {
+        background: #f0fdfa;
+        color: #0d9488;
+    }
+
+    .hazop-module-arrow {
+        color: #9ca3af;
+        font-size: 14px;
+        transition: transform 0.2s ease;
+    }
+
+    .hazop-module-card:hover .hazop-module-arrow {
+        transform: translateX(4px);
+        color: var(--hazop-primary);
+    }
+
+    .hazop-module-card h5 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 9px;
+    }
+
+    .hazop-module-card p {
+        color: var(--hazop-muted);
+        font-size: 13px;
+        line-height: 1.65;
+        margin-bottom: 18px;
+    }
+
+    .hazop-module-footer {
+        margin-top: auto;
+        padding-top: 13px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--hazop-primary);
+    }
+
+    .hazop-module-footer .footer-icon {
+        color: #9ca3af;
+        font-weight: 400;
+    }
+
+    /* Feature cards */
+    .hazop-feature-card {
+        background: #fff;
+        border: 1px solid var(--hazop-border);
+        border-radius: 13px;
+        padding: 24px;
+        height: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .hazop-feature-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+    }
+
+    .hazop-feature-card h5 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 9px;
+    }
+
+    .hazop-feature-card p {
+        font-size: 13px;
+        color: var(--hazop-muted);
+        line-height: 1.7;
+        margin-bottom: 18px;
+    }
+
+    .hazop-feature-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #2563eb;
+        text-decoration: none !important;
+    }
+
+    .hazop-feature-link:hover {
+        color: #1d4ed8;
+    }
+
+    /* Information strip */
+    .hazop-info-strip {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        padding: 18px 20px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        margin-top: 5px;
+    }
+
+    .hazop-info-icon {
+        color: #2563eb;
+        font-size: 18px;
+        margin-top: 2px;
+    }
+
+    .hazop-info-strip strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 5px;
+        color: #1f2937;
+    }
+
+    .hazop-info-strip p {
+        font-size: 12px;
+        color: var(--hazop-muted);
+        margin-bottom: 0;
+        line-height: 1.7;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-hero {
+            padding: 23px;
+        }
+
+        .hazop-hero h3 {
+            font-size: 23px;
+        }
+
+        .hazop-module-card {
+            min-height: auto;
+        }
+    }
+</style>
+
+
+<div class="hazop-dashboard">
+
+    <!-- HERO SECTION -->
+    <div class="hazop-hero">
+
+        <div class="hazop-hero-content">
+
+            <div class="hazop-hero-label">
+                <i class="fas fa-shield-alt"></i>
+                EHS Risk Management
+            </div>
+
+            <h3>Hazard and Operability Study</h3>
+
+            <p>
+                Plan and manage HAZOP studies, identify process deviations,
+                evaluate potential risks, document safeguards and track
+                recommendations through a structured workflow.
+            </p>
+
+            <div class="hazop-hero-actions">
+
+                <a href="{% url 'hazop:configuration' %}"
+                   class="hazop-hero-btn hazop-hero-btn-primary">
+
+                    <i class="fas fa-cog"></i>
+                    HAZOP Configuration
+
+                </a>
+
+                <a href="{% url 'hazop:risk_matrix_list' %}"
+                   class="hazop-hero-btn hazop-hero-btn-outline">
+
+                    <i class="fas fa-th"></i>
+                    Risk Matrix Configuration
+
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- STUDY MANAGEMENT -->
+    <div class="hazop-section">
+
+        <div class="hazop-section-header">
+            <h4 class="hazop-section-title">
+                Study Management
+            </h4>
+
+            <p class="hazop-section-subtitle">
+                Create studies and manage process nodes and worksheets.
+            </p>
+        </div>
+
+        <div class="row">
+
+            <!-- Study Register -->
+            <div class="col-xl-4 col-md-6 mb-4">
+
+                <a href="{% url 'hazop:study_list' %}"
+                   class="hazop-module-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-blue">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+
+                        <i class="fas fa-arrow-right hazop-module-arrow"></i>
+                    </div>
+
+                    <h5>HAZOP Study Register</h5>
+
+                    <p>
+                        Create and manage HAZOP studies, define study scope,
+                        assign team members and track study progress.
+                    </p>
+
+                    <div class="hazop-module-footer">
+                        <span>Manage Studies</span>
+                        <span class="footer-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- Node Register -->
+            <div class="col-xl-4 col-md-6 mb-4">
+
+                <a href="{% url 'hazop:study_list' %}"
+                   class="hazop-module-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-purple">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+
+                        <i class="fas fa-arrow-right hazop-module-arrow"></i>
+                    </div>
+
+                    <h5>Node Register</h5>
+
+                    <p>
+                        Select a HAZOP study to manage its process nodes,
+                        equipment boundaries and process parameters.
+                    </p>
+
+                    <div class="hazop-module-footer">
+                        <span>Select Study to Manage Nodes</span>
+                        <span class="footer-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- Worksheet Register -->
+            <div class="col-xl-4 col-md-6 mb-4">
+
+                <a href="{% url 'hazop:study_list' %}"
+                   class="hazop-module-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-green">
+                            <i class="fas fa-table"></i>
+                        </div>
+
+                        <i class="fas fa-arrow-right hazop-module-arrow"></i>
+                    </div>
+
+                    <h5>Worksheet Register</h5>
+
+                    <p>
+                        Select a study and node to manage guide words,
+                        deviations, causes, consequences and safeguards.
+                    </p>
+
+                    <div class="hazop-module-footer">
+                        <span>Open Study Worksheets</span>
+                        <span class="footer-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </div>
+
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- RISK MANAGEMENT -->
+    <div class="hazop-section">
+
+        <div class="hazop-section-header">
+            <h4 class="hazop-section-title">
+                Risk Management
+            </h4>
+
+            <p class="hazop-section-subtitle">
+                Configure common risk settings and access risk assessments.
+            </p>
+        </div>
+
+        <div class="row">
+
+            <!-- Risk Matrix Configuration -->
+            <div class="col-xl-6 col-md-6 mb-4">
+
+                <div class="hazop-feature-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-orange">
+                            <i class="fas fa-th"></i>
+                        </div>
+                    </div>
+
+                    <h5>Risk Matrix Configuration</h5>
+
+                    <p>
+                        Configure likelihood, severity, risk scoring
+                        and risk levels. The common matrix can be used
+                        across HAZOP studies and worksheets.
+                    </p>
+
+                    <a href="{% url 'hazop:risk_matrix_list' %}"
+                       class="hazop-feature-link">
+
+                        Configure Risk Matrix
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- Risk Levels -->
+            <div class="col-xl-6 col-md-6 mb-4">
+
+                <div class="hazop-feature-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-red">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                    </div>
+
+                    <h5>Risk Levels</h5>
+
+                    <p>
+                        Define Low, Medium, High and Critical risk
+                        categories, including score ranges and
+                        action requirements.
+                    </p>
+
+                    <a href="{% url 'hazop:risk_level_list' %}"
+                       class="hazop-feature-link">
+
+                        Manage Risk Levels
+                        <i class="fas fa-arrow-right"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- Risk Assessment -->
+            <div class="col-xl-6 col-md-6 mb-4">
+
+                <a href="{% url 'hazop:study_list' %}"
+                   class="hazop-module-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-teal">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+
+                        <i class="fas fa-arrow-right hazop-module-arrow"></i>
+                    </div>
+
+                    <h5>Risk Assessment</h5>
+
+                    <p>
+                        Select a study and node to review initial
+                        and residual risk scores, control measures
+                        and assigned actions.
+                    </p>
+
+                    <div class="hazop-module-footer">
+                        <span>Select Study for Assessment</span>
+                        <span class="footer-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- Risk Assessment Reports Placeholder -->
+            <div class="col-xl-6 col-md-6 mb-4">
+
+                <div class="hazop-feature-card">
+
+                    <div class="hazop-module-top">
+                        <div class="hazop-module-icon hazop-icon-purple">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+
+                    <h5>HAZOP Reports</h5>
+
+                    <p>
+                        Report functionality can be connected here
+                        when the HAZOP report dashboard and export
+                        views are implemented.
+                    </p>
+
+                    <span class="hazop-feature-link"
+                          style="color: #9ca3af; cursor: default;">
+
+                        <i class="fas fa-clock"></i>
+                        Coming Soon
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- INFORMATION -->
+    <div class="hazop-info-strip">
+
+        <div class="hazop-info-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+
+        <div>
+
+            <strong>Common Risk Matrix Configuration</strong>
+
+            <p>
+                Risk Matrix Configuration is maintained centrally.
+                Individual HAZOP worksheets use the configured matrix
+                to calculate initial and residual risk scores.
+                Users do not need to create a separate matrix for
+                every worksheet.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,381 @@
+
+{% extends 'base/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{% url 'dashboards:home' %}">Home</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:dashboard' %}">HAZOP</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{% url 'hazop:configuration' %}">Configuration</a>
+</li>
+<li class="breadcrumb-item active">{{ page_title }}</li>
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .hazop-config-list {
+        font-size: 12px;
+        color: #344054;
+    }
+
+    .hazop-config-list .config-list-card {
+        background: #fff;
+        border: 1px solid #e8edf2;
+        border-radius: 9px;
+        box-shadow: 0 2px 8px rgba(20, 40, 70, 0.04);
+        overflow: hidden;
+    }
+
+    .hazop-config-list .config-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 18px;
+        background: #fff;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .hazop-config-list .config-list-title {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #29384a;
+    }
+
+    .hazop-config-list .config-list-title i {
+        color: #64748b;
+        font-size: 14px;
+        margin-right: 9px;
+    }
+
+    .hazop-config-list .config-add-btn {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 11px;
+        border-radius: 5px;
+        white-space: nowrap;
+    }
+
+    .hazop-config-list .config-table {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+
+    .hazop-config-list .config-table thead th {
+        background: #f8fafc;
+        color: #667085;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        padding: 12px 14px;
+        border-top: 0;
+        border-bottom: 1px solid #e9edf2;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .hazop-config-list .config-table tbody td {
+        padding: 13px 14px;
+        vertical-align: middle;
+        border-top: 1px solid #f0f2f5;
+        color: #475467;
+    }
+
+    .hazop-config-list .config-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    .hazop-config-list .config-code {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #344054;
+        background: #f2f4f7;
+        border: 1px solid #e4e7ec;
+        border-radius: 4px;
+        padding: 4px 7px;
+        white-space: nowrap;
+    }
+
+    .hazop-config-list .config-record-name {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #29384a;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    .hazop-config-list .config-record-description {
+        display: block;
+        font-size: 11px;
+        color: #98a2b3;
+        line-height: 1.5;
+        margin-top: 4px;
+        overflow-wrap: anywhere;
+    }
+
+    .hazop-config-list .config-badge {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .hazop-config-list .badge-default {
+        color: #175cd3;
+        background: #eff8ff;
+    }
+
+    .hazop-config-list .badge-custom {
+        color: #475467;
+        background: #f2f4f7;
+    }
+
+    .hazop-config-list .badge-active {
+        color: #027a48;
+        background: #ecfdf3;
+    }
+
+    .hazop-config-list .badge-inactive {
+        color: #b42318;
+        background: #fef3f2;
+    }
+
+    .hazop-config-list .config-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 145px;
+    }
+
+    .hazop-config-list .config-action-btn {
+        font-size: 10px;
+        line-height: 1.4;
+        padding: 5px 9px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .hazop-config-list .config-empty {
+        padding: 35px 15px !important;
+        text-align: center;
+        color: #98a2b3 !important;
+    }
+
+    .hazop-config-list .config-empty i {
+        display: block;
+        font-size: 24px;
+        color: #cbd5e1;
+        margin-bottom: 10px;
+    }
+
+    .hazop-config-list .config-empty-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #667085;
+        margin-bottom: 4px;
+    }
+
+    .hazop-config-list .config-empty-text {
+        font-size: 11px;
+        margin: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        .hazop-config-list .config-list-header {
+            padding: 12px 14px;
+        }
+
+        .hazop-config-list .config-table thead th,
+        .hazop-config-list .config-table tbody td {
+            padding: 10px;
+        }
+
+        .hazop-config-list .config-actions {
+            justify-content: flex-start;
+            min-width: 0;
+        }
+    }
+</style>
+
+<div class="hazop-config-list">
+    <div class="config-list-card">
+
+        <div class="config-list-header">
+            <h5 class="config-list-title">
+                <i class="fas fa-list"></i>
+                {{ page_title }}
+            </h5>
+
+            <a href="{% url create_url_name %}"
+               class="btn btn-primary config-add-btn">
+                <i class="fas fa-plus mr-1"></i>
+                Add New
+            </a>
+        </div>
+
+        <div class="config-list-body">
+            <div class="table-responsive">
+                <table class="table table-hover config-table">
+
+                    <thead>
+                        <tr>
+                            <th style="width: 150px;">
+                                {% if config_records and config_records.0.parameter %}
+                                    Parameter
+                                {% else %}
+                                    Code
+                                {% endif %}
+                            </th>
+
+                            <th>Name / Description</th>
+
+                            <th style="width: 100px;">Source</th>
+
+                            <th style="width: 100px;">Status</th>
+
+                            <th class="text-right" style="width: 180px;">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for record in config_records %}
+                        <tr>
+                            <td>
+                                {% if record.parameter %}
+                                    <span class="config-code">
+                                        {{ record.parameter }}
+                                    </span>
+                                {% elif record.code %}
+                                    <span class="config-code">
+                                        {{ record.code }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="config-record-name">
+                                    {% if record.parameter and record.guide_word %}
+                                        {{ record.parameter }} - {{ record.guide_word }}
+                                    {% else %}
+                                        {{ record }}
+                                    {% endif %}
+                                </span>
+
+                                {% if record.description %}
+                                    <span class="config-record-description">
+                                        {{ record.description|truncatechars:100 }}
+                                    </span>
+                                {% endif %}
+
+                                {% if record.deviation_text %}
+                                    <span class="config-record-description">
+                                        {{ record.deviation_text|truncatechars:100 }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if record.is_system_default %}
+                                    <span class="config-badge badge-default">
+                                        Default
+                                    </span>
+                                {% elif record.is_system_default == False %}
+                                    <span class="config-badge badge-custom">
+                                        Custom
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if record.is_active %}
+                                    <span class="config-badge badge-active">
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="config-badge badge-inactive">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="config-actions">
+
+                                    <a href="{% url edit_url_name record.pk %}"
+                                       class="btn btn-outline-primary config-action-btn">
+                                        <i class="fas fa-pen mr-1"></i>
+                                        Edit
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url toggle_url_name record.pk %}"
+                                          class="m-0">
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="btn btn-outline-secondary config-action-btn">
+                                            {% if record.is_active %}
+                                                <i class="fas fa-ban mr-1"></i>
+                                                Deactivate
+                                            {% else %}
+                                                <i class="fas fa-check mr-1"></i>
+                                                Activate
+                                            {% endif %}
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="config-empty">
+                                <i class="fas fa-folder-open"></i>
+
+                                <div class="config-empty-title">
+                                    No configuration records found
+                                </div>
+
+                                <p class="config-empty-text">
+                                    Click Add New to create your first record.
+                                </p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

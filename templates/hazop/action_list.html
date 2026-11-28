@@ -1,0 +1,886 @@
+
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<style>
+    .hazop-action-page {
+        --ha-primary: #2563eb;
+        --ha-border: #e8edf4;
+        --ha-muted: #64748b;
+        color: #1e293b;
+    }
+
+    .hazop-action-page .page-heading {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #172033;
+    }
+
+    .hazop-action-page .page-subtitle {
+        color: var(--ha-muted);
+        font-size: 0.9rem;
+    }
+
+    .ha-card {
+        background: #fff;
+        border: 1px solid var(--ha-border);
+        border-radius: 14px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
+    }
+
+    .ha-stat-card {
+        padding: 20px;
+        height: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ha-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .ha-stat-label {
+        color: var(--ha-muted);
+        font-size: 0.82rem;
+        font-weight: 500;
+    }
+
+    .ha-stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #172033;
+        line-height: 1.2;
+        margin-top: 8px;
+    }
+
+    .ha-stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .ha-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .ha-icon-orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .ha-icon-purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .ha-icon-green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .ha-toolbar {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--ha-border);
+    }
+
+    .ha-search {
+        position: relative;
+        max-width: 340px;
+    }
+
+    .ha-search .search-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .ha-search input {
+        padding-left: 38px;
+        border-radius: 9px;
+        border-color: #e2e8f0;
+        height: 42px;
+        font-size: 0.88rem;
+    }
+
+    .ha-search input:focus,
+    .ha-filter:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .ha-filter {
+        min-width: 155px;
+        height: 42px;
+        border-radius: 9px;
+        border-color: #e2e8f0;
+        font-size: 0.88rem;
+    }
+
+    .ha-btn-primary {
+        background: var(--ha-primary);
+        border: 1px solid var(--ha-primary);
+        color: #fff;
+        border-radius: 9px;
+        padding: 10px 16px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s ease;
+    }
+
+    .ha-btn-primary:hover {
+        background: #1d4ed8;
+        color: #fff;
+    }
+
+    .ha-table {
+        margin-bottom: 0;
+        min-width: 1050px;
+    }
+
+    .ha-table thead th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+        padding: 15px 18px;
+        border-bottom: 1px solid var(--ha-border);
+        white-space: nowrap;
+    }
+
+    .ha-table tbody td {
+        padding: 17px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.86rem;
+    }
+
+    .ha-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .ha-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    .ha-action-number {
+        font-weight: 700;
+        color: #2563eb;
+        font-size: 0.83rem;
+        white-space: nowrap;
+    }
+
+    .ha-action-description {
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.45;
+        max-width: 260px;
+    }
+
+    .ha-recommendation {
+        color: #64748b;
+        line-height: 1.45;
+        max-width: 230px;
+    }
+
+    .ha-assignee {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 150px;
+    }
+
+    .ha-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .ha-assignee-name {
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.82rem;
+    }
+
+    .ha-assignee-dept {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin-top: 2px;
+    }
+
+    .ha-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 7px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ha-priority-critical {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .ha-priority-high {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .ha-priority-medium {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .ha-priority-low {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .ha-status-open {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .ha-status-progress {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .ha-status-verification {
+        background: #fffbeb;
+        color: #b45309;
+    }
+
+    .ha-status-verified {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .ha-status-reopened {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .ha-status-cancelled {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .ha-due-date {
+        font-weight: 600;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    .ha-due-date.overdue {
+        color: #dc2626;
+    }
+
+    .ha-overdue-label {
+        display: block;
+        font-size: 0.7rem;
+        color: #dc2626;
+        margin-top: 3px;
+    }
+
+    .ha-empty-state {
+        padding: 65px 20px;
+        text-align: center;
+    }
+
+    .ha-empty-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 18px;
+        background: #f1f5f9;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 18px;
+    }
+
+    .ha-table-footer {
+        padding: 15px 20px;
+        border-top: 1px solid var(--ha-border);
+        color: #64748b;
+        font-size: 0.82rem;
+    }
+
+    @media (max-width: 767px) {
+        .hazop-action-page .page-heading {
+            font-size: 1.3rem;
+        }
+
+        .ha-toolbar {
+            padding: 15px;
+        }
+
+        .ha-search {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .ha-filter {
+            width: 100%;
+        }
+    }
+
+    .ha-status-link {
+        display: inline-flex;
+        text-decoration: none;
+        cursor: pointer;
+        border-radius: 7px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ha-status-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+    }
+
+    .ha-status-link:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 3px;
+    }
+</style>
+
+<div class="container-fluid py-4 hazop-action-page">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <h3 class="page-heading mb-1">
+                HAZOP Action Tracking
+            </h3>
+
+            <p class="page-subtitle mb-0">
+                Monitor recommendations, corrective actions and implementation progress.
+            </p>
+        </div>
+
+        <a href="{% url 'hazop:hazop_action_create' %}"
+           class="ha-btn-primary">
+            <i class="bi bi-plus-lg"></i>
+            Create Action
+        </a>
+
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3"
+                 role="alert">
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="ha-card ha-stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="ha-stat-label">Total Actions</div>
+                        <div class="ha-stat-value">{{ actions|length }}</div>
+                    </div>
+
+                    <div class="ha-stat-icon ha-icon-blue">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="ha-card ha-stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="ha-stat-label">Open Actions</div>
+                        <div class="ha-stat-value">
+                            {{ open_count|default:"0" }}
+                        </div>
+                    </div>
+
+                    <div class="ha-stat-icon ha-icon-orange">
+                        <i class="bi bi-folder2-open"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="ha-card ha-stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="ha-stat-label">In Progress</div>
+                        <div class="ha-stat-value">
+                            {{ in_progress_count|default:"0" }}
+                        </div>
+                    </div>
+
+                    <div class="ha-stat-icon ha-icon-purple">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="ha-card ha-stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="ha-stat-label">Verified Actions</div>
+                        <div class="ha-stat-value">
+                            {{ verified_count|default:"0" }}
+                        </div>
+                    </div>
+
+                    <div class="ha-stat-icon ha-icon-green">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Action Table -->
+    <div class="ha-card overflow-hidden">
+
+        <!-- Toolbar -->
+        <div class="ha-toolbar">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+                <div>
+                    <h5 class="mb-1 fw-bold">Action Register</h5>
+                    <small class="text-muted">
+                        All recommendations and assigned actions
+                    </small>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <div class="ha-search">
+                        <i class="bi bi-search search-icon"></i>
+
+                        <input type="text"
+                               id="actionSearch"
+                               class="form-control"
+                               placeholder="Search actions...">
+                    </div>
+
+                    <select id="statusFilter"
+                            class="form-select ha-filter">
+                        <option value="">All Statuses</option>
+                        <option value="OPEN">Open</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="SUBMITTED_FOR_VERIFICATION">
+                            Submitted for Verification
+                        </option>
+                        <option value="VERIFIED">Verified</option>
+                        <option value="REOPENED">Reopened</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+
+            <table class="table ha-table" id="actionTable">
+
+                <thead>
+                    <tr>
+                        <th>Action ID</th>
+                        <th>Action Details</th>
+                        <th>Recommendation</th>
+                        <th>Assigned To</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for action in actions %}
+
+                        <tr data-status="{{ action.status }}">
+
+                            <!-- Action ID -->
+                            <td>
+                                <a href="{% url 'hazop:hazop_action_detail' action.pk %}"
+                                class="ha-action-number text-decoration-none"
+                                title="View Action Details">
+
+                                    {{ action.action_number|default:"HAZOP-ACT" }}
+
+                                    <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                </a>
+                            </td>
+
+                            <!-- Description -->
+                            <td>
+                                <div class="ha-action-description">
+                                    {{ action.action_description|truncatechars:100 }}
+                                </div>
+
+                                {% if action.department %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="bi bi-building me-1"></i>
+                                        {{ action.department }}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <!-- Recommendation -->
+                            <td>
+                                <div class="ha-recommendation">
+                                    {{ action.recommendation.recommendation_description|truncatechars:80 }}
+                                </div>
+                            </td>
+
+                            <!-- Assigned User -->
+                            <td>
+                                {% if action.assigned_to %}
+
+                                    <div class="ha-assignee">
+
+                                        <div class="ha-avatar">
+                                            {{ action.assigned_to.get_full_name|default:action.assigned_to.username|slice:":1"|upper }}
+                                        </div>
+
+                                        <div>
+                                            <div class="ha-assignee-name">
+                                                {{ action.assigned_to.get_full_name|default:action.assigned_to.username }}
+                                            </div>
+
+                                            {% if action.department %}
+                                                <div class="ha-assignee-dept">
+                                                    {{ action.department }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        <i class="bi bi-person-dash me-1"></i>
+                                        Unassigned
+                                    </span>
+
+                                {% endif %}
+                            </td>
+
+                            <!-- Priority -->
+                            <td>
+                                {% if action.priority == "CRITICAL" %}
+                                    <span class="ha-badge ha-priority-critical">
+                                        <i class="bi bi-exclamation-octagon"></i>
+                                        Critical
+                                    </span>
+
+                                {% elif action.priority == "HIGH" %}
+                                    <span class="ha-badge ha-priority-high">
+                                        <i class="bi bi-arrow-up"></i>
+                                        High
+                                    </span>
+
+                                {% elif action.priority == "MEDIUM" %}
+                                    <span class="ha-badge ha-priority-medium">
+                                        <i class="bi bi-dash"></i>
+                                        Medium
+                                    </span>
+
+                                {% else %}
+                                    <span class="ha-badge ha-priority-low">
+                                        <i class="bi bi-arrow-down"></i>
+                                        Low
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Due Date -->
+                            <td>
+                                {% if action.due_date %}
+
+                                    <span class="ha-due-date
+                                        {% if action.due_date < today and action.status != 'VERIFIED' and action.status != 'CANCELLED' %}
+                                            overdue
+                                        {% endif %}">
+
+                                        {{ action.due_date|date:"d M Y" }}
+
+                                    </span>
+
+                                    {% if action.due_date < today and action.status != "VERIFIED" and action.status != "CANCELLED" %}
+                                        <span class="ha-overdue-label">
+                                            <i class="bi bi-clock-history me-1"></i>
+                                            Overdue
+                                        </span>
+                                    {% endif %}
+
+                                {% else %}
+                                    <span class="text-muted">Not set</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Clickable Status -->
+                            <td>
+                                <a href="{% url 'hazop:hazop_action_detail' action.pk %}"
+                                class="ha-status-link"
+                                title="Open action details">
+
+                                    {% if action.status == "OPEN" %}
+
+                                        <span class="ha-badge ha-status-open">
+                                            <i class="bi bi-circle"></i>
+                                            Open
+                                        </span>
+
+                                    {% elif action.status == "IN_PROGRESS" %}
+
+                                        <span class="ha-badge ha-status-progress">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            In Progress
+                                        </span>
+
+                                    {% elif action.status == "SUBMITTED_FOR_VERIFICATION" %}
+
+                                        <span class="ha-badge ha-status-verification">
+                                            <i class="bi bi-hourglass-split"></i>
+                                            Verification
+                                        </span>
+
+                                    {% elif action.status == "VERIFIED" %}
+
+                                        <span class="ha-badge ha-status-verified">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                            Verified
+                                        </span>
+
+                                    {% elif action.status == "REOPENED" %}
+
+                                        <span class="ha-badge ha-status-reopened">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                            Reopened
+                                        </span>
+
+                                    {% elif action.status == "CANCELLED" %}
+
+                                        <span class="ha-badge ha-status-cancelled">
+                                            <i class="bi bi-x-circle"></i>
+                                            Cancelled
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="ha-badge ha-status-open">
+                                            {{ action.get_status_display }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </a>
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="7">
+
+                                <div class="ha-empty-state">
+
+                                    <div class="ha-empty-icon">
+                                        <i class="bi bi-clipboard2-x"></i>
+                                    </div>
+
+                                    <h5 class="fw-bold mb-2">
+                                        No HAZOP actions yet
+                                    </h5>
+
+                                    <p class="text-muted mb-4">
+                                        Create your first action to start tracking
+                                        recommendation implementation.
+                                    </p>
+
+                                    <a href="{% url 'hazop:hazop_action_create' %}"
+                                       class="ha-btn-primary">
+                                        <i class="bi bi-plus-lg"></i>
+                                        Create First Action
+                                    </a>
+
+                                </div>
+
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                    <tr id="noSearchResults" style="display: none;">
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            No matching actions found.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4" aria-label="Action pagination">
+
+                <ul class="pagination justify-content-center">
+
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }}
+                            of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+
+                </ul>
+
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="ha-table-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>
+                Showing <strong id="visibleActionCount">{{ actions|length }}</strong>
+                of <strong>{{ actions|length }}</strong> actions
+            </span>
+
+            <span>
+                <i class="bi bi-info-circle me-1"></i>
+                Action status is updated through action workflow.
+            </span>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("actionSearch");
+    const statusFilter = document.getElementById("statusFilter");
+    const actionTable = document.getElementById("actionTable");
+    const visibleCount = document.getElementById("visibleActionCount");
+    const noResultsRow = document.getElementById("noSearchResults");
+
+    if (!searchInput || !statusFilter || !actionTable) {
+        return;
+    }
+
+    const actionRows = Array.from(
+        actionTable.querySelectorAll("tbody tr[data-status]")
+    );
+
+    function filterActions() {
+
+        const searchText = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter.value;
+
+        let visible = 0;
+
+        actionRows.forEach(function (row) {
+
+            const rowText = row.textContent.toLowerCase();
+            const rowStatus = row.dataset.status;
+
+            const matchesSearch = rowText.includes(searchText);
+            const matchesStatus = !selectedStatus || rowStatus === selectedStatus;
+
+            const shouldShow = matchesSearch && matchesStatus;
+
+            row.style.display = shouldShow ? "" : "none";
+
+            if (shouldShow) {
+                visible++;
+            }
+        });
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+
+        if (noResultsRow) {
+            noResultsRow.style.display =
+                actionRows.length > 0 && visible === 0 ? "" : "none";
+        }
+    }
+
+    searchInput.addEventListener("input", filterActions);
+    statusFilter.addEventListener("change", filterActions);
+
+});
+</script>
+
+{% endblock %}
